@@ -1,13 +1,13 @@
 ---
 title: "Juan Enrique Potosi Ortiz"
 subtitle: "Estudiante de Biología — Universidad del Cauca"
-image: fotos/juan.jpg
+image: fotos/juanpotosi.jpg
 format:
   html:
     toc: true
     css: card.css
 margin-header: |
-  ![Juan Enrique Potosi Ortiz](fotos/juan.jpg)
+  ![Juan Enrique Potosi Ortiz](fotos/juanpotosi.jpg)
 ---
 
 ### Perfil

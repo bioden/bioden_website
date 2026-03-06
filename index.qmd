@@ -1,5 +1,5 @@
 ---
-title: "Bienvenidos al Semillero de Investigación en Biología del Desarrollo y Plasticidad Neural - BIODEN"
+title: "Semillero de Biología del Desarrollo y Plasticidad Neural-BIODEN"
 format:
   html:
     css: styles.css
@@ -57,6 +57,6 @@ Aquí puedes ver nuestra colobaración con otras Universidades y laboratorios
 
 ![](logos/adscritos.png){.img-fluid .rounded-3 .shadow width="4149"}
 
-
 ## Relaciones interinstitucionales
+
 ![](logos/interinstitucionales.png){.img-fluid .rounded-3 .shadow width="4149"}

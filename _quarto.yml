@@ -4,6 +4,10 @@ project:
 website:
   title: "BIODEN"
   favicon: 'logo.png'
+  site-url: https://bioden.github.io/bioden_website/
+  description: >
+    Sitio web del Semillero de Investigación de 
+    Biología del Desarrollo y Plasticidad Neural
   cookie-consent: 
     type: express
     style: interstitial

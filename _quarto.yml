@@ -1,6 +1,8 @@
 project:
   type: website
   output-dir: docs
+resources: 
+  - googledd127c809b3e536d.html
 website:
   title: "BIODEN"
   favicon: 'logo.png'

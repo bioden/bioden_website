@@ -1,7 +1,8 @@
 project:
   type: website
   output-dir: docs
-
+  description: "Sitio web oficial del Semillero de Biología del 
+  Desarrollo y Plasticidad Neural (BIODEN) de la Universidad del Cauca."
 website:
   title: "BIODEN"
   favicon: 'logo.png'
@@ -10,7 +11,7 @@ website:
     style: interstitial
     palette: dark
   navbar:
-    background: light
+    background: primary
     logo: logo.png
     search: true
     left:
@@ -18,18 +19,14 @@ website:
         text: Inicio
       - href: integrantes.qmd
         text: Integrantes
-      - href: https://sites.google.com/unicauca.edu.co/bioden/webinar-neurolab
+      - href: biosistalks.qmd
         text: Webinar Neurolab
       - href: material_educativo.qmd
         text: Material educativo
-      - href: https://sites.google.com/unicauca.edu.co/bioden/eventos
+      - href: eventos.qmd
         text: Eventos
-      - href: https://sites.google.com/unicauca.edu.co/bioden/bolet%C3%ADn-bioden
-        text: Boletín Bioden
       - href: https://sites.google.com/unicauca.edu.co/bioden/contacto
         text: Contacto
-      - href: https://sites.google.com/unicauca.edu.co/bioden/solicitudes
-        text: Solicitudes
       - href: investigacion.qmd
         text: Invesitgación
     right: 
@@ -62,8 +59,10 @@ format:
     margin-header: |
       ![Universidad del Cauca](/logos/unicauca.png)
     theme:
-      light: cosmo
-      dark: darkly
+      light: zephyr
+      dark: solar
+    link-external-newwindow: true
+    smooth-scroll: true
     css: styles.css
     code-overflow: scroll
     anchor-sections: false

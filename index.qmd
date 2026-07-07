@@ -41,15 +41,15 @@ Paralelamente, evaluamos propiedades toxicológicas y citotóxicas para contribu
 
 ## Lineas de investigación
 
--   Mecanismos moleculares asociados a neurodegeneración
+- Mecanismos moleculares asociados a neurodegeneración
 
--   Abordajes farmacológicos a través de fitoquímica
+- Abordajes farmacológicos a través de fitoquímica
 
--   Búsqueda de fármacos mediante herramientas bioinformáticas
+- Búsqueda de fármacos mediante herramientas bioinformáticas
 
--   Abordajes *in silico* e *in vivo*
+- Abordajes *in silico* e *in vivo*
 
--   Estudios toxicológicos y citogenéticos
+- Estudios toxicológicos y citogenéticos
 
 ## Instituciones a las que está adscrita el semillero
 

@@ -1,8 +1,6 @@
 project:
   type: website
   output-dir: docs
-  description: "Sitio web oficial del Semillero de Biología del 
-  Desarrollo y Plasticidad Neural (BIODEN) de la Universidad del Cauca."
 website:
   title: "BIODEN"
   favicon: 'logo.png'
@@ -20,7 +18,6 @@ website:
       - href: integrantes.qmd
         text: Integrantes
       - href: biosistalks.qmd
-        text: Webinar Neurolab
       - href: material_educativo.qmd
         text: Material educativo
       - href: eventos.qmd

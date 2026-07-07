@@ -22,8 +22,6 @@ website:
         text: Material educativo
       - href: eventos.qmd
         text: Eventos
-      - href: https://sites.google.com/unicauca.edu.co/bioden/contacto
-        text: Contacto
       - href: investigacion.qmd
         text: Invesitgación
     right: 

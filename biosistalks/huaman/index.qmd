@@ -7,7 +7,7 @@ lang: es
 
 date: 2025-11-26
 
-image: unnamed.jpg
+image: unnamed.png
 
 citation: false
 

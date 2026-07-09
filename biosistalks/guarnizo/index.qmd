@@ -1,0 +1,55 @@
+---
+title: "2° BiosisTalks"
+pagetitle:  "Divulgación científica: No esperes a que alguien más divulgue tu ciencia"
+author: "Carlos Enrique Guarnizo, PhD"
+
+lang: en
+
+date: 2026-02-16
+
+image: unnamed.jpg
+
+citation: false
+
+categories: 
+  - Divulgación
+  - ciencia
+  - evolución 
+  - biología
+  - BIOCORE
+
+about:
+  id: biosistalks
+  template: jolla
+  image-shape: rectangle
+comments: false
+---
+
+::: {#biosistalks}
+:::
+
+::: {style="text-align: justify;"}
+## Resumen del ponente
+
+Biólogo de la Universidad de los Andes y Doctor en la Universidad de Texas en Austin. Estudia las causas y los patrones que explican la increíble diversidad de ranas en Colombia. Lidera el Core de Biodiversidad (BIOCORE) en UniAndes, es profesor de Divulgación Científica y Biogeografía y un activo comunicador de la ciencia. Creador de **Ciencia Café pa' Sumercé** y **Seneca Divulga** y presentador del programa de televisión **Embusters**
+
+## Enlace de reunión
+
+[Reunión meet](https://meet.google.com/svh-mstg-zzc)
+
+## Grabación de la charla
+
+[¿Te perdiste la charla?](https://drive.google.com/file/d/1VVaEdNLR8ifjQlqR1qB2_xnCd_gnIT9p/view?usp=sharing)
+
+## Información de los ponentes
+
+<i class="bi bi-book"></i> <a href="https://scholar.google.com/citations?user=k9jk59EAAAAJ&hl=es">Google Scholar</a>
+
+<i class="bi bi-linkedin"></i> [Carlos E. Guarnizo](linkedin.com/in/carlos-e-guarnizo-246207b5?originalSubdomain=co)
+
+[Website personal](https://carloseguarnizo.wordpress.com/)
+
+## Grupo de Investigación
+
+[BioCore - UniAndes](https://www.uniandes.edu.co/investigacioncreacion/es/etiquetas/biocore)
+:::

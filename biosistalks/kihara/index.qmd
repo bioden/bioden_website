@@ -37,6 +37,10 @@ Daisuke Kihara es profesor de la Universidad de Purdue y experto en el desarroll
 
 [Reunión meet](https://meet.google.com/svh-mstg-zzc)
 
+## Grabación de la charla
+
+[¿Te perdiste la charla?](https://drive.google.com/file/d/1VVaEdNLR8ifjQlqR1qB2_xnCd_gnIT9p/view?usp=sharing)
+
 ## Información de los ponentes
 
 <i class="bi bi-book"></i> <a href="https://scholar.google.com/citations?user=WfGLzyAAAAAJ&hl=en">Google Scholar</a>

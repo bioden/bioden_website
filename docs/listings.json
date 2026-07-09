@@ -23,6 +23,17 @@
     ]
   },
   {
+    "listing": "/biosistalks/biosistalks.html",
+    "items": [
+      "/biosistalks/huaman/index.html",
+      "/biosistalks/gallego/index.html",
+      "/biosistalks/meiselman/index.html",
+      "/biosistalks/kihara/index.html",
+      "/biosistalks/daniel/index.html",
+      "/biosistalks/alissen/index.html"
+    ]
+  },
+  {
     "listing": "/material_educativo.html",
     "items": [
       "/material_educativo/curso_python.html",

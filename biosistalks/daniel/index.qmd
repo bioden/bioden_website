@@ -1,0 +1,53 @@
+---
+title: "2° Webinar NeuroLab"
+pagetitle:  "Búsqueda de agonsitas del receptor X hepático en un extracto del género *Zanthoxylum*"
+author: "Daniel Felipe López Niño & Paula Andrea Vargas Pinilla"
+
+lang: es
+
+date: 2025-09-30
+
+image: unnamed.png
+
+citation: false
+
+categories: 
+  - Zanthoxylum
+  - agonistas
+  - receptor 
+  - extracto
+  - metcore
+
+about:
+  id: biosistalks
+  template: jolla
+  image-shape: rectangle
+comments: false
+---
+
+::: {#biosistalks}
+:::
+
+::: {style="text-align: justify;"}
+## Resumen del ponente
+
+Daniel Felipe López Niño es Químico de la Universidad Nacional y su trabajo se centra en bioquímica, química analítica y química computacional. Asimismo, ha trabajado en síntesis y caracterización de polímeros de Colombia y Paula Andrea Vargas Pinilla es Química, MSc. en Bioquímica de la Universidad Nacional de Colombia
+
+## Enlace de reunión
+
+[Reunión meet](https://meet.google.com/yri-wpht-kna)
+
+## Información de los ponentes
+
+<i class="bi bi-linkedin"></i> [Daniel Felipe López Niño](https://www.linkedin.com/in/danielfelipelopeznino/)
+
+<i class="bi bi-linkedin"></i> [Daniel Felipe López Niño](https://www.linkedin.com/in/paula-andrea-vargas-pinilla-361460348/)
+
+## Grupo de Investigación
+
+[Grupo de Investigación en Neurociencias - Universidad Nacional de Colombia](http://www.hermes.unal.edu.co/pages/Consultas/Grupo.xhtml?idGrupo=681)
+
+[Grupo de investigación en Muerte celular](http://www.hermes.unal.edu.co/pages/Consultas/Grupo.xhtml?idGrupo=1096)
+
+[Centro de metabolómica MetCore](https://corefacilities.uniandes.edu.co/metcore/)
+:::

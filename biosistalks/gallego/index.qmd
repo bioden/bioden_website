@@ -1,0 +1,50 @@
+---
+title: "5° Webinar NeuroLab"
+pagetitle:  "Esclerosis sistémica: Manejo de la esclerodermia desde una mirada bio-reguladora con la medicina del futuro aplicada el día de hoy"
+author: "Med. Jesús Gallego Zapata"
+
+lang: es
+
+date: 2025-11-19
+
+image: unnamed.png
+
+citation: false
+
+categories: 
+  - esclerosis
+  - sistemica
+  - medicina 
+  - esclerodermia
+  - futuro
+
+about:
+  id: biosistalks
+  template: jolla
+  image-shape: rectangle
+comments: false
+---
+
+
+::: {#biosistalks}
+:::
+
+::: {style="text-align: justify;"}
+## Resumen del ponente
+
+La esclerosis sistémica es una enfermedad autoinmune crónica y de difícil tratamiento. En este Webinar, el Dr. Jesús Dagoberto Gallego presentará un enfoque innovador basado en **medicina regenerativa y bioreguladora** utilizando plasma rico en plaqueta **(PRP)** y fármacos multicomponentes como **Traumeel** y **Zeel** para modular la inflamación y favorecer la regeneración tisular. Compartirá además los resultados de un caso clínico reconocido internacionalmente, con mejorías notablaes en dolor, movilidad, elasticidad y pigmentación cutánea, resaltando el potencial de estas terapias integrativas en enfermedades autoinmunes
+
+
+## Enlace de reunión
+
+Charla presencial
+
+## Información de los ponentes
+
+No disponible
+
+## Grupo de Investigación
+
+No disponible
+
+:::

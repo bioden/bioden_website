@@ -1,0 +1,28 @@
+---
+title: "Biosis  Talks"
+pagetitle: "Biosis  Talks"
+
+listing: 
+  - id: biosistalks
+    contents: "*/index.qmd"
+    sort: "date desc"
+    type: grid
+    image-height: 225px
+    categories: false
+    sort-ui: false
+    filter-ui: false
+    fields: [image, title, categories, date]
+    grid-columns: 3
+    # page-size: 3
+    # max-items: 3
+    feed: false
+
+comments: false
+---
+
+Aquí podrás revisar el calendario histórico de todas las charlas que se han abordado en el marco de Biosis Talks y junto con los Webinar NeuroLabs del Semillero de Biología del Desarrollo y Plasticidad Neural - Bioden
+
+::: {#biosistalks}
+:::
+
+

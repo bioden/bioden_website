@@ -23,7 +23,7 @@ website:
         text: Inicio
       - href: integrantes.qmd
         text: Integrantes
-      - href: biosistalks.qmd
+      - href: biosistalks/biosistalks.qmd
       - href: material_educativo.qmd
         text: Material educativo
       - href: eventos.qmd
@@ -58,10 +58,10 @@ website:
 format:
   html:
     margin-header: |
-      ![Universidad del Cauca](/logos/unicauca.png)
+      ![Universidad del Cauca](/logos/semillero.png)
     theme:
       light: zephyr
-      dark: solar
+      dark: darkly
     link-external-newwindow: true
     smooth-scroll: true
     css: styles.css

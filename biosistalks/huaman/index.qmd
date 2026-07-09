@@ -1,0 +1,46 @@
+---
+title: "6° Webinar NeuroLab"
+pagetitle:  "*Schinus molle* como alternativa agroecologica para controlar *Bidens pilosa*, maleza clave en el cultivo de maíz"
+author: "Joselyn Huaman Anyaipoma"
+
+lang: es
+
+date: 2025-11-26
+
+image: unnamed.jpg
+
+citation: false
+
+categories: 
+  - Bidens
+  - agroecología
+  - maíz 
+  - cultivo
+  - Schinus
+
+about:
+  id: biosistalks
+  template: jolla
+  image-shape: rectangle
+comments: false
+---
+
+::: {#biosistalks}
+:::
+
+::: {style="text-align: justify;"}
+## Resumen del ponente
+
+La investigación analiza el efecto alelopático de un extracto vegetal sobre una maleza que compite intensamente en el cultivo de maíz. El maíz muetra una respuesta inicial favorable, mientras que la maleza evidencia una inhibición notable y un comportamiento germinativo irregular asociado a la variabilidad de sus semillas y a la complejidad química del extracto. 
+
+## Enlace de reunión
+
+[Reunión meet](https://meet.google.com/svh-mstg-zzc)
+
+## Información de los ponentes
+
+<i class="bi bi-linkedin"></i> [Joselyn Huaman Anyaipoma](https://www.linkedin.com/in/joselyn-huaman-anyaipoma-472511286/)
+
+## Grupo de Investigación
+
+No disponible

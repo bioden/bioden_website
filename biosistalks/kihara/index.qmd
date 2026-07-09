@@ -1,0 +1,49 @@
+---
+title: "3° Webinar NeuroLab"
+pagetitle:  "Biomolecular Structure Modelling Beyond AlphaFold: Cryo-EM, RNA and More"
+author: "Daisuke Kihara, PhD"
+
+lang: en
+
+date: 2025-11-07
+
+image: unnamed.jpg
+
+citation: false
+
+categories: 
+  - RNA
+  - AlphaFold
+  - Kihara 
+  - Modelling
+  - Biomolecular
+
+about:
+  id: biosistalks
+  template: jolla
+  image-shape: rectangle
+comments: false
+---
+
+::: {#biosistalks}
+:::
+
+::: {style="text-align: justify;"}
+## Resumen del ponente
+
+Daisuke Kihara es profesor de la Universidad de Purdue y experto en el desarrollo de algoritmos y software para bioinformática de proteínas. Cuenta con más de 240 publicaciones científicas y ha sido reconocido con distinciones como el **AIMBE Fellow (2021)** y el **Faculty Research Award (2025)**. Actualmente, el Dr. Kihara forma parte de la **Junta Directiva de la International Society for Computational Biology (ISCB)**
+
+## Enlace de reunión
+
+[Reunión meet](https://meet.google.com/svh-mstg-zzc)
+
+## Información de los ponentes
+
+<i class="bi bi-book"></i> <a href="https://scholar.google.com/citations?user=WfGLzyAAAAAJ&hl=en">Google Scholar</a>
+
+<i class="bi bi-linkedin"></i> [Daisuke Kihara](linkedin.com/in/ACoAAAD-IVQB5qnYz8cElsPx-cVgW2iac2zK6pY?skipRedirect=true)
+
+## Grupo de Investigación
+
+[Kihara Lab - Purdue University](https://kiharalab.org/web/dkihara/)
+:::

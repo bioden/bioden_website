@@ -1,0 +1,52 @@
+---
+title: "4° Webinar NeuroLab"
+pagetitle:  "Using ethiological signatures to define the neural circuitry of dormancy"
+author: "Matthew Ramiah Meiselman, PhD"
+
+lang: en
+
+date: 2025-11-17
+
+image: unnamed.png
+
+citation: false
+
+categories: 
+  - ethiological
+  - signatures
+  - neural 
+  - dormancy
+  - circuitry
+
+about:
+  id: biosistalks
+  template: jolla
+  image-shape: rectangle
+comments: false
+---
+
+
+::: {#biosistalks}
+:::
+
+::: {style="text-align: justify;"}
+## Resumen del ponente
+
+Daisuke Kihara es un biólogo molecular y neurobiólogo con más de diez años de experiencia especializado en la regulación endocrina y neuroendocrina del comportamiento y la fisiología. Se formó en **Northwestern University** trabajando con biología del cáncer, realizó su doctorado en **UC Riverside** investigando cómo hormonas del desarrollo regulan la actividad neuronal y la reproducción en *Drosophila melanogaster*, y en su posdoctorado en **Cornell University** identificó neuronas sensibles al frío **(DN3)** que controlan la dispausa reproductiva, aportando un modelo clave para entender la **dormancia reproductiva**
+
+
+## Enlace de reunión
+
+[Reunión meet](https://meet.google.com/zde-zvha-vdx?authuser=0)
+
+## Información de los ponentes
+
+<i class="bi bi-book"></i> <a href="https://scholar.google.com/citations?user=D5L-udgAAAAJ&hl=en">Google Scholar</a>
+
+<i class="bi bi-linkedin"></i> [Matthew Meiselman](https://www.linkedin.com/in/matthew-meiselman-75623b3a/)
+
+## Grupo de Investigación
+
+[Meiselman Lab - Univerisity of Nevada (UNLV)](https://meiselmanlab.com/)
+
+:::

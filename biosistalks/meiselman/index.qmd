@@ -1,5 +1,5 @@
 ---
-title: "4° Webinar NeuroLab"
+title: "5° Webinar NeuroLab"
 pagetitle:  "Using ethiological signatures to define the neural circuitry of dormancy"
 author: "Matthew Ramiah Meiselman, PhD"
 
@@ -25,7 +25,6 @@ about:
 comments: false
 ---
 
-
 ::: {#biosistalks}
 :::
 
@@ -34,10 +33,13 @@ comments: false
 
 Daisuke Kihara es un biólogo molecular y neurobiólogo con más de diez años de experiencia especializado en la regulación endocrina y neuroendocrina del comportamiento y la fisiología. Se formó en **Northwestern University** trabajando con biología del cáncer, realizó su doctorado en **UC Riverside** investigando cómo hormonas del desarrollo regulan la actividad neuronal y la reproducción en *Drosophila melanogaster*, y en su posdoctorado en **Cornell University** identificó neuronas sensibles al frío **(DN3)** que controlan la dispausa reproductiva, aportando un modelo clave para entender la **dormancia reproductiva**
 
-
 ## Enlace de reunión
 
 [Reunión meet](https://meet.google.com/zde-zvha-vdx?authuser=0)
+
+## Grabación de la charla
+
+[¿Te perdiste la charla?](https://drive.google.com/file/d/1_mcMs07IfxcsH7FFuy515MetQel7-f3L/view?usp=sharing)
 
 ## Información de los ponentes
 
@@ -48,5 +50,4 @@ Daisuke Kihara es un biólogo molecular y neurobiólogo con más de diez años d
 ## Grupo de Investigación
 
 [Meiselman Lab - Univerisity of Nevada (UNLV)](https://meiselmanlab.com/)
-
 :::

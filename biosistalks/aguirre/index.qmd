@@ -1,0 +1,50 @@
+---
+title: "4° Webinar NeuroLab"
+pagetitle:  "Aplicación de la quimiometría y desduplicación de señales en la identificación de compuestos bioactivos en extractos de plantas medicinales con actividad antiproliferativa"
+
+lang: es
+
+date: 2025-11-10
+
+image: unnamed.png
+
+citation: false
+
+categories: 
+  - extracto
+  - plantas
+  - fitoquímica 
+  - farmacología
+  - quimiometría
+
+about:
+  id: biosistalks
+  template: jolla
+  image-shape: rectangle
+comments: false
+---
+
+::: {#biosistalks}
+:::
+
+::: {style="text-align: justify;"}
+## Resumen del ponente
+
+Óscar A. Sánchez es profesor de la Universidad Veracruzana, especializado en plantas medicinales con propiedades antiproliferativas y antimicrobianas. Es miembro del Sistema Nacional de Investigadores (SECIHTI) y secretario del Comité Científico del Congreso Latinoamericano de Plantas Medicinales (COLAPLAMED), evento que se celebra anualmente en distintos países de Latinoamérica. Además, colabora con el Boletín Latinoamericano de Plantas Medicinales y Aromáticas (BLACPMA) y mantiene vínculos académicos con instituciones de Ecuador, Bolivia y Perú.
+
+## Enlace de reunión
+
+[Reunión meet](meet.google.com/chd-nxqa-ouu)
+
+## Grabación de la charla
+
+[¿Te perdiste la charla?](https://drive.google.com/file/d/1pzgVDZuhVEj_ptQEy-VFc2457TfhBAjk/view?usp=sharing)
+
+## Información de los ponentes
+
+<i class="bi bi-book"></i> <a href="https://scholar.google.com/citations?user=A43Z8_cAAAAJ&hl=es">Google Scholar</a>
+
+<i class="bi bi-linkedin"></i> [Óscar A. Sánchez Aguirre](https://www.researchgate.net/profile/Oscar-Antonio-Sanchez-Aguirre)
+
+## Grupo de Investigación
+:::

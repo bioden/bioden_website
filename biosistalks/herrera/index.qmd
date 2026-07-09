@@ -1,5 +1,5 @@
 ---
-title: "7° Webinar NeuroLab & 1° BiosisTalks"
+title: "1° BiosisTalks"
 pagetitle:  "Biotecnología microbiana: Microbiología moderna del laboratorio a la aplicación real"
 author: "Biólogo Diego Fernando Herrera"
 
@@ -7,7 +7,7 @@ lang: es
 
 date: 2026-02-09
 
-image: unnamed.jpg
+image: unnamed.png
 
 citation: false
 
@@ -33,7 +33,6 @@ comments: false
 
 Profesional en Microbiología Industrial con sólida trayectoria en biología molecular y biología celular, actualmente desempeñándome como Asesor Científico en Sanitas Technologies. Cuento con más de 5 años de experiencia liderando y ejecutando proyectos de investigación aplicada, con enfoque en la optimización de procesos en laboratorios académicos e industriales.
 
-
 ## Enlace de reunión
 
 [Reunión meet](https://meet.google.com/ddg-rjnm-nhd)
@@ -45,3 +44,4 @@ Profesional en Microbiología Industrial con sólida trayectoria en biología mo
 ## Grupo de Investigación
 
 No disponible
+:::

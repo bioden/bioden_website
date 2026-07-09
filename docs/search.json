@@ -11,14 +11,14 @@
     "href": "material_educativo/capitulos_r/Capitulo2.html",
     "title": "¿Cómo programar en R sin morir en el intento?",
     "section": "",
-    "text": "Comprender los fundamentos de la estadística descriptiva aplicada a datos biológicos.\n\nCalcular y visualizar medidas de tendencia central y dispersión.\n\nRealizar pruebas estadísticas básicas (t de Student, ANOVA, Chi-cuadrado, correlación).\n\nInterpretar los resultados en el contexto biológico.\n\n\n\n\n\n¿Qué son variables y tipos de datos?\n¿Cómo crear y manipular dataframes en R?\n\n\n\n\nLa estadística descriptiva resume y organiza la información contenida en los datos.\nEn biología, nos permite caracterizar poblaciones, comparar tratamientos o detectar patrones ecológicos.\n\n\n\n\n\n\n\n\nTipo de medida\nQué indica\nEjemplo biológico\n\n\n\n\nTendencia central\nValor típico o promedio\nLongitud promedio de hojas\n\n\nDispersión\nQué tan variables son los datos\nVariación en peso entre machos y hembras\n\n\nForma de distribución\nCómo se distribuyen los datos\nSi las tallas de una especie son simétricas o sesgadas\n\n\n\nEn biología una de las orientaciones que ustedpodría considerar son por ejemplo:\n\n\n\n\n\n\n\n\nEscala\nEjemplo\nTipo de análisis\n\n\n\n\nMolecular\nExpresión diferencial de genes\nEstadística inferencial (t-test, ANOVA)\n\n\nOrganismo\nMorfometría (longitud, peso, área foliar)\nDescriptiva y comparativa\n\n\nPoblacional\nEstructura de edad o sexo\nFrecuencias, Chi-cuadrado\n\n\nEcológica\nDiversidad de especies o abundancias\nÍndices, ANOVA, correlaciones\n\n\n\n\n\n\n\n# Cargar los datos de ejemplo\ndata &lt;- data.frame(\n  Localidad = rep(c(\"Popayán\", \"Pasto\"), each = 10),\n  Longitud = c(rnorm(10, mean = 4.5, sd = 0.3), rnorm(10, mean = 5.1, sd = 0.4))\n)\n\n# Inspección general\nhead(data)\n\n  Localidad Longitud\n1   Popayán 4.766016\n2   Popayán 4.353044\n3   Popayán 4.394870\n4   Popayán 4.806750\n5   Popayán 4.664074\n6   Popayán 4.742475\n\nsummary(data)\n\n  Localidad            Longitud    \n Length:20          Min.   :4.353  \n Class :character   1st Qu.:4.521  \n Mode  :character   Median :4.754  \n                    Mean   :4.814  \n                    3rd Qu.:5.042  \n                    Max.   :5.577  \n\nstr(data)\n\n'data.frame':   20 obs. of  2 variables:\n $ Localidad: chr  \"Popayán\" \"Popayán\" \"Popayán\" \"Popayán\" ...\n $ Longitud : num  4.77 4.35 4.39 4.81 4.66 ...\n\n# Estadísticas básicas\nmean(data$Longitud)\n\n[1] 4.813807\n\nsd(data$Longitud)\n\n[1] 0.3772862\n\nvar(data$Longitud)\n\n[1] 0.1423449\n\n\n\n\n\n\n\n\n\n\n\n\n\nMedida\nFunción en R\nDescripción\n\n\n\n\nMedia\nmean(x)\nPromedio aritmético\n\n\nMediana\nmedian(x)\nValor central de los datos ordenados\n\n\nModa\nsort(table(x), decreasing = TRUE)[1]\nValor más frecuente\n\n\n\n\nmean(data$Longitud)\n\n[1] 4.813807\n\nmedian(data$Longitud)\n\n[1] 4.754246\n\n\n\n\nSi las longitudes de las hojas son 4.1, 4.4, 4.6, 5.1 y 5.2.\nCalcule cuáles serán las medias y medianas.\n\n\n\n\n\n\n\n\n\n\n\n\nMedida\nFunción en R\nQué representa\n\n\n\n\nRango\nrange(x)\nDiferencia entre máximo y mínimo\n\n\nVarianza\nvar(x)\nPromedio de las desviaciones cuadradas\n\n\nDesviación estándar\nsd(x)\nVariabilidad respecto al promedio\n\n\nError estándar de la media\nsd(x)/sqrt(length(x))\nPrecisión del promedio estimado\n\n\n\nAhora uste podrá a partir de los datos que ya hemos trabajado usar las funciones que hemos colocado en la tabla anterior. Entonces, por ejemplo podría considerar lo siguiente:\n\nrange(data$Longitud)\n\n[1] 4.353044 5.576682\n\nsd(data$Longitud)\n\n[1] 0.3772862\n\n\n¿Qué observa y qué puede analizar teniendo en cuenta los datos pasados?. En biología por ejemplo, la desviación estándar es esencial para comparar poblaciones de diferentes puntos, nichos o localidades.\n\n\n\n\n\nEn biología, los datos rara vez son solo números: representan procesos biológicos, ecológicos o fisiológicos.\nDesde el crecimiento de una planta bajo distintos tratamientos, hasta la diversidad de especies en diferentes hábitats, todos los estudios comparten un punto de partida común: describir, resumir y entender la variabilidad en los datos.\nLa estadística descriptiva busca caracterizar los datos —su tendencia central, dispersión, forma y posibles valores atípicos— antes de aplicar cualquier modelo o prueba inferencial.\nPero para avanzar hacia inferencias válidas (como comparar grupos o correlacionar variables), debemos verificar supuestos fundamentales, especialmente la normalidad y la homogeneidad de varianzas.\n\n\n\n\nAntes de aplicar una prueba, debemos identificar el tipo de variable con la que trabajamos:\n\n\n\n\n\n\n\n\nTipo de variable\nEjemplo biológico\nTipo de análisis\n\n\n\n\nCuantitativa continua\nLongitud de una hoja, peso de un pez, concentración de clorofila\nMedia, varianza, ANOVA, regresión\n\n\nCuantitativa discreta\nNúmero de individuos, semillas germinadas\nConteos, Poisson, Chi-cuadrado\n\n\nCategórica (nominal)\nSexo (macho/hembra), hábitat (bosque/páramo)\nTablas de contingencia, proporciones\n\n\nOrdinal\nGrado de severidad, nivel de floración\nPruebas no paramétricas (Kruskal–Wallis)\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nCaracterística\nPruebas paramétricas\nPruebas no paramétricas\n\n\n\n\nSupuesto principal\nNormalidad de los datos\nNo requieren normalidad\n\n\nTipo de variable\nContinua\nOrdinal o no normal\n\n\nEjemplo\nt-test, ANOVA, regresión lineal\nMann–Whitney, Kruskal–Wallis, Spearman\n\n\nVentajas\nMayor poder estadístico\nMás robustas ante datos sesgados\n\n\nLimitaciones\nSensibles a outliers y asimetrías\nMenos potencia, resultados menos específicos\n\n\n\n\n\n\n\nLa normalidad implica que los datos se distribuyen de manera simétrica alrededor de la media.\nMatemáticamente, la distribución normal (o gaussiana) tiene la forma:\n\\[f(x) = \\frac{1}{\\sigma \\sqrt{2\\pi}} e^{-\\frac{1}{2}\\left(\\frac{x-\\mu}{\\sigma}\\right)^2}\\]\nEn biología, muchas variables aproximan una distribución normal debido al efecto acumulativo de múltiples factores (por ejemplo, tamaño corporal, masa, tasa de crecimiento).\n\n\n\n\n\n\nLos gráficos son la primera herramienta para evaluar visualmente si los datos se comportan como una normal:\n\nHistogramas: deben mostrar una forma de campana.\n\nGráfico QQ (Quantile–Quantile): los puntos deben seguir aproximadamente una línea recta.\n\nBoxplots: ayudan a detectar asimetrías y valores atípicos.\n\n\n# Ejemplo en R\nset.seed(123)\ndatos &lt;- rnorm(30, mean = 10, sd = 2)\n\nhist(datos, main = \"Distribución aproximada normal\", col = \"lightgreen\", border = \"white\")\n\n\n\n\n\n\n\nqqnorm(datos); qqline(datos, col = \"red\", lwd = 2)\n\n\n\n\n\n\n\nboxplot(datos, main = \"Boxplot de ejemplo\", col = \"lightblue\")\n\n\n\n\n\n\n\n\nY ahora estas son algunas de las pruebas de hipótesis más utilizadas.\n\n\n\n\n\n\n\n\n\nPrueba\nHipótesis nula (H_0)\nInterpretación\nUso recomendado\n\n\n\n\nShapiro–Wilk\nLos datos siguen una distribución normal\nSi p &gt; 0.05 → normalidad aceptada\nMuestras pequeñas (&lt;50)\n\n\nKolmogorov–Smirnov\nSimilar a Shapiro, compara con una normal teórica\nMenos sensible en muestras pequeñas\nMuestras grandes (&gt;50)\n\n\nAnderson–Darling / Lilliefors\nAlternativas más potentes para colas asimétricas\nMejor para datos ambientales o ecológicos\nDistribuciones sesgadas\n\n\n\nEn base al ejemplo anterior, ahora puede calcular la normalidad. ¿Qué nos indican estos datos?\n\nshapiro.test(datos)\n\n\n    Shapiro-Wilk normality test\n\ndata:  datos\nW = 0.97894, p-value = 0.7966\n\n\nSi\n\n0.05&gt; : no se rechaza la normalidad. Si &lt;p ≤ 0.05&gt; : los datos difieren significativamente de una normal → considerar transformaciones o pruebas no paramétricas.\n\n\n\n\nAdemás de la normalidad, muchas pruebas requieren que los grupos comparados tengan varianzas similares. Esto garantiza que las diferencias observadas se deban al tratamiento y no a la dispersión desigual de los datos.\n\n\n\n\n\n\n\n\nPrueba\nHipótesis nula (H_0)\nCuándo usar\n\n\n\n\nLevene\nLas varianzas son iguales\nMás robusta, datos no normales\n\n\nBartlett\nLas varianzas son iguales\nSolo para datos normales\n\n\n\n\ngrupo1 &lt;- rnorm(20, 10, 2)\ngrupo2 &lt;- rnorm(20, 11, 2.5)\ngrupo3 &lt;- rnorm(20, 9, 1.8)\n\nlibrary(car)\n\nLoading required package: carData\n\nleveneTest(c(grupo1, grupo2, grupo3),\ngroup = factor(rep(1:3, each = 20)))\n\nLevene's Test for Homogeneity of Variance (center = median)\n      Df F value Pr(&gt;F)\ngroup  2  0.5917 0.5568\n      57               \n\n\n\n\n\nCuando los datos no cumplen normalidad, se pueden aplicar transformaciones para estabilizar la varianza:\n\n\n\nTipo de dato\nTransformación sugerida\n\n\n\n\nConteos\n()\n\n\nProporciones o tasas\n(())\n\n\nDatos sesgados\n(_{10}(x+1)) o ((x+1))\n\n\nDistribuciones exponenciales\n(1/x) o Box–Cox\n\n\n\nEstas transformaciones son comunes en ecología, botánica y fisiología vegetal, donde muchas variables (biomasa, abundancia, tasa de fotosíntesis) presentan sesgo.\n\n#Ejemplo de transformación logarítmica\n\nsesgados &lt;- rexp(30, rate = 0.2)\nhist(log10(sesgados + 1), main = \"Transformación log10(x+1)\", col = \"lightcoral\", border = \"white\")\n\n\n\n\n\n\n\n\n\n\n\nAntes de aplicar una prueba estadística, el biólogo debe responder tres preguntas clave:\n¿Mis datos son normales?\n¿Las varianzas entre grupos son homogéneas?\n¿El tipo de variable y tamaño de muestra justifican un modelo paramétrico o no paramétrico?"
+    "text": "Comprender los fundamentos de la estadística descriptiva aplicada a datos biológicos.\n\nCalcular y visualizar medidas de tendencia central y dispersión.\n\nRealizar pruebas estadísticas básicas (t de Student, ANOVA, Chi-cuadrado, correlación).\n\nInterpretar los resultados en el contexto biológico.\n\n\n\n\n\n¿Qué son variables y tipos de datos?\n¿Cómo crear y manipular dataframes en R?\n\n\n\n\nLa estadística descriptiva resume y organiza la información contenida en los datos.\nEn biología, nos permite caracterizar poblaciones, comparar tratamientos o detectar patrones ecológicos.\n\n\n\n\n\n\n\n\nTipo de medida\nQué indica\nEjemplo biológico\n\n\n\n\nTendencia central\nValor típico o promedio\nLongitud promedio de hojas\n\n\nDispersión\nQué tan variables son los datos\nVariación en peso entre machos y hembras\n\n\nForma de distribución\nCómo se distribuyen los datos\nSi las tallas de una especie son simétricas o sesgadas\n\n\n\nEn biología una de las orientaciones que ustedpodría considerar son por ejemplo:\n\n\n\n\n\n\n\n\nEscala\nEjemplo\nTipo de análisis\n\n\n\n\nMolecular\nExpresión diferencial de genes\nEstadística inferencial (t-test, ANOVA)\n\n\nOrganismo\nMorfometría (longitud, peso, área foliar)\nDescriptiva y comparativa\n\n\nPoblacional\nEstructura de edad o sexo\nFrecuencias, Chi-cuadrado\n\n\nEcológica\nDiversidad de especies o abundancias\nÍndices, ANOVA, correlaciones\n\n\n\n\n\n\n\n# Cargar los datos de ejemplo\ndata &lt;- data.frame(\n  Localidad = rep(c(\"Popayán\", \"Pasto\"), each = 10),\n  Longitud = c(rnorm(10, mean = 4.5, sd = 0.3), rnorm(10, mean = 5.1, sd = 0.4))\n)\n\n# Inspección general\nhead(data)\n\n  Localidad Longitud\n1   Popayán 4.798999\n2   Popayán 4.839958\n3   Popayán 4.848175\n4   Popayán 4.292230\n5   Popayán 4.476502\n6   Popayán 4.427585\n\nsummary(data)\n\n  Localidad            Longitud    \n Length:20          Min.   :3.974  \n Class :character   1st Qu.:4.433  \n Mode  :character   Median :4.764  \n                    Mean   :4.776  \n                    3rd Qu.:4.848  \n                    Max.   :5.898  \n\nstr(data)\n\n'data.frame':   20 obs. of  2 variables:\n $ Localidad: chr  \"Popayán\" \"Popayán\" \"Popayán\" \"Popayán\" ...\n $ Longitud : num  4.8 4.84 4.85 4.29 4.48 ...\n\n# Estadísticas básicas\nmean(data$Longitud)\n\n[1] 4.776359\n\nsd(data$Longitud)\n\n[1] 0.4713925\n\nvar(data$Longitud)\n\n[1] 0.2222108\n\n\n\n\n\n\n\n\n\n\n\n\n\nMedida\nFunción en R\nDescripción\n\n\n\n\nMedia\nmean(x)\nPromedio aritmético\n\n\nMediana\nmedian(x)\nValor central de los datos ordenados\n\n\nModa\nsort(table(x), decreasing = TRUE)[1]\nValor más frecuente\n\n\n\n\nmean(data$Longitud)\n\n[1] 4.776359\n\nmedian(data$Longitud)\n\n[1] 4.764083\n\n\n\n\nSi las longitudes de las hojas son 4.1, 4.4, 4.6, 5.1 y 5.2.\nCalcule cuáles serán las medias y medianas.\n\n\n\n\n\n\n\n\n\n\n\n\nMedida\nFunción en R\nQué representa\n\n\n\n\nRango\nrange(x)\nDiferencia entre máximo y mínimo\n\n\nVarianza\nvar(x)\nPromedio de las desviaciones cuadradas\n\n\nDesviación estándar\nsd(x)\nVariabilidad respecto al promedio\n\n\nError estándar de la media\nsd(x)/sqrt(length(x))\nPrecisión del promedio estimado\n\n\n\nAhora uste podrá a partir de los datos que ya hemos trabajado usar las funciones que hemos colocado en la tabla anterior. Entonces, por ejemplo podría considerar lo siguiente:\n\nrange(data$Longitud)\n\n[1] 3.973873 5.897963\n\nsd(data$Longitud)\n\n[1] 0.4713925\n\n\n¿Qué observa y qué puede analizar teniendo en cuenta los datos pasados?. En biología por ejemplo, la desviación estándar es esencial para comparar poblaciones de diferentes puntos, nichos o localidades.\n\n\n\n\n\nEn biología, los datos rara vez son solo números: representan procesos biológicos, ecológicos o fisiológicos.\nDesde el crecimiento de una planta bajo distintos tratamientos, hasta la diversidad de especies en diferentes hábitats, todos los estudios comparten un punto de partida común: describir, resumir y entender la variabilidad en los datos.\nLa estadística descriptiva busca caracterizar los datos —su tendencia central, dispersión, forma y posibles valores atípicos— antes de aplicar cualquier modelo o prueba inferencial.\nPero para avanzar hacia inferencias válidas (como comparar grupos o correlacionar variables), debemos verificar supuestos fundamentales, especialmente la normalidad y la homogeneidad de varianzas.\n\n\n\n\nAntes de aplicar una prueba, debemos identificar el tipo de variable con la que trabajamos:\n\n\n\n\n\n\n\n\nTipo de variable\nEjemplo biológico\nTipo de análisis\n\n\n\n\nCuantitativa continua\nLongitud de una hoja, peso de un pez, concentración de clorofila\nMedia, varianza, ANOVA, regresión\n\n\nCuantitativa discreta\nNúmero de individuos, semillas germinadas\nConteos, Poisson, Chi-cuadrado\n\n\nCategórica (nominal)\nSexo (macho/hembra), hábitat (bosque/páramo)\nTablas de contingencia, proporciones\n\n\nOrdinal\nGrado de severidad, nivel de floración\nPruebas no paramétricas (Kruskal–Wallis)\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nCaracterística\nPruebas paramétricas\nPruebas no paramétricas\n\n\n\n\nSupuesto principal\nNormalidad de los datos\nNo requieren normalidad\n\n\nTipo de variable\nContinua\nOrdinal o no normal\n\n\nEjemplo\nt-test, ANOVA, regresión lineal\nMann–Whitney, Kruskal–Wallis, Spearman\n\n\nVentajas\nMayor poder estadístico\nMás robustas ante datos sesgados\n\n\nLimitaciones\nSensibles a outliers y asimetrías\nMenos potencia, resultados menos específicos\n\n\n\n\n\n\n\nLa normalidad implica que los datos se distribuyen de manera simétrica alrededor de la media.\nMatemáticamente, la distribución normal (o gaussiana) tiene la forma:\n\\[f(x) = \\frac{1}{\\sigma \\sqrt{2\\pi}} e^{-\\frac{1}{2}\\left(\\frac{x-\\mu}{\\sigma}\\right)^2}\\]\nEn biología, muchas variables aproximan una distribución normal debido al efecto acumulativo de múltiples factores (por ejemplo, tamaño corporal, masa, tasa de crecimiento).\n\n\n\n\n\n\nLos gráficos son la primera herramienta para evaluar visualmente si los datos se comportan como una normal:\n\nHistogramas: deben mostrar una forma de campana.\n\nGráfico QQ (Quantile–Quantile): los puntos deben seguir aproximadamente una línea recta.\n\nBoxplots: ayudan a detectar asimetrías y valores atípicos.\n\n\n# Ejemplo en R\nset.seed(123)\ndatos &lt;- rnorm(30, mean = 10, sd = 2)\n\nhist(datos, main = \"Distribución aproximada normal\", col = \"lightgreen\", border = \"white\")\n\n\n\n\n\n\n\nqqnorm(datos); qqline(datos, col = \"red\", lwd = 2)\n\n\n\n\n\n\n\nboxplot(datos, main = \"Boxplot de ejemplo\", col = \"lightblue\")\n\n\n\n\n\n\n\n\nY ahora estas son algunas de las pruebas de hipótesis más utilizadas.\n\n\n\n\n\n\n\n\n\nPrueba\nHipótesis nula (H_0)\nInterpretación\nUso recomendado\n\n\n\n\nShapiro–Wilk\nLos datos siguen una distribución normal\nSi p &gt; 0.05 → normalidad aceptada\nMuestras pequeñas (&lt;50)\n\n\nKolmogorov–Smirnov\nSimilar a Shapiro, compara con una normal teórica\nMenos sensible en muestras pequeñas\nMuestras grandes (&gt;50)\n\n\nAnderson–Darling / Lilliefors\nAlternativas más potentes para colas asimétricas\nMejor para datos ambientales o ecológicos\nDistribuciones sesgadas\n\n\n\nEn base al ejemplo anterior, ahora puede calcular la normalidad. ¿Qué nos indican estos datos?\n\nshapiro.test(datos)\n\n\n    Shapiro-Wilk normality test\n\ndata:  datos\nW = 0.97894, p-value = 0.7966\n\n\nSi\n\n0.05&gt; : no se rechaza la normalidad. Si &lt;p ≤ 0.05&gt; : los datos difieren significativamente de una normal → considerar transformaciones o pruebas no paramétricas.\n\n\n\n\nAdemás de la normalidad, muchas pruebas requieren que los grupos comparados tengan varianzas similares. Esto garantiza que las diferencias observadas se deban al tratamiento y no a la dispersión desigual de los datos.\n\n\n\n\n\n\n\n\nPrueba\nHipótesis nula (H_0)\nCuándo usar\n\n\n\n\nLevene\nLas varianzas son iguales\nMás robusta, datos no normales\n\n\nBartlett\nLas varianzas son iguales\nSolo para datos normales\n\n\n\n\ngrupo1 &lt;- rnorm(20, 10, 2)\ngrupo2 &lt;- rnorm(20, 11, 2.5)\ngrupo3 &lt;- rnorm(20, 9, 1.8)\n\nlibrary(car)\n\nLoading required package: carData\n\nleveneTest(c(grupo1, grupo2, grupo3),\ngroup = factor(rep(1:3, each = 20)))\n\nLevene's Test for Homogeneity of Variance (center = median)\n      Df F value Pr(&gt;F)\ngroup  2  0.5917 0.5568\n      57               \n\n\n\n\n\nCuando los datos no cumplen normalidad, se pueden aplicar transformaciones para estabilizar la varianza:\n\n\n\nTipo de dato\nTransformación sugerida\n\n\n\n\nConteos\n()\n\n\nProporciones o tasas\n(())\n\n\nDatos sesgados\n(_{10}(x+1)) o ((x+1))\n\n\nDistribuciones exponenciales\n(1/x) o Box–Cox\n\n\n\nEstas transformaciones son comunes en ecología, botánica y fisiología vegetal, donde muchas variables (biomasa, abundancia, tasa de fotosíntesis) presentan sesgo.\n\n#Ejemplo de transformación logarítmica\n\nsesgados &lt;- rexp(30, rate = 0.2)\nhist(log10(sesgados + 1), main = \"Transformación log10(x+1)\", col = \"lightcoral\", border = \"white\")\n\n\n\n\n\n\n\n\n\n\n\nAntes de aplicar una prueba estadística, el biólogo debe responder tres preguntas clave:\n¿Mis datos son normales?\n¿Las varianzas entre grupos son homogéneas?\n¿El tipo de variable y tamaño de muestra justifican un modelo paramétrico o no paramétrico?"
   },
   {
     "objectID": "material_educativo/capitulos_r/Capitulo2.html#estadística-descriptiva-y-pruebas-básicas-en-r",
     "href": "material_educativo/capitulos_r/Capitulo2.html#estadística-descriptiva-y-pruebas-básicas-en-r",
     "title": "¿Cómo programar en R sin morir en el intento?",
     "section": "",
-    "text": "Comprender los fundamentos de la estadística descriptiva aplicada a datos biológicos.\n\nCalcular y visualizar medidas de tendencia central y dispersión.\n\nRealizar pruebas estadísticas básicas (t de Student, ANOVA, Chi-cuadrado, correlación).\n\nInterpretar los resultados en el contexto biológico.\n\n\n\n\n\n¿Qué son variables y tipos de datos?\n¿Cómo crear y manipular dataframes en R?\n\n\n\n\nLa estadística descriptiva resume y organiza la información contenida en los datos.\nEn biología, nos permite caracterizar poblaciones, comparar tratamientos o detectar patrones ecológicos.\n\n\n\n\n\n\n\n\nTipo de medida\nQué indica\nEjemplo biológico\n\n\n\n\nTendencia central\nValor típico o promedio\nLongitud promedio de hojas\n\n\nDispersión\nQué tan variables son los datos\nVariación en peso entre machos y hembras\n\n\nForma de distribución\nCómo se distribuyen los datos\nSi las tallas de una especie son simétricas o sesgadas\n\n\n\nEn biología una de las orientaciones que ustedpodría considerar son por ejemplo:\n\n\n\n\n\n\n\n\nEscala\nEjemplo\nTipo de análisis\n\n\n\n\nMolecular\nExpresión diferencial de genes\nEstadística inferencial (t-test, ANOVA)\n\n\nOrganismo\nMorfometría (longitud, peso, área foliar)\nDescriptiva y comparativa\n\n\nPoblacional\nEstructura de edad o sexo\nFrecuencias, Chi-cuadrado\n\n\nEcológica\nDiversidad de especies o abundancias\nÍndices, ANOVA, correlaciones\n\n\n\n\n\n\n\n# Cargar los datos de ejemplo\ndata &lt;- data.frame(\n  Localidad = rep(c(\"Popayán\", \"Pasto\"), each = 10),\n  Longitud = c(rnorm(10, mean = 4.5, sd = 0.3), rnorm(10, mean = 5.1, sd = 0.4))\n)\n\n# Inspección general\nhead(data)\n\n  Localidad Longitud\n1   Popayán 4.766016\n2   Popayán 4.353044\n3   Popayán 4.394870\n4   Popayán 4.806750\n5   Popayán 4.664074\n6   Popayán 4.742475\n\nsummary(data)\n\n  Localidad            Longitud    \n Length:20          Min.   :4.353  \n Class :character   1st Qu.:4.521  \n Mode  :character   Median :4.754  \n                    Mean   :4.814  \n                    3rd Qu.:5.042  \n                    Max.   :5.577  \n\nstr(data)\n\n'data.frame':   20 obs. of  2 variables:\n $ Localidad: chr  \"Popayán\" \"Popayán\" \"Popayán\" \"Popayán\" ...\n $ Longitud : num  4.77 4.35 4.39 4.81 4.66 ...\n\n# Estadísticas básicas\nmean(data$Longitud)\n\n[1] 4.813807\n\nsd(data$Longitud)\n\n[1] 0.3772862\n\nvar(data$Longitud)\n\n[1] 0.1423449\n\n\n\n\n\n\n\n\n\n\n\n\n\nMedida\nFunción en R\nDescripción\n\n\n\n\nMedia\nmean(x)\nPromedio aritmético\n\n\nMediana\nmedian(x)\nValor central de los datos ordenados\n\n\nModa\nsort(table(x), decreasing = TRUE)[1]\nValor más frecuente\n\n\n\n\nmean(data$Longitud)\n\n[1] 4.813807\n\nmedian(data$Longitud)\n\n[1] 4.754246\n\n\n\n\nSi las longitudes de las hojas son 4.1, 4.4, 4.6, 5.1 y 5.2.\nCalcule cuáles serán las medias y medianas.\n\n\n\n\n\n\n\n\n\n\n\n\nMedida\nFunción en R\nQué representa\n\n\n\n\nRango\nrange(x)\nDiferencia entre máximo y mínimo\n\n\nVarianza\nvar(x)\nPromedio de las desviaciones cuadradas\n\n\nDesviación estándar\nsd(x)\nVariabilidad respecto al promedio\n\n\nError estándar de la media\nsd(x)/sqrt(length(x))\nPrecisión del promedio estimado\n\n\n\nAhora uste podrá a partir de los datos que ya hemos trabajado usar las funciones que hemos colocado en la tabla anterior. Entonces, por ejemplo podría considerar lo siguiente:\n\nrange(data$Longitud)\n\n[1] 4.353044 5.576682\n\nsd(data$Longitud)\n\n[1] 0.3772862\n\n\n¿Qué observa y qué puede analizar teniendo en cuenta los datos pasados?. En biología por ejemplo, la desviación estándar es esencial para comparar poblaciones de diferentes puntos, nichos o localidades.\n\n\n\n\n\nEn biología, los datos rara vez son solo números: representan procesos biológicos, ecológicos o fisiológicos.\nDesde el crecimiento de una planta bajo distintos tratamientos, hasta la diversidad de especies en diferentes hábitats, todos los estudios comparten un punto de partida común: describir, resumir y entender la variabilidad en los datos.\nLa estadística descriptiva busca caracterizar los datos —su tendencia central, dispersión, forma y posibles valores atípicos— antes de aplicar cualquier modelo o prueba inferencial.\nPero para avanzar hacia inferencias válidas (como comparar grupos o correlacionar variables), debemos verificar supuestos fundamentales, especialmente la normalidad y la homogeneidad de varianzas.\n\n\n\n\nAntes de aplicar una prueba, debemos identificar el tipo de variable con la que trabajamos:\n\n\n\n\n\n\n\n\nTipo de variable\nEjemplo biológico\nTipo de análisis\n\n\n\n\nCuantitativa continua\nLongitud de una hoja, peso de un pez, concentración de clorofila\nMedia, varianza, ANOVA, regresión\n\n\nCuantitativa discreta\nNúmero de individuos, semillas germinadas\nConteos, Poisson, Chi-cuadrado\n\n\nCategórica (nominal)\nSexo (macho/hembra), hábitat (bosque/páramo)\nTablas de contingencia, proporciones\n\n\nOrdinal\nGrado de severidad, nivel de floración\nPruebas no paramétricas (Kruskal–Wallis)\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nCaracterística\nPruebas paramétricas\nPruebas no paramétricas\n\n\n\n\nSupuesto principal\nNormalidad de los datos\nNo requieren normalidad\n\n\nTipo de variable\nContinua\nOrdinal o no normal\n\n\nEjemplo\nt-test, ANOVA, regresión lineal\nMann–Whitney, Kruskal–Wallis, Spearman\n\n\nVentajas\nMayor poder estadístico\nMás robustas ante datos sesgados\n\n\nLimitaciones\nSensibles a outliers y asimetrías\nMenos potencia, resultados menos específicos\n\n\n\n\n\n\n\nLa normalidad implica que los datos se distribuyen de manera simétrica alrededor de la media.\nMatemáticamente, la distribución normal (o gaussiana) tiene la forma:\n\\[f(x) = \\frac{1}{\\sigma \\sqrt{2\\pi}} e^{-\\frac{1}{2}\\left(\\frac{x-\\mu}{\\sigma}\\right)^2}\\]\nEn biología, muchas variables aproximan una distribución normal debido al efecto acumulativo de múltiples factores (por ejemplo, tamaño corporal, masa, tasa de crecimiento).\n\n\n\n\n\n\nLos gráficos son la primera herramienta para evaluar visualmente si los datos se comportan como una normal:\n\nHistogramas: deben mostrar una forma de campana.\n\nGráfico QQ (Quantile–Quantile): los puntos deben seguir aproximadamente una línea recta.\n\nBoxplots: ayudan a detectar asimetrías y valores atípicos.\n\n\n# Ejemplo en R\nset.seed(123)\ndatos &lt;- rnorm(30, mean = 10, sd = 2)\n\nhist(datos, main = \"Distribución aproximada normal\", col = \"lightgreen\", border = \"white\")\n\n\n\n\n\n\n\nqqnorm(datos); qqline(datos, col = \"red\", lwd = 2)\n\n\n\n\n\n\n\nboxplot(datos, main = \"Boxplot de ejemplo\", col = \"lightblue\")\n\n\n\n\n\n\n\n\nY ahora estas son algunas de las pruebas de hipótesis más utilizadas.\n\n\n\n\n\n\n\n\n\nPrueba\nHipótesis nula (H_0)\nInterpretación\nUso recomendado\n\n\n\n\nShapiro–Wilk\nLos datos siguen una distribución normal\nSi p &gt; 0.05 → normalidad aceptada\nMuestras pequeñas (&lt;50)\n\n\nKolmogorov–Smirnov\nSimilar a Shapiro, compara con una normal teórica\nMenos sensible en muestras pequeñas\nMuestras grandes (&gt;50)\n\n\nAnderson–Darling / Lilliefors\nAlternativas más potentes para colas asimétricas\nMejor para datos ambientales o ecológicos\nDistribuciones sesgadas\n\n\n\nEn base al ejemplo anterior, ahora puede calcular la normalidad. ¿Qué nos indican estos datos?\n\nshapiro.test(datos)\n\n\n    Shapiro-Wilk normality test\n\ndata:  datos\nW = 0.97894, p-value = 0.7966\n\n\nSi\n\n0.05&gt; : no se rechaza la normalidad. Si &lt;p ≤ 0.05&gt; : los datos difieren significativamente de una normal → considerar transformaciones o pruebas no paramétricas.\n\n\n\n\nAdemás de la normalidad, muchas pruebas requieren que los grupos comparados tengan varianzas similares. Esto garantiza que las diferencias observadas se deban al tratamiento y no a la dispersión desigual de los datos.\n\n\n\n\n\n\n\n\nPrueba\nHipótesis nula (H_0)\nCuándo usar\n\n\n\n\nLevene\nLas varianzas son iguales\nMás robusta, datos no normales\n\n\nBartlett\nLas varianzas son iguales\nSolo para datos normales\n\n\n\n\ngrupo1 &lt;- rnorm(20, 10, 2)\ngrupo2 &lt;- rnorm(20, 11, 2.5)\ngrupo3 &lt;- rnorm(20, 9, 1.8)\n\nlibrary(car)\n\nLoading required package: carData\n\nleveneTest(c(grupo1, grupo2, grupo3),\ngroup = factor(rep(1:3, each = 20)))\n\nLevene's Test for Homogeneity of Variance (center = median)\n      Df F value Pr(&gt;F)\ngroup  2  0.5917 0.5568\n      57               \n\n\n\n\n\nCuando los datos no cumplen normalidad, se pueden aplicar transformaciones para estabilizar la varianza:\n\n\n\nTipo de dato\nTransformación sugerida\n\n\n\n\nConteos\n()\n\n\nProporciones o tasas\n(())\n\n\nDatos sesgados\n(_{10}(x+1)) o ((x+1))\n\n\nDistribuciones exponenciales\n(1/x) o Box–Cox\n\n\n\nEstas transformaciones son comunes en ecología, botánica y fisiología vegetal, donde muchas variables (biomasa, abundancia, tasa de fotosíntesis) presentan sesgo.\n\n#Ejemplo de transformación logarítmica\n\nsesgados &lt;- rexp(30, rate = 0.2)\nhist(log10(sesgados + 1), main = \"Transformación log10(x+1)\", col = \"lightcoral\", border = \"white\")\n\n\n\n\n\n\n\n\n\n\n\nAntes de aplicar una prueba estadística, el biólogo debe responder tres preguntas clave:\n¿Mis datos son normales?\n¿Las varianzas entre grupos son homogéneas?\n¿El tipo de variable y tamaño de muestra justifican un modelo paramétrico o no paramétrico?"
+    "text": "Comprender los fundamentos de la estadística descriptiva aplicada a datos biológicos.\n\nCalcular y visualizar medidas de tendencia central y dispersión.\n\nRealizar pruebas estadísticas básicas (t de Student, ANOVA, Chi-cuadrado, correlación).\n\nInterpretar los resultados en el contexto biológico.\n\n\n\n\n\n¿Qué son variables y tipos de datos?\n¿Cómo crear y manipular dataframes en R?\n\n\n\n\nLa estadística descriptiva resume y organiza la información contenida en los datos.\nEn biología, nos permite caracterizar poblaciones, comparar tratamientos o detectar patrones ecológicos.\n\n\n\n\n\n\n\n\nTipo de medida\nQué indica\nEjemplo biológico\n\n\n\n\nTendencia central\nValor típico o promedio\nLongitud promedio de hojas\n\n\nDispersión\nQué tan variables son los datos\nVariación en peso entre machos y hembras\n\n\nForma de distribución\nCómo se distribuyen los datos\nSi las tallas de una especie son simétricas o sesgadas\n\n\n\nEn biología una de las orientaciones que ustedpodría considerar son por ejemplo:\n\n\n\n\n\n\n\n\nEscala\nEjemplo\nTipo de análisis\n\n\n\n\nMolecular\nExpresión diferencial de genes\nEstadística inferencial (t-test, ANOVA)\n\n\nOrganismo\nMorfometría (longitud, peso, área foliar)\nDescriptiva y comparativa\n\n\nPoblacional\nEstructura de edad o sexo\nFrecuencias, Chi-cuadrado\n\n\nEcológica\nDiversidad de especies o abundancias\nÍndices, ANOVA, correlaciones\n\n\n\n\n\n\n\n# Cargar los datos de ejemplo\ndata &lt;- data.frame(\n  Localidad = rep(c(\"Popayán\", \"Pasto\"), each = 10),\n  Longitud = c(rnorm(10, mean = 4.5, sd = 0.3), rnorm(10, mean = 5.1, sd = 0.4))\n)\n\n# Inspección general\nhead(data)\n\n  Localidad Longitud\n1   Popayán 4.798999\n2   Popayán 4.839958\n3   Popayán 4.848175\n4   Popayán 4.292230\n5   Popayán 4.476502\n6   Popayán 4.427585\n\nsummary(data)\n\n  Localidad            Longitud    \n Length:20          Min.   :3.974  \n Class :character   1st Qu.:4.433  \n Mode  :character   Median :4.764  \n                    Mean   :4.776  \n                    3rd Qu.:4.848  \n                    Max.   :5.898  \n\nstr(data)\n\n'data.frame':   20 obs. of  2 variables:\n $ Localidad: chr  \"Popayán\" \"Popayán\" \"Popayán\" \"Popayán\" ...\n $ Longitud : num  4.8 4.84 4.85 4.29 4.48 ...\n\n# Estadísticas básicas\nmean(data$Longitud)\n\n[1] 4.776359\n\nsd(data$Longitud)\n\n[1] 0.4713925\n\nvar(data$Longitud)\n\n[1] 0.2222108\n\n\n\n\n\n\n\n\n\n\n\n\n\nMedida\nFunción en R\nDescripción\n\n\n\n\nMedia\nmean(x)\nPromedio aritmético\n\n\nMediana\nmedian(x)\nValor central de los datos ordenados\n\n\nModa\nsort(table(x), decreasing = TRUE)[1]\nValor más frecuente\n\n\n\n\nmean(data$Longitud)\n\n[1] 4.776359\n\nmedian(data$Longitud)\n\n[1] 4.764083\n\n\n\n\nSi las longitudes de las hojas son 4.1, 4.4, 4.6, 5.1 y 5.2.\nCalcule cuáles serán las medias y medianas.\n\n\n\n\n\n\n\n\n\n\n\n\nMedida\nFunción en R\nQué representa\n\n\n\n\nRango\nrange(x)\nDiferencia entre máximo y mínimo\n\n\nVarianza\nvar(x)\nPromedio de las desviaciones cuadradas\n\n\nDesviación estándar\nsd(x)\nVariabilidad respecto al promedio\n\n\nError estándar de la media\nsd(x)/sqrt(length(x))\nPrecisión del promedio estimado\n\n\n\nAhora uste podrá a partir de los datos que ya hemos trabajado usar las funciones que hemos colocado en la tabla anterior. Entonces, por ejemplo podría considerar lo siguiente:\n\nrange(data$Longitud)\n\n[1] 3.973873 5.897963\n\nsd(data$Longitud)\n\n[1] 0.4713925\n\n\n¿Qué observa y qué puede analizar teniendo en cuenta los datos pasados?. En biología por ejemplo, la desviación estándar es esencial para comparar poblaciones de diferentes puntos, nichos o localidades.\n\n\n\n\n\nEn biología, los datos rara vez son solo números: representan procesos biológicos, ecológicos o fisiológicos.\nDesde el crecimiento de una planta bajo distintos tratamientos, hasta la diversidad de especies en diferentes hábitats, todos los estudios comparten un punto de partida común: describir, resumir y entender la variabilidad en los datos.\nLa estadística descriptiva busca caracterizar los datos —su tendencia central, dispersión, forma y posibles valores atípicos— antes de aplicar cualquier modelo o prueba inferencial.\nPero para avanzar hacia inferencias válidas (como comparar grupos o correlacionar variables), debemos verificar supuestos fundamentales, especialmente la normalidad y la homogeneidad de varianzas.\n\n\n\n\nAntes de aplicar una prueba, debemos identificar el tipo de variable con la que trabajamos:\n\n\n\n\n\n\n\n\nTipo de variable\nEjemplo biológico\nTipo de análisis\n\n\n\n\nCuantitativa continua\nLongitud de una hoja, peso de un pez, concentración de clorofila\nMedia, varianza, ANOVA, regresión\n\n\nCuantitativa discreta\nNúmero de individuos, semillas germinadas\nConteos, Poisson, Chi-cuadrado\n\n\nCategórica (nominal)\nSexo (macho/hembra), hábitat (bosque/páramo)\nTablas de contingencia, proporciones\n\n\nOrdinal\nGrado de severidad, nivel de floración\nPruebas no paramétricas (Kruskal–Wallis)\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nCaracterística\nPruebas paramétricas\nPruebas no paramétricas\n\n\n\n\nSupuesto principal\nNormalidad de los datos\nNo requieren normalidad\n\n\nTipo de variable\nContinua\nOrdinal o no normal\n\n\nEjemplo\nt-test, ANOVA, regresión lineal\nMann–Whitney, Kruskal–Wallis, Spearman\n\n\nVentajas\nMayor poder estadístico\nMás robustas ante datos sesgados\n\n\nLimitaciones\nSensibles a outliers y asimetrías\nMenos potencia, resultados menos específicos\n\n\n\n\n\n\n\nLa normalidad implica que los datos se distribuyen de manera simétrica alrededor de la media.\nMatemáticamente, la distribución normal (o gaussiana) tiene la forma:\n\\[f(x) = \\frac{1}{\\sigma \\sqrt{2\\pi}} e^{-\\frac{1}{2}\\left(\\frac{x-\\mu}{\\sigma}\\right)^2}\\]\nEn biología, muchas variables aproximan una distribución normal debido al efecto acumulativo de múltiples factores (por ejemplo, tamaño corporal, masa, tasa de crecimiento).\n\n\n\n\n\n\nLos gráficos son la primera herramienta para evaluar visualmente si los datos se comportan como una normal:\n\nHistogramas: deben mostrar una forma de campana.\n\nGráfico QQ (Quantile–Quantile): los puntos deben seguir aproximadamente una línea recta.\n\nBoxplots: ayudan a detectar asimetrías y valores atípicos.\n\n\n# Ejemplo en R\nset.seed(123)\ndatos &lt;- rnorm(30, mean = 10, sd = 2)\n\nhist(datos, main = \"Distribución aproximada normal\", col = \"lightgreen\", border = \"white\")\n\n\n\n\n\n\n\nqqnorm(datos); qqline(datos, col = \"red\", lwd = 2)\n\n\n\n\n\n\n\nboxplot(datos, main = \"Boxplot de ejemplo\", col = \"lightblue\")\n\n\n\n\n\n\n\n\nY ahora estas son algunas de las pruebas de hipótesis más utilizadas.\n\n\n\n\n\n\n\n\n\nPrueba\nHipótesis nula (H_0)\nInterpretación\nUso recomendado\n\n\n\n\nShapiro–Wilk\nLos datos siguen una distribución normal\nSi p &gt; 0.05 → normalidad aceptada\nMuestras pequeñas (&lt;50)\n\n\nKolmogorov–Smirnov\nSimilar a Shapiro, compara con una normal teórica\nMenos sensible en muestras pequeñas\nMuestras grandes (&gt;50)\n\n\nAnderson–Darling / Lilliefors\nAlternativas más potentes para colas asimétricas\nMejor para datos ambientales o ecológicos\nDistribuciones sesgadas\n\n\n\nEn base al ejemplo anterior, ahora puede calcular la normalidad. ¿Qué nos indican estos datos?\n\nshapiro.test(datos)\n\n\n    Shapiro-Wilk normality test\n\ndata:  datos\nW = 0.97894, p-value = 0.7966\n\n\nSi\n\n0.05&gt; : no se rechaza la normalidad. Si &lt;p ≤ 0.05&gt; : los datos difieren significativamente de una normal → considerar transformaciones o pruebas no paramétricas.\n\n\n\n\nAdemás de la normalidad, muchas pruebas requieren que los grupos comparados tengan varianzas similares. Esto garantiza que las diferencias observadas se deban al tratamiento y no a la dispersión desigual de los datos.\n\n\n\n\n\n\n\n\nPrueba\nHipótesis nula (H_0)\nCuándo usar\n\n\n\n\nLevene\nLas varianzas son iguales\nMás robusta, datos no normales\n\n\nBartlett\nLas varianzas son iguales\nSolo para datos normales\n\n\n\n\ngrupo1 &lt;- rnorm(20, 10, 2)\ngrupo2 &lt;- rnorm(20, 11, 2.5)\ngrupo3 &lt;- rnorm(20, 9, 1.8)\n\nlibrary(car)\n\nLoading required package: carData\n\nleveneTest(c(grupo1, grupo2, grupo3),\ngroup = factor(rep(1:3, each = 20)))\n\nLevene's Test for Homogeneity of Variance (center = median)\n      Df F value Pr(&gt;F)\ngroup  2  0.5917 0.5568\n      57               \n\n\n\n\n\nCuando los datos no cumplen normalidad, se pueden aplicar transformaciones para estabilizar la varianza:\n\n\n\nTipo de dato\nTransformación sugerida\n\n\n\n\nConteos\n()\n\n\nProporciones o tasas\n(())\n\n\nDatos sesgados\n(_{10}(x+1)) o ((x+1))\n\n\nDistribuciones exponenciales\n(1/x) o Box–Cox\n\n\n\nEstas transformaciones son comunes en ecología, botánica y fisiología vegetal, donde muchas variables (biomasa, abundancia, tasa de fotosíntesis) presentan sesgo.\n\n#Ejemplo de transformación logarítmica\n\nsesgados &lt;- rexp(30, rate = 0.2)\nhist(log10(sesgados + 1), main = \"Transformación log10(x+1)\", col = \"lightcoral\", border = \"white\")\n\n\n\n\n\n\n\n\n\n\n\nAntes de aplicar una prueba estadística, el biólogo debe responder tres preguntas clave:\n¿Mis datos son normales?\n¿Las varianzas entre grupos son homogéneas?\n¿El tipo de variable y tamaño de muestra justifican un modelo paramétrico o no paramétrico?"
   },
   {
     "objectID": "material_educativo/capitulos_r/Capitulo2.html#casos-de-estudio",
@@ -105,6 +105,34 @@
     "text": "Perfil\n\n\nLínea de Investigación\n\n\nHoja de vida\n\n\nContacto"
   },
   {
+    "objectID": "biosistalks/zamora/index.html#resumen-del-ponente",
+    "href": "biosistalks/zamora/index.html#resumen-del-ponente",
+    "title": "6° BiosisTalks",
+    "section": "Resumen del ponente",
+    "text": "Resumen del ponente\nBenjamín Díaz Zamora cursó estudios de pregrado en Genética y Biotecnología en la Universidad Mayor de San Marcos (UMSM). Realizó una pasantía en el Instituto Nacional de Salud de Perú. Asimismo, realizó pasantías internacionales en el Instituto de Ingeniería Biológica y Médica (PUC-Chile), Universidad Austral de Chile, Dana Farber Cancer Institute (Harvard) y el Instituto Pasteur, Alemania. Actualmente es Biólogo enfocado en Biología sintética realizando investigación sobre expresión de proteínas recombinantes en células procariotas y eucariotas."
+  },
+  {
+    "objectID": "biosistalks/zamora/index.html#enlace-de-reunión",
+    "href": "biosistalks/zamora/index.html#enlace-de-reunión",
+    "title": "6° BiosisTalks",
+    "section": "Enlace de reunión",
+    "text": "Enlace de reunión\nReunión meet"
+  },
+  {
+    "objectID": "biosistalks/zamora/index.html#información-de-los-ponentes",
+    "href": "biosistalks/zamora/index.html#información-de-los-ponentes",
+    "title": "6° BiosisTalks",
+    "section": "Información de los ponentes",
+    "text": "Información de los ponentes\n Benajamín Díaz Zamora"
+  },
+  {
+    "objectID": "biosistalks/zamora/index.html#grupo-de-investigación",
+    "href": "biosistalks/zamora/index.html#grupo-de-investigación",
+    "title": "6° BiosisTalks",
+    "section": "Grupo de Investigación",
+    "text": "Grupo de Investigación\nNo disponible"
+  },
+  {
     "objectID": "biosistalks/kihara/index.html#resumen-del-ponente",
     "href": "biosistalks/kihara/index.html#resumen-del-ponente",
     "title": "3° Webinar NeuroLab",
@@ -142,86 +170,65 @@
   {
     "objectID": "biosistalks/herrera/index.html#resumen-del-ponente",
     "href": "biosistalks/herrera/index.html#resumen-del-ponente",
-    "title": "7° Webinar NeuroLab & 1° BiosisTalks",
+    "title": "1° BiosisTalks",
     "section": "Resumen del ponente",
     "text": "Resumen del ponente\nProfesional en Microbiología Industrial con sólida trayectoria en biología molecular y biología celular, actualmente desempeñándome como Asesor Científico en Sanitas Technologies. Cuento con más de 5 años de experiencia liderando y ejecutando proyectos de investigación aplicada, con enfoque en la optimización de procesos en laboratorios académicos e industriales."
   },
   {
     "objectID": "biosistalks/herrera/index.html#enlace-de-reunión",
     "href": "biosistalks/herrera/index.html#enlace-de-reunión",
-    "title": "7° Webinar NeuroLab & 1° BiosisTalks",
+    "title": "1° BiosisTalks",
     "section": "Enlace de reunión",
     "text": "Enlace de reunión\nReunión meet"
   },
   {
     "objectID": "biosistalks/herrera/index.html#información-de-los-ponentes",
     "href": "biosistalks/herrera/index.html#información-de-los-ponentes",
-    "title": "7° Webinar NeuroLab & 1° BiosisTalks",
+    "title": "1° BiosisTalks",
     "section": "Información de los ponentes",
     "text": "Información de los ponentes\n Diego Fernando Herrera Pineda"
   },
   {
     "objectID": "biosistalks/herrera/index.html#grupo-de-investigación",
     "href": "biosistalks/herrera/index.html#grupo-de-investigación",
-    "title": "7° Webinar NeuroLab & 1° BiosisTalks",
+    "title": "1° BiosisTalks",
     "section": "Grupo de Investigación",
     "text": "Grupo de Investigación\nNo disponible"
   },
   {
-    "objectID": "biosistalks/gallego/index.html#resumen-del-ponente",
-    "href": "biosistalks/gallego/index.html#resumen-del-ponente",
-    "title": "5° Webinar NeuroLab",
+    "objectID": "biosistalks/gilbert/index.html#resumen-del-ponente",
+    "href": "biosistalks/gilbert/index.html#resumen-del-ponente",
+    "title": "8° BiosisTalks",
     "section": "Resumen del ponente",
-    "text": "Resumen del ponente\nLa esclerosis sistémica es una enfermedad autoinmune crónica y de difícil tratamiento. En este Webinar, el Dr. Jesús Dagoberto Gallego presentará un enfoque innovador basado en medicina regenerativa y bioreguladora utilizando plasma rico en plaqueta (PRP) y fármacos multicomponentes como Traumeel y Zeel para modular la inflamación y favorecer la regeneración tisular. Compartirá además los resultados de un caso clínico reconocido internacionalmente, con mejorías notablaes en dolor, movilidad, elasticidad y pigmentación cutánea, resaltando el potencial de estas terapias integrativas en enfermedades autoinmunes"
+    "text": "Resumen del ponente\nScott F. Gilbert is the Howard A. Schneiderman Professor of Biology (emeritus) at Swarthmore College, where he has taught embryology and the history and critiques of biology. He is also a Finland Distinguished Professor (emeritus) at the University of Helsinki. He received his B.A. in both biology and religion from Wesleyan University, and he earned his MA in the history of science and his PhD in biology from the Johns Hopkins University. Scott’s biological research concerns how changes in embryonic development can generate evolutionary novelties, focusing how changes in gene expression create the shell of the turtle and how microbes generate the rumen of cattle. Scott is the co-author of the textbooks Developmental Biology; Ecological Developmental Biology; and Evolution Evolving, as well as Fear, Wonder, and Science in the Age of Reproductive Biotechnology, a trade-book concerning both the scientific and emotional aspects of reproductive biotechnology. Scott has received several awards for his work in evolutionary developmental biology, including a John Simon Guggenheim grant, the Kowalevsky Prize in Evolutionary Developmental Biology, and the Service Award from the Pan-American Society for Evolutionary Developmental Biology."
   },
   {
-    "objectID": "biosistalks/gallego/index.html#enlace-de-reunión",
-    "href": "biosistalks/gallego/index.html#enlace-de-reunión",
-    "title": "5° Webinar NeuroLab",
+    "objectID": "biosistalks/gilbert/index.html#enlace-de-reunión",
+    "href": "biosistalks/gilbert/index.html#enlace-de-reunión",
+    "title": "8° BiosisTalks",
     "section": "Enlace de reunión",
-    "text": "Enlace de reunión\nCharla presencial"
+    "text": "Enlace de reunión\nEsta charla se encuentra dividida en dos archivos de grabación, puede consultarlos en el siguiente orden.\nReunión meet - Parte I\nReunión meet - Parte II"
   },
   {
-    "objectID": "biosistalks/gallego/index.html#información-de-los-ponentes",
-    "href": "biosistalks/gallego/index.html#información-de-los-ponentes",
-    "title": "5° Webinar NeuroLab",
+    "objectID": "biosistalks/gilbert/index.html#grabación-de-la-charla",
+    "href": "biosistalks/gilbert/index.html#grabación-de-la-charla",
+    "title": "8° BiosisTalks",
+    "section": "Grabación de la charla",
+    "text": "Grabación de la charla\n¿Te perdiste la charla?"
+  },
+  {
+    "objectID": "biosistalks/gilbert/index.html#información-de-los-ponentes",
+    "href": "biosistalks/gilbert/index.html#información-de-los-ponentes",
+    "title": "8° BiosisTalks",
     "section": "Información de los ponentes",
-    "text": "Información de los ponentes\nNo disponible"
+    "text": "Información de los ponentes\n Google Scholar\nWeb personal"
   },
   {
-    "objectID": "biosistalks/gallego/index.html#grupo-de-investigación",
-    "href": "biosistalks/gallego/index.html#grupo-de-investigación",
-    "title": "5° Webinar NeuroLab",
+    "objectID": "biosistalks/gilbert/index.html#grupo-de-investigación",
+    "href": "biosistalks/gilbert/index.html#grupo-de-investigación",
+    "title": "8° BiosisTalks",
     "section": "Grupo de Investigación",
-    "text": "Grupo de Investigación\nNo disponible"
-  },
-  {
-    "objectID": "biosistalks/biosistalks.html",
-    "href": "biosistalks/biosistalks.html",
-    "title": "Biosis Talks",
-    "section": "",
-    "text": "Aquí podrás revisar el calendario histórico de todas las charlas que se han abordado en el marco de Biosis Talks y junto con los Webinar NeuroLabs del Semillero de Biología del Desarrollo y Plasticidad Neural - Bioden\n\n\n\n\n\n\n\n\n\n\n2° BiosisTalks\n\n\n\nDivulgación\n\nciencia\n\nevolución\n\nbiología\n\nBIOCORE\n\n\n\n\nFeb 16, 2026\n\n\n\n\n\n\n\n\n\n\n\n\n\n7° Webinar NeuroLab & 1° BiosisTalks\n\n\n\nmicrobiología\n\nbiotecnología\n\naplicación\n\nreal\n\nlaboratorio\n\n\n\n\nFeb 9, 2026\n\n\n\n\n\n\n\n\n\n\n\n\n\n6° Webinar NeuroLab\n\n\n\nBidens\n\nagroecología\n\nmaíz\n\ncultivo\n\nSchinus\n\n\n\n\nNov 26, 2025\n\n\n\n\n\n\n\n\n\n\n\n\n\n5° Webinar NeuroLab\n\n\n\nesclerosis\n\nsistemica\n\nmedicina\n\nesclerodermia\n\nfuturo\n\n\n\n\nNov 19, 2025\n\n\n\n\n\n\n\n\n\n\n\n\n\n4° Webinar NeuroLab\n\n\n\nethiological\n\nsignatures\n\nneural\n\ndormancy\n\ncircuitry\n\n\n\n\nNov 17, 2025\n\n\n\n\n\n\n\n\n\n\n\n\n\n3° Webinar NeuroLab\n\n\n\nRNA\n\nAlphaFold\n\nKihara\n\nModelling\n\nBiomolecular\n\n\n\n\nNov 7, 2025\n\n\n\n\n\n\n\n\n\n\n\n\n\n2° Webinar NeuroLab\n\n\n\nZanthoxylum\n\nagonistas\n\nreceptor\n\nextracto\n\nmetcore\n\n\n\n\nSep 30, 2025\n\n\n\n\n\n\n\n\n\n\n\n\n\n1° Webinar NeuroLab\n\n\n\ninvestigación\n\ndescubrimientos\n\nincertidumbre\n\ndudas\n\ncélulas\n\n\n\n\nSep 22, 2025\n\n\n\n\n\n\nNo matching items"
-  },
-  {
-    "objectID": "biosistalks/alissen/index.html#resumen-del-ponente",
-    "href": "biosistalks/alissen/index.html#resumen-del-ponente",
-    "title": "1° Webinar NeuroLab",
-    "section": "Resumen del ponente",
-    "text": "Resumen del ponente\nAlissen Haro es una bióloga graduada de la Universidad San Francisco de Quito, Ecuador. Actualmente, se encuentra realizando sus estudios de maestría en Biomedicina Molecular en la Universidad Autónoma de Madrid. Forma parte del equipo Biomedical Discovery de la Universidad San Francisco de Quito, liderado por PhD. Andrés Caicedo. Ha participado en investigaciones sobre el modelamiento de proteínas mitocondriales con mutaciones potencialmente relacionadas con la longevidad celular, y en estudios sobre el uso de mitocondrias como “living drugs” para terapias de regeneración celular."
-  },
-  {
-    "objectID": "biosistalks/alissen/index.html#enlace-de-reunión",
-    "href": "biosistalks/alissen/index.html#enlace-de-reunión",
-    "title": "1° Webinar NeuroLab",
-    "section": "Enlace de reunión",
-    "text": "Enlace de reunión\nReunión meet"
-  },
-  {
-    "objectID": "biosistalks/alissen/index.html#información-del-ponente",
-    "href": "biosistalks/alissen/index.html#información-del-ponente",
-    "title": "1° Webinar NeuroLab",
-    "section": "Información del ponente",
-    "text": "Información del ponente\n Alissen Haro\n\nGrupo de Investigación"
+    "text": "Grupo de Investigación\nHoward A. Schneiderman ‘48’"
   },
   {
     "objectID": "biosistalks/daniel/index.html#resumen-del-ponente",
@@ -250,6 +257,188 @@
     "title": "2° Webinar NeuroLab",
     "section": "Grupo de Investigación",
     "text": "Grupo de Investigación\nGrupo de Investigación en Neurociencias - Universidad Nacional de Colombia\nGrupo de investigación en Muerte celular\nCentro de metabolómica MetCore"
+  },
+  {
+    "objectID": "biosistalks/caceres/index.html#resumen-del-ponente",
+    "href": "biosistalks/caceres/index.html#resumen-del-ponente",
+    "title": "4° BiosisTalks",
+    "section": "Resumen del ponente",
+    "text": "Resumen del ponente\nLicenciado en Farmacia por la Universidad de Granada con Máster en Bioinformática y Bioestadística por la Universidad de Cataluña. Actualmente se desempeña como bioinformático y científico de datos en el Centro Naciona de Investigaciones Oncológicas (CNIO) en España."
+  },
+  {
+    "objectID": "biosistalks/caceres/index.html#enlace-de-reunión",
+    "href": "biosistalks/caceres/index.html#enlace-de-reunión",
+    "title": "4° BiosisTalks",
+    "section": "Enlace de reunión",
+    "text": "Enlace de reunión\nReunión meet"
+  },
+  {
+    "objectID": "biosistalks/caceres/index.html#información-de-los-ponentes",
+    "href": "biosistalks/caceres/index.html#información-de-los-ponentes",
+    "title": "4° BiosisTalks",
+    "section": "Información de los ponentes",
+    "text": "Información de los ponentes\n Google Scholar\n Daviv Cáceres Gallardo\nWebsite personal"
+  },
+  {
+    "objectID": "biosistalks/caceres/index.html#grupo-de-investigación",
+    "href": "biosistalks/caceres/index.html#grupo-de-investigación",
+    "title": "4° BiosisTalks",
+    "section": "Grupo de Investigación",
+    "text": "Grupo de Investigación\nCentro Nacional de Investigaciones Oncológicas (CNIO)"
+  },
+  {
+    "objectID": "biosistalks/biosistalks.html",
+    "href": "biosistalks/biosistalks.html",
+    "title": "Biosis Talks",
+    "section": "",
+    "text": "Aquí podrás revisar el calendario histórico de todas las charlas que se han abordado en el marco de Biosis Talks y junto con los Webinar NeuroLabs del Semillero de Biología del Desarrollo y Plasticidad Neural - Bioden\n\n\n\n\n\n\n\n\n\n\n8° BiosisTalks\n\n\n\nethiological\n\nsignatures\n\nneural\n\ndormancy\n\ncircuitry\n\n\n\n\nApr 21, 2026\n\n\n\n\n\n\n\n\n\n\n\n\n\n7° BiosisTalks\n\n\n\nethiological\n\nsignatures\n\nneural\n\ndormancy\n\ncircuitry\n\n\n\n\nApr 15, 2026\n\n\n\n\n\n\n\n\n\n\n\n\n\n6° BiosisTalks\n\n\n\nmicrocítico\n\ncáncer\n\nbioinformática\n\nRNA-seq\n\nmacrófagos\n\n\n\n\nMar 18, 2026\n\n\n\n\n\n\n\n\n\n\n\n\n\n5° BiosisTalks\n\n\n\nMAEs\n\ncáncer\n\nradioterapia\n\nBioingeniería\n\n\n\n\nMar 14, 2026\n\n\n\n\n\n\n\n\n\n\n\n\n\n4° BiosisTalks\n\n\n\nmicrocítico\n\ncáncer\n\nbioinformática\n\nRNA-seq\n\nmacrófagos\n\n\n\n\nMar 3, 2026\n\n\n\n\n\n\n\n\n\n\n\n\n\n3° BiosisTalks\n\n\n\nhuésped-microbio\n\nciencia\n\ncáncer\n\nbiología\n\nmicrobiota\n\n\n\n\nFeb 26, 2026\n\n\n\n\n\n\n\n\n\n\n\n\n\n2° BiosisTalks\n\n\n\nDivulgación\n\nciencia\n\nevolución\n\nbiología\n\nBIOCORE\n\n\n\n\nFeb 16, 2026\n\n\n\n\n\n\n\n\n\n\n\n\n\n1° BiosisTalks\n\n\n\nmicrobiología\n\nbiotecnología\n\naplicación\n\nreal\n\nlaboratorio\n\n\n\n\nFeb 9, 2026\n\n\n\n\n\n\n\n\n\n\n\n\n\n7° Webinar NeuroLab\n\n\n\nBidens\n\nagroecología\n\nmaíz\n\ncultivo\n\nSchinus\n\n\n\n\nNov 26, 2025\n\n\n\n\n\n\n\n\n\n\n\n\n\n6° Webinar NeuroLab\n\n\n\nesclerosis\n\nsistemica\n\nmedicina\n\nesclerodermia\n\nfuturo\n\n\n\n\nNov 19, 2025\n\n\n\n\n\n\n\n\n\n\n\n\n\n5° Webinar NeuroLab\n\n\n\nethiological\n\nsignatures\n\nneural\n\ndormancy\n\ncircuitry\n\n\n\n\nNov 17, 2025\n\n\n\n\n\n\n\n\n\n\n\n\n\n4° Webinar NeuroLab\n\n\n\nextracto\n\nplantas\n\nfitoquímica\n\nfarmacología\n\nquimiometría\n\n\n\n\nNov 10, 2025\n\n\n\n\n\n\n\n\n\n\n\n\n\n3° Webinar NeuroLab\n\n\n\nRNA\n\nAlphaFold\n\nKihara\n\nModelling\n\nBiomolecular\n\n\n\n\nNov 7, 2025\n\n\n\n\n\n\n\n\n\n\n\n\n\n2° Webinar NeuroLab\n\n\n\nZanthoxylum\n\nagonistas\n\nreceptor\n\nextracto\n\nmetcore\n\n\n\n\nSep 30, 2025\n\n\n\n\n\n\n\n\n\n\n\n\n\n1° Webinar NeuroLab\n\n\n\ninvestigación\n\ndescubrimientos\n\nincertidumbre\n\ndudas\n\ncélulas\n\n\n\n\nSep 22, 2025\n\n\n\n\n\n\nNo matching items"
+  },
+  {
+    "objectID": "biosistalks/aguirre/index.html#resumen-del-ponente",
+    "href": "biosistalks/aguirre/index.html#resumen-del-ponente",
+    "title": "4° Webinar NeuroLab",
+    "section": "Resumen del ponente",
+    "text": "Resumen del ponente\nÓscar A. Sánchez es profesor de la Universidad Veracruzana, especializado en plantas medicinales con propiedades antiproliferativas y antimicrobianas. Es miembro del Sistema Nacional de Investigadores (SECIHTI) y secretario del Comité Científico del Congreso Latinoamericano de Plantas Medicinales (COLAPLAMED), evento que se celebra anualmente en distintos países de Latinoamérica. Además, colabora con el Boletín Latinoamericano de Plantas Medicinales y Aromáticas (BLACPMA) y mantiene vínculos académicos con instituciones de Ecuador, Bolivia y Perú."
+  },
+  {
+    "objectID": "biosistalks/aguirre/index.html#enlace-de-reunión",
+    "href": "biosistalks/aguirre/index.html#enlace-de-reunión",
+    "title": "4° Webinar NeuroLab",
+    "section": "Enlace de reunión",
+    "text": "Enlace de reunión\nReunión meet"
+  },
+  {
+    "objectID": "biosistalks/aguirre/index.html#grabación-de-la-charla",
+    "href": "biosistalks/aguirre/index.html#grabación-de-la-charla",
+    "title": "4° Webinar NeuroLab",
+    "section": "Grabación de la charla",
+    "text": "Grabación de la charla\n¿Te perdiste la charla?"
+  },
+  {
+    "objectID": "biosistalks/aguirre/index.html#información-de-los-ponentes",
+    "href": "biosistalks/aguirre/index.html#información-de-los-ponentes",
+    "title": "4° Webinar NeuroLab",
+    "section": "Información de los ponentes",
+    "text": "Información de los ponentes\n Google Scholar\n Óscar A. Sánchez Aguirre"
+  },
+  {
+    "objectID": "biosistalks/aguirre/index.html#grupo-de-investigación",
+    "href": "biosistalks/aguirre/index.html#grupo-de-investigación",
+    "title": "4° Webinar NeuroLab",
+    "section": "Grupo de Investigación",
+    "text": "Grupo de Investigación"
+  },
+  {
+    "objectID": "biosistalks/alissen/index.html#resumen-del-ponente",
+    "href": "biosistalks/alissen/index.html#resumen-del-ponente",
+    "title": "1° Webinar NeuroLab",
+    "section": "Resumen del ponente",
+    "text": "Resumen del ponente\nAlissen Haro es una bióloga graduada de la Universidad San Francisco de Quito, Ecuador. Actualmente, se encuentra realizando sus estudios de maestría en Biomedicina Molecular en la Universidad Autónoma de Madrid. Forma parte del equipo Biomedical Discovery de la Universidad San Francisco de Quito, liderado por PhD. Andrés Caicedo. Ha participado en investigaciones sobre el modelamiento de proteínas mitocondriales con mutaciones potencialmente relacionadas con la longevidad celular, y en estudios sobre el uso de mitocondrias como “living drugs” para terapias de regeneración celular."
+  },
+  {
+    "objectID": "biosistalks/alissen/index.html#enlace-de-reunión",
+    "href": "biosistalks/alissen/index.html#enlace-de-reunión",
+    "title": "1° Webinar NeuroLab",
+    "section": "Enlace de reunión",
+    "text": "Enlace de reunión\nReunión meet"
+  },
+  {
+    "objectID": "biosistalks/alissen/index.html#información-del-ponente",
+    "href": "biosistalks/alissen/index.html#información-del-ponente",
+    "title": "1° Webinar NeuroLab",
+    "section": "Información del ponente",
+    "text": "Información del ponente\n Alissen Haro\n\nGrupo de Investigación"
+  },
+  {
+    "objectID": "biosistalks/caballero/index.html#resumen-del-ponente",
+    "href": "biosistalks/caballero/index.html#resumen-del-ponente",
+    "title": "5° BiosisTalks",
+    "section": "Resumen del ponente",
+    "text": "Resumen del ponente\nCon experiencia en neuroingeniería, neurotecnología e investigación traslacional. Actualmente realiza su doctorado en el Reino Unido enfocado en factores humanos y diseño de tecnologías para a salud aplicadas a radioterapia Upright. Cuenca con una Maestría Erasmus Mundus en Bioingenieríapara Medicina de Precisión y formación académica en Perú, Canadá y Europa."
+  },
+  {
+    "objectID": "biosistalks/caballero/index.html#enlace-de-reunión",
+    "href": "biosistalks/caballero/index.html#enlace-de-reunión",
+    "title": "5° BiosisTalks",
+    "section": "Enlace de reunión",
+    "text": "Enlace de reunión\nReunión meet"
+  },
+  {
+    "objectID": "biosistalks/caballero/index.html#información-de-los-ponentes",
+    "href": "biosistalks/caballero/index.html#información-de-los-ponentes",
+    "title": "5° BiosisTalks",
+    "section": "Información de los ponentes",
+    "text": "Información de los ponentes\n Google Scholar\n Daviv Cáceres Gallardo"
+  },
+  {
+    "objectID": "biosistalks/caballero/index.html#grupo-de-investigación",
+    "href": "biosistalks/caballero/index.html#grupo-de-investigación",
+    "title": "5° BiosisTalks",
+    "section": "Grupo de Investigación",
+    "text": "Grupo de Investigación\nNo disponible"
+  },
+  {
+    "objectID": "biosistalks/chirinos/index.html#resumen-del-ponente",
+    "href": "biosistalks/chirinos/index.html#resumen-del-ponente",
+    "title": "7° BiosisTalks",
+    "section": "Resumen del ponente",
+    "text": "Resumen del ponente\nDoctora en Ciencias Biológicas. Cuenta con múltiples maestrías y posgrados en CTS, bioinformática, Biología molecular, docencia y emprendimiento. Investigadora CONCYTEC con publicaciones en WOS, Scopus y Scielo. Divulgadora científica, directora de revista, autora de materiales infantiles traducidos al quechua, y voluntaria en el programa Ask A Biologist de Arizona State University"
+  },
+  {
+    "objectID": "biosistalks/chirinos/index.html#enlace-de-reunión",
+    "href": "biosistalks/chirinos/index.html#enlace-de-reunión",
+    "title": "7° BiosisTalks",
+    "section": "Enlace de reunión",
+    "text": "Enlace de reunión\nReunión meet"
+  },
+  {
+    "objectID": "biosistalks/chirinos/index.html#grabación-de-la-charla",
+    "href": "biosistalks/chirinos/index.html#grabación-de-la-charla",
+    "title": "7° BiosisTalks",
+    "section": "Grabación de la charla",
+    "text": "Grabación de la charla\n¿Te perdiste la charla?"
+  },
+  {
+    "objectID": "biosistalks/chirinos/index.html#información-de-los-ponentes",
+    "href": "biosistalks/chirinos/index.html#información-de-los-ponentes",
+    "title": "7° BiosisTalks",
+    "section": "Información de los ponentes",
+    "text": "Información de los ponentes\n Google Scholar\n Daviv Cáceres Gallardo\nWeb personal"
+  },
+  {
+    "objectID": "biosistalks/chirinos/index.html#grupo-de-investigación",
+    "href": "biosistalks/chirinos/index.html#grupo-de-investigación",
+    "title": "7° BiosisTalks",
+    "section": "Grupo de Investigación",
+    "text": "Grupo de Investigación\nInstituto de Genética Barbara McClintock-IGBM"
+  },
+  {
+    "objectID": "biosistalks/gallego/index.html#resumen-del-ponente",
+    "href": "biosistalks/gallego/index.html#resumen-del-ponente",
+    "title": "6° Webinar NeuroLab",
+    "section": "Resumen del ponente",
+    "text": "Resumen del ponente\nLa esclerosis sistémica es una enfermedad autoinmune crónica y de difícil tratamiento. En este Webinar, el Dr. Jesús Dagoberto Gallego presentará un enfoque innovador basado en medicina regenerativa y bioreguladora utilizando plasma rico en plaqueta (PRP) y fármacos multicomponentes como Traumeel y Zeel para modular la inflamación y favorecer la regeneración tisular. Compartirá además los resultados de un caso clínico reconocido internacionalmente, con mejorías notablaes en dolor, movilidad, elasticidad y pigmentación cutánea, resaltando el potencial de estas terapias integrativas en enfermedades autoinmunes"
+  },
+  {
+    "objectID": "biosistalks/gallego/index.html#enlace-de-reunión",
+    "href": "biosistalks/gallego/index.html#enlace-de-reunión",
+    "title": "6° Webinar NeuroLab",
+    "section": "Enlace de reunión",
+    "text": "Enlace de reunión\nCharla presencial"
+  },
+  {
+    "objectID": "biosistalks/gallego/index.html#información-de-los-ponentes",
+    "href": "biosistalks/gallego/index.html#información-de-los-ponentes",
+    "title": "6° Webinar NeuroLab",
+    "section": "Información de los ponentes",
+    "text": "Información de los ponentes\nNo disponible"
+  },
+  {
+    "objectID": "biosistalks/gallego/index.html#grupo-de-investigación",
+    "href": "biosistalks/gallego/index.html#grupo-de-investigación",
+    "title": "6° Webinar NeuroLab",
+    "section": "Grupo de Investigación",
+    "text": "Grupo de Investigación\nNo disponible"
   },
   {
     "objectID": "biosistalks/guarnizo/index.html#resumen-del-ponente",
@@ -289,58 +478,93 @@
   {
     "objectID": "biosistalks/huaman/index.html#resumen-del-ponente",
     "href": "biosistalks/huaman/index.html#resumen-del-ponente",
-    "title": "6° Webinar NeuroLab",
+    "title": "7° Webinar NeuroLab",
     "section": "Resumen del ponente",
     "text": "Resumen del ponente\nLa investigación analiza el efecto alelopático de un extracto vegetal sobre una maleza que compite intensamente en el cultivo de maíz. El maíz muetra una respuesta inicial favorable, mientras que la maleza evidencia una inhibición notable y un comportamiento germinativo irregular asociado a la variabilidad de sus semillas y a la complejidad química del extracto."
   },
   {
     "objectID": "biosistalks/huaman/index.html#enlace-de-reunión",
     "href": "biosistalks/huaman/index.html#enlace-de-reunión",
-    "title": "6° Webinar NeuroLab",
+    "title": "7° Webinar NeuroLab",
     "section": "Enlace de reunión",
     "text": "Enlace de reunión\nReunión meet"
   },
   {
     "objectID": "biosistalks/huaman/index.html#información-de-los-ponentes",
     "href": "biosistalks/huaman/index.html#información-de-los-ponentes",
-    "title": "6° Webinar NeuroLab",
+    "title": "7° Webinar NeuroLab",
     "section": "Información de los ponentes",
     "text": "Información de los ponentes\n Joselyn Huaman Anyaipoma"
   },
   {
     "objectID": "biosistalks/huaman/index.html#grupo-de-investigación",
     "href": "biosistalks/huaman/index.html#grupo-de-investigación",
-    "title": "6° Webinar NeuroLab",
+    "title": "7° Webinar NeuroLab",
     "section": "Grupo de Investigación",
     "text": "Grupo de Investigación\nNo disponible"
   },
   {
     "objectID": "biosistalks/meiselman/index.html#resumen-del-ponente",
     "href": "biosistalks/meiselman/index.html#resumen-del-ponente",
-    "title": "4° Webinar NeuroLab",
+    "title": "5° Webinar NeuroLab",
     "section": "Resumen del ponente",
     "text": "Resumen del ponente\nDaisuke Kihara es un biólogo molecular y neurobiólogo con más de diez años de experiencia especializado en la regulación endocrina y neuroendocrina del comportamiento y la fisiología. Se formó en Northwestern University trabajando con biología del cáncer, realizó su doctorado en UC Riverside investigando cómo hormonas del desarrollo regulan la actividad neuronal y la reproducción en Drosophila melanogaster, y en su posdoctorado en Cornell University identificó neuronas sensibles al frío (DN3) que controlan la dispausa reproductiva, aportando un modelo clave para entender la dormancia reproductiva"
   },
   {
     "objectID": "biosistalks/meiselman/index.html#enlace-de-reunión",
     "href": "biosistalks/meiselman/index.html#enlace-de-reunión",
-    "title": "4° Webinar NeuroLab",
+    "title": "5° Webinar NeuroLab",
     "section": "Enlace de reunión",
     "text": "Enlace de reunión\nReunión meet"
   },
   {
+    "objectID": "biosistalks/meiselman/index.html#grabación-de-la-charla",
+    "href": "biosistalks/meiselman/index.html#grabación-de-la-charla",
+    "title": "5° Webinar NeuroLab",
+    "section": "Grabación de la charla",
+    "text": "Grabación de la charla\n¿Te perdiste la charla?"
+  },
+  {
     "objectID": "biosistalks/meiselman/index.html#información-de-los-ponentes",
     "href": "biosistalks/meiselman/index.html#información-de-los-ponentes",
-    "title": "4° Webinar NeuroLab",
+    "title": "5° Webinar NeuroLab",
     "section": "Información de los ponentes",
     "text": "Información de los ponentes\n Google Scholar\n Matthew Meiselman"
   },
   {
     "objectID": "biosistalks/meiselman/index.html#grupo-de-investigación",
     "href": "biosistalks/meiselman/index.html#grupo-de-investigación",
-    "title": "4° Webinar NeuroLab",
+    "title": "5° Webinar NeuroLab",
     "section": "Grupo de Investigación",
     "text": "Grupo de Investigación\nMeiselman Lab - Univerisity of Nevada (UNLV)"
+  },
+  {
+    "objectID": "biosistalks/zegarra/index.html#resumen-del-ponente",
+    "href": "biosistalks/zegarra/index.html#resumen-del-ponente",
+    "title": "3° BiosisTalks",
+    "section": "Resumen del ponente",
+    "text": "Resumen del ponente\nProfesor asistente en la Universidad de Virginia, donde investiga como las interacciones huésped-microbio influyen en la autoinmunidad. Obtuvo su doctorado en inmunología en la Universidad de Yale y realizó sus estudios en Farmacia y Bioquímica en Lima, Perú. Realizó su formación posdoctoral en el Baylor Collegue of Medicine y en el Centro Oncológico Memorial Sioan Kattering, estudiando el papel de la microbiota en el cáncer y las enfermedades autoinmunes. Su investigación se centra en la relación entre la microbiota intestinal, la dieta y la autoinmunidad, y su laboratorio cuenta con financiación institucional y una beca K99/R00 del NIH/NIAMS."
+  },
+  {
+    "objectID": "biosistalks/zegarra/index.html#enlace-de-reunión",
+    "href": "biosistalks/zegarra/index.html#enlace-de-reunión",
+    "title": "3° BiosisTalks",
+    "section": "Enlace de reunión",
+    "text": "Enlace de reunión\nReunión meet"
+  },
+  {
+    "objectID": "biosistalks/zegarra/index.html#información-de-los-ponentes",
+    "href": "biosistalks/zegarra/index.html#información-de-los-ponentes",
+    "title": "3° BiosisTalks",
+    "section": "Información de los ponentes",
+    "text": "Información de los ponentes\n Google Scholar\n Daniel F. Zegarra-Ruiz, PhD\nWebsite personal"
+  },
+  {
+    "objectID": "biosistalks/zegarra/index.html#grupo-de-investigación",
+    "href": "biosistalks/zegarra/index.html#grupo-de-investigación",
+    "title": "3° BiosisTalks",
+    "section": "Grupo de Investigación",
+    "text": "Grupo de Investigación\nZegarra-Ruiz Lab"
   },
   {
     "objectID": "index.html",

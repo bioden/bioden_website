@@ -1,0 +1,59 @@
+---
+title: "7° BiosisTalks"
+pagetitle:  "El científico 4.0 bioinformática aplicada desde la educación hasta la biología del desarrollo"
+author: "Michelle Chirinos-Arias, PhD"
+
+lang: es
+
+date: 2026-04-15
+
+image: unnamed.png
+
+citation: false
+
+categories: 
+  - ethiological
+  - signatures
+  - neural 
+  - dormancy
+  - circuitry
+
+about:
+  id: biosistalks
+  template: jolla
+  image-shape: rectangle
+comments: false
+---
+
+::: {#biosistalks}
+:::
+
+::: {style="text-align: justify;"}
+## Resumen del ponente
+
+Doctora en Ciencias Biológicas. Cuenta con múltiples maestrías y posgrados en CTS, bioinformática, Biología molecular, docencia y emprendimiento. Investigadora CONCYTEC con publicaciones en WOS, Scopus y Scielo. Divulgadora científica, directora de revista, autora de materiales infantiles traducidos al quechua, y voluntaria en el programa Ask A Biologist de Arizona State University
+
+## Enlace de reunión
+
+[Reunión meet](meet.google.com/chd-nxqa-ouu )
+
+## Grabación de la charla
+
+[¿Te perdiste la charla?](https://drive.google.com/file/d/1_mcMs07IfxcsH7FFuy515MetQel7-f3L/view?usp=sharing)
+
+## Información de los ponentes
+
+<i class="bi bi-book"></i> <a href="https://scholar.google.com/citations?user=tvstoBEAAAAJ&hl=en">Google Scholar</a>
+
+<i class="bi bi-linkedin"></i> [Daviv Cáceres Gallardo](linkedin.com/in/atgmichelle)
+
+[Web personal](https://atgmichelle.xyz/)
+
+## Grupo de Investigación
+
+[Instituto de Genética Barbara McClintock-IGBM](https://www.igbmgenetica.org/atgmichelle#:~:text=Chirinos%2DArias,aceleradora%20de%20startups%20en%20biotecnolog%C3%ADa.)
+:::
+
+
+
+

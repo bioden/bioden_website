@@ -1,0 +1,57 @@
+---
+title: "8° BiosisTalks"
+pagetitle:  "A deeper understanding of biological principles through the integrative lens of EcoEvoDevo"
+author: "Scott Frederick Gilbert, PhD"
+
+lang: en
+
+date: 2026-04-21
+
+image: unnamed.png
+
+citation: false
+
+categories: 
+  - ethiological
+  - signatures
+  - neural 
+  - dormancy
+  - circuitry
+
+about:
+  id: biosistalks
+  template: jolla
+  image-shape: rectangle
+comments: false
+---
+
+::: {#biosistalks}
+:::
+
+::: {style="text-align: justify;"}
+## Resumen del ponente
+
+Scott F. Gilbert is the Howard A. Schneiderman Professor of Biology (emeritus) at Swarthmore College, where he has taught embryology and the history and critiques of biology. He is also a Finland Distinguished Professor (emeritus) at the University of Helsinki. He received his B.A. in both biology and religion from Wesleyan University, and he earned his MA in the history of science and his PhD in biology from the Johns Hopkins University. Scott’s biological research concerns how changes in embryonic development can generate evolutionary novelties, focusing how changes in gene expression create the shell of the turtle and how microbes generate the rumen of cattle. Scott is the co-author of the textbooks Developmental Biology; Ecological Developmental Biology; and Evolution Evolving, as well as Fear, Wonder, and Science in the Age of Reproductive Biotechnology, a trade-book concerning both the scientific and emotional aspects of reproductive biotechnology. Scott has received several awards for his work in evolutionary developmental biology, including a John Simon Guggenheim grant, the Kowalevsky Prize in Evolutionary Developmental Biology, and the Service Award from the Pan-American Society for Evolutionary Developmental Biology.
+
+## Enlace de reunión
+Esta charla se encuentra dividida en dos archivos de grabación, puede consultarlos en el siguiente orden.
+
+
+[Reunión meet - Parte I](https://drive.google.com/file/d/1G74ZsZLSrdZfKMZy9u24p_0i8gq64mlv/view?usp=sharing)
+
+[Reunión meet - Parte II](https://drive.google.com/file/d/1yvv2N_4XZpTNxzKbLtm8Lcb1Juj5Axyx/view?usp=sharing)
+
+## Grabación de la charla
+
+[¿Te perdiste la charla?](https://drive.google.com/file/d/1_mcMs07IfxcsH7FFuy515MetQel7-f3L/view?usp=sharing)
+
+## Información de los ponentes
+
+<i class="bi bi-book"></i> <a href="https://scholar.google.com/citations?user=jpMLyFYAAAAJ&hl=en">Google Scholar</a>
+
+[Web personal](https://www.swarthmore.edu/profile/scott-gilbert)
+
+## Grupo de Investigación
+
+[Howard A. Schneiderman '48'](https://www.swarthmore.edu/profile/scott-gilbert)
+:::

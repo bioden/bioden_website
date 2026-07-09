@@ -1,0 +1,54 @@
+---
+title: "4° BiosisTalks"
+pagetitle:  "Caracterización del microambietne tumoral en cáncer de pulmón no microcítico mediante single-cell RNA-seq: Interacción entre macrófagos alveolares y fibroblastos"
+author: "David Cáceres Gallardo"
+
+lang: es
+
+date: 2026-03-03
+
+image: unnamed.png
+
+citation: false
+
+categories: 
+  - microcítico
+  - cáncer
+  - bioinformática 
+  - RNA-seq
+  - macrófagos
+
+about:
+  id: biosistalks
+  template: jolla
+  image-shape: rectangle
+comments: false
+---
+
+::: {#biosistalks}
+:::
+
+::: {style="text-align: justify;"}
+### Certificados de asistencia
+[Descarga tu certificado](https://drive.google.com/file/d/17ooGJaqh2GuiYccH3U8tgIMRx4Vs5PV2/view?usp=drive_link)
+
+## Resumen del ponente
+
+Licenciado en Farmacia por la Universidad de Granada con Máster en Bioinformática y Bioestadística por la Universidad de Cataluña. Actualmente se desempeña como bioinformático y científico de datos en el Centro Naciona de Investigaciones Oncológicas (CNIO) en España.
+
+## Enlace de reunión
+
+[Reunión meet](meet.google.com/jjs-jcmp-btn)
+
+## Información de los ponentes
+
+<i class="bi bi-book"></i> <a href="https://scholar.google.com/citations?user=ZJDbSHYAAAAJ&hl=en">Google Scholar</a>
+
+<i class="bi bi-linkedin"></i> [Daviv Cáceres Gallardo](linkedin.com/in/ACoAADZ_VGcBkMeEfDdp5Wmyl3pNnbN8D9xAu80?skipRedirect=true)
+
+[Website personal](https://casanovaacebeslab.com/members/david-caceres-gallardo/)
+
+## Grupo de Investigación
+
+[Centro Nacional de Investigaciones Oncológicas (CNIO)](https://www.cnio.es/)
+:::

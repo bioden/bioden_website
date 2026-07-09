@@ -1,5 +1,5 @@
 ---
-title: "6° Webinar NeuroLab"
+title: "7° Webinar NeuroLab"
 pagetitle:  "*Schinus molle* como alternativa agroecologica para controlar *Bidens pilosa*, maleza clave en el cultivo de maíz"
 author: "Joselyn Huaman Anyaipoma"
 
@@ -31,7 +31,7 @@ comments: false
 ::: {style="text-align: justify;"}
 ## Resumen del ponente
 
-La investigación analiza el efecto alelopático de un extracto vegetal sobre una maleza que compite intensamente en el cultivo de maíz. El maíz muetra una respuesta inicial favorable, mientras que la maleza evidencia una inhibición notable y un comportamiento germinativo irregular asociado a la variabilidad de sus semillas y a la complejidad química del extracto. 
+La investigación analiza el efecto alelopático de un extracto vegetal sobre una maleza que compite intensamente en el cultivo de maíz. El maíz muetra una respuesta inicial favorable, mientras que la maleza evidencia una inhibición notable y un comportamiento germinativo irregular asociado a la variabilidad de sus semillas y a la complejidad química del extracto.
 
 ## Enlace de reunión
 
@@ -44,3 +44,4 @@ La investigación analiza el efecto alelopático de un extracto vegetal sobre un
 ## Grupo de Investigación
 
 No disponible
+:::

@@ -1,0 +1,51 @@
+---
+title: "6° BiosisTalks"
+pagetitle:  "Diseñando lo artificial o rediseñando lo auténtico"
+author: "Bejamín Díaz Zamora"
+
+lang: es
+
+date: 2026-03-18
+
+image: unnamed.jpg
+
+citation: false
+
+categories: 
+  - microcítico
+  - cáncer
+  - bioinformática 
+  - RNA-seq
+  - macrófagos
+
+about:
+  id: biosistalks
+  template: jolla
+  image-shape: rectangle
+comments: false
+---
+
+::: {#biosistalks}
+:::
+
+::: {style="text-align: justify;"}
+### Certificados de asistencia
+
+[Descarga tu certificado](https://drive.google.com/file/d/1CAFks2oFG8cTPLBkX7zZ8nYCEqSf3Apz/view?usp=drive_link)
+
+## Resumen del ponente
+
+Benjamín Díaz Zamora cursó estudios de pregrado en Genética y Biotecnología en la Universidad Mayor de San Marcos (UMSM). Realizó una pasantía en el Instituto Nacional de Salud de Perú. Asimismo, realizó pasantías internacionales en el Instituto de Ingeniería Biológica y Médica (PUC-Chile), Universidad Austral de Chile, Dana Farber Cancer Institute (Harvard) y el Instituto Pasteur, Alemania. Actualmente es Biólogo enfocado en Biología sintética realizando investigación sobre expresión de proteínas recombinantes en células procariotas y eucariotas.
+
+## Enlace de reunión
+
+[Reunión meet](https://meet.google.com/pry-ahzy-sgk)
+
+## Información de los ponentes
+
+<i class="bi bi-linkedin"></i> [Benajamín Díaz Zamora](https://www.linkedin.com/in/benjamin-diaz-zamora-9170b6197/)
+
+## Grupo de Investigación
+
+No disponible
+:::

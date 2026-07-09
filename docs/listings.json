@@ -25,11 +25,18 @@
   {
     "listing": "/biosistalks/biosistalks.html",
     "items": [
+      "/biosistalks/gilbert/index.html",
+      "/biosistalks/chirinos/index.html",
+      "/biosistalks/zamora/index.html",
+      "/biosistalks/caballero/index.html",
+      "/biosistalks/caceres/index.html",
+      "/biosistalks/zegarra/index.html",
       "/biosistalks/guarnizo/index.html",
       "/biosistalks/herrera/index.html",
       "/biosistalks/huaman/index.html",
       "/biosistalks/gallego/index.html",
       "/biosistalks/meiselman/index.html",
+      "/biosistalks/aguirre/index.html",
       "/biosistalks/kihara/index.html",
       "/biosistalks/daniel/index.html",
       "/biosistalks/alissen/index.html"

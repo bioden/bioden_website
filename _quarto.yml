@@ -26,8 +26,8 @@ website:
       - href: biosistalks/biosistalks.qmd
       - href: material_educativo.qmd
         text: Material educativo
-      - href: eventos.qmd
-        text: Eventos
+      #- href: eventos.qmd
+        #text: Eventos
       - href: investigacion.qmd
         text: Invesitgación
     right: 

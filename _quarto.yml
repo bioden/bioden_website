@@ -21,17 +21,18 @@ website:
     left:
       - href: index.qmd
         text: Inicio
-      - href: integrantes.qmd
-        text: Integrantes
-      - href: biosistalks/biosistalks.qmd
-      - href: material_educativo.qmd
-        text: Material educativo
       - text: Proyectos
         menu: 
           - text: "De la Botánica a la Bioinformática"
             href: https://bioden.github.io/XIII_CCB_curso/
       - href: investigacion.qmd
         text: Invesitgación
+      - href: integrantes.qmd
+        text: Integrantes
+      - href: biosistalks/biosistalks.qmd
+      - href: material_educativo.qmd
+        text: Material educativo
+
     right: 
       - icon: instagram
         href: https://www.instagram.com/dbg_unicauca/

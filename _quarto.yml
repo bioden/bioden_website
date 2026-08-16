@@ -26,8 +26,10 @@ website:
       - href: biosistalks/biosistalks.qmd
       - href: material_educativo.qmd
         text: Material educativo
-      #- href: eventos.qmd
-        #text: Eventos
+      - text: Proyectos
+        menu: 
+          - text: "De la Botánica a la Bioinformática"
+            href: https://bioden.github.io/XIII_CCB_curso/
       - href: investigacion.qmd
         text: Invesitgación
     right: 

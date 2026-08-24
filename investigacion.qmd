@@ -1,5 +1,4 @@
 ---
-title: "investigacion"
+title: "Investigacion"
 format: html
 ---
-

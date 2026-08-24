@@ -569,41 +569,41 @@ En biología, nos permite <strong>caracterizar poblaciones</strong>, <strong>com
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(data)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>  Localidad Longitud
-1   Popayán 5.217418
-2   Popayán 4.820535
-3   Popayán 4.143337
-4   Popayán 5.019397
-5   Popayán 4.297935
-6   Popayán 4.607004</code></pre>
+1   Popayán 4.577521
+2   Popayán 4.324276
+3   Popayán 3.848903
+4   Popayán 4.425117
+5   Popayán 4.527225
+6   Popayán 4.343582</code></pre>
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(data)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>  Localidad            Longitud    
- Length:20          Min.   :4.143  
- Class :character   1st Qu.:4.511  
- Mode  :character   Median :4.954  
-                    Mean   :4.853  
-                    3rd Qu.:5.224  
-                    Max.   :5.521  </code></pre>
+ Length:20          Min.   :3.849  
+ Class :character   1st Qu.:4.431  
+ Mode  :character   Median :4.622  
+                    Mean   :4.699  
+                    3rd Qu.:4.883  
+                    Max.   :5.645  </code></pre>
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(data)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>'data.frame':   20 obs. of  2 variables:
  $ Localidad: chr  "Popayán" "Popayán" "Popayán" "Popayán" ...
- $ Longitud : num  5.22 4.82 4.14 5.02 4.3 ...</code></pre>
+ $ Longitud : num  4.58 4.32 3.85 4.43 4.53 ...</code></pre>
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Estadísticas básicas</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(data<span class="sc">$</span>Longitud)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 4.85296</code></pre>
+<pre><code>[1] 4.699004</code></pre>
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sd</span>(data<span class="sc">$</span>Longitud)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.4426194</code></pre>
+<pre><code>[1] 0.4158818</code></pre>
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">var</span>(data<span class="sc">$</span>Longitud)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.1959119</code></pre>
+<pre><code>[1] 0.1729577</code></pre>
 </div>
 </div>
 </section>
@@ -643,11 +643,11 @@ En biología, nos permite <strong>caracterizar poblaciones</strong>, <strong>com
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(data<span class="sc">$</span>Longitud)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 4.85296</code></pre>
+<pre><code>[1] 4.699004</code></pre>
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">median</span>(data<span class="sc">$</span>Longitud)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 4.954427</code></pre>
+<pre><code>[1] 4.621876</code></pre>
 </div>
 </div>
 <section id="ejemplo-práctico-no.-1" class="level5">
@@ -698,11 +698,11 @@ En biología, nos permite <strong>caracterizar poblaciones</strong>, <strong>com
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">range</span>(data<span class="sc">$</span>Longitud)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 4.143337 5.520932</code></pre>
+<pre><code>[1] 3.848903 5.644574</code></pre>
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sd</span>(data<span class="sc">$</span>Longitud)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.4426194</code></pre>
+<pre><code>[1] 0.4158818</code></pre>
 </div>
 </div>
 <p>¿Qué observa y qué puede analizar teniendo en cuenta los datos pasados?. En biología por ejemplo, la desviación estándar es esencial para comparar poblaciones de diferentes puntos, nichos o localidades.</p>

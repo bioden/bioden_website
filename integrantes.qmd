@@ -18,7 +18,7 @@ Todos nuestros integrantes aparecerán listados aquí. Usted podrá acceder a ca
 
 ![](integrantes/fotos/todos.jpg){fig-align="center" width="408"}
 
--   Para acceder a más material fotográfico del semillero podrá acceder haciendo [clic aquí](multimedia.qmd)
+- Para acceder a más material fotográfico del semillero podrá acceder haciendo [clic aquí](multimedia.qmd)
 
 ## Enlace de asistencia sesiones BIODEN
 

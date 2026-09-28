@@ -1,20 +1,40 @@
 ---
-title: "Nohelia Cajas Salazar"
+title: "Nohelia Cajas Salazar, PhD"
 subtitle: "Profesora del Departamento de Biología — Profesor asociado - Universidad del Cauca"
-image: fotos/juan.jpg
+image: fotos/nohelia.jpeg
 format:
   html:
     toc: true
     css: card.css
 margin-header: |
-  ![Nohelia Cajas Salazar](fotos/juan.jpg)
+  ![Nohelia Cajas Salazar, PhD](fotos/nohelia.jpeg)
 order: 3
 ---
 
 ### Perfil
 
+Licenciada en Biología por la Universidad del Cauca y Doctora en Medicina preventiva y salud pública por la Universidad de Texas, Galveston, Estados Unidos en 2001. Actualmente es Docente en el programa de Biología de la Universidad del Cauca.
+
 ### Línea de Investigación
+
+- Genética
+
+- Biología Molecular
+
+- Biología celular
+
+- Toxicología y citogenética
 
 ### Hoja de vida
 
+Podrás acceder a mi curriculum vitae en el siguiente enlace
+
+[Curriculum vitae](https://scienti.minciencias.gov.co/cvlac/visualizador/generarCurriculoCv.do?cod_rh=0000011401)
+
 ### Contacto
+
+[E-mail](nsalazar@unicauca.edu.co)
+
+[ResearchGate](https://www.researchgate.net/profile/Nohelia-Cajas-Salazar)
+
+[ORCID](https://orcid.org/0000-0003-3157-7251)

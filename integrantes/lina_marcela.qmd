@@ -12,13 +12,11 @@ margin-header: |
 
 ### Perfil
 
-Aprendiendo, creciendo y viviendo a mi ritmo
-
 ### Líneas de Investigación
 
--   Ornitología
+- Ornitología
 
--   Neurociencias
+- Neurociencias
 
 ### Hoja de vida
 

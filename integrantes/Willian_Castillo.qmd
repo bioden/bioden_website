@@ -17,13 +17,13 @@ Es Biólogo y actualmente profesor del Departamento de Biología de la Universid
 
 ### Líneas de investigación
 
--   Neurofarmacología y Alzheimer
+- Neurofarmacología y Alzheimer
 
--   Descubrimiento de fármacos y química medicinal computacional
+- Descubrimiento de fármacos y química medicinal computacional
 
--   Fitocompuestos y bioprospección de plantas medicinales
+- Fitocompuestos y bioprospección de plantas medicinales
 
--   Genotoxicidad, toxicología celular y epigenética
+- Genotoxicidad, toxicología celular y epigenética
 
 ### Publicaciones
 
@@ -41,7 +41,7 @@ Es Biólogo y actualmente profesor del Departamento de Biología de la Universid
 
 ### Grupo de Investigación
 
--   Grupo de Microscopía electrónica y análisis de imágenes (GIMAI)
+- Grupo de Microscopía electrónica y análisis de imágenes (GIMAI)
 
 ### Hoja de vida
 

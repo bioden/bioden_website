@@ -1,20 +1,42 @@
 ---
-title: "MAYRA ALEJANDRA VELASCO REYES"
+title: "Mayra Alejandra Velasco Reyes, PhD"
 subtitle: "Profesora del Departamento de Biología — Profesor asociado - Universidad del Cauca"
-image: fotos/juan.jpg
+image: fotos/mayra.jpg
 format:
   html:
     toc: true
     css: card.css
 margin-header: |
-  ![MAYRA ALEJANDRA VELASCO REYES](fotos/juan.jpg)
+  ![Mayra Alejandra Velasco Reyes, PhD](fotos/mayra.jpg)
 order: 2
 ---
 
 ### Perfil
 
+Profesora de la Universidad del Cauca.
+
 ### Línea de Investigación
+
+- Bioquímica
+
+- Genética y Biología molecular
+
+- Microbiología e inmunología
+
+- Farmacología
+
+- Toxicología y ciencias farmaceúticas
 
 ### Hoja de vida
 
+Podrás acceder a mi curriculum vitae en el siguiente enlace
+
+[Curriculum vitae](https://scienti.minciencias.gov.co/cvlac/visualizador/generarCurriculoCv.do?cod_rh=0001471424)
+
 ### Contacto
+
+[E-mail](alejavelasco@unicauca.edu.co)
+
+[ResearchGate](https://www.researchgate.net/profile/Mayra-Velasco-Reyes)
+
+[ORCID](https://orcid.org/0000-0002-1616-6473)

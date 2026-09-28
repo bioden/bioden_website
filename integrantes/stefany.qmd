@@ -1,0 +1,29 @@
+---
+title: "Stefany Molina Zapata"
+subtitle: "Estudiante de Biología — Universidad del Cauca"
+image: fotos/stefany.jpeg
+format:
+  html:
+    toc: true
+    css: card.css
+margin-header: |
+  ![Stefany Molina Zapata](fotos/stefany.jpeg)
+---
+
+### Perfil
+
+Estudiante de Biología de la Universidad del Cauca, con interés en la etnofarmacología, la investigación de productos naturales y la evaluación de sus propiedades biológicas. Actualmente desarrolla una investigación enfocada en evaluar la actividad antiinflamatoria de los aceites esenciales de *Lippia alba* (pronto alivio), utilizando como biomodelo larvas de pez cebra (*Danio rerio*). Su trabajo busca contribuir al conocimiento científico sobre el potencial terapéutico de las plantas medicinales, integrando los saberes tradicionales con herramientas experimentales y modelos biológicos para el estudio de sus efectos antiinflamatorios.
+
+### Líneas de investigación
+
+- Farmacología
+
+### Hoja de vida
+
+Podrás acceder a mi curriculum vitae en el siguiente enlace
+
+[Curriculum - CVLAC](https://scienti.minciencias.gov.co/cvlac/visualizador/generarCurriculoCv.do?cod_rh=0001845084)
+
+### Contacto
+
+[E-mail](stmolina@unicauca.edu.co) <br> [ORCID](https://orcid.org/0009-0003-0049-7117)

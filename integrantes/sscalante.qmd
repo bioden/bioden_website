@@ -1,0 +1,33 @@
+---
+title: "Sebastián Scalante Aguillón"
+subtitle: "Estudiante de Biología — Coordinador del Semillero — Universidad del Cauca"
+image: fotos/sscalante.jpg
+format:
+  html:
+    toc: true
+    css: card.css
+margin-header: |
+  ![Sebastián Scalante Aguillón](fotos/sscalante.jpg)
+---
+
+### Perfil
+
+Mi interés se centra en comprender los efectos neurotóxicos, genotóxicos y epigenéticos de compuestos naturales y sintéticos, así como en la identificación de metabolitos con potencial farmacológico para el tratamiento de enfermedades neurodegenerativas, especialmente el Alzheimer.
+
+Integro enfoques in vitro, in vivo e in silico, aplicando herramientas de modelado molecular, predicción ADMET, docking molecular, dinámica molecular y análisis transcriptómico, con el propósito de explorar mecanismos biológicos y diseñar estrategias racionales de descubrimiento de fármacos de origen natural.
+
+### Líneas de investigación
+
+- Neurobiología y neurotoxicología experimental
+- Bioinformática y biología computacional
+- Bioprospección y etnobotánica
+
+### Hoja de vida
+
+Podrás acceder a mi curriculum vitae en el siguiente enlace
+
+[Curriculum - CVLAC](https://scienti.minciencias.gov.co/cvlac/visualizador/generarCurriculoCv.do?cod_rh=0002023488)
+
+### Contacto
+
+[E-mail](sscalante@unicauca.edu.co) <br> [Linkedin](https://www.linkedin.com/in/sebastian-scalante-aguillon-0673a2380/) <br> [ORCID](https://orcid.org/0009-0002-0312-5944)

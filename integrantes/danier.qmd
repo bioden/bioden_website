@@ -1,0 +1,39 @@
+---
+title: "Danier Muñoz Buitrón"
+subtitle: "Estudiante de Biología — Coordinador del Semillero — Universidad del Cauca"
+image: fotos/danier.jpeg
+format:
+  html:
+    toc: true
+    css: card.css
+margin-header: |
+  ![Danier Muñoz Buitrón](fotos/danier.jpeg)
+---
+
+### Perfil
+
+Mi linea de investigación se centra en las plantas medicinales con gran potencial farmacologico, la aplicacion de sistemas de informacion a la conservacion de las especies vegetales, y a los sistemas de información geográfico orientados a procesos ecológicos.
+
+### Líneas de Investigación
+
+- Toxicología y citogenética
+
+- Biología del desarrollo
+
+- Exposición a contaminantes
+
+- Sistemas de Información Geográfica (SIG)
+
+### Publicaciones
+
+1.  García Cevallos, X. C., Muñoz Buitron, D., Huila Medina, J. F., & Arcos Ortega, L. T. (2026). Efectos reproductivos, neurotóxicos y morfológicos de la exposición al glifocafé en Drosophila melanogaster (Drosophilidae). *Actualidades Biológicas*, *48*(125), e4809. https://doi.org/10.17533/udea.acbi/v48n125a09
+
+### Hoja de vida
+
+Podrás acceder a mi curriculum vitae en el siguiente enlace
+
+[Curriculum - CVLAC](https://scienti.minciencias.gov.co/cvlac/visualizador/generarCurriculoCv.do?cod_rh=0002358343)
+
+### Contato
+
+[E-mail](daniermunoz@unicauca.edu.co)<br> [ResearchGate](https://www.researchgate.net/profile/Danier-Munoz-Buitron) <br> [ORCID](https://orcid.org/0009-0008-8598-7698)

@@ -1,6 +1,6 @@
 ---
 title: "Ariadna Vasquez Ledezma"
-subtitle: "Estudiante de Biología — Universidad del Cauca"
+subtitle: "Estudiante de Biología — Coordinadora del Semillero — Universidad del Cauca"
 image: fotos/ariadna.jpg
 format:
   html:
@@ -17,14 +17,16 @@ Me desempeño en el área de Toxicología Genética y Citogenética, con enfoque
 
 ### Lineas de investigación
 
--   Toxicología genética y citogenética
--   Epigenética y Biología del Desarrollo
--   Salud ambiental y exposición a contaminantes
--   Aplicación en prevención y salud pública
+- Toxicología genética y citogenética
+- Epigenética y Biología del Desarrollo
+- Salud ambiental y exposición a contaminantes
+- Aplicación en prevención y salud pública
 
 ### Hoja de vida
 
-Podrás acceder a mi curriculum vitae en el siguiente enlace [Curriculum vitae](https://scienti.minciencias.gov.co/cvlac/visualizador/generarCurriculoCv.do?cod_rh=0002322603)
+Podrás acceder a mi curriculum vitae en el siguiente enlace
+
+[Curriculum vitae](https://scienti.minciencias.gov.co/cvlac/visualizador/generarCurriculoCv.do?cod_rh=0002322603)
 
 ### Contacto
 

@@ -1,0 +1,35 @@
+---
+title: "Darcy Carolina Palechor Narváez"
+subtitle: "Estudiante de Biología — Universidad del Cauca"
+image: fotos/darcy.jpg
+format:
+  html:
+    toc: true
+    css: card.css
+margin-header: |
+  ![Darcy Carolina Palechor Narváez](fotos/darcy.jpg)
+---
+
+### Perfil
+
+Mi interés académico y de investigación está orientado hacia el estudio de fitoquímicos y plantas medicinales, así como al desarrollo de estudios bibliográficos enfocados en el análisis de enfermedades que no necesariamente están asociadas a factores de riesgo evidentes. En este contexto, me interesa especialmente profundizar en áreas como la toxicología genética y la citogenética, la epigenética y la biología del desarrollo, así como en la relación entre la salud ambiental y la exposición a contaminantes. Considero que estas líneas de investigación tienen un gran potencial de aplicación en la prevención de enfermedades y en el fortalecimiento de estrategias de salud pública. Asimismo, me interesa conocer y revisar publicaciones científicas relacionadas con estos temas que contribuyan a ampliar el conocimiento en estos campos.
+
+### Líneas de investigación
+
+- Toxicología y citogenétic
+
+- Epigenética
+
+- Biología del desarrollo
+
+- Neurobiología
+
+### Hoja de vida
+
+Podrás acceder a mi curriculum vitae en el siguiente enlace
+
+[Curriculum - CVLAC](https://scienti.minciencias.gov.co/cvlac/visualizador/generarCurriculoCv.do?cod_rh=0002007346)
+
+### Contacto
+
+[E-mail](darcypal@unicauca.edu.co) <br> [Linkedin](https://www.linkedin.com/in/darcy-carolina-palechor-narvaez-4597193b4?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base_contact_details%3BAlRH2jNvRoKNBzaumzSD9g%3D%3D)<br> ResearchGate <br> [ORCID](https://orcid.org/0009-0000-0813-9400)

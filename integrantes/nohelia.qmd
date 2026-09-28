@@ -1,13 +1,13 @@
 ---
 title: "Nohelia Cajas Salazar, PhD"
 subtitle: "Profesora del Departamento de Biología — Profesor asociado - Universidad del Cauca"
-image: fotos/nohelia.jpeg
+image: fotos/nohelia.png
 format:
   html:
     toc: true
     css: card.css
 margin-header: |
-  ![Nohelia Cajas Salazar, PhD](fotos/nohelia.jpeg)
+  ![Nohelia Cajas Salazar, PhD](fotos/nohelia.png)
 order: 3
 ---
 

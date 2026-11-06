@@ -1,0 +1,355 @@
+---
+title: "Capítulo 1: ¿Por qué Rust en biología?"
+subtitle: "Qué es Rust, por qué le interesa a un biólogo, y tu primer programa con Cargo"
+format:
+  html:
+    toc: true
+---
+
+En este primer capítulo vamos a responder tres preguntas: qué es Rust, por
+qué un biólogo debería invertir tiempo en aprenderlo, y cómo dejar tu
+computadora lista para programar. Al final habrás creado, compilado y
+ejecutado tu primer programa con datos biológicos. No se necesita ningún
+conocimiento previo del lenguaje: los conceptos de programación se irán
+introduciendo capítulo a capítulo.
+
+## 1.1 ¿Qué es Rust?
+
+Rust es un lenguaje de programación de sistemas creado en Mozilla por
+Graydon Hoare, presentado públicamente en 2010 y lanzado en su versión 1.0 en
+2015. Un "lenguaje de sistemas" es aquel diseñado para escribir software que
+necesita ser rápido y eficiente: sistemas operativos, motores de navegadores,
+bases de datos y, como veremos en este curso, herramientas bioinformáticas
+que procesan millones de datos.
+
+Lo que hace especial a Rust es que combina dos cualidades que históricamente
+estaban reñidas. Por un lado, el **rendimiento** de lenguajes como C y C++:
+Rust compila directamente a código de máquina, sin intérprete ni máquina
+virtual. Por otro lado, la **seguridad de memoria**: el compilador verifica,
+*antes de que tu programa se ejecute una sola vez*, que toda la memoria que
+usas está bien administrada. En C eso es responsabilidad del programador (y
+los errores cuestan caro); en Python o R hay un recolector de basura que lo
+resuelve, pagando algo de velocidad; en Rust lo resuelve el compilador, sin
+costo en tiempo de ejecución.
+
+No es casualidad que Rust haya encabezado durante años consecutivos la lista
+de lenguajes más admirados en las encuestas anuales de desarrolladores de
+Stack Overflow. Quien lo usa, rara vez vuelve atrás. Parte de esa admiración
+viene de algo que sorprende al principio: el compilador de Rust no solo
+rechaza el código incorrecto, sino que te explica el error y suele sugerirte
+la corrección. En vez de un enemigo que te bloquea, es un colega revisor un
+tanto estricto.
+
+## 1.2 ¿Por qué un biólogo debería aprenderlo?
+
+La mayoría de biólogos analizamos datos en Python o R, y no hay nada de malo
+en eso: son lenguajes fantásticos para explorar datos, hacer estadística y
+producir gráficos. El punto débil aparece cuando la **escala** crece. Procesar
+un genoma de 3 mil millones de bases, iterar sobre millones de lecturas de
+secuenciación, o simular la evolución de una población durante miles de
+generaciones son tareas donde un bucle de Python puede tardar minutos y el
+equivalente en Rust, milisegundos. La diferencia no es un lujo: determina qué
+preguntas biológicas puedes responder en un tiempo razonable.
+
+La tabla siguiente resume el panorama, siendo honestos con las fortalezas de
+cada lenguaje:
+
+| Aspecto | Python | R | Rust |
+|---------|--------|---|------|
+| Velocidad de ejecución | Lenta a media | Lenta a media | Comparable a C/C++ |
+| Seguridad de memoria | Automática (intérprete) | Automática | Garantizada al compilar, sin costo en ejecución |
+| Curva de aprendizaje | Suave | Suave | Pronunciada al inicio |
+| Ecosistema biológico | Enorme (Biopython) | Enorme (Bioconductor) | Creciendo (crate `bio`, `needletail`) |
+| Ideal para | Explorar y prototipar | Estadística y gráficos | Herramientas rápidas y robustas |
+
+Hay una tercera razón, menos obvia: **aprender Rust te enseña a programar
+mejor en cualquier lenguaje**. Su sistema de propiedad y préstamos (*ownership
+y borrowing*, capítulo 4) te obliga a pensar qué le pasa a cada dato en
+memoria. Esa intuición te acompañará de vuelta en Python y R, donde los
+errores de aliasing y mutación inesperada son bastante comunes.
+
+::: {.callout-note}
+## Realismo biológico
+Rust no reemplaza a Python ni a R en tu día a día. El flujo de trabajo sano
+es usar Python o R para explorar, graficar y hacer estadística, y Rust para
+las piezas donde el rendimiento importa: filtros de lecturas, búsquedas de
+patrones en genomas, simulaciones grandes. De hecho, muchas librerías
+científicas de Python esconden por dentro núcleos escritos en lenguajes
+compilados; con Rust puedes escribir ese núcleo tú mismo.
+:::
+
+En bioinformática ya existen proyectos serios escritos en Rust: el crate
+`bio` (rust-bio) implementa algoritmos clásicos de bioinformática, y
+`needletail` se usa para leer archivos FASTA y FASTQ a altísima velocidad.
+También hay instrumentos científicos generales como `polars`, una biblioteca
+de dataframes muy rápida. El ecosistema es más joven que Biopython, pero
+crece de forma sostenida.
+
+## 1.3 Instalación
+
+Rust se instala mediante **rustup**, un administrador de versiones que además
+mantiene el lenguaje actualizado. El procedimiento depende de tu sistema
+operativo, pero en todos los casos queda todo listo en unos minutos.
+
+En **Linux o macOS**, abre una terminal y ejecuta:
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+El instalador te hará una o dos preguntas; aceptar las opciones por defecto
+(presionando Enter) funciona perfectamente. En **Windows**, descarga y
+ejecuta el instalador `rustup-init.exe` desde la página oficial
+[https://rustup.rs](https://rustup.rs); si te pide instalar las herramientas
+de compilación de Visual Studio (las "Build Tools"), déjalo que lo haga.
+
+Para verificar que la instalación quedó bien, cierra y reabre la terminal y
+ejecuta:
+
+```bash
+rustc --version
+cargo --version
+```
+
+Deberías ver algo como `rustc 1.75.0` y `cargo 1.75.0` (el número de versión
+cada pocas semanas: no te preocupes si el tuyo es mayor). `rustc` es el
+compilador y `cargo` es la herramienta que usarás el 95% del tiempo.
+
+::: {.callout-tip}
+## ¿Sin permiso para instalar nada?
+Si usas una computadora del laboratorio o de la universidad donde no puedes
+instalar programas, puedes seguir casi todo el curso en el
+[Rust Playground](https://play.rust-lang.org/): escribe el código en el
+navegador, presiona Run y listo. Guarda tus ejercicios en un archivo de texto
+para no perderlos.
+:::
+
+Como editor, cualquier editor de texto sirve, pero la experiencia más cómoda
+es **VS Code** con la extensión **rust-analyzer**, que te muestra los errores
+del compilador mientras escribes, autocompleta y muestra la documentación de
+cada función al pasar el cursor.
+
+## 1.4 Cargo, tu compañero de laboratorio
+
+Cargo es el administrador de proyectos de Rust: crea proyectos, los compila,
+los ejecuta, descarga librerías (llamadas *crates*), corre tests y genera
+documentación. Todo lo que haremos en este curso pasa por Cargo. Para crear
+tu primer proyecto, ubícate en la carpeta donde quieras trabajar (por ejemplo
+una carpeta `curso_rust`) y ejecuta:
+
+```bash
+cargo new bio_hola
+cd bio_hola
+```
+
+Cargo crea esta estructura:
+
+```text
+bio_hola/
+├── Cargo.toml
+└── src/
+    └── main.rs
+```
+
+El archivo `Cargo.toml` es la "ficha de catálogo" del proyecto: nombre,
+versión y dependencias. Se escribe en formato TOML, muy legible:
+
+```toml
+[package]
+name = "bio_hola"
+version = "0.1.0"
+edition = "2024"
+```
+
+La línea `edition` indica qué "edición" del lenguaje usas: Rust es famoso por
+su compatibilidad hacia atrás, y las ediciones agrupan mejoras modernas del
+lenguaje sin romper código antiguo. Con una instalación reciente verás la
+edición 2024; si tu computadora muestra 2021, todo el código de este curso
+funciona igual.
+
+Los comandos que usarás a diario son tres:
+
+- `cargo run` — compila y ejecuta el proyecto en un solo paso.
+- `cargo build` — solo compila (deja el ejecutable en `target/debug/`).
+- `cargo check` — verifica errores sin generar el ejecutable; es el más
+  rápido y el ideal mientras escribes.
+
+## 1.5 Tu primer programa biológico
+
+Abre `src/main.rs`, borra su contenido y escribe lo siguiente. Sí, a mano:
+escribir el código (y equivocarse) es parte del entrenamiento.
+
+```rust
+fn main() {
+    let dna = "ATGGCCTTTTAA";
+    let longitud = dna.len();
+
+    println!("Analizando la secuencia {}", dna);
+    println!("Longitud del gen: {} pb", longitud);
+}
+```
+
+Ejecuta `cargo run` y verás en la terminal:
+
+```text
+Analizando la secuencia ATGGCCTTTTAA
+Longitud del gen: 12 pb
+```
+
+Repasemos línea por línea, porque este pequeño programa contiene varias
+ideas centrales del lenguaje:
+
+- `fn main() { ... }` define la función `main`, el punto de entrada de todo
+  programa Rust: cuando ejecutas el binario, lo primero que corre es este
+  bloque. Las llaves delimitan el cuerpo y la sangría es por legibilidad
+  (cuatro espacios es la convención).
+- `let dna = "ATGGCCTTTTAA";` crea una **variable** llamada `dna` con un
+  valor de texto. En Rust las variables son inmutables por defecto, un tema
+  que trataremos a fondo en el capítulo 2. Los textos se escriben entre
+  comillas dobles; las comillas simples se reservan para un solo carácter,
+  como `'A'`.
+- `let longitud = dna.len();` llama al método `.len()`, que devuelve la
+  longitud del texto, y guarda el resultado en otra variable. La
+  secuencia `ATGGCCTTTTAA` es un mini-gen real: comienza con el codón de
+  inicio `ATG` (metionina) y termina en `TAA` (codón de paro). La usaremos
+  varias veces en el curso.
+- `println!(...)` imprime una línea en la terminal. El signo `!` indica que
+  es una **macro** y no una función normal: por ahora basta con saber que
+  `println!` acepta un texto con huecos `{}` que se rellenan con los valores
+  que le pases después, en orden.
+- Cada instrucción termina en punto y coma `;`, y los comentarios comienzan
+  con `//`: todo lo que sigue en esa línea es para humanos y el compilador lo
+  ignora.
+
+## 1.6 Cómo estudiar este curso
+
+Cada capítulo introduce un concepto con ejemplos biológicos y termina con
+ejercicios. La recomendación metodológica es simple: **escribe y ejecuta todo
+el código tú mismo**, incluso los ejemplos que parezcan obvios. Programar es
+un oficio motor tanto como intelectual, y los errores de compilación que
+cometas ahora son exactamente los que construyen la intuición.
+
+Para el curso puedes crear un proyecto por capítulo (`cargo new cap02`,
+`cargo new cap03`, ...) o reutilizar uno solo y cambiar el código de
+`main.rs`. Ambas formas funcionan; la primera mantiene tus soluciones
+guardadas y ordenadas, así que es la que recomiendo.
+
+Cuando un ejemplo no compile, lee el mensaje completo: verás el archivo y la
+línea del problema, un fragmento del código con una flecha señalando el
+lugar exacto, y una explicación que casi siempre incluye la palabra clave que
+necesitas buscar. Acostúmbrate desde hoy a leerlo con calma; es la habilidad
+que más dividendos pagará en los capítulos de ownership.
+
+## Ejercicios
+
+### Ejercicio 1.1 · Instalación
+
+Instala Rust con rustup (o prepara tu acceso al Rust Playground) y verifica
+la instalación mostrando las versiones de `rustc` y `cargo`.
+
+<details>
+<summary>Solución</summary>
+
+En Linux o macOS:
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+En Windows, ejecuta `rustup-init.exe` descargado de [https://rustup.rs](https://rustup.rs).
+Luego, en una terminal nueva:
+
+```bash
+rustc --version
+cargo --version
+```
+
+La salida debe mostrar versiones 1.x mayores que 1.75 (el número exacto
+depende de cuándo instales). Si algún comando no se encuentra, cierra y
+reabre la terminal para que se recargue la configuración del sistema.
+
+</details>
+
+### Ejercicio 1.2 · Tu primer informe
+
+Crea el proyecto `bio_hola` y modifica `main.rs` para que imprima un informe
+de tres líneas: el identificador de la secuencia (`>genA`), la secuencia
+misma y su longitud en pb.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+fn main() {
+    let id = "genA";
+    let dna = "ATGGCCTTTTAA";
+    let longitud = dna.len();
+
+    println!("Identificador: {}", id);
+    println!("Secuencia: {}", dna);
+    println!("Longitud: {} pb", longitud);
+}
+```
+
+```text
+Identificador: genA
+Secuencia: ATGGCCTTTTAA
+Longitud: 12 pb
+```
+
+Las variables `id`, `dna` y `longitud` son tres datos de distinto tipo
+(texto y número) que `println!` imprime con el mismo mecanismo de huecos
+`{}`.
+
+</details>
+
+### Ejercicio 1.3 · Dos genes
+
+Modifica el programa para analizar dos secuencias, `ATGGCCTTTTAA` (12 pb) y
+`ATGCGATCGATCGA` (14 pb), e imprime la longitud total sumando ambas.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+fn main() {
+    let gen1 = "ATGGCCTTTTAA";
+    let gen2 = "ATGCGATCGATCGA";
+    let total = gen1.len() + gen2.len();
+
+    println!("Gen 1: {} pb", gen1.len());
+    println!("Gen 2: {} pb", gen2.len());
+    println!("Longitud total: {} pb", total);
+}
+```
+
+```text
+Gen 1: 12 pb
+Gen 2: 14 pb
+Longitud total: 26 pb
+```
+
+`.len()` devuelve un número entero, así que se puede sumar directamente con
+el operador `+`. En el próximo capítulo veremos qué tipo exacto de número es
+y cómo convertirlo a otros.
+
+</details>
+
+### Ejercicio 1.4 · Lee tu primer error
+
+A propósito, quita la última comilla de la línea `let dna = "ATGGCCTTTTAA";`
+(quedando `let dna = "ATGGCCTTTTAA;`) y ejecuta `cargo run`. Lee el mensaje
+de error completo, restaura la comilla, y repite el experimento quitando el
+punto y coma de la línea de `println!`.
+
+<details>
+<summary>Solución</summary>
+
+En el primer caso, el compilador indica que la cadena de texto no está
+cerrada y señala la línea del problema; incluso suele sugerir que falta una
+comilla. En el segundo caso, el error explica que esperaba un `;` al final de
+la instrucción. Observa la estructura común de los errores de Rust: archivo y
+línea, fragmento de código con el lugar señalado, y explicación. Acostumbrarte
+a leerlos con calma es, literalmente, media asignatura de Rust.
+
+</details>

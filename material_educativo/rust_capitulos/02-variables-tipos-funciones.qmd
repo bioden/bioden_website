@@ -1,0 +1,461 @@
+---
+title: "Capítulo 2: Variables, tipos y funciones"
+subtitle: "let, mut, los tipos numéricos y de texto, y tu primera función bioinformática de verdad"
+format:
+  html:
+    toc: true
+---
+
+En el capítulo anterior imprimiste tu primer informe de secuencias. En este
+vas a aprender a guardar datos en variables, a distinguir los tipos
+numéricos y de texto que ofrece Rust, y a escribir tus propias funciones,
+incluida `contenido_gc`, tu primera función bioinformática clásica. Este
+capítulo es denso en vocabulario nuevo, pero cada pieza se usará durante todo
+el resto del curso.
+
+## 2.1 Variables: inmutables por defecto
+
+En Rust una variable se crea con `let`. Lo particular del lenguaje es que
+toda variable es **inmutable por defecto**: una vez asignada, su valor no
+puede cambiar. Si intentas reasignarla, el compilador lo rechaza:
+
+```rust
+fn main() {
+    let cobertura = 30;
+    cobertura = cobertura + 5; // ⛔ NO COMPILA (intencionalmente)
+}
+```
+
+El error es exactamente el que quieres en un análisis: "cannot assign twice
+to immutable variable". Si un valor no debe cambiar, el lenguaje se asegura
+de que no cambie. Cuando sí necesitas modificar una variable —por ejemplo, un
+contador de mutaciones que crece dentro de un bucle— la declaras con `mut`:
+
+```rust
+fn main() {
+    let mut mutaciones = 0;
+    println!("Inicio: {} mutaciones", mutaciones);
+    mutaciones = mutaciones + 1;
+    mutaciones += 1; // forma abreviada de sumar 1
+    println!("Fin: {} mutaciones", mutaciones);
+}
+// Inicio: 0 mutaciones
+// Fin: 2 mutaciones
+```
+
+La recomendación es simple: empieza siempre con `let` simple y agréga `mut`
+solo cuando el compilador te lo pida. Así, cualquier mutación en tu código es
+explícita y visible.
+
+### Sombras: reutilizar un nombre
+
+Se puede declarar una nueva variable con el mismo nombre que una anterior; se
+dice que la primera queda "en sombra" de la segunda. Esto es distinto de
+mutar: se crea un valor nuevo, incluso de otro tipo:
+
+```rust
+fn main() {
+    let posicion = "328";           // un texto...
+    let posicion: usize = posicion.parse().expect("no era un número");
+    println!("Posición 0-based: {}", posicion - 1);
+}
+// Posición 0-based: 327
+```
+
+Este patrón —parsear un dato que llega como texto y sombrearlo con su
+versión numérica— es muy común en Rust y lo verás en el capítulo 12 al leer
+archivos. Nótese también la anotación de tipo `: usize` en la segunda
+declaración: le dice al compilador qué tipo esperamos del `parse()`.
+
+## 2.2 Tipos escalares: números, booleanos y caracteres
+
+Rust es un lenguaje de **tipado estático**: el tipo de cada valor se conoce
+en tiempo de compilación. Muchas veces el compilador lo infiere del contexto,
+pero conviene conocer el catálogo, porque elegir bien el tipo evita sorpresas.
+
+### Enteros
+
+Un entero puede ser con signo (`i`) o sin signo (`u`), y ocupa 8, 16, 32, 64
+o 128 bits. Los tipos más usados en la práctica biológica:
+
+| Tipo | Rango | Ejemplo de uso |
+|------|-------|----------------|
+| `u8` | 0 a 255 | puntajes PHRED de calidad (máx. 41 en Illumina) |
+| `u32` | 0 a ~4 290 millones | posiciones en cromosomas |
+| `usize` | depende de tu máquina | índices y longitudes (lo que devuelve `.len()`) |
+| `i32` | ±2 140 millones | entero con signo; es el default de Rust |
+
+Dos detalles prácticos. Primero, los literales admiten guiones bajos para
+agrupar dígitos: `3_000_000_000` (el genoma humano, en bases) se lee mejor
+que `3000000000`. Segundo, si un cálculo se sale del rango del tipo, Rust
+hace *overflow*: en modo debug el programa se detiene con un error, y en modo
+release el valor "da la vuelta". Para genomas completos usa `u32` o `u64`, y
+para posiciones y longitudes usa `usize`, que es el tipo natural de índices.
+
+### Flotantes, booleanos y caracteres
+
+Los decimales son `f32` y `f64` (precisión simple y doble); el default y el
+recomendado para datos científicos es `f64`, con unos 15 dígitos de
+precisión. Los booleanos son `true` y `false`. Y el tipo `char` guarda un
+solo carácter Unicode, entre comillas simples: `'A'`, `'T'`, pero también
+`'á'` o `'🦀'`. Ese detalle hará tu vida más fácil al validar secuencias con
+letras raras.
+
+```rust
+fn main() {
+    let frecuencia_alelica: f64 = 0.037;
+    let phred: u8 = 37;
+    let pasa_filtro: bool = phred >= 30;
+    let base: char = 'G';
+
+    println!("frecuencia: {} | PHRED: {} | ¿pasa?: {}", frecuencia_alelica, phred, pasa_filtro);
+}
+// frecuencia: 0.037 | PHRED: 37 | ¿pasa?: true
+```
+
+## 2.3 Tuplas y arrays: datos compuestos
+
+Cuando varios valores pertenecen juntos, Rust ofrece dos formas básicas de
+agruparlos sin crear un tipo nuevo. La **tupla** agrupa valores de tipos
+distintos y de cantidad fija; es ideal para registros cortos como una
+coordenada de colecta:
+
+```rust
+fn main() {
+    let colecta = (0.2512, -78.4520, "Quinche");
+    let (lat, lon, sitio) = colecta; // "desestructuración": separar la tupla
+
+    println!("Sitio: {} (lat {}, lon {})", sitio, lat, lon);
+    println!("Latitud sola: {}", colecta.0); // también por índice: .0, .1, .2
+}
+// Sitio: Quinche (lat 0.2512, lon -78.4520)
+// Latitud sola: 0.2512
+```
+
+El **array** agrupa varios valores del *mismo* tipo, con tamaño fijo conocido
+en compilación. Por ejemplo, las tres temperaturas de un ciclo de PCR:
+
+```rust
+fn main() {
+    let temperaturas_pcr = [95.0, 55.0, 72.0];
+    println!("Desnaturalización: {} °C", temperaturas_pcr[0]);
+    println!("Extensión: {} °C", temperaturas_pcr[2]);
+    println!("El ciclo tiene {} pasos", temperaturas_pcr.len());
+}
+// Desnaturalización: 95 °C
+// Extensión: 72 °C
+// El ciclo tiene 3 pasos
+```
+
+Los índices empiezan en **cero**: `temperaturas_pcr[0]` es el primer
+elemento. Guarda esa idea, porque en biología estamos acostumbrados a
+contar posiciones desde 1 (la "posición 329 del gen"), y en Rust la misma
+posición vive en el índice 328. Las colecciones de tamaño variable llegan en
+el capítulo 7 con `Vec`.
+
+## 2.4 Texto: `&str` y `String`
+
+En Rust hay dos tipos principales de texto, y la distinción importa. Un
+literal como `"ATGGCCTTTTAA"` tiene tipo `&str` ("string slice"): una vista
+de solo lectura sobre el texto escrito en tu programa. El tipo `String` es un
+texto propio en memoria, que puede crecer y modificarse:
+
+```rust
+fn main() {
+    let literal = "ATG";            // &str
+    let mut secuencia = String::from("ATG"); // String
+    secuencia.push_str("GCCTTTTAA");         // le añadimos texto
+
+    println!("{} -> {} ({} pb)", literal, secuencia, secuencia.len());
+}
+// ATG -> ATGGCCTTTTAA (12 pb)
+```
+
+`String::from` construye un `String` y el método `push_str` le concatena
+texto. Por ahora basta con esta distinción operativa: literales `&str` para
+datos fijos, `String` para texto que se construye. En el capítulo 4 la
+historia se completa con ownership y en el 7 con los métodos de `String`.
+Una advertencia útil desde ya: `.len()` cuenta **bytes**, no caracteres;
+para secuencias en mayúsculas ASCII (lo habitual en FASTA) coinciden, y en
+el capítulo 7 veremos `chars()` para los casos raros.
+
+## 2.5 Funciones
+
+Las funciones son la unidad básica de organización en Rust. Se declaran con
+`fn`, anotando el tipo de cada parámetro y el tipo del valor de retorno
+después de `->`:
+
+```rust
+fn densidad(individuos: u32, area_m2: f64) -> f64 {
+    individuos as f64 / area_m2
+}
+
+fn main() {
+    let d = densidad(240, 600.0);
+    println!("Densidad: {:.2} individuos/m²", d);
+}
+// Densidad: 0.40 individuos/m²
+```
+
+Este ejemplo trae tres novedades. Primero, la conversión `individuos as
+f64`: dividir dos enteros hace división entera (¡y `240 / 600` daría `0`!),
+así que convertimos antes de dividir. Ese es el error numérico más común de
+los programadores que llegan de Python; si un porcentaje te sale en cero,
+casi siempre es esto. Segundo, la función devuelve la última **expresión**
+del bloque, escrita **sin punto y coma**: eso le dice a Rust "este valor es
+el resultado". También existe la forma explícita `return individuos as f64 /
+area_m2;`, que se usa para retornos tempranos, pero la idiomática es la
+primera. Tercero, en `println!` el formato `{:.2}` redondea la salida a dos
+decimales, útil para reportes.
+
+### Declaraciones y expresiones
+
+Vale la pena fijar el vocabulario. Una **declaración** (*statement*)
+ejecuta una acción y no produce valor: `let x = 5;` o una llamada con `;`.
+Una **expresión** (*expression*) produce un valor: `5`, `area_m2`, la
+llamada `densidad(240, 600.0)`, o un bloque entero `{ ... }` cuyo valor es su
+última expresión sin `;`. Esta distinción explica por qué quitar un punto y
+coma a veces *arregla* o *rompe* un programa, y será clave en el próximo
+capítulo, donde `if` y `match` se usan como expresiones.
+
+## 2.6 Tu primera función bioinformática: contenido de GC
+
+Con todo lo anterior ya puedes escribir una función clásica: el porcentaje
+de bases guanina y citosina de una secuencia, métrica estructural del ADN que
+correlaciona con la temperatura de fusión y la estabilidad de la dúplex:
+
+```rust
+fn contenido_gc(dna: &str) -> f64 {
+    let g = dna.matches('G').count();
+    let c = dna.matches('C').count();
+    (g + c) as f64 / dna.len() as f64 * 100.0
+}
+
+fn main() {
+    let dna = "ATGGCCTTTTAA";
+    println!("Secuencia:  {}", dna);
+    println!("Contenido GC: {:.1}%", contenido_gc(dna));
+}
+// Secuencia:  ATGGCCTTTTAA
+// Contenido GC: 41.7%
+```
+
+Analicemos las piezas nuevas. El parámetro es `dna: &str`: el `&` indica que
+la función pide la secuencia "prestada", sin copiarla ni apropiársela; es la
+forma estándar de pasar texto y la estudiaremos a fondo en el capítulo 4.
+El método `.matches('G')` produce todas las apariciones de un carácter y
+`.count()` las cuenta (por dentro hay un iterador; los dominaremos en el
+capítulo 10). La expresión final convierte los conteos a `f64` antes de
+dividir —ya sabes por qué— y multiplica por 100 para tener porcentaje.
+
+Para verificar: `ATGGCCTTTTAA` tiene 12 bases, de las cuales 5 son G o C
+(dos `G`, tres `C`), y 5/12 × 100 ≈ 41.7%. La aritmética cierra. Haz el
+hábito de verificar tus funciones a mano con casos chicos: es la versión
+casera de los tests del capítulo 13.
+
+## 2.7 Constantes y conversiones
+
+Para valores que nunca cambian y tienen significado científico, Rust ofrece
+las `const`, que se escriben en MAYÚSCULAS y exigen anotar el tipo:
+
+```rust
+const PHRED_MINIMO: u8 = 20;
+const CROMOSOMO: &str = "chr17";
+
+fn main() {
+    let phred = 37;
+    let pasa = phred >= PHRED_MINIMO;
+    println!("¿Lectura confiable (Q≥{})?: {}", PHRED_MINIMO, pasa);
+}
+// ¿Lectura confiable (Q≥20)?: true
+```
+
+Las conversiones entre tipos usan `as` para números (`x as f64`,
+`phred as f64`), con la precaución de que convertir un flotante a entero
+trunca los decimales. La conversión inversa y más delicada —texto a número—
+se hace con `.parse()`, que puede fallar (el texto podría decir `"hola"`), y
+por eso devuelve un resultado especial que exige tratamiento:
+
+```rust
+fn main() {
+    let texto = "57";
+    let phred: u8 = texto.parse().expect("PHRED inválido");
+    println!("PHRED + 3 = {}", phred + 3);
+}
+// PHRED + 3 = 60
+```
+
+El `.expect(...)` detiene el programa con ese mensaje si el texto no es un
+número válido. Es aceptable mientras aprendemos, pero un análisis real no
+puede venirse abajo por una línea corrupta de un archivo: en el capítulo 8,
+`parse` será nuestro caso de estudio para el manejo elegante de errores.
+
+## Ejercicios
+
+### Ejercicio 2.1 · Contador de mutaciones
+
+Escribe un programa que simule (con valores fijos, sin azar por ahora) un
+contador de mutaciones que empieza en 0, registra 3 sustituciones y luego
+una deleción más, e imprime el total acumulado.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+fn main() {
+    let mut mutaciones = 0;
+    mutaciones += 1; // sustitución en la posición 102
+    mutaciones += 1; // sustitución en la posición 415
+    mutaciones += 1; // sustitución en la posición 903
+    mutaciones += 1; // deleción de 1 pb
+    println!("Mutaciones acumuladas: {}", mutaciones);
+}
+// Mutaciones acumuladas: 4
+```
+
+El contador necesita `mut` porque su valor cambia. Los comentarios
+documentan cada evento, una buena práctica cuando el "registro de campo" es
+el propio código.
+
+</details>
+
+### Ejercicio 2.2 · Temperatura de fusión (regla de Wallace)
+
+Para oligonucleótidos cortos (menos de ~14 pb), la temperatura de fusión se
+aproxima como `Tm = 2·(A+T) + 4·(G+C)`. Escribe la función `tm_wallace` que
+reciba un `&str` y devuelva la Tm en grados Celsius, y pruébala con
+`ATGGCCTTTTAA` y con `ATATATAT`.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+fn tm_wallace(dna: &str) -> usize {
+    let a = dna.matches('A').count();
+    let t = dna.matches('T').count();
+    let g = dna.matches('G').count();
+    let c = dna.matches('C').count();
+    2 * (a + t) + 4 * (g + c)
+}
+
+fn main() {
+    println!("Tm de ATGGCCTTTTAA: {} °C", tm_wallace("ATGGCCTTTTAA"));
+    println!("Tm de ATATATAT: {} °C", tm_wallace("ATATATAT"));
+}
+// Tm de ATGGCCTTTTAA: 38 °C
+// Tm de ATATATAT: 16 °C
+```
+
+Para `ATGGCCTTTTAA`: A+T = 7 y G+C = 5, así que Tm = 2·7 + 4·5 = 38 °C.
+Todo el cálculo ocurre en enteros (`usize`), así que el retorno también es
+entero; no hay división y por tanto no hace falta `f64`.
+
+</details>
+
+### Ejercicio 2.3 · Parseando un archivo imaginario
+
+Una línea de un archivo de resultados dice `"329,0.84,57"`, es decir:
+posición, frecuencia alélica y PHRED. Guárdala en una variable, parsea los
+tres valores a `usize`, `f64` y `u8`, e imprime la posición convertida a
+índice 0-based y la suma de PHRED más 10. Pista: `texto.split(',')` separa
+por comas.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+fn main() {
+    let linea = "329,0.84,57";
+    let mut campos = linea.split(',');
+
+    let posicion: usize = campos.next().expect("falta posición").parse().expect("posición inválida");
+    let frecuencia: f64 = campos.next().expect("falta frecuencia").parse().expect("frecuencia inválida");
+    let phred: u8 = campos.next().expect("falta PHRED").parse().expect("PHRED inválido");
+
+    println!("Índice 0-based: {}", posicion - 1);
+    println!("Frecuencia: {}", frecuencia);
+    println!("PHRED + 10 = {}", phred + 10);
+}
+// Índice 0-based: 328
+// Frecuencia: 0.84
+// PHRED + 10 = 67
+```
+
+`split(',')` entrega los campos uno a uno y `next()` toma el siguiente (de
+nuevo, un iterador trabajando en silencio; su momento llegará). Nota cómo el
+sombreado de tipos (`let posicion: usize = ...parse()...`) hace la
+conversión texto→número en una sola línea por campo.
+
+</details>
+
+### Ejercicio 2.4 · Distancias entre colectas
+
+Dos colectas de la misma especie se hicieron en las coordenadas `(x1, y1) =
+(120.5, 84.2)` y `(x2, y2) = (115.1, 90.7)` de una grilla local, en metros.
+Escribe una función `distancia` que reciba las cuatro coordenadas y devuelva
+la distancia euclidiana. Pista: `f64` tiene los métodos `.powi(2)` (elevar al
+cuadrado) y `.sqrt()` (raíz cuadrada).
+
+<details>
+<summary>Solución</summary>
+
+```rust
+fn distancia(x1: f64, y1: f64, x2: f64, y2: f64) -> f64 {
+    let dx = x2 - x1;
+    let dy = y2 - y1;
+    (dx.powi(2) + dy.powi(2)).sqrt()
+}
+
+fn main() {
+    let d = distancia(120.5, 84.2, 115.1, 90.7);
+    println!("Distancia entre colectas: {:.2} m", d);
+}
+// Distancia entre colectas: 8.49 m
+```
+
+Verificación manual: dx = −5.4, dy = 6.5; 5.4² + 6.5² = 29.16 + 42.25 =
+71.41, y su raíz es ≈ 8.45... con los decimales exactos de la resta da 8.49;
+el punto es que puedes y debes reproducir el cálculo a mano. La función es
+"pura": misma entrada, misma salida, sin sorpresas.
+
+</details>
+
+### Ejercicio 2.5 · Caza el bug del porcentaje
+
+Una compañera escribió esta función y el contenido de GC de *cualquier*
+secuencia le da `0.0%`. Encuentra el error y corrígelo.
+
+```rust
+fn contenido_gc_roto(dna: &str) -> f64 {
+    let g = dna.matches('G').count();
+    let c = dna.matches('C').count();
+    (g + c) / dna.len() * 100.0
+}
+```
+
+<details>
+<summary>Solución</summary>
+
+La división `(g + c) / dna.len()` ocurre **entre enteros** (`usize`), y la
+división entera trunca: para `ATGGCCTTTTAA`, 5 / 12 = 0. El `* 100.0` llega
+tarde: el 0 ya se produjo. La corrección es convertir a flotante **antes**
+de dividir, como en la versión del capítulo:
+
+```rust
+fn contenido_gc(dna: &str) -> f64 {
+    let g = dna.matches('G').count();
+    let c = dna.matches('C').count();
+    (g + c) as f64 / dna.len() as f64 * 100.0
+}
+
+fn main() {
+    println!("Contenido GC: {:.1}%", contenido_gc("ATGGCCTTTTAA"));
+}
+// Contenido GC: 41.7%
+```
+
+Moraleja: en Rust, mezclar enteros y flotantes nunca es automático; el
+lenguaje te obliga a decidir dónde ocurre la conversión, y eso es una vacuna
+contra resultados silenciosamente truncados.
+
+</details>

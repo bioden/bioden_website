@@ -1,0 +1,542 @@
+---
+title: "Capítulo 13: Testing"
+subtitle: "cargo test: la forma de demostrar que tu análisis es correcto"
+format:
+  html:
+    toc: true
+---
+
+Durante doce capítulos verificamos las funciones a mano: calculábamos el GC
+de `ATGGCCTTTTAA` con lápiz y comparábamos. Funcionó, pero no escala: nadie
+recalcula a mano 40 funciones cada vez que cambia una línea de código. Los
+**tests automatizados** convierten esas verificaciones mentales en
+ejecutables que `cargo test` corre en segundos. En ciencia, además del
+argumento de ingeniería hay uno de método: un análisis cuyos pasos no
+pueden verificarse automáticamente es, en la práctica, irreproducible. Este
+capítulo hace del tuyo un pipeline comprobable.
+
+## 13.1 Tu primer test
+
+Un test es una función marcada con `#[test]` que (normalmente) termina en
+un `assert`. La convención: un módulo `tests` al final del archivo,
+activado solo en modo test con `#[cfg(test)]`:
+
+```rust
+fn contenido_gc(dna: &str) -> f64 {
+    let gc = dna.bytes().filter(|b| *b == b'G' || *b == b'C').count();
+    gc as f64 / dna.len() as f64 * 100.0
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*; // trae contenido_gc y amigos al módulo de tests
+
+    #[test]
+    fn gc_de_secuencia_balanceada() {
+        assert_eq!(contenido_gc("ATGC"), 50.0);
+    }
+}
+```
+
+Ejecuta `cargo test` y disfrutarás de uno de los mejores momentos de la
+programación:
+
+```text
+running 1 test
+test tests::gc_de_secuencia_balanceada ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+```
+
+`use super::*` importa todo lo del archivo (el módulo padre, de ahí
+`super::`) para que los tests llamen a las funciones sin prefijos. El
+nombre del test es documentación: `gc_de_secuencia_balanceada` dice qué
+promete. Rompe el test a propósito (cambia `50.0` por `51.0` en el
+`assert_eq!`) y mira la salida: el test falla, `cargo` señala la línea y
+muestra `left: 50`, `right: 51` — los valores reales de ambos lados.
+
+## 13.2 El arsenal de asserts
+
+Tres macros cubren el 95% de las verificaciones:
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn iguales() {
+        // assert_eq!(izquierda, derecha): falla si difieren
+        assert_eq!(2 + 2, 4);
+    }
+
+    #[test]
+    fn distintos() {
+        // assert_ne!: falla si coinciden
+        assert_ne!(contenido_gc("ATAT"), contenido_gc("GCGC"));
+    }
+
+    #[test]
+    fn condiciones() {
+        // assert!: falla si la condición es falsa
+        let gc = contenido_gc("ATGGCCTTTTAA");
+        assert!(gc > 40.0 && gc < 45.0, "GC fuera del rango esperado: {}", gc);
+    }
+}
+```
+
+El tercer argumento de cualquier assert es un **mensaje propio** que se
+imprime al fallar — el lugar perfecto para dejarle una nota a tu yo futuro
+sobre qué significaba el número. Para comparaciones flotantes, la exactitud
+de `assert_eq!` es demasiado estricta (0.1 + 0.2 ≠ 0.3 en aritmética
+binaria); el patrón idiomático compara distancias:
+
+```rust
+#[test]
+fn gc_aproximado() {
+    let gc = contenido_gc("ATGGCCTTTTAA"); // 5/12 = 41.666...
+    assert!((gc - 41.7).abs() < 0.05, "esperaba ~41.7, obtuve {}", gc);
+}
+```
+
+## 13.3 Los casos límite son la ciencia
+
+Los tests brillan donde el lápiz se cansa: los **casos límite**. Para
+`contenido_gc`, todo analista de secuencias debería preguntarse qué pasa
+con una secuencia vacía, una homogénea, y una en minúsculas:
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn gc_de_toda_gc() {
+        assert_eq!(contenido_gc("GCGCGC"), 100.0);
+    }
+
+    #[test]
+    fn gc_de_toda_at() {
+        assert_eq!(contenido_gc("ATATAT"), 0.0);
+    }
+
+    #[test]
+    fn gc_de_vacia_es_nan() {
+        // 0/0 en punto flotante: documentamos la decisión actual
+        assert!(contenido_gc("").is_nan());
+    }
+
+    #[test]
+    fn gc_ignora_minusculas_deberia_preocuparnos() {
+        let gc = contenido_gc("atgc");
+        assert!(gc != 50.0, "las minúsculas no se cuentan: {}", gc);
+    }
+}
+```
+
+Los dos últimos tests son deliberadamente incómodos: **documentan
+comportamientos questionables en vez de esconderlos**. La secuencia vacía
+produce `NaN` (0/0), y las minúsculas quedan fuera del conteo — el test
+`gc_ignora_minusculas_deberia_preocuparnos` lleva un nombre que grita "esto
+es una decisión pendiente". En el proyecto final las resolveremos de
+verdad (normalizando con `to_uppercase`, como hicimos en el capítulo 12).
+Un test que falla o que incomoda es información; los bugs nacen de los
+comportamientos que nadie se atrevió a escribir.
+
+## 13.4 Esperar el pánico y devolver `Result`
+
+Dos variantes de test útiles en tu caja. Si una función debe entrar en
+pánico, se declara la expectativa (recuerda el `panic!` del capítulo 8):
+
+```rust
+fn heterocigocidad(n_alelos: usize) -> f64 {
+    if n_alelos == 0 {
+        panic!("la heterocigocidad no está definida sin alelos");
+    }
+    1.0 - 1.0 / n_alelos as f64
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[should_panic(expected = "sin alelos")]
+    fn heterocigocidad_sin_alelos() {
+        heterocigocidad(0);
+    }
+}
+```
+
+El `expected = "..."` comprueba que el pánico diga lo esperado (cualquier
+otro pánico hace fallar el test). Y cuando el propio test realiza
+operaciones que devuelven `Result`, puede retornarlo y usar `?`:
+
+```rust
+#[test]
+fn parseo_phred_desde_config() -> Result<(), String> {
+    let phred: u8 = "37".parse().map_err(|e| e.to_string())?;
+    assert_eq!(phred, 37);
+    Ok(())
+}
+```
+
+## 13.5 Unitarios junto al código, integración en `/tests`
+
+Los tests que viven en el módulo `#[cfg(test)]` son **unitarios**:
+prueban funciones internas, incluso privadas, y se compilan solo con
+`cargo test` (nunca ensucian el binario final). Los tests de
+**integración** prueban la herramienta completa desde fuera, como la
+usaría un usuario, y viven en la carpeta `tests/` del proyecto:
+
+```text
+bio_toolkit/
+├── Cargo.toml
+├── src/
+│   ├── lib.rs
+│   └── fasta.rs
+└── tests/
+    └── fasta_integracion.rs
+```
+
+Con `src/fasta.rs` exponiendo `parsear`, el archivo
+`tests/fasta_integracion.rs` importa el crate como cualquier usuario
+externo:
+
+```rust
+use bio_toolkit::fasta::parsear;
+
+#[test]
+fn parsea_multilinea_y_lineas_vacias() {
+    let texto = ">genA ejemplo
+ATGGCC
+TTTTAA
+
+>genB
+GATTACA";
+
+    let registros = parsear(texto);
+
+    assert_eq!(registros.len(), 2);
+    assert_eq!(registros[0].0, "genA");
+    assert_eq!(registros[0].1, "ATGGCCTTTTAA");
+    assert_eq!(registros[1].1, "GATTACA");
+}
+
+#[test]
+fn texto_vacio_da_cero_registros() {
+    assert!(parsear("").is_empty());
+}
+```
+
+La diferencia conceptual importa: los unitarios preguntan "¿esta función
+hace su trabajo?"; los de integración preguntan "¿la herramienta hace lo
+que promete su documentación?". Ambos corren con el mismo `cargo test`, y
+sus resultados aparecen en bloques separados (verás `Running
+tests/fasta_integracion.rs`).
+
+## 13.6 Doc-tests: la documentación que se evalúa
+
+Tercer nivel de verificación: los ejemplos dentro de los doc comments
+(capítulo 11) se ejecutan como tests. Si tu `///` promete
+
+```rust
+/// Devuelve el contenido de GC en porcentaje.
+///
+/// ```
+/// use bio_toolkit::analisis::contenido_gc;
+/// assert_eq!(contenido_gc("GCGC"), 100.0);
+/// ```
+```
+
+entonces `cargo test` lo corre y falla el día que alguien cambie la
+función y olvide la documentación. La salida de `cargo test` lo resume:
+
+```text
+running 2 tests
+test src/lib.rs - analisis::contenido_gc (line 8) ... ok
+```
+
+Con esto cierra el trío: unitarios para las piezas, integración para el
+conjunto, doc-tests para la promesa pública.
+
+## 13.7 `cargo test` en el día a día
+
+```bash
+cargo test                  # corre todo (unitarios + integración + doc-tests)
+cargo test gc               # solo los tests cuyo nombre contiene "gc"
+cargo test -- --nocapture   # muestra los println! de los tests
+cargo test --release        # tests con optimizaciones (más lento de compilar)
+```
+
+El filtro por nombre (`cargo test gc`) convierte la suite completa en tu
+bucle de trabajo: escribes el test que falla, corres solo ese, arreglas,
+y repites. Ese ciclo —**rojo, verde, refactor**— es la práctica conocida
+como TDD (desarrollo dirigido por tests), y en bioinformática equivale al
+control positivo de laboratorio: primero el estándar que debe dar señal,
+después el experimento.
+
+::: {.callout-tip}
+## ¿Cuántos tests son suficientes?
+No hay número mágico; hay una pregunta: "si esta función se rompiera
+mañana, ¿qué test lo delataría?". Empieza por los casos con respuesta
+biológica conocida (el GC de una secuencia balanceada, el complemento de
+una palindrómica) y agrega un test cada vez que encuentres un bug — cada
+bug es un test que faltaba, y ahora quedará inmunizado para siempre.
+:::
+
+## Ejercicios
+
+### Ejercicio 13.1 · La suite de `complemento_inverso`
+
+Escribe `complemento_inverso` (capítulo 3) y su suite completa: caso
+típico, secuencia palindrómica (su complemento inverso es ella misma, como
+`GAATTC` de EcoRI), secuencia con base ambigua, y secuencia vacía.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+fn complemento_inverso(dna: &str) -> String {
+    let mut resultado = String::new();
+    for base in dna.chars().rev() {
+        let complementaria = match base {
+            'A' => 'T',
+            'T' => 'A',
+            'C' => 'G',
+            'G' => 'C',
+            otra => otra,
+        };
+        resultado.push(complementaria);
+    }
+    resultado
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn caso_tipico() {
+        assert_eq!(complemento_inverso("ATGGCC"), "GGCCAT");
+    }
+
+    #[test]
+    fn palindromica_de_ecori() {
+        // GAATTC: sitio de corte de EcoRI, palíndromo de 6 pb
+        assert_eq!(complemento_inverso("GAATTC"), "GAATTC");
+    }
+
+    #[test]
+    fn base_ambigua_pasa_igual() {
+        assert_eq!(complemento_inverso("AN"), "NT");
+    }
+
+    #[test]
+    fn vacia_da_vacia() {
+        assert_eq!(complemento_inverso(""), "");
+    }
+}
+```
+
+El test palindrómico es oro puro biológico: los sitios de restricción son
+precisamente secuencias con esta simetría, y un `complemento_inverso`
+roto la delataría al instante. Verifica el caso típico a mano si quieres
+cerrar el círculo con el lápiz: invertir `ATGGCC` da `CCGGTA`, y
+complementar da `GGCCAT` ✓.
+
+</details>
+
+### Ejercicio 13.2 · Rojo, verde, refactor
+
+Aplica TDD en miniatura: escribe primero un test que exija que
+`traducir("ATGGCCTTTTAA")` devuelva `"MAF*"` (sabes del capítulo 7 que es
+cierto), corre `cargo test` para verlo fallar con "function not found",
+implementa `traducir` con la tabla de codones, y corre de nuevo para verlo
+verde.
+
+<details>
+<summary>Solución</summary>
+
+Paso 1 — el test (rojo, porque `traducir` aún no existe):
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn traduce_el_mini_gen() {
+        assert_eq!(traducir("ATGGCCTTTTAA"), "MAF*");
+    }
+}
+```
+
+`cargo test` falla con `cannot find function `traducir` in this scope` —
+exactamente el rojo que queríamos. Paso 2 — la implementación (verde):
+
+```rust
+use std::collections::HashMap;
+
+fn traducir(dna: &str) -> String {
+    let tabla = HashMap::from([
+        ("ATG", 'M'), ("GCC", 'A'), ("TTT", 'F'),
+        ("TAA", '*'), ("TAG", '*'), ("TGA", '*'),
+    ]);
+    let mut proteina = String::new();
+    for i in (0..dna.len()).step_by(3) {
+        if i + 3 > dna.len() {
+            break;
+        }
+        let aa = tabla.get(&dna[i..i + 3]).copied().unwrap_or('X');
+        proteina.push(aa);
+    }
+    proteina
+}
+```
+
+Paso 3 — refactor con confianza: ahora puedes extraer la tabla a su
+propia función, cambiar el bucle por iteradores (capítulo 10) o moverla al
+módulo `traductor` (capítulo 11); después de cada cambio, `cargo test`
+confirma en un segundo que la biología sigue intacta. Esa libertad es
+exactamente lo que los tests compran.
+
+</details>
+
+### Ejercicio 13.3 · Caza el bug con test incluido
+
+Esta función de un colega "funciona siempre" excepto cuando no. Escribe el
+test que expone el bug, y arréglalo:
+
+```rust
+fn tm_wallace(dna: &str) -> usize {
+    let a = dna.matches('A').count();
+    let t = dna.matches('T').count();
+    let g = dna.matches('G').count();
+    let c = dna.matches('C').count();
+    2 * (a + t) + 4 * (g + c)
+}
+```
+
+Pista: el colega jura que `ATATAT` debe dar 12.
+
+<details>
+<summary>Solución</summary>
+
+El test que expone el problema:
+
+```rust
+#[test]
+fn tm_de_solo_at() {
+    assert_eq!(tm_wallace("ATATAT"), 12);
+}
+```
+
+Y... pasa. `2 × (3+3) = 12` ✓. El bug real está en otra parte: prueba con
+una secuencia con `N` o minúsculas — `tm_wallace("ATATaN")` también da 12,
+porque las bases no canónicas **no contribuyen en absoluto** sin que nada
+lo advierta. El test honesto documenta esa decisión:
+
+```rust
+#[test]
+fn bases_no_canonicas_no_contribuyen() {
+    // decisión documentada: N y minúsculas se ignoran en el conteo
+    assert_eq!(tm_wallace("ATATaN"), tm_wallace("ATATA"));
+    assert_eq!(tm_wallace("atgc"), 0);
+}
+```
+
+Moraleja doble: primero, un test que pasa no certifica correctitud, solo
+el caso probado; segundo, los bugs biológicos acechan en las entradas
+sucias, no en las limpias. Si la regla fuera "rechazar lo no canónico",
+cambiaríamos el retorno a `Result` (capítulo 8) — otra opción igual de
+válida, siempre que esté escrita en un test.
+
+</details>
+
+### Ejercicio 13.4 · Suite de integración para `parsear`
+
+Convierte en test de integración (en `tests/`) el caso del FASTA
+multilínea con línea vacía del capítulo 11, incluyendo una aserción sobre
+el total de pares de bases.
+
+<details>
+<summary>Solución</summary>
+
+`tests/parsear_integracion.rs`:
+
+```rust
+use bio_toolkit::fasta::parsear;
+
+#[test]
+fn fasta_real_multilinea_con_espacios() {
+    let texto = ">genA mini-gen
+ATGGCC
+TTTTAA
+
+>genB fragmento
+GCCGGCCTTAAGGC";
+
+    let registros = parsear(texto);
+
+    assert_eq!(registros.len(), 2);
+    assert_eq!(registros[0], (String::from("genA"), String::from("ATGGCCTTTTAA")));
+    assert_eq!(registros[1].1.len(), 14);
+
+    let total: usize = registros.iter().map(|(_, bases)| bases.len()).sum();
+    assert_eq!(total, 26);
+}
+```
+
+Comparar la tupla completa con `assert_eq!` funciona porque las tuplas de
+tipos comparables implementan `PartialEq`. Y el total (12 + 14 = 26) usa
+el pipeline `map + sum` del capítulo 10: los tests también son código
+Rust, y todo lo aprendido aplica dentro de ellos.
+
+</details>
+
+### Ejercicio 13.5 · Tu suite personal
+
+Elige tres funciones que hayas escrito en los ejercicios de capítulos
+anteriores y dales su suite mínima de tests (típico + límite + decisión
+incómoda documentada, mínimo 3 tests por función). Corre `cargo test` y
+celebra el verde.
+
+<details>
+<summary>Solución</summary>
+
+Ejemplo de estructura final para `contenido_gc` (adapta a tus funciones):
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn tipico() {
+        assert!((contenido_gc("ATGGCCTTTTAA") - 41.7).abs() < 0.05);
+    }
+
+    #[test]
+    fn limites() {
+        assert_eq!(contenido_gc("GCGC"), 100.0);
+        assert_eq!(contenido_gc("ATAT"), 0.0);
+        assert!(contenido_gc("").is_nan()); // documentado: entrada inválida
+    }
+
+    #[test]
+    fn decision_documentada() {
+        // las minúsculas NO cuentan: decisión pendiente de revisar
+        assert_ne!(contenido_gc("atgc"), 50.0);
+    }
+}
+```
+
+La suite completa de un proyecto maduro sigue esta proporción: por cada
+función, un caso típico que cualquiera esperaría, los límites donde el
+comportamiento cambia (vacío, máximo, mínimo) y una aserción que grabe en
+mármol las decisiones discutibles. Cuando regreses a ese código en seis
+meses, los tests serán la memoria del proyecto — y la evidencia de que
+funciona, lista para adjuntar a tu sección de métodos.
+
+</details>

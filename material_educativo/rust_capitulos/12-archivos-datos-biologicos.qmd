@@ -1,0 +1,504 @@
+---
+title: "Capítulo 12: Archivos"
+subtitle: "Leer FASTA real de disco, escribir reportes TSV y sobrevivir a rutas y errores"
+format:
+  html:
+    toc: true
+---
+
+Todo lo anterior operó sobre datos escritos en el código. Este capítulo
+abre la puerta al mundo real: leer archivos de secuencias desde disco,
+procesarlos línea a línea sin reventar la memoria, y escribir reportes
+tabulados que puedas abrir en R o Python para graficar. Es un capítulo de
+pocos conceptos nuevos —`Result` con `?` ya lo dominas— pero mucha
+integración: structs, iteradores, módulos y errores convergen aquí.
+
+## 12.1 Leer un archivo completo
+
+La forma directa: `std::fs::read_to_string`, que lee todo el archivo a un
+`String`. Como esperarías de algo que toca el mundo exterior, devuelve
+`Result`:
+
+```rust
+use std::fs;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let contenido = fs::read_to_string("ejemplo.fa")?;
+
+    println!("El archivo tiene {} caracteres", contenido.len());
+    println!("Y {} líneas", contenido.lines().count());
+    Ok(())
+}
+```
+
+Si `ejemplo.fa` no existe, el programa termina con
+`Error: No such file or directory (os error 2)` — limpio, informativo,
+sin pánico. Crea el archivo de trabajo de este capítulo y guárdalo como
+`ejemplo.fa` en la carpeta del proyecto:
+
+```text
+>genA mini-gen de ejemplo
+ATGGCCTTTTAA
+>genB fragmento con GC alto
+GCCGGCCTTAAGGC
+>genC marcador
+
+GATTACAGATTACA
+```
+
+Nota la línea en blanco antes de la tercera secuencia: es un regalo
+intencional del mundo real (los FASTA que exportan las herramientas vienen
+con espacios y líneas vacías de sobra). La salida del programa es:
+
+```text
+El archivo tiene 113 caracteres
+Y 7 líneas
+```
+
+## 12.2 Línea a línea: `BufReader`
+
+Cargar el archivo entero en memoria está bien para ejemplos; para un
+genoma de 3 Gb es un lujo peligroso. La herramienta de precisión es
+`File` + `BufReader`, que entrega las líneas una a una con un búfer
+pequeño y constante:
+
+```rust
+use std::fs::File;
+use std::io::{BufRead, BufReader};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let archivo = File::open("ejemplo.fa")?;
+    let lector = BufReader::new(archivo);
+
+    let mut encabezados = 0;
+    let mut bases = 0;
+
+    for linea in lector.lines() {
+        let linea = linea?; // cada línea puede fallar: otro Result
+
+        let linea = linea.trim();
+        if linea.is_empty() {
+            continue;
+        }
+        if linea.starts_with('>') {
+            encabezados += 1;
+        } else {
+            bases += linea.len();
+        }
+    }
+
+    println!("{} registros, {} pb en total", encabezados, bases);
+    Ok(())
+}
+// 3 registros, 40 pb en total
+```
+
+Nótese el doble `?`: uno para abrir el archivo y otro **por cada línea**
+(la lectura física puede fallar a mitad de archivo). Ese patrón `for linea
+in lector.lines() { let linea = linea?; ... }` lo escribirás tantas veces
+que se volverá reflejo. El `trim()` y el salto de vacías son higiene de
+lector: los archivos FASTA reales vienen con espacios, retornos de carro
+de Windows (`\r`) y líneas en blanco de regalo.
+
+## 12.3 Escribir archivos
+
+Para escribir, dos niveles. El exprés: `fs::write(ruta, contenido)` crea
+(o sobreescribe) el archivo de un golpe. El controlado: `File::create` +
+`writeln!`, que escribe línea a línea — nuestro formato para reportes:
+
+```rust
+use std::fs::File;
+use std::io::Write;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let mut salida = File::create("reporte.tsv")?;
+
+    writeln!(salida, "id\tlongitud\tpb_gc")?;
+    writeln!(salida, "genA\t12\t5")?;
+    writeln!(salida, "genB\t14\t10")?;
+
+    println!("Reporte escrito en reporte.tsv");
+    Ok(())
+}
+```
+
+`writeln!` es la macro hermana de `println!` (mismos formatos, `\t` es un
+tabulador) pero escribe al archivo; el `?` tras cada llamada propaga
+errores de disco lleno o permisos. El resultado se abre directo en R:
+`read.delim("reporte.tsv")` o en cualquier hoja de cálculo.
+
+Para **agregar** sin sobreescribir (bitácoras de análisis, logs de
+laboratorio), `OpenOptions` es la llave:
+
+```rust
+use std::fs::OpenOptions;
+use std::io::Write;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let mut log = OpenOptions::new()
+        .append(true)
+        .create(true)
+        .open("analisis.log")?;
+
+    writeln!(log, "ejecución del análisis FASTA: OK")?;
+    Ok(())
+}
+```
+
+`.create(true)` lo crea si no existe; cada ejecución añade una línea al
+final en vez de destruir lo anterior — la diferencia entre una bitácora y
+un bloc que se borra cada día.
+
+## 12.4 Rutas: `Path` y `PathBuf`
+
+Las rutas de archivo tienen su propio tipo, `Path`, con utilidades que
+evitan concatenar textos a mano (y fallar en Windows, donde el separador
+es `\`):
+
+```rust
+use std::path::Path;
+
+fn main() {
+    let ruta = Path::new("datos").join("genomas").join("ejemplo.fa");
+
+    println!("Ruta:       {}", ruta.display());
+    println!("¿Existe?:   {}", ruta.exists());
+    println!("Extensión:  {:?}", ruta.extension());
+    println!("¿Es FASTA?: {}", ruta.extension().map_or(false, |ext| ext == "fa"));
+}
+// Ruta:       datos/genomas/ejemplo.fa
+// ¿Existe?:   false
+// Extensión:  Some("fa")
+// ¿Es FASTA?: true
+```
+
+`join` construye rutas con el separador correcto del sistema,
+`extension()` devuelve `Option` (un archivo puede no tener extensión) y
+`map_or(false, ...)` es el "si hay algo, evalúa; si no, falso" — primo de
+`map` + `unwrap_or` que ya conoces. `Path::new` toma prestado;
+`PathBuf` es su versión dueña y creciente (la misma relación `&str` /
+`String`), y es el tipo natural para los campos de configuración que
+guardan rutas.
+
+## 12.5 Proyecto del capítulo: pipeline FASTA → TSV
+
+Integremos todo en un analizador de archivos reales. Recibe `ejemplo.fa`,
+calcula estadísticas por registro y escribe `reporte.tsv`:
+
+```rust
+use std::fs;
+use std::io::Write;
+use std::path::Path;
+
+fn contenido_gc(dna: &str) -> f64 {
+    let gc = dna.bytes().filter(|b| *b == b'G' || *b == b'C').count();
+    gc as f64 / dna.len() as f64 * 100.0
+}
+
+fn parsear_fasta(texto: &str) -> Vec<(String, String)> {
+    let mut registros = Vec::new();
+    let mut id_actual = String::new();
+    let mut bases = String::new();
+
+    for linea in texto.lines() {
+        let linea = linea.trim();
+        if linea.is_empty() {
+            continue;
+        }
+        if let Some(encabezado) = linea.strip_prefix('>') {
+            if !id_actual.is_empty() {
+                registros.push((id_actual, bases));
+            }
+            id_actual = encabezado.split_whitespace().next().unwrap_or("").to_string();
+            bases = String::new();
+        } else {
+            bases.push_str(linea.to_uppercase().trim());
+        }
+    }
+    if !id_actual.is_empty() {
+        registros.push((id_actual, bases));
+    }
+    registros
+}
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // 1. Validar y leer
+    let ruta_entrada = Path::new("ejemplo.fa");
+    if !ruta_entrada.exists() {
+        return Err("archivo de entrada no encontrado: ejemplo.fa".into());
+    }
+    let texto = fs::read_to_string(ruta_entrada)?;
+
+    // 2. Parsear y analizar
+    let registros = parsear_fasta(&texto);
+
+    // 3. Reportar
+    let mut salida = fs::File::create("reporte.tsv")?;
+    writeln!(salida, "id\tlongitud\tpb_gc\tpct_gc")?;
+
+    let mut total_pb = 0;
+    for (id, bases) in &registros {
+        let gc = bases.bytes().filter(|b| *b == b'G' || *b == b'C').count();
+        writeln!(salida, "{}\t{}\t{}\t{:.1}", id, bases.len(), gc, contenido_gc(bases))?;
+        total_pb += bases.len();
+    }
+
+    println!("{} registros, {} pb totales -> reporte.tsv", registros.len(), total_pb);
+    Ok(())
+}
+```
+
+Ejecutado sobre nuestro `ejemplo.fa`, la consola reporta
+`3 registros, 40 pb totales -> reporte.tsv` y el TSV queda:
+
+```text
+id      longitud        pb_gc   pct_gc
+genA    12      5       41.7
+genB    14      10      71.4
+genC    14      2       14.3
+```
+
+Tres decisiones de diseño dignas de mención. Primera: el parser ahora
+normaliza con `to_uppercase()` al acumular — la `g` minúscula de un genoma
+soft-masked no rompe los conteos. Segunda: el error de "archivo no
+encontrado" usa `.into()` para convertir un `&str` en `Box<dyn Error>` —
+el mismo comodín del capítulo 8 acepta textos. Tercera: `writeln!` también
+lleva `?`, porque escribir puede fallar tanto como leer. Este programa,
+con 60 líneas, ya es una herramienta de uso diario de laboratorio.
+
+## 12.6 Lo que viene después
+
+Para datos tabulados complejos (CSV con comillas, encabezados, tipos), el
+ecosistema ofrece los crates `csv` y `serde` que automatizan todo esto —
+los presentamos en el próximo capítulo. Y para archivos comprimidos
+(genomas `.gz`), el crate `flate2` descifra el formato con la misma
+interfaz de lectores que vimos aquí. El patrón `File → BufReader →
+lines()`, eso sí, es el mismo siempre: aprendiste el esqueleto una vez.
+
+## Ejercicios
+
+### Ejercicio 12.1 · `wc` casero
+
+Escribe un programa que reciba el nombre de archivo `ejemplo.fa` (por
+ahora fijo en el código), e imprima líneas, palabras y caracteres, como el
+`wc` de Unix.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+use std::fs;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let texto = fs::read_to_string("ejemplo.fa")?;
+    let mut lineas = 0;
+    let mut palabras = 0;
+
+    for linea in texto.lines() {
+        lineas += 1;
+        palabras += linea.split_whitespace().count();
+    }
+
+    println!("{} líneas, {} palabras, {} caracteres", lineas, palabras, texto.len());
+    Ok(())
+}
+```
+
+`split_whitespace().count()` cuenta las palabras de cada línea usando el
+iterador del capítulo 10. Con `texto.len()` contamos caracteres del String
+completo (incluye saltos de línea, igual que `wc -c` cuenta bytes).
+
+</details>
+
+### Ejercicio 12.2 · Escribir y releer
+
+Escribe un programa de dos fases: primero crea `mini.fa` con dos registros
+FASTA desde el código (con `writeln!`), luego léelo de vuelta con
+`parsear_fasta` e imprime un resumen de cada registro. Todo en la misma
+ejecución.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+use std::fs::{self, File};
+use std::io::Write;
+
+fn parsear_fasta(texto: &str) -> Vec<(String, String)> {
+    let mut registros = Vec::new();
+    let mut id_actual = String::new();
+    let mut bases = String::new();
+
+    for linea in texto.lines() {
+        let linea = linea.trim();
+        if linea.is_empty() {
+            continue;
+        }
+        if let Some(encabezado) = linea.strip_prefix('>') {
+            if !id_actual.is_empty() {
+                registros.push((id_actual, bases));
+            }
+            id_actual = encabezado.split_whitespace().next().unwrap_or("").to_string();
+            bases = String::new();
+        } else {
+            bases.push_str(linea);
+        }
+    }
+    if !id_actual.is_empty() {
+        registros.push((id_actual, bases));
+    }
+    registros
+}
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Fase 1: escribir
+    let mut archivo = File::create("mini.fa")?;
+    writeln!(archivo, ">seq1 primera")?;
+    writeln!(archivo, "ATGGCCTTTTAA")?;
+    writeln!(archivo, ">seq2 segunda")?;
+    writeln!(archivo, "GATTACAGATTACA")?;
+    drop(archivo); // cerramos explícitamente antes de releer
+
+    // Fase 2: releer
+    let registros = parsear_fasta(&fs::read_to_string("mini.fa")?);
+    for (id, bases) in &registros {
+        println!("{}: {} pb -> {}", id, bases.len(), bases);
+    }
+    Ok(())
+}
+// seq1: 12 pb -> ATGGCCTTTTAA
+// seq2: 14 pb -> GATTACAGATTACA
+```
+
+El `drop(archivo)` cierra el archivo a propósito antes de leerlo: Rust
+cierra los archivos al soltarlos, y ser explícito evita la incómoda
+situación de leer un archivo aún abierto en modo escritura. Verás que en
+la práctica casi nunca es necesario (los `?` y los ámbitos suelen ordenar
+todo solos), pero saber que existe el control manual vale la pena.
+
+</details>
+
+### Ejercicio 12.3 · N50 de un ensamblaje
+
+El N50 es la estadística de ensamblajes: ordena los contigs de largo a
+corto y encuentra la longitud del contig con el que acumulas al menos el
+50% del total. Escribe `fn n50(longitudes: &[usize]) -> usize` (un slice
+de longitudes) y pruébala con `[12, 14, 16, 30, 8]`.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+fn n50(longitudes: &[usize]) -> usize {
+    let mut ordenadas = longitudes.to_vec();
+    ordenadas.sort_unstable_by(|a, b| b.cmp(a)); // descendente
+
+    let total: usize = ordenadas.iter().sum();
+    let mut acumulado = 0;
+
+    for l in ordenadas {
+        acumulado += l;
+        if acumulado * 2 >= total {
+            return l;
+        }
+    }
+    0 // solo si la lista está vacía
+}
+
+fn main() {
+    let contigs = [12, 14, 16, 30, 8];
+    println!("N50 del ensamblaje: {} pb", n50(&contigs));
+}
+// N50 del ensamblaje: 16 pb
+```
+
+Verificación manual: total = 80; mitad = 40. Ordenados: 30, 16, 14, 12, 8.
+Acumulado: 30 (< 40), 46 (≥ 40) → N50 = 16 ✓. El parámetro `&[usize]` es
+el slice del capítulo 4: la función acepta prestar un trozo de cualquier
+vector de longitudes. `acumulado * 2 >= total` evita la división flotante
+— el viejo truco anti-overflow de enteros que los genomas agradecen.
+
+</details>
+
+### Ejercicio 12.4 · Bitácora persistente
+
+Agrega al pipeline del capítulo una bitácora: al inicio y al final de cada
+ejecución, escribe en `analisis.log` la fecha simulada y el evento
+("inicio" y "fin: N registros"). Ejecútalo tres veces y muestra el log.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+use std::fs::OpenOptions;
+use std::io::Write;
+
+fn registrar_evento(mensaje: &str) -> std::io::Result<()> {
+    let mut log = OpenOptions::new()
+        .append(true)
+        .create(true)
+        .open("analisis.log")?;
+    writeln!(log, "[bitácora] {}", mensaje)
+}
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    registrar_evento("inicio del análisis")?;
+    let registros = 3; // ... el pipeline real calcularía esto
+    registrar_evento(&format!("fin: {} registros procesados", registros))?;
+    Ok(())
+}
+```
+
+Tras tres ejecuciones, `analisis.log` contiene:
+
+```text
+[bitácora] inicio del análisis
+[bitácora] fin: 3 registros procesados
+[bitácora] inicio del análisis
+[bitácora] fin: 3 registros procesados
+[bitácora] inicio del análisis
+[bitácora] fin: 3 registros procesados
+```
+
+La función `registrar_evento` devuelve `std::io::Result<()>` y su última
+expresión es directamente el `writeln!` — sin `;` final, el resultado del
+writeln es el resultado de la función. En un sistema real añadirías la
+fecha real con el crate `chrono` o el estándar `std::time`; con lo que
+sabes, la estructura ya está completa.
+
+</details>
+
+### Ejercicio 12.5 · Robustez total
+
+Modifica el pipeline del capítulo para que, si el archivo de entrada no
+existe, el mensaje de error sea `Error: no encontré 'ejemplo.fa' en
+'<directorio actual>'` (pista: `std::env::current_dir()` devuelve la
+carpeta de ejecución, envuelta en Result).
+
+<details>
+<summary>Solución</summary>
+
+```rust
+use std::path::Path;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let ruta = Path::new("ejemplo.fa");
+
+    if !ruta.exists() {
+        let carpeta = std::env::current_dir()?;
+        return Err(format!("no encontré '{}' en '{}'", ruta.display(), carpeta.display()).into());
+    }
+
+    // ... continuar con la lectura y el análisis
+    println!("Archivo listo para procesar");
+    Ok(())
+}
+```
+
+Con el archivo ausente, el programa termina con
+`Error: no encontré 'ejemplo.fa' en '/home/usuario/proyecto'`. Ese mensaje
+les ahorra a tus usuarios (y a tu yo futuro) un minuto de confusión por
+cada vez que lo ejecutan desde la carpeta equivocada. La regla de cortesía
+de las herramientas: cuando falles, di **qué** buscabas y **dónde**.
+
+</details>

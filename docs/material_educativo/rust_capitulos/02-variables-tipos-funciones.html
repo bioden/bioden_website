@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.19">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Capítulo 2: Variables, tipos y funciones – BIODEN</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../logo.png" rel="icon" type="image/png">
+<script src="../../site_libs/cookie-consent/cookie-consent.js"></script>
+<link href="../../site_libs/cookie-consent/cookie-consent.css" rel="stylesheet">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-70f92796293836dceea0045bd755b5b1.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-1242ccc02940432acd87c1b818d9cd49.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-70f92796293836dceea0045bd755b5b1.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+<script type="text/javascript" charset="UTF-8">
+document.addEventListener('DOMContentLoaded', function () {
+cookieconsent.run({
+  "notice_banner_type":"interstitial",
+  "consent_type":"express",
+  "palette":"dark",
+  "language":"en",
+  "page_load_consent_levels":["strictly-necessary"],
+  "notice_banner_reject_button_hide":false,
+  "preferences_center_close_button_hide":false,
+  "website_name":""
+  ,
+"language":"en"
+  });
+});
+</script> 
+  
+<style>html{ scroll-behavior: smooth; }</style>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../logo.png" alt="" class="navbar-logo light-content">
+    <img src="../../logo.png" alt="" class="navbar-logo dark-content">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">BIODEN</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Inicio</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-proyectos" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Proyectos</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-proyectos">    
+        <li>
+    <a class="dropdown-item" href="https://bioden.github.io/XIII_CCB_curso/">
+ <span class="dropdown-text">De la Botánica a la Bioinformática</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../investigacion.html"> 
+<span class="menu-text">Investigación</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../integrantes.html"> 
+<span class="menu-text">Integrantes</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../biosistalks/biosistalks.html"> 
+<span class="menu-text">Biosis Talks</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../material_educativo.html"> 
+<span class="menu-text">Material educativo</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../suplementario.html"> 
+<span class="menu-text">Servicios</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.instagram.com/dbg_unicauca/"> <i class="bi bi-instagram" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.facebook.com/profile.php?id=61583453722433"> <i class="bi bi-facebook" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:bioden@unicauca.edu.co"> <i class="bi bi-envelope" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar"><div class="quarto-margin-header"><div class="margin-header-item">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../../logos/semillero.png" class="img-fluid figure-img"></p>
+<figcaption>Universidad del Cauca</figcaption>
+</figure>
+</div>
+</div></div>
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#variables-inmutables-por-defecto" id="toc-variables-inmutables-por-defecto" class="nav-link active" data-scroll-target="#variables-inmutables-por-defecto">2.1 Variables: inmutables por defecto</a>
+  <ul class="collapse">
+  <li><a href="#sombras-reutilizar-un-nombre" id="toc-sombras-reutilizar-un-nombre" class="nav-link" data-scroll-target="#sombras-reutilizar-un-nombre">Sombras: reutilizar un nombre</a></li>
+  </ul></li>
+  <li><a href="#tipos-escalares-números-booleanos-y-caracteres" id="toc-tipos-escalares-números-booleanos-y-caracteres" class="nav-link" data-scroll-target="#tipos-escalares-números-booleanos-y-caracteres">2.2 Tipos escalares: números, booleanos y caracteres</a>
+  <ul class="collapse">
+  <li><a href="#enteros" id="toc-enteros" class="nav-link" data-scroll-target="#enteros">Enteros</a></li>
+  <li><a href="#flotantes-booleanos-y-caracteres" id="toc-flotantes-booleanos-y-caracteres" class="nav-link" data-scroll-target="#flotantes-booleanos-y-caracteres">Flotantes, booleanos y caracteres</a></li>
+  </ul></li>
+  <li><a href="#tuplas-y-arrays-datos-compuestos" id="toc-tuplas-y-arrays-datos-compuestos" class="nav-link" data-scroll-target="#tuplas-y-arrays-datos-compuestos">2.3 Tuplas y arrays: datos compuestos</a></li>
+  <li><a href="#texto-str-y-string" id="toc-texto-str-y-string" class="nav-link" data-scroll-target="#texto-str-y-string">2.4 Texto: <code>&amp;str</code> y <code>String</code></a></li>
+  <li><a href="#funciones" id="toc-funciones" class="nav-link" data-scroll-target="#funciones">2.5 Funciones</a>
+  <ul class="collapse">
+  <li><a href="#declaraciones-y-expresiones" id="toc-declaraciones-y-expresiones" class="nav-link" data-scroll-target="#declaraciones-y-expresiones">Declaraciones y expresiones</a></li>
+  </ul></li>
+  <li><a href="#tu-primera-función-bioinformática-contenido-de-gc" id="toc-tu-primera-función-bioinformática-contenido-de-gc" class="nav-link" data-scroll-target="#tu-primera-función-bioinformática-contenido-de-gc">2.6 Tu primera función bioinformática: contenido de GC</a></li>
+  <li><a href="#constantes-y-conversiones" id="toc-constantes-y-conversiones" class="nav-link" data-scroll-target="#constantes-y-conversiones">2.7 Constantes y conversiones</a></li>
+  <li><a href="#ejercicios" id="toc-ejercicios" class="nav-link" data-scroll-target="#ejercicios">Ejercicios</a>
+  <ul class="collapse">
+  <li><a href="#ejercicio-2.1-contador-de-mutaciones" id="toc-ejercicio-2.1-contador-de-mutaciones" class="nav-link" data-scroll-target="#ejercicio-2.1-contador-de-mutaciones">Ejercicio 2.1 · Contador de mutaciones</a></li>
+  <li><a href="#ejercicio-2.2-temperatura-de-fusión-regla-de-wallace" id="toc-ejercicio-2.2-temperatura-de-fusión-regla-de-wallace" class="nav-link" data-scroll-target="#ejercicio-2.2-temperatura-de-fusión-regla-de-wallace">Ejercicio 2.2 · Temperatura de fusión (regla de Wallace)</a></li>
+  <li><a href="#ejercicio-2.3-parseando-un-archivo-imaginario" id="toc-ejercicio-2.3-parseando-un-archivo-imaginario" class="nav-link" data-scroll-target="#ejercicio-2.3-parseando-un-archivo-imaginario">Ejercicio 2.3 · Parseando un archivo imaginario</a></li>
+  <li><a href="#ejercicio-2.4-distancias-entre-colectas" id="toc-ejercicio-2.4-distancias-entre-colectas" class="nav-link" data-scroll-target="#ejercicio-2.4-distancias-entre-colectas">Ejercicio 2.4 · Distancias entre colectas</a></li>
+  <li><a href="#ejercicio-2.5-caza-el-bug-del-porcentaje" id="toc-ejercicio-2.5-caza-el-bug-del-porcentaje" class="nav-link" data-scroll-target="#ejercicio-2.5-caza-el-bug-del-porcentaje">Ejercicio 2.5 · Caza el bug del porcentaje</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Capítulo 2: Variables, tipos y funciones</h1>
+<p class="subtitle lead">let, mut, los tipos numéricos y de texto, y tu primera función bioinformática de verdad</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>En el capítulo anterior imprimiste tu primer informe de secuencias. En este vas a aprender a guardar datos en variables, a distinguir los tipos numéricos y de texto que ofrece Rust, y a escribir tus propias funciones, incluida <code>contenido_gc</code>, tu primera función bioinformática clásica. Este capítulo es denso en vocabulario nuevo, pero cada pieza se usará durante todo el resto del curso.</p>
+<section id="variables-inmutables-por-defecto" class="level2">
+<h2 data-anchor-id="variables-inmutables-por-defecto">2.1 Variables: inmutables por defecto</h2>
+<p>En Rust una variable se crea con <code>let</code>. Lo particular del lenguaje es que toda variable es <strong>inmutable por defecto</strong>: una vez asignada, su valor no puede cambiar. Si intentas reasignarla, el compilador lo rechaza:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> cobertura <span class="op">=</span> <span class="dv">30</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    cobertura <span class="op">=</span> cobertura <span class="op">+</span> <span class="dv">5</span><span class="op">;</span> <span class="co">// ⛔ NO COMPILA (intencionalmente)</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>El error es exactamente el que quieres en un análisis: “cannot assign twice to immutable variable”. Si un valor no debe cambiar, el lenguaje se asegura de que no cambie. Cuando sí necesitas modificar una variable —por ejemplo, un contador de mutaciones que crece dentro de un bucle— la declaras con <code>mut</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> mutaciones <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"Inicio: {} mutaciones"</span><span class="op">,</span> mutaciones)<span class="op">;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    mutaciones <span class="op">=</span> mutaciones <span class="op">+</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    mutaciones <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span> <span class="co">// forma abreviada de sumar 1</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"Fin: {} mutaciones"</span><span class="op">,</span> mutaciones)<span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Inicio: 0 mutaciones</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Fin: 2 mutaciones</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>La recomendación es simple: empieza siempre con <code>let</code> simple y agréga <code>mut</code> solo cuando el compilador te lo pida. Así, cualquier mutación en tu código es explícita y visible.</p>
+<section id="sombras-reutilizar-un-nombre" class="level3">
+<h3 data-anchor-id="sombras-reutilizar-un-nombre">Sombras: reutilizar un nombre</h3>
+<p>Se puede declarar una nueva variable con el mismo nombre que una anterior; se dice que la primera queda “en sombra” de la segunda. Esto es distinto de mutar: se crea un valor nuevo, incluso de otro tipo:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> posicion <span class="op">=</span> <span class="st">"328"</span><span class="op">;</span>           <span class="co">// un texto...</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> posicion<span class="op">:</span> <span class="dt">usize</span> <span class="op">=</span> posicion<span class="op">.</span>parse()<span class="op">.</span>expect(<span class="st">"no era un número"</span>)<span class="op">;</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"Posición 0-based: {}"</span><span class="op">,</span> posicion <span class="op">-</span> <span class="dv">1</span>)<span class="op">;</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co">// Posición 0-based: 327</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Este patrón —parsear un dato que llega como texto y sombrearlo con su versión numérica— es muy común en Rust y lo verás en el capítulo 12 al leer archivos. Nótese también la anotación de tipo <code>: usize</code> en la segunda declaración: le dice al compilador qué tipo esperamos del <code>parse()</code>.</p>
+</section>
+</section>
+<section id="tipos-escalares-números-booleanos-y-caracteres" class="level2">
+<h2 data-anchor-id="tipos-escalares-números-booleanos-y-caracteres">2.2 Tipos escalares: números, booleanos y caracteres</h2>
+<p>Rust es un lenguaje de <strong>tipado estático</strong>: el tipo de cada valor se conoce en tiempo de compilación. Muchas veces el compilador lo infiere del contexto, pero conviene conocer el catálogo, porque elegir bien el tipo evita sorpresas.</p>
+<section id="enteros" class="level3">
+<h3 data-anchor-id="enteros">Enteros</h3>
+<p>Un entero puede ser con signo (<code>i</code>) o sin signo (<code>u</code>), y ocupa 8, 16, 32, 64 o 128 bits. Los tipos más usados en la práctica biológica:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 24%">
+<col style="width: 55%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Tipo</th>
+<th>Rango</th>
+<th>Ejemplo de uso</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>u8</code></td>
+<td>0 a 255</td>
+<td>puntajes PHRED de calidad (máx. 41 en Illumina)</td>
+</tr>
+<tr class="even">
+<td><code>u32</code></td>
+<td>0 a ~4 290 millones</td>
+<td>posiciones en cromosomas</td>
+</tr>
+<tr class="odd">
+<td><code>usize</code></td>
+<td>depende de tu máquina</td>
+<td>índices y longitudes (lo que devuelve <code>.len()</code>)</td>
+</tr>
+<tr class="even">
+<td><code>i32</code></td>
+<td>±2 140 millones</td>
+<td>entero con signo; es el default de Rust</td>
+</tr>
+</tbody>
+</table>
+<p>Dos detalles prácticos. Primero, los literales admiten guiones bajos para agrupar dígitos: <code>3_000_000_000</code> (el genoma humano, en bases) se lee mejor que <code>3000000000</code>. Segundo, si un cálculo se sale del rango del tipo, Rust hace <em>overflow</em>: en modo debug el programa se detiene con un error, y en modo release el valor “da la vuelta”. Para genomas completos usa <code>u32</code> o <code>u64</code>, y para posiciones y longitudes usa <code>usize</code>, que es el tipo natural de índices.</p>
+</section>
+<section id="flotantes-booleanos-y-caracteres" class="level3">
+<h3 data-anchor-id="flotantes-booleanos-y-caracteres">Flotantes, booleanos y caracteres</h3>
+<p>Los decimales son <code>f32</code> y <code>f64</code> (precisión simple y doble); el default y el recomendado para datos científicos es <code>f64</code>, con unos 15 dígitos de precisión. Los booleanos son <code>true</code> y <code>false</code>. Y el tipo <code>char</code> guarda un solo carácter Unicode, entre comillas simples: <code>'A'</code>, <code>'T'</code>, pero también <code>'á'</code> o <code>'🦀'</code>. Ese detalle hará tu vida más fácil al validar secuencias con letras raras.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> frecuencia_alelica<span class="op">:</span> <span class="dt">f64</span> <span class="op">=</span> <span class="dv">0.037</span><span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> phred<span class="op">:</span> <span class="dt">u8</span> <span class="op">=</span> <span class="dv">37</span><span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> pasa_filtro<span class="op">:</span> <span class="dt">bool</span> <span class="op">=</span> phred <span class="op">&gt;=</span> <span class="dv">30</span><span class="op">;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> base<span class="op">:</span> <span class="dt">char</span> <span class="op">=</span> <span class="ch">'G'</span><span class="op">;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"frecuencia: {} | PHRED: {} | ¿pasa?: {}"</span><span class="op">,</span> frecuencia_alelica<span class="op">,</span> phred<span class="op">,</span> pasa_filtro)<span class="op">;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co">// frecuencia: 0.037 | PHRED: 37 | ¿pasa?: true</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="tuplas-y-arrays-datos-compuestos" class="level2">
+<h2 data-anchor-id="tuplas-y-arrays-datos-compuestos">2.3 Tuplas y arrays: datos compuestos</h2>
+<p>Cuando varios valores pertenecen juntos, Rust ofrece dos formas básicas de agruparlos sin crear un tipo nuevo. La <strong>tupla</strong> agrupa valores de tipos distintos y de cantidad fija; es ideal para registros cortos como una coordenada de colecta:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> colecta <span class="op">=</span> (<span class="dv">0.2512</span><span class="op">,</span> <span class="op">-</span><span class="dv">78.4520</span><span class="op">,</span> <span class="st">"Quinche"</span>)<span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> (lat<span class="op">,</span> lon<span class="op">,</span> sitio) <span class="op">=</span> colecta<span class="op">;</span> <span class="co">// "desestructuración": separar la tupla</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"Sitio: {} (lat {}, lon {})"</span><span class="op">,</span> sitio<span class="op">,</span> lat<span class="op">,</span> lon)<span class="op">;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"Latitud sola: {}"</span><span class="op">,</span> colecta<span class="op">.</span><span class="dv">0</span>)<span class="op">;</span> <span class="co">// también por índice: .0, .1, .2</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Sitio: Quinche (lat 0.2512, lon -78.4520)</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Latitud sola: 0.2512</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>El <strong>array</strong> agrupa varios valores del <em>mismo</em> tipo, con tamaño fijo conocido en compilación. Por ejemplo, las tres temperaturas de un ciclo de PCR:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> temperaturas_pcr <span class="op">=</span> [<span class="dv">95.0</span><span class="op">,</span> <span class="dv">55.0</span><span class="op">,</span> <span class="dv">72.0</span>]<span class="op">;</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"Desnaturalización: {} °C"</span><span class="op">,</span> temperaturas_pcr[<span class="dv">0</span>])<span class="op">;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"Extensión: {} °C"</span><span class="op">,</span> temperaturas_pcr[<span class="dv">2</span>])<span class="op">;</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"El ciclo tiene {} pasos"</span><span class="op">,</span> temperaturas_pcr<span class="op">.</span>len())<span class="op">;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co">// Desnaturalización: 95 °C</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co">// Extensión: 72 °C</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="co">// El ciclo tiene 3 pasos</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Los índices empiezan en <strong>cero</strong>: <code>temperaturas_pcr[0]</code> es el primer elemento. Guarda esa idea, porque en biología estamos acostumbrados a contar posiciones desde 1 (la “posición 329 del gen”), y en Rust la misma posición vive en el índice 328. Las colecciones de tamaño variable llegan en el capítulo 7 con <code>Vec</code>.</p>
+</section>
+<section id="texto-str-y-string" class="level2">
+<h2 data-anchor-id="texto-str-y-string">2.4 Texto: <code>&amp;str</code> y <code>String</code></h2>
+<p>En Rust hay dos tipos principales de texto, y la distinción importa. Un literal como <code>"ATGGCCTTTTAA"</code> tiene tipo <code>&amp;str</code> (“string slice”): una vista de solo lectura sobre el texto escrito en tu programa. El tipo <code>String</code> es un texto propio en memoria, que puede crecer y modificarse:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> literal <span class="op">=</span> <span class="st">"ATG"</span><span class="op">;</span>            <span class="co">// &amp;str</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> secuencia <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"ATG"</span>)<span class="op">;</span> <span class="co">// String</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    secuencia<span class="op">.</span>push_str(<span class="st">"GCCTTTTAA"</span>)<span class="op">;</span>         <span class="co">// le añadimos texto</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"{} -&gt; {} ({} pb)"</span><span class="op">,</span> literal<span class="op">,</span> secuencia<span class="op">,</span> secuencia<span class="op">.</span>len())<span class="op">;</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co">// ATG -&gt; ATGGCCTTTTAA (12 pb)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>String::from</code> construye un <code>String</code> y el método <code>push_str</code> le concatena texto. Por ahora basta con esta distinción operativa: literales <code>&amp;str</code> para datos fijos, <code>String</code> para texto que se construye. En el capítulo 4 la historia se completa con ownership y en el 7 con los métodos de <code>String</code>. Una advertencia útil desde ya: <code>.len()</code> cuenta <strong>bytes</strong>, no caracteres; para secuencias en mayúsculas ASCII (lo habitual en FASTA) coinciden, y en el capítulo 7 veremos <code>chars()</code> para los casos raros.</p>
+</section>
+<section id="funciones" class="level2">
+<h2 data-anchor-id="funciones">2.5 Funciones</h2>
+<p>Las funciones son la unidad básica de organización en Rust. Se declaran con <code>fn</code>, anotando el tipo de cada parámetro y el tipo del valor de retorno después de <code>-&gt;</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> densidad(individuos<span class="op">:</span> <span class="dt">u32</span><span class="op">,</span> area_m2<span class="op">:</span> <span class="dt">f64</span>) <span class="op">-&gt;</span> <span class="dt">f64</span> <span class="op">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    individuos <span class="kw">as</span> <span class="dt">f64</span> <span class="op">/</span> area_m2</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> d <span class="op">=</span> densidad(<span class="dv">240</span><span class="op">,</span> <span class="dv">600.0</span>)<span class="op">;</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"Densidad: {:.2} individuos/m²"</span><span class="op">,</span> d)<span class="op">;</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Densidad: 0.40 individuos/m²</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Este ejemplo trae tres novedades. Primero, la conversión <code>individuos as f64</code>: dividir dos enteros hace división entera (¡y <code>240 / 600</code> daría <code>0</code>!), así que convertimos antes de dividir. Ese es el error numérico más común de los programadores que llegan de Python; si un porcentaje te sale en cero, casi siempre es esto. Segundo, la función devuelve la última <strong>expresión</strong> del bloque, escrita <strong>sin punto y coma</strong>: eso le dice a Rust “este valor es el resultado”. También existe la forma explícita <code>return individuos as f64 / area_m2;</code>, que se usa para retornos tempranos, pero la idiomática es la primera. Tercero, en <code>println!</code> el formato <code>{:.2}</code> redondea la salida a dos decimales, útil para reportes.</p>
+<section id="declaraciones-y-expresiones" class="level3">
+<h3 data-anchor-id="declaraciones-y-expresiones">Declaraciones y expresiones</h3>
+<p>Vale la pena fijar el vocabulario. Una <strong>declaración</strong> (<em>statement</em>) ejecuta una acción y no produce valor: <code>let x = 5;</code> o una llamada con <code>;</code>. Una <strong>expresión</strong> (<em>expression</em>) produce un valor: <code>5</code>, <code>area_m2</code>, la llamada <code>densidad(240, 600.0)</code>, o un bloque entero <code>{ ... }</code> cuyo valor es su última expresión sin <code>;</code>. Esta distinción explica por qué quitar un punto y coma a veces <em>arregla</em> o <em>rompe</em> un programa, y será clave en el próximo capítulo, donde <code>if</code> y <code>match</code> se usan como expresiones.</p>
+</section>
+</section>
+<section id="tu-primera-función-bioinformática-contenido-de-gc" class="level2">
+<h2 data-anchor-id="tu-primera-función-bioinformática-contenido-de-gc">2.6 Tu primera función bioinformática: contenido de GC</h2>
+<p>Con todo lo anterior ya puedes escribir una función clásica: el porcentaje de bases guanina y citosina de una secuencia, métrica estructural del ADN que correlaciona con la temperatura de fusión y la estabilidad de la dúplex:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> contenido_gc(dna<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">f64</span> <span class="op">{</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> g <span class="op">=</span> dna<span class="op">.</span>matches(<span class="ch">'G'</span>)<span class="op">.</span>count()<span class="op">;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> c <span class="op">=</span> dna<span class="op">.</span>matches(<span class="ch">'C'</span>)<span class="op">.</span>count()<span class="op">;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    (g <span class="op">+</span> c) <span class="kw">as</span> <span class="dt">f64</span> <span class="op">/</span> dna<span class="op">.</span>len() <span class="kw">as</span> <span class="dt">f64</span> <span class="op">*</span> <span class="dv">100.0</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> dna <span class="op">=</span> <span class="st">"ATGGCCTTTTAA"</span><span class="op">;</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"Secuencia:  {}"</span><span class="op">,</span> dna)<span class="op">;</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"Contenido GC: {:.1}%"</span><span class="op">,</span> contenido_gc(dna))<span class="op">;</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Secuencia:  ATGGCCTTTTAA</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="co">// Contenido GC: 41.7%</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Analicemos las piezas nuevas. El parámetro es <code>dna: &amp;str</code>: el <code>&amp;</code> indica que la función pide la secuencia “prestada”, sin copiarla ni apropiársela; es la forma estándar de pasar texto y la estudiaremos a fondo en el capítulo 4. El método <code>.matches('G')</code> produce todas las apariciones de un carácter y <code>.count()</code> las cuenta (por dentro hay un iterador; los dominaremos en el capítulo 10). La expresión final convierte los conteos a <code>f64</code> antes de dividir —ya sabes por qué— y multiplica por 100 para tener porcentaje.</p>
+<p>Para verificar: <code>ATGGCCTTTTAA</code> tiene 12 bases, de las cuales 5 son G o C (dos <code>G</code>, tres <code>C</code>), y 5/12 × 100 ≈ 41.7%. La aritmética cierra. Haz el hábito de verificar tus funciones a mano con casos chicos: es la versión casera de los tests del capítulo 13.</p>
+</section>
+<section id="constantes-y-conversiones" class="level2">
+<h2 data-anchor-id="constantes-y-conversiones">2.7 Constantes y conversiones</h2>
+<p>Para valores que nunca cambian y tienen significado científico, Rust ofrece las <code>const</code>, que se escriben en MAYÚSCULAS y exigen anotar el tipo:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> PHRED_MINIMO<span class="op">:</span> <span class="dt">u8</span> <span class="op">=</span> <span class="dv">20</span><span class="op">;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">const</span> CROMOSOMO<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span> <span class="op">=</span> <span class="st">"chr17"</span><span class="op">;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> phred <span class="op">=</span> <span class="dv">37</span><span class="op">;</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> pasa <span class="op">=</span> phred <span class="op">&gt;=</span> PHRED_MINIMO<span class="op">;</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"¿Lectura confiable (Q≥{})?: {}"</span><span class="op">,</span> PHRED_MINIMO<span class="op">,</span> pasa)<span class="op">;</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="co">// ¿Lectura confiable (Q≥20)?: true</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Las conversiones entre tipos usan <code>as</code> para números (<code>x as f64</code>, <code>phred as f64</code>), con la precaución de que convertir un flotante a entero trunca los decimales. La conversión inversa y más delicada —texto a número— se hace con <code>.parse()</code>, que puede fallar (el texto podría decir <code>"hola"</code>), y por eso devuelve un resultado especial que exige tratamiento:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> texto <span class="op">=</span> <span class="st">"57"</span><span class="op">;</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> phred<span class="op">:</span> <span class="dt">u8</span> <span class="op">=</span> texto<span class="op">.</span>parse()<span class="op">.</span>expect(<span class="st">"PHRED inválido"</span>)<span class="op">;</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"PHRED + 3 = {}"</span><span class="op">,</span> phred <span class="op">+</span> <span class="dv">3</span>)<span class="op">;</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="co">// PHRED + 3 = 60</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>El <code>.expect(...)</code> detiene el programa con ese mensaje si el texto no es un número válido. Es aceptable mientras aprendemos, pero un análisis real no puede venirse abajo por una línea corrupta de un archivo: en el capítulo 8, <code>parse</code> será nuestro caso de estudio para el manejo elegante de errores.</p>
+</section>
+<section id="ejercicios" class="level2">
+<h2 data-anchor-id="ejercicios">Ejercicios</h2>
+<section id="ejercicio-2.1-contador-de-mutaciones" class="level3">
+<h3 data-anchor-id="ejercicio-2.1-contador-de-mutaciones">Ejercicio 2.1 · Contador de mutaciones</h3>
+<p>Escribe un programa que simule (con valores fijos, sin azar por ahora) un contador de mutaciones que empieza en 0, registra 3 sustituciones y luego una deleción más, e imprime el total acumulado.</p>
+<details>
+<summary>
+Solución
+</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> mutaciones <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    mutaciones <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span> <span class="co">// sustitución en la posición 102</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    mutaciones <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span> <span class="co">// sustitución en la posición 415</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    mutaciones <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span> <span class="co">// sustitución en la posición 903</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    mutaciones <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span> <span class="co">// deleción de 1 pb</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"Mutaciones acumuladas: {}"</span><span class="op">,</span> mutaciones)<span class="op">;</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Mutaciones acumuladas: 4</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>El contador necesita <code>mut</code> porque su valor cambia. Los comentarios documentan cada evento, una buena práctica cuando el “registro de campo” es el propio código.</p>
+</details>
+</section>
+<section id="ejercicio-2.2-temperatura-de-fusión-regla-de-wallace" class="level3">
+<h3 data-anchor-id="ejercicio-2.2-temperatura-de-fusión-regla-de-wallace">Ejercicio 2.2 · Temperatura de fusión (regla de Wallace)</h3>
+<p>Para oligonucleótidos cortos (menos de ~14 pb), la temperatura de fusión se aproxima como <code>Tm = 2·(A+T) + 4·(G+C)</code>. Escribe la función <code>tm_wallace</code> que reciba un <code>&amp;str</code> y devuelva la Tm en grados Celsius, y pruébala con <code>ATGGCCTTTTAA</code> y con <code>ATATATAT</code>.</p>
+<details>
+<summary>
+Solución
+</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> tm_wallace(dna<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">usize</span> <span class="op">{</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> a <span class="op">=</span> dna<span class="op">.</span>matches(<span class="ch">'A'</span>)<span class="op">.</span>count()<span class="op">;</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> t <span class="op">=</span> dna<span class="op">.</span>matches(<span class="ch">'T'</span>)<span class="op">.</span>count()<span class="op">;</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> g <span class="op">=</span> dna<span class="op">.</span>matches(<span class="ch">'G'</span>)<span class="op">.</span>count()<span class="op">;</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> c <span class="op">=</span> dna<span class="op">.</span>matches(<span class="ch">'C'</span>)<span class="op">.</span>count()<span class="op">;</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="dv">2</span> <span class="op">*</span> (a <span class="op">+</span> t) <span class="op">+</span> <span class="dv">4</span> <span class="op">*</span> (g <span class="op">+</span> c)</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"Tm de ATGGCCTTTTAA: {} °C"</span><span class="op">,</span> tm_wallace(<span class="st">"ATGGCCTTTTAA"</span>))<span class="op">;</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"Tm de ATATATAT: {} °C"</span><span class="op">,</span> tm_wallace(<span class="st">"ATATATAT"</span>))<span class="op">;</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="co">// Tm de ATGGCCTTTTAA: 38 °C</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="co">// Tm de ATATATAT: 16 °C</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Para <code>ATGGCCTTTTAA</code>: A+T = 7 y G+C = 5, así que Tm = 2·7 + 4·5 = 38 °C. Todo el cálculo ocurre en enteros (<code>usize</code>), así que el retorno también es entero; no hay división y por tanto no hace falta <code>f64</code>.</p>
+</details>
+</section>
+<section id="ejercicio-2.3-parseando-un-archivo-imaginario" class="level3">
+<h3 data-anchor-id="ejercicio-2.3-parseando-un-archivo-imaginario">Ejercicio 2.3 · Parseando un archivo imaginario</h3>
+<p>Una línea de un archivo de resultados dice <code>"329,0.84,57"</code>, es decir: posición, frecuencia alélica y PHRED. Guárdala en una variable, parsea los tres valores a <code>usize</code>, <code>f64</code> y <code>u8</code>, e imprime la posición convertida a índice 0-based y la suma de PHRED más 10. Pista: <code>texto.split(',')</code> separa por comas.</p>
+<details>
+<summary>
+Solución
+</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> linea <span class="op">=</span> <span class="st">"329,0.84,57"</span><span class="op">;</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> campos <span class="op">=</span> linea<span class="op">.</span>split(<span class="ch">','</span>)<span class="op">;</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> posicion<span class="op">:</span> <span class="dt">usize</span> <span class="op">=</span> campos<span class="op">.</span>next()<span class="op">.</span>expect(<span class="st">"falta posición"</span>)<span class="op">.</span>parse()<span class="op">.</span>expect(<span class="st">"posición inválida"</span>)<span class="op">;</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> frecuencia<span class="op">:</span> <span class="dt">f64</span> <span class="op">=</span> campos<span class="op">.</span>next()<span class="op">.</span>expect(<span class="st">"falta frecuencia"</span>)<span class="op">.</span>parse()<span class="op">.</span>expect(<span class="st">"frecuencia inválida"</span>)<span class="op">;</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> phred<span class="op">:</span> <span class="dt">u8</span> <span class="op">=</span> campos<span class="op">.</span>next()<span class="op">.</span>expect(<span class="st">"falta PHRED"</span>)<span class="op">.</span>parse()<span class="op">.</span>expect(<span class="st">"PHRED inválido"</span>)<span class="op">;</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"Índice 0-based: {}"</span><span class="op">,</span> posicion <span class="op">-</span> <span class="dv">1</span>)<span class="op">;</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"Frecuencia: {}"</span><span class="op">,</span> frecuencia)<span class="op">;</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"PHRED + 10 = {}"</span><span class="op">,</span> phred <span class="op">+</span> <span class="dv">10</span>)<span class="op">;</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="co">// Índice 0-based: 328</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a><span class="co">// Frecuencia: 0.84</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="co">// PHRED + 10 = 67</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>split(',')</code> entrega los campos uno a uno y <code>next()</code> toma el siguiente (de nuevo, un iterador trabajando en silencio; su momento llegará). Nota cómo el sombreado de tipos (<code>let posicion: usize = ...parse()...</code>) hace la conversión texto→número en una sola línea por campo.</p>
+</details>
+</section>
+<section id="ejercicio-2.4-distancias-entre-colectas" class="level3">
+<h3 data-anchor-id="ejercicio-2.4-distancias-entre-colectas">Ejercicio 2.4 · Distancias entre colectas</h3>
+<p>Dos colectas de la misma especie se hicieron en las coordenadas <code>(x1, y1) = (120.5, 84.2)</code> y <code>(x2, y2) = (115.1, 90.7)</code> de una grilla local, en metros. Escribe una función <code>distancia</code> que reciba las cuatro coordenadas y devuelva la distancia euclidiana. Pista: <code>f64</code> tiene los métodos <code>.powi(2)</code> (elevar al cuadrado) y <code>.sqrt()</code> (raíz cuadrada).</p>
+<details>
+<summary>
+Solución
+</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> distancia(x1<span class="op">:</span> <span class="dt">f64</span><span class="op">,</span> y1<span class="op">:</span> <span class="dt">f64</span><span class="op">,</span> x2<span class="op">:</span> <span class="dt">f64</span><span class="op">,</span> y2<span class="op">:</span> <span class="dt">f64</span>) <span class="op">-&gt;</span> <span class="dt">f64</span> <span class="op">{</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> dx <span class="op">=</span> x2 <span class="op">-</span> x1<span class="op">;</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> dy <span class="op">=</span> y2 <span class="op">-</span> y1<span class="op">;</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    (dx<span class="op">.</span>powi(<span class="dv">2</span>) <span class="op">+</span> dy<span class="op">.</span>powi(<span class="dv">2</span>))<span class="op">.</span>sqrt()</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> d <span class="op">=</span> distancia(<span class="dv">120.5</span><span class="op">,</span> <span class="dv">84.2</span><span class="op">,</span> <span class="dv">115.1</span><span class="op">,</span> <span class="dv">90.7</span>)<span class="op">;</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"Distancia entre colectas: {:.2} m"</span><span class="op">,</span> d)<span class="op">;</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Distancia entre colectas: 8.49 m</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Verificación manual: dx = −5.4, dy = 6.5; 5.4² + 6.5² = 29.16 + 42.25 = 71.41, y su raíz es ≈ 8.45… con los decimales exactos de la resta da 8.49; el punto es que puedes y debes reproducir el cálculo a mano. La función es “pura”: misma entrada, misma salida, sin sorpresas.</p>
+</details>
+</section>
+<section id="ejercicio-2.5-caza-el-bug-del-porcentaje" class="level3">
+<h3 data-anchor-id="ejercicio-2.5-caza-el-bug-del-porcentaje">Ejercicio 2.5 · Caza el bug del porcentaje</h3>
+<p>Una compañera escribió esta función y el contenido de GC de <em>cualquier</em> secuencia le da <code>0.0%</code>. Encuentra el error y corrígelo.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> contenido_gc_roto(dna<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">f64</span> <span class="op">{</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> g <span class="op">=</span> dna<span class="op">.</span>matches(<span class="ch">'G'</span>)<span class="op">.</span>count()<span class="op">;</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> c <span class="op">=</span> dna<span class="op">.</span>matches(<span class="ch">'C'</span>)<span class="op">.</span>count()<span class="op">;</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    (g <span class="op">+</span> c) <span class="op">/</span> dna<span class="op">.</span>len() <span class="op">*</span> <span class="dv">100.0</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<details>
+<summary>
+Solución
+</summary>
+<p>La división <code>(g + c) / dna.len()</code> ocurre <strong>entre enteros</strong> (<code>usize</code>), y la división entera trunca: para <code>ATGGCCTTTTAA</code>, 5 / 12 = 0. El <code>* 100.0</code> llega tarde: el 0 ya se produjo. La corrección es convertir a flotante <strong>antes</strong> de dividir, como en la versión del capítulo:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> contenido_gc(dna<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">f64</span> <span class="op">{</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> g <span class="op">=</span> dna<span class="op">.</span>matches(<span class="ch">'G'</span>)<span class="op">.</span>count()<span class="op">;</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> c <span class="op">=</span> dna<span class="op">.</span>matches(<span class="ch">'C'</span>)<span class="op">.</span>count()<span class="op">;</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    (g <span class="op">+</span> c) <span class="kw">as</span> <span class="dt">f64</span> <span class="op">/</span> dna<span class="op">.</span>len() <span class="kw">as</span> <span class="dt">f64</span> <span class="op">*</span> <span class="dv">100.0</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"Contenido GC: {:.1}%"</span><span class="op">,</span> contenido_gc(<span class="st">"ATGGCCTTTTAA"</span>))<span class="op">;</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Contenido GC: 41.7%</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Moraleja: en Rust, mezclar enteros y flotantes nunca es automático; el lenguaje te obliga a decidir dónde ocurre la conversión, y eso es una vacuna contra resultados silenciosamente truncados.</p>
+</details>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/bioden\.github\.io\/bioden_website\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Semillero de Biología del Desarrollo y Plasticidad Neural © 2025. All content licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Sitio web desarrollado por Xavier Clemente García Cevallos</p>
+</div>   
+    <div class="nav-footer-center">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/bioden">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="mailto:bioden@unicauca.edu.co">
+      <i class="bi bi-envelope" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    <div class="cookie-consent-footer"><a href="#" id="open_preferences_center">Cookie Preferences</a></div></div>
+    <div class="nav-footer-right">
+<p>Made with <a href="https://www.r-project.org/"><img src="https://www.r-project.org/Rlogo.png" alt="R" width="25px"></a> and <a href="https://quarto.org/"><img src="https://quarto.org/quarto.png" alt="Quarto" width="65px"></a>.</p>
+</div>
+  </div>
+</footer>
+
+
+
+
+<script src="../../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

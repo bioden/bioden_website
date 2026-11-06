@@ -1,0 +1,562 @@
+---
+title: "Capítulo 9: Traits y genéricos"
+subtitle: "Un solo contenido_gc para ADN, ARN y cualquier secuencia futura"
+format:
+  html:
+    toc: true
+---
+
+Llega el momento de preguntar qué tienen en común un ADN y un ARN: ambos
+tienen bases, longitud y contenido de GC, aunque sean tipos distintos. Los
+**traits** (rasgos) definen esa capacidad compartida —un contrato de
+comportamiento— y los **genéricos** escriben código que funciona con
+cualquier tipo que cumpla el contrato. Ya llevas tiempo usándolos sin
+saberlo: `Debug`, `Clone` y `PartialEq` del capítulo 5, y el `Display` que
+implementaste para tu error en el capítulo 8, son traits. Hoy pasas de
+consumidor a diseñador.
+
+## 9.1 El problema del código duplicado
+
+Con lo aprendido, modelar ADN y ARN como structs distintos es directo. El
+problema aparece al escribir sus análisis: `contenido_gc_dna`,
+`contenido_gc_rna`, `resumen_dna`, `resumen_rna`... funciones gemelas que se
+diferencian solo en el tipo del parámetro. En un laboratorio con veinte
+formatos de datos, esa duplicación se convierte en veinte oportunidades de
+que una corrección llegue a diecinueve. Los traits invierten la pregunta:
+en vez de "¿qué tipo es?", preguntan "¿qué sabe hacer?".
+
+## 9.2 Un trait es un contrato
+
+Un trait declara un conjunto de métodos que un tipo puede comprometerse a
+implementar. Definamos el contrato de "secuencia biológica":
+
+```rust
+trait SecuenciaBiologica {
+    fn bases(&self) -> &str;        // obligatorio: entregar sus bases
+
+    fn longitud(&self) -> usize {  // opcional: implementación por defecto
+        self.bases().len()
+    }
+
+    fn contenido_gc(&self) -> f64 { // también por defecto, reutilizando bases()
+        let g = self.bases().matches('G').count();
+        let c = self.bases().matches('C').count();
+        (g + c) as f64 / self.bases().len() as f64 * 100.0
+    }
+}
+```
+
+Los métodos sin cuerpo son **obligatorios**; los que traen cuerpo son
+**métodos por defecto** que cualquier implementación recibe gratis (y puede
+sobreescribir). Es un diseño "dime lo mínimo y te regalo el resto". Ahora,
+los structs cumplen el contrato con `impl Trait for Tipo`:
+
+```rust
+struct Dna {
+    id: String,
+    bases: String,
+}
+
+struct Rna {
+    id: String,
+    bases: String,
+}
+
+impl SecuenciaBiologica for Dna {
+    fn bases(&self) -> &str {
+        &self.bases
+    }
+}
+
+impl SecuenciaBiologica for Rna {
+    fn bases(&self) -> &str {
+        &self.bases
+    }
+}
+
+fn main() {
+    let dna = Dna { id: String::from("genA"), bases: String::from("ATGGCCTTTTAA") };
+    let arn = Rna { id: String::from("rnA"), bases: String::from("AUGGCCUUUUAA") };
+
+    println!("{}: {} pb, {:.1}% GC", dna.id, dna.longitud(), dna.contenido_gc());
+    println!("{}: {} pb, {:.1}% GC", arn.id, arn.longitud(), arn.contenido_gc());
+}
+// genA: 12 pb, 41.7% GC
+// rnA: 12 pb, 41.7% GC
+```
+
+Cada tipo implementó **solo** `bases`; `longitud` y `contenido_gc` llegaron
+por defecto. Y si un día el ARN necesitara un cálculo especial (por ejemplo,
+excluir las U de un denominador), basta sobreescribir ese método en su
+`impl`. El contrato es la misma sintaxis que usaste con `fmt::Display` en el
+capítulo 8: ahora sabes que ese bloque era "implementar el trait Display
+para mi tipo de error".
+
+## 9.3 Genéricos con límites de trait
+
+La función genérica que soñábamos acepta "cualquier cosa que sea
+`SecuenciaBiologica`":
+
+```rust
+fn resumen<S: SecuenciaBiologica>(sec: &S) -> String {
+    format!("{} pb con {:.1}% GC", sec.longitud(), sec.contenido_gc())
+}
+
+fn main() {
+    let dna = Dna { id: String::from("genA"), bases: String::from("ATGGCCTTTTAA") };
+    let arn = Rna { id: String::from("rnA"), bases: String::from("AUGGCCUUUUAA") };
+
+    println!("ADN:  {}", resumen(&dna));
+    println!("ARN:  {}", resumen(&arn));
+}
+// ADN:  12 pb con 41.7% GC
+// ARN:  12 pb con 41.7% GC
+```
+
+La `<S: SecuenciaBiologica>` declara: "S es un tipo todavía desconocido,
+pero garantizado secuencial". Dentro de la función solo puedes llamar
+métodos del contrato —y esa disciplina es la bendición: la función compila
+para cualquier S presente o **futuro** que implemente el trait. No hay
+duplicación y no habrá. Cuando los límites crecen, la cláusula `where` los
+ordena:
+
+```rust
+fn reportar<S>(sec: &S) -> String
+where
+    S: SecuenciaBiologica + std::fmt::Debug,
+{
+    format!(" {:?} -> {} pb", sec, sec.longitud())
+}
+```
+
+El `+` exige ambos contratos a la vez (con `#[derive(Debug)]` en los
+structs, claro). Para tipos con muchos límites, `where` es el formato
+preferido por legibilidad.
+
+## 9.4 Structs genéricos
+
+La genericidad también modela contenedores de datos científicos: una
+`Muestra` de campo cuyo valor medido cambia de tipo según el protocolo:
+
+```rust
+struct Muestra<T> {
+    codigo: String,
+    valor: T,
+}
+
+impl<T> Muestra<T> {
+    fn nueva(codigo: &str, valor: T) -> Muestra<T> {
+        Muestra { codigo: String::from(codigo), valor }
+    }
+}
+
+fn main() {
+    let concentracion = Muestra::nueva("M-001", 42.5);      // Muestra<f64>
+    let phred = Muestra::nueva("M-002", 38u8);              // Muestra<u8>
+    let banda = Muestra::nueva("M-003", true);              // Muestra<bool>
+
+    println!("{}: {} ng/µL", concentracion.codigo, concentracion.valor);
+    println!("{}: Q{}", phred.codigo, phred.valor);
+    println!("{}: banda presente = {}", banda.codigo, banda.valor);
+}
+// M-001: 42.5 ng/µL
+// M-002: Q38
+// M-003: banda presente = true
+```
+
+`Muestra<T>` es una sola definición que el compilador especializa a
+`Muestra<f64>`, `Muestra<u8>`, etc. — sin costo en ejecución, porque cada
+versión se genera en compilación. Fíjate en el `impl<T>`: el bloque es
+genérico para que `nueva` acepte cualquier `T`.
+
+## 9.5 Los traits que ya usabas
+
+Vale la pena recolocar los conocimientos previos sobre esta base formal:
+
+- `#[derive(Debug)]` genera un `impl Debug for MiTipo` automático (impresión
+  con `{:?}`); `Clone` y `PartialEq`/`PartialOrd` son lo mismo para copiar,
+  comparar y **ordenar**. Ordeneemos especímenes de colecta por abundancia:
+
+```rust
+#[derive(Debug)]
+struct Especimen {
+    especie: String,
+    individuos: u32,
+}
+
+fn main() {
+    let mut especimenes = vec![
+        Especimen { especie: String::from("Espeletia pycnophylla"), individuos: 34 },
+        Especimen { especie: String::from("Polylepis incana"), individuos: 12 },
+        Especimen { especie: String::from("Oreomyrrhis andicola"), individuos: 58 },
+    ];
+
+    especimenes.sort_by_key(|e| e.individuos); // de menor a mayor
+
+    for e in &especimenes {
+        println!("{:>3} × {}", e.individuos, e.especie);
+    }
+}
+//  12 × Polylepis incana
+//  34 × Espeletia pycnophylla
+//  58 × Oreomyrrhis andicola
+```
+
+Ese `|e| e.individuos` es una *closure*, la función anónima estrella del
+próximo capítulo; `sort_by_key` ordena por la llave que ella produce, de
+menor a mayor. Para orden descendente, invierte la comparación con
+`sort_by(|a, b| b.individuos.cmp(&a.individuos))`. El formato `{:>3}`
+alinea a la derecha en 3 caracteres: reportes de consola presentables sin
+librerías.
+
+- `Display` es el trait de la impresión humana (con `{}`). Ya lo
+  implementaste para un error; hagámoslo para la `Base` del capítulo 6:
+
+```rust
+use std::fmt;
+
+#[derive(Debug)]
+enum Base {
+    A,
+    C,
+    G,
+    T,
+}
+
+impl fmt::Display for Base {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let letra = match self {
+            Base::A => 'A',
+            Base::C => 'C',
+            Base::G => 'G',
+            Base::T => 'T',
+        };
+        write!(f, "{}", letra)
+    }
+}
+
+fn main() {
+    let b = Base::G;
+    println!("La base es {} (y en debug: {:?})", b, b);
+}
+// La base es G (y en debug: Base::G)
+```
+
+## 9.6 `dyn Trait`: mezclar tipos en una colección
+
+La genericidad de `resumen<S>` compila **una versión por tipo**: perfecta
+para rendimiento, pero un `Vec<S>` no puede contener un `Dna` y un `Rna` a
+la vez (serían Vec<Dna> o Vec<Rna>). Cuando el lote es genuinamente mixto,
+se usan **objetos trait**: un puntero (`Box`) a "algo que implementa el
+trait", decidido en ejecución:
+
+```rust
+fn main() {
+    let lotes: Vec<Box<dyn SecuenciaBiologica>> = vec![
+        Box::new(Dna { id: String::from("genA"), bases: String::from("ATGGCCTTTTAA") }),
+        Box::new(Rna { id: String::from("rnA"), bases: String::from("AUGGCCUUUUAA") }),
+        Box::new(Dna { id: String::from("genB"), bases: String::from("GCCGGCCTTAAGGC") }),
+    ];
+
+    for sec in &lotes {
+        println!("{} pb, {:.1}% GC", sec.longitud(), sec.contenido_gc());
+    }
+}
+// 12 pb, 41.7% GC
+// 12 pb, 41.7% GC
+// 14 pb, 71.4% GC
+```
+
+`Box::new(...)` guarda cada valor en el heap y borra de la etiqueta la
+pregunta "¿Dna o Rna?": lo único que se sabe de cada elemento es que cumple
+el contrato. ¿Te suena? Es exactamente el `Box<dyn Error>` del capítulo 8:
+"una caja con cualquier error dentro". La contrapartida del `dyn` es una
+indirección mínima en ejecución —irrelevante al nivel de un bucle de
+reporte— y que los métodos por defecto se resuelven igual de bien.
+
+::: {.callout-note}
+## La regla del huérfano
+Puedes implementar tus traits para tus tipos, y traits ajenos para tus
+tipos (como `Display` para `Base`), pero no tus traits ni implementaciones
+para tipos ajenos-ajenos (por ejemplo, `impl MiTrait para i32` sí; `impl
+Display para Vec<i32>` no). Esta "regla del huérfano" evita que dos
+librerías implementen el mismo trait para el mismo tipo de formas
+incompatibles.
+:::
+
+## 9.7 Guía de elección
+
+| Necesito... | Herramienta | Se decide en... |
+|-------------|-------------|-----------------|
+| Comportamiento compartido por tipos | trait | diseño |
+| Función que sirva para muchos tipos | genérico `<T: Trait>` | compilación |
+| Colección con tipos mezclados | `Vec<Box<dyn Trait>>` | ejecución |
+| Copiar, comparar, depurar, ordenar | `#[derive(...)]` | una línea |
+
+## Ejercicios
+
+### Ejercicio 9.1 · El trait de los especímenes
+
+Define el trait `Colectable` con método obligatorio `coordenadas(&self)
+-> (f64, f64)` y método por defecto `en_hemisferio_sur(&self) -> bool` que
+devuelva si la latitud es negativa. Implementa para `Especimen` (agrega
+campos `latitud`/`longitud`) y prueba ambos métodos.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+trait Colectable {
+    fn coordenadas(&self) -> (f64, f64);
+
+    fn en_hemisferio_sur(&self) -> bool {
+        self.coordenadas().0 < 0.0
+    }
+}
+
+struct Especimen {
+    especie: String,
+    latitud: f64,
+    longitud: f64,
+}
+
+impl Colectable for Especimen {
+    fn coordenadas(&self) -> (f64, f64) {
+        (self.latitud, self.longitud)
+    }
+}
+
+fn main() {
+    let a = Especimen { especie: String::from("Polylepis incana"), latitud: 0.2512, longitud: -78.4520 };
+    let b = Especimen { especie: String::from("Nothofagus pumilio"), latitud: -41.13, longitud: -71.31 };
+
+    println!("{}: {:?}", a.especie, a.coordenadas());
+    println!("{} ¿sur?: {}", b.especie, b.en_hemisferio_sur());
+}
+// Polylepis incana: (0.2512, -78.4520)
+// Nothofagus pumilio ¿sur?: true
+```
+
+El método por defecto usa `.0` de la tupla devuelta por el método
+obligatorio: los traits se construyen unos sobre otros, igual que los
+métodos de un struct. Una especie ecuatoriana (latitud ~0) y una patagónica
+dan la respuesta esperada en cada hemisferio.
+
+</details>
+
+### Ejercicio 9.2 · Reporte genérico
+
+Escribe la función genérica `fn ficha<C: Colectable>(c: &C) -> String` que
+devuelva `"lat X, lon Y"` usando `format!("{:.2}", ...)` sobre las
+coordenadas, y comprueba que funciona con dos tipos distintos que
+implementen el trait (inventa un `PuntoMuestreo` además de `Especimen`).
+
+<details>
+<summary>Solución</summary>
+
+```rust
+trait Colectable {
+    fn coordenadas(&self) -> (f64, f64);
+}
+
+struct Especimen { especie: String, latitud: f64, longitud: f64 }
+struct PuntoMuestreo { codigo: u32, latitud: f64, longitud: f64 }
+
+impl Colectable for Especimen {
+    fn coordenadas(&self) -> (f64, f64) { (self.latitud, self.longitud) }
+}
+
+impl Colectable for PuntoMuestreo {
+    fn coordenadas(&self) -> (f64, f64) { (self.latitud, self.longitud) }
+}
+
+fn ficha<C: Colectable>(c: &C) -> String {
+    let (lat, lon) = c.coordenadas();
+    format!("lat {:.2}, lon {:.2}", lat, lon)
+}
+
+fn main() {
+    let e = Especimen { especie: String::from("P. incana"), latitud: 0.2512, longitud: -78.4520 };
+    let p = PuntoMuestreo { codigo: 7, latitud: -1.65, longitud: -78.65 };
+
+    println!("Especimen: {}", ficha(&e));
+    println!("Punto:     {}", ficha(&p));
+}
+// Especimen: lat 0.25, lon -78.45
+// Punto:     lat -1.65, lon -78.65
+```
+
+Una sola `ficha`, dos (o dos mil) tipos clientes: el objetivo del capítulo
+cumplido. El compilador genera `ficha::<Especimen>` y `ficha::<PuntoMuestreo>`
+por separado, sin costo en ejecución.
+
+</details>
+
+### Ejercicio 9.3 · Muestras genéricas con método
+
+Amplía `Muestra<T>` con el método `es_mayor_que(&self, otra: &Muestra<T>)
+-> bool` que exija `T: PartialOrd` y compare los valores. Prueba con
+concentraciones (`f64`) y con PHRED (`u8`).
+
+<details>
+<summary>Solución</summary>
+
+```rust
+struct Muestra<T> {
+    codigo: String,
+    valor: T,
+}
+
+impl<T: PartialOrd> Muestra<T> {
+    fn es_mayor_que(&self, otra: &Muestra<T>) -> bool {
+        self.valor > otra.valor
+    }
+}
+
+fn main() {
+    let m1 = Muestra { codigo: String::from("A"), valor: 42.5f64 };
+    let m2 = Muestra { codigo: String::from("B"), valor: 41.9f64 };
+
+    let q1 = Muestra { codigo: String::from("Q1"), valor: 38u8 };
+    let q2 = Muestra { codigo: String::from("Q2"), valor: 40u8 };
+
+    println!("¿A > B?: {}", m1.es_mayor_que(&m2));
+    println!("¿Q1 > Q2?: {}", q1.es_mayor_que(&q2));
+}
+// ¿A > B?: true
+// ¿Q1 > Q2?: false
+```
+
+El límite se declara en el `impl` (`impl<T: PartialOrd>`), así que el
+método existe solo para `Muestra<T>` comparables: una `Muestra<String>`
+simplemente no tendría `es_mayor_que`, y el compilador lo hace respetar.
+Los floats usan `PartialOrd` (y no `Ord`) porque `NaN` no es ordenable con
+todo — detalle que Rust te obliga a conocer en vez de escondértelo.
+
+</details>
+
+### Ejercicio 9.4 · Catálogo mixto
+
+Crea un `Vec<Box<dyn SecuenciaBiologica>>` con dos `Dna` y un `Rna`, y
+escribe un `for` que imprima longitud y contenido GC de cada uno (métodos
+por defecto del trait), señalando el de mayor longitud al final.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+trait SecuenciaBiologica {
+    fn bases(&self) -> &str;
+
+    fn longitud(&self) -> usize {
+        self.bases().len()
+    }
+
+    fn contenido_gc(&self) -> f64 {
+        let g = self.bases().matches('G').count();
+        let c = self.bases().matches('C').count();
+        (g + c) as f64 / self.bases().len() as f64 * 100.0
+    }
+}
+
+struct Dna { id: String, bases: String }
+struct Rna { id: String, bases: String }
+
+impl SecuenciaBiologica for Dna {
+    fn bases(&self) -> &str { &self.bases }
+}
+
+impl SecuenciaBiologica for Rna {
+    fn bases(&self) -> &str { &self.bases }
+}
+
+fn main() {
+    let catalogo: Vec<Box<dyn SecuenciaBiologica>> = vec![
+        Box::new(Dna { id: String::from("genA"), bases: String::from("ATGGCCTTTTAA") }),
+        Box::new(Rna { id: String::from("rnA"), bases: String::from("AUGGCCUUUUAA") }),
+        Box::new(Dna { id: String::from("genB"), bases: String::from("GCCGGCCTTAAGGCTA") }),
+    ];
+
+    let mut mayor = 0;
+    for sec in &catalogo {
+        println!("{} pb, {:.1}% GC", sec.longitud(), sec.contenido_gc());
+        if sec.longitud() > mayor {
+            mayor = sec.longitud();
+        }
+    }
+    println!("La secuencia más larga tiene {} pb", mayor);
+}
+// 12 pb, 41.7% GC
+// 12 pb, 41.7% GC
+// 16 pb, 62.5% GC
+// La secuencia más larga tiene 16 pb
+```
+
+El mismo bucle pregunta por el contrato (`longitud`, `contenido_gc`) sin
+saber jamás si detrás hay un `Dna` o un `Rna`. Verifica el tercer caso:
+`GCCGGCCTTAAGGCTA` tiene 16 bases con 10 GC → 62.5% ✓. Este catálogo mixto
+es el esqueleto exacto del lector multi-registro del capítulo 12.
+
+</details>
+
+### Ejercicio 9.5 · Display para SecuenciaBiologica
+
+Agrega al trait `SecuenciaBiologica` un método por defecto
+`encabezado_fasta(&self) -> String` que devuelva un encabezado FASTA válido
+`">"` seguido de la longitud, y úsalo para imprimir los tres registros del
+catálogo anterior.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+trait SecuenciaBiologica {
+    fn id(&self) -> &str;
+    fn bases(&self) -> &str;
+
+    fn longitud(&self) -> usize {
+        self.bases().len()
+    }
+
+    fn encabezado_fasta(&self) -> String {
+        format!(">{} len={}", self.id(), self.longitud())
+    }
+}
+
+struct Dna { id: String, bases: String }
+struct Rna { id: String, bases: String }
+
+impl SecuenciaBiologica for Dna {
+    fn id(&self) -> &str { &self.id }
+    fn bases(&self) -> &str { &self.bases }
+}
+
+impl SecuenciaBiologica for Rna {
+    fn id(&self) -> &str { &self.id }
+    fn bases(&self) -> &str { &self.bases }
+}
+
+fn main() {
+    let catalogo: Vec<Box<dyn SecuenciaBiologica>> = vec![
+        Box::new(Dna { id: String::from("genA"), bases: String::from("ATGGCCTTTTAA") }),
+        Box::new(Rna { id: String::from("rnA"), bases: String::from("AUGGCCUUUUAA") }),
+    ];
+
+    for sec in &catalogo {
+        println!("{}", sec.encabezado_fasta());
+        println!("{}", sec.bases());
+    }
+}
+// >genA len=12
+// ATGGCCTTTTAA
+// >rnA len=12
+// AUGGCCUUUUAA
+```
+
+El método por defecto combina otros dos métodos del trait (`id` y
+`longitud`): esa composición interna es lo que hace que agregar capacidad a
+un trait no obligue a reescribir sus implementaciones. La salida es FASTA
+válido, listo para `blast` o para el lector del capítulo 12 — que, si
+todo va bien, ya empieza a parecer poco mágico.
+
+</details>

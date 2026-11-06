@@ -1,0 +1,51 @@
+---
+title: "9° BiosisTalks"
+pagetitle:  "Mitochondrial Metabolism in Exercise & Ageing"
+author: "Hans-Georg Sprenger, PhD"
+
+lang: en
+
+date: 2026-09-22
+
+image: forero.jpeg
+
+citation: false
+
+categories: 
+  - Alzheimer
+  - Ciencia
+  - Psicología  
+  - Neurobiología
+  - Envejecimiento
+
+about:
+  id: biosistalks
+  template: jolla
+  image-shape: rectangle
+comments: false
+---
+
+::: {#biosistalks}
+:::
+
+::: {style="text-align: justify;"}
+## Resumen del ponente
+
+Médico de la Universidad Nacional de Colombia en 2003 y Doctor en Ciencias Biomédicas por la Universidad de Amberes. Bélgica en 2009. Actualmente es profesor y líder de investigación de la Fundación Universitaria del Área Andina. Ha desarrollado investigaciones mediante genética humana, genómica molecular, bioinformática y de psicología, en colaboración con investigadores de todo el mundo.
+
+## Enlace de reunión
+
+[Reunión meet](meet.google.com/dzu-naqf-eyf)
+
+## Información de los ponentes
+
+<i class="bi bi-linkedin"></i> [Dr. Diego Forero, MD](https://www.linkedin.com/in/diego-forero-md-phd-b0827918/)
+
+[Google Scholar](https://scholar.google.com/citations?user=bRmms6wAAAAJ&hl=en)
+
+[Website personal](https://sites.google.com/site/diegoforerolab)
+
+## Grupo de Investigación
+
+[Forero Lab](https://adaggio.areandina.edu.co/expert/about/PER-ADG-FUAA0-0000304)
+:::

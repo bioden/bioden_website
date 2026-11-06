@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.19">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Capítulo 10: Iteradores y closures – BIODEN</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../logo.png" rel="icon" type="image/png">
+<script src="../../site_libs/cookie-consent/cookie-consent.js"></script>
+<link href="../../site_libs/cookie-consent/cookie-consent.css" rel="stylesheet">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-70f92796293836dceea0045bd755b5b1.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-1242ccc02940432acd87c1b818d9cd49.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-70f92796293836dceea0045bd755b5b1.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+<script type="text/javascript" charset="UTF-8">
+document.addEventListener('DOMContentLoaded', function () {
+cookieconsent.run({
+  "notice_banner_type":"interstitial",
+  "consent_type":"express",
+  "palette":"dark",
+  "language":"en",
+  "page_load_consent_levels":["strictly-necessary"],
+  "notice_banner_reject_button_hide":false,
+  "preferences_center_close_button_hide":false,
+  "website_name":""
+  ,
+"language":"en"
+  });
+});
+</script> 
+  
+<style>html{ scroll-behavior: smooth; }</style>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../logo.png" alt="" class="navbar-logo light-content">
+    <img src="../../logo.png" alt="" class="navbar-logo dark-content">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">BIODEN</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Inicio</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-proyectos" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Proyectos</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-proyectos">    
+        <li>
+    <a class="dropdown-item" href="https://bioden.github.io/XIII_CCB_curso/">
+ <span class="dropdown-text">De la Botánica a la Bioinformática</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../investigacion.html"> 
+<span class="menu-text">Investigación</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../integrantes.html"> 
+<span class="menu-text">Integrantes</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../biosistalks/biosistalks.html"> 
+<span class="menu-text">Biosis Talks</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../material_educativo.html"> 
+<span class="menu-text">Material educativo</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../suplementario.html"> 
+<span class="menu-text">Servicios</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.instagram.com/dbg_unicauca/"> <i class="bi bi-instagram" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.facebook.com/profile.php?id=61583453722433"> <i class="bi bi-facebook" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:bioden@unicauca.edu.co"> <i class="bi bi-envelope" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar"><div class="quarto-margin-header"><div class="margin-header-item">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../../logos/semillero.png" class="img-fluid figure-img"></p>
+<figcaption>Universidad del Cauca</figcaption>
+</figure>
+</div>
+</div></div>
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#closures-funciones-de-bolsillo" id="toc-closures-funciones-de-bolsillo" class="nav-link active" data-scroll-target="#closures-funciones-de-bolsillo">10.1 Closures: funciones de bolsillo</a></li>
+  <li><a href="#las-tres-puertas-del-iterador" id="toc-las-tres-puertas-del-iterador" class="nav-link" data-scroll-target="#las-tres-puertas-del-iterador">10.2 Las tres puertas del iterador</a></li>
+  <li><a href="#adaptadores-la-pipa-de-unix" id="toc-adaptadores-la-pipa-de-unix" class="nav-link" data-scroll-target="#adaptadores-la-pipa-de-unix">10.3 Adaptadores: la pipa de Unix</a></li>
+  <li><a href="#consumidores-cerrar-la-pipa" id="toc-consumidores-cerrar-la-pipa" class="nav-link" data-scroll-target="#consumidores-cerrar-la-pipa">10.4 Consumidores: cerrar la pipa</a></li>
+  <li><a href="#reescribiendo-el-curso-en-pipelines" id="toc-reescribiendo-el-curso-en-pipelines" class="nav-link" data-scroll-target="#reescribiendo-el-curso-en-pipelines">10.5 Reescribiendo el curso en pipelines</a></li>
+  <li><a href="#fold-el-consumidor-universal" id="toc-fold-el-consumidor-universal" class="nav-link" data-scroll-target="#fold-el-consumidor-universal">10.6 <code>fold</code>: el consumidor universal</a></li>
+  <li><a href="#k-mers-con-windows" id="toc-k-mers-con-windows" class="nav-link" data-scroll-target="#k-mers-con-windows">10.7 k-mers con <code>windows</code></a></li>
+  <li><a href="#ejercicios" id="toc-ejercicios" class="nav-link" data-scroll-target="#ejercicios">Ejercicios</a>
+  <ul class="collapse">
+  <li><a href="#ejercicio-10.1-bases-a-vec" id="toc-ejercicio-10.1-bases-a-vec" class="nav-link" data-scroll-target="#ejercicio-10.1-bases-a-vec">Ejercicio 10.1 · Bases a <code>Vec</code></a></li>
+  <li><a href="#ejercicio-10.2-densidad-de-mutaciones" id="toc-ejercicio-10.2-densidad-de-mutaciones" class="nav-link" data-scroll-target="#ejercicio-10.2-densidad-de-mutaciones">Ejercicio 10.2 · Densidad de mutaciones</a></li>
+  <li><a href="#ejercicio-10.3-lecturas-que-pasan-el-filtro" id="toc-ejercicio-10.3-lecturas-que-pasan-el-filtro" class="nav-link" data-scroll-target="#ejercicio-10.3-lecturas-que-pasan-el-filtro">Ejercicio 10.3 · Lecturas que pasan el filtro</a></li>
+  <li><a href="#ejercicio-10.4-primer-codón-de-paro-versión-elegante" id="toc-ejercicio-10.4-primer-codón-de-paro-versión-elegante" class="nav-link" data-scroll-target="#ejercicio-10.4-primer-codón-de-paro-versión-elegante">Ejercicio 10.4 · Primer codón de paro, versión elegante</a></li>
+  <li><a href="#ejercicio-10.5-promedio-con-fold" id="toc-ejercicio-10.5-promedio-con-fold" class="nav-link" data-scroll-target="#ejercicio-10.5-promedio-con-fold">Ejercicio 10.5 · Promedio con <code>fold</code></a></li>
+  <li><a href="#ejercicio-10.6-pipeline-maestro-gc-y-n50-de-un-lote" id="toc-ejercicio-10.6-pipeline-maestro-gc-y-n50-de-un-lote" class="nav-link" data-scroll-target="#ejercicio-10.6-pipeline-maestro-gc-y-n50-de-un-lote">Ejercicio 10.6 · Pipeline maestro: GC y N50 de un lote</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Capítulo 10: Iteradores y closures</h1>
+<p class="subtitle lead">map, filter, fold y zip: pensar en pipelines de datos biológicos</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Hemos usado iteradores desde el capítulo 3 (<code>chars()</code>, <code>enumerate()</code>, <code>windows</code>) sin levantar la tapa. Es hora de ver el motor completo: los <strong>iteradores</strong> producen valores uno a uno, los <strong>adaptadores</strong> los transforman en cadena (como una pipa de Unix) y los <strong>consumidores</strong> extraen el resultado final. Las <strong>closures</strong>, esas funciones anónimas <code>|x| ...</code> que ya se nos escaparon en capítulos anteriores, son el combustible de todo el sistema. Al terminar, funciones que te tomaron diez líneas serán pipelines de una.</p>
+<section id="closures-funciones-de-bolsillo" class="level2">
+<h2 data-anchor-id="closures-funciones-de-bolsillo">10.1 Closures: funciones de bolsillo</h2>
+<p>Una closure es una función sin nombre, declarada con barras verticales: <code>|parámetros| expresión</code>. A diferencia de las funciones <code>fn</code>, no necesitan anotar tipos (se infieren del uso) y pueden <strong>capturar</strong> variables del entorno:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> factor_dilucion <span class="op">=</span> <span class="dv">0.5</span><span class="op">;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> diluir <span class="op">=</span> <span class="op">|</span>concentracion<span class="op">:</span> <span class="dt">f64</span><span class="op">|</span> concentracion <span class="op">*</span> factor_dilucion<span class="op">;</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"42.0 ng/µL diluido: {} ng/µL"</span><span class="op">,</span> diluir(<span class="dv">42.0</span>))<span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"18.0 ng/µL diluido: {} ng/µL"</span><span class="op">,</span> diluir(<span class="dv">18.0</span>))<span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">// 42.0 ng/µL diluido: 21 ng/µL</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co">// 18.0 ng/µL diluido: 9 ng/µL</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>La closure <code>diluir</code> usa <code>factor_dilucion</code> sin que se lo pasen: la “capturó” del entorno (por referencia, siguiendo las reglas de préstamo del capítulo 4). Cuando una closure necesita apropiarse de un dato capturado —típico al crear hilos en el capítulo 15— se marca con <code>move</code>: <code>move |x| ...</code>. Guarda una closure en una variable y pásala como argumento: es el comportamiento que llena de sentido a lo que sigue.</p>
+</section>
+<section id="las-tres-puertas-del-iterador" class="level2">
+<h2 data-anchor-id="las-tres-puertas-del-iterador">10.2 Las tres puertas del iterador</h2>
+<p>Todo <code>Vec</code>, <code>String</code> y la mayoría de colecciones ofrecen tres formas de producir un iterador:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> phreds <span class="op">=</span> <span class="pp">vec!</span>[<span class="dv">37</span><span class="op">,</span> <span class="dv">12</span><span class="op">,</span> <span class="dv">29</span><span class="op">,</span> <span class="dv">41</span>]<span class="op">;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 1) iter(): presta cada elemento (&amp;T) — el Vec sigue intacto</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> q <span class="kw">in</span> phreds<span class="op">.</span>iter() <span class="op">{</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>        <span class="pp">print!</span>(<span class="st">"{} "</span><span class="op">,</span> q)<span class="op">;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>()<span class="op">;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 2) iter_mut(): presta mutable (&amp;mut T) — permite transformar</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> q <span class="kw">in</span> phreds<span class="op">.</span>iter_mut() <span class="op">{</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>        <span class="op">*</span>q <span class="op">=</span> q<span class="op">.</span>saturating_sub(<span class="dv">1</span>)<span class="op">;</span> <span class="co">// envejece la calidad en 1</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"{:?}"</span><span class="op">,</span> phreds)<span class="op">;</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 3) into_iter(): entrega cada elemento por valor (T) — consume el Vec</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> suma<span class="op">:</span> <span class="dt">i32</span> <span class="op">=</span> phreds<span class="op">.</span>into_iter()<span class="op">.</span>sum()<span class="op">;</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"Suma: {}"</span><span class="op">,</span> suma)<span class="op">;</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="co">// println!("{:?}", phreds); // ⛔ NO COMPILA: phreds fue consumido</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="co">// 37 12 29 41</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="co">// [36, 11, 28, 40]</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="co">// Suma: 115</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>La tercera puerta es la más drástica y la más expresiva: entregar la propiedad de los elementos al pipeline. El <code>for x in &amp;coleccion</code> que usamos todo el curso es azúcar de la primera puerta.</p>
+</section>
+<section id="adaptadores-la-pipa-de-unix" class="level2">
+<h2 data-anchor-id="adaptadores-la-pipa-de-unix">10.3 Adaptadores: la pipa de Unix</h2>
+<p>Los adaptadores reciben un iterador y devuelven otro iterador, transformando en el camino. Los esenciales para análisis de datos:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 30%">
+<col style="width: 16%">
+<col style="width: 52%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Adaptador</th>
+<th>Hace</th>
+<th>Ejemplo biológico</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>map(f)</code></td>
+<td>transforma cada valor</td>
+<td>ADN → ARN (T→U)</td>
+</tr>
+<tr class="even">
+<td><code>filter(f)</code></td>
+<td>deja pasar los que cumplen</td>
+<td>lecturas con Q ≥ 30</td>
+</tr>
+<tr class="odd">
+<td><code>enumerate()</code></td>
+<td>agrega el índice</td>
+<td>posición de cada base</td>
+</tr>
+<tr class="even">
+<td><code>zip(otro)</code></td>
+<td>empareja dos iteradores</td>
+<td>comparar referencia vs.&nbsp;variante</td>
+</tr>
+<tr class="odd">
+<td><code>take(n)</code> / <code>skip(n)</code></td>
+<td>corta / salta</td>
+<td>solo los primeros 100 registros</td>
+</tr>
+<tr class="even">
+<td><code>rev()</code></td>
+<td>invierte</td>
+<td>recorrer el gen 3’→5’</td>
+</tr>
+<tr class="odd">
+<td><code>step_by(n)</code></td>
+<td>avanza de n en n</td>
+<td>marcos de lectura</td>
+</tr>
+<tr class="even">
+<td><code>flat_map(f)</code></td>
+<td>transforma y aplana</td>
+<td>todos los k-mers de varias secuencias</td>
+</tr>
+</tbody>
+</table>
+<p>Y la propiedad que los hace “gratis”: son <strong>perezosos</strong>. Esta línea no hace absolutamente nada:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">let</span> pipeline <span class="op">=</span> phreds<span class="op">.</span>iter()<span class="op">.</span>map(<span class="op">|</span>q<span class="op">|</span> q <span class="op">+</span> <span class="dv">1</span>)<span class="op">.</span>filter(<span class="op">|</span>q<span class="op">|</span> <span class="op">*</span>q <span class="op">&gt;=</span> <span class="dv">30</span>)<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Nada se ejecuta hasta que un <strong>consumidor</strong> (<code>collect</code>, <code>sum</code>, <code>for</code>, <code>count</code>…) reclama valores. Recién entonces los elementos fluyen uno a uno por toda la pipa, sin construir colecciones intermedias: ni vectores temporales, ni copias del genoma.</p>
+</section>
+<section id="consumidores-cerrar-la-pipa" class="level2">
+<h2 data-anchor-id="consumidores-cerrar-la-pipa">10.4 Consumidores: cerrar la pipa</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 38%">
+<col style="width: 32%">
+<col style="width: 29%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Consumidor</th>
+<th>Devuelve</th>
+<th>Ejemplo</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>collect()</code></td>
+<td>colección (Vec, HashMap, String…)</td>
+<td>bases filtradas a <code>Vec</code></td>
+</tr>
+<tr class="even">
+<td><code>sum()</code> / <code>count()</code> / <code>max()</code> / <code>min()</code></td>
+<td>totales</td>
+<td>masa total, cuántas pasan</td>
+</tr>
+<tr class="odd">
+<td><code>fold(inicio, f)</code></td>
+<td>acumulador libre</td>
+<td>score de alineamiento</td>
+</tr>
+<tr class="even">
+<td><code>any(f)</code> / <code>all(f)</code></td>
+<td><code>bool</code></td>
+<td>¿hay algún <code>N</code>? ¿todas Q≥30?</td>
+</tr>
+<tr class="odd">
+<td><code>position(f)</code> / <code>find(f)</code></td>
+<td><code>Option&lt;usize&gt;</code> / <code>Option&lt;T&gt;</code></td>
+<td>índice del primer motivo</td>
+</tr>
+</tbody>
+</table>
+<p><code>collect()</code> merece atención: produce la colección que le indiques (a veces hay que decírselo con la sintaxis <em>turbofish</em> <code>::&lt;&gt;</code>):</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> phreds <span class="op">=</span> <span class="pp">vec!</span>[<span class="dv">37</span><span class="op">,</span> <span class="dv">12</span><span class="op">,</span> <span class="dv">29</span><span class="op">,</span> <span class="dv">41</span><span class="op">,</span> <span class="dv">8</span><span class="op">,</span> <span class="dv">35</span>]<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> buenas<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;&amp;</span><span class="dt">i32</span><span class="op">&gt;</span> <span class="op">=</span> phreds<span class="op">.</span>iter()<span class="op">.</span>filter(<span class="op">|</span>q<span class="op">|</span> <span class="op">**</span>q <span class="op">&gt;=</span> <span class="dv">30</span>)<span class="op">.</span>collect()<span class="op">;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> cuantas<span class="op">:</span> <span class="dt">usize</span> <span class="op">=</span> phreds<span class="op">.</span>iter()<span class="op">.</span>filter(<span class="op">|</span>q<span class="op">|</span> <span class="op">**</span>q <span class="op">&gt;=</span> <span class="dv">30</span>)<span class="op">.</span>count()<span class="op">;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> suma_buenas<span class="op">:</span> <span class="dt">i32</span> <span class="op">=</span> buenas<span class="op">.</span>iter()<span class="op">.</span>map(<span class="op">|</span>q<span class="op">|</span> <span class="op">**</span>q)<span class="op">.</span>sum()<span class="op">;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"{} buenas de {}: suma Q {}"</span><span class="op">,</span> cuantas<span class="op">,</span> phreds<span class="op">.</span>len()<span class="op">,</span> suma_buenas)<span class="op">;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"{:?}"</span><span class="op">,</span> buenas)<span class="op">;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co">// 3 buenas de 6: suma Q 104</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co">// [37, 41, 35]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Ese doble <code>**q</code> es la primera sorpresa de <code>filter</code>: su closure recibe <code>&amp;&amp;i32</code> (referencia a la referencia que entrega el iterador), y comparar exige deshacer ambas capas. Es la fricción típica hasta que el radar de préstamos se calibra; alternativa elegante: <code>filter(|q| **q &gt;= 30)</code> o <code>filter(|&amp;&amp;q| q &gt;= 30)</code> (destructurando la referencia en el patrón).</p>
+</section>
+<section id="reescribiendo-el-curso-en-pipelines" class="level2">
+<h2 data-anchor-id="reescribiendo-el-curso-en-pipelines">10.5 Reescribiendo el curso en pipelines</h2>
+<p>El mejor resumen del capítulo es reescribir funciones que ya escribiste con bucles. El contenido de GC, versión pipeline:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> contenido_gc(dna<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">f64</span> <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> gc <span class="op">=</span> dna<span class="op">.</span>bytes()<span class="op">.</span>filter(<span class="op">|</span>b<span class="op">|</span> <span class="op">*</span>b <span class="op">==</span> <span class="ch">b'G'</span> <span class="op">||</span> <span class="op">*</span>b <span class="op">==</span> <span class="ch">b'C'</span>)<span class="op">.</span>count()<span class="op">;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    gc <span class="kw">as</span> <span class="dt">f64</span> <span class="op">/</span> dna<span class="op">.</span>len() <span class="kw">as</span> <span class="dt">f64</span> <span class="op">*</span> <span class="dv">100.0</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>bytes()</code> itera los bytes, <code>filter</code> deja pasar G y C (comparando contra los literales de byte <code>b'G'</code>), y <code>count</code> cierra la pipa: tres conceptos, una línea, cero variables mutables.</p>
+<p>La transcripción del capítulo 3, sin <code>String</code> manual:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> transcribir(dna<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">String</span> <span class="op">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    dna<span class="op">.</span>chars()<span class="op">.</span>map(<span class="op">|</span>c<span class="op">|</span> <span class="cf">if</span> c <span class="op">==</span> <span class="ch">'T'</span> <span class="op">{</span> <span class="ch">'U'</span> <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span> c <span class="op">}</span>)<span class="op">.</span>collect()</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>map</code> transforma cada carácter y <code>collect</code> junta el resultado en <code>String</code> — el tipo de destino se infiere del retorno de la función. Comparado con el <code>for</code> + <code>push</code> original: mismo resultado, menos ceremonia, y el <em>qué</em> (T se vuelve U) gana protagonismo sobre el <em>cómo</em>.</p>
+<p>Contar sustituciones entre una referencia y una variante — el clásico de genómica de poblaciones — es el trabajo perfecto de <code>zip</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> referencia <span class="op">=</span> <span class="st">"ATGGCCTAGTAA"</span><span class="op">;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> variante <span class="op">=</span> <span class="st">"ATCGCTTAGTAA"</span><span class="op">;</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> mutaciones <span class="op">=</span> referencia</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>chars()</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>zip(variante<span class="op">.</span>chars())</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>filter(<span class="op">|</span>(r<span class="op">,</span> a)<span class="op">|</span> r <span class="op">!=</span> a)</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>count()<span class="op">;</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"{} sitios difieren entre las secuencias"</span><span class="op">,</span> mutaciones)<span class="op">;</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="co">// 3 sitios difieren entre las secuencias</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>zip</code> empareja cada base de la referencia con su homóloga, y el patrón <code>|(r, a)|</code> desempaqueta la tupla directamente en los parámetros de la closure: dentro, compararlas es trivial. Nota de seguridad: <code>zip</code> se corta en la secuencia más corta; para secuencias de longitudes distintas, valida antes (la distancia de longitud también es información biológica).</p>
+<p>El promedio de calidad de una línea PHRD (capítulo 5) en una expresión:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> linea <span class="op">=</span> <span class="st">"II5I35FFII"</span><span class="op">;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> promedio <span class="op">=</span> linea<span class="op">.</span>chars()<span class="op">.</span>map(<span class="op">|</span>c<span class="op">|</span> (c <span class="kw">as</span> <span class="dt">u8</span> <span class="op">-</span> <span class="dv">33</span>) <span class="kw">as</span> <span class="dt">f64</span>)<span class="op">.</span><span class="pp">sum::</span><span class="op">&lt;</span><span class="dt">f64</span><span class="op">&gt;</span>()</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>        <span class="op">/</span> linea<span class="op">.</span>chars()<span class="op">.</span>count() <span class="kw">as</span> <span class="dt">f64</span><span class="op">;</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"Calidad promedio: Q{:.1}"</span><span class="op">,</span> promedio)<span class="op">;</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="co">// Calidad promedio: Q33.2</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>map</code> decodifica cada carácter a su puntaje y <code>sum::&lt;f64&gt;</code> acumula (el turbofish le dice a <code>sum</code> que el acumulador es <code>f64</code>). Verifica a mano: I, I, 5, I, 3, 5, F, F, I, I → 40+40+20+40+18+20+37+37+40+40 = 332, y 332/10 = 33.2 ✓.</p>
+</section>
+<section id="fold-el-consumidor-universal" class="level2">
+<h2 data-anchor-id="fold-el-consumidor-universal">10.6 <code>fold</code>: el consumidor universal</h2>
+<p>Cuando ningún consumidor encaja, <code>fold</code> lo hace todo: recibe un valor inicial y una closure <code>(acumulador, elemento) -&gt; nuevo acumulador</code>. Un score de alineamiento simplificado (+1 coincidencia, −1 diferencia):</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> refe <span class="op">=</span> <span class="st">"ATGGCCTAGTAA"</span><span class="op">;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> alt <span class="op">=</span> <span class="st">"ATCGCTTAGTAA"</span><span class="op">;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> score <span class="op">=</span> refe<span class="op">.</span>chars()<span class="op">.</span>zip(alt<span class="op">.</span>chars())<span class="op">.</span>fold(<span class="dv">0i32</span><span class="op">,</span> <span class="op">|</span>acc<span class="op">,</span> (r<span class="op">,</span> a)<span class="op">|</span> <span class="op">{</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> r <span class="op">==</span> a <span class="op">{</span> acc <span class="op">+</span> <span class="dv">1</span> <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span> acc <span class="op">-</span> <span class="dv">1</span> <span class="op">}</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"Score de alineamiento simple: {}"</span><span class="op">,</span> score)<span class="op">;</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="co">// Score de alineamiento simple: 6</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Doce posiciones, tres diferencias: (9 − 3) = 6 ✓. <code>fold</code> es el bisturí general: sirve para promedios ponderados, construir mapas, calcular probabilidades acumuladas… cualquier recorrido con memoria.</p>
+</section>
+<section id="k-mers-con-windows" class="level2">
+<h2 data-anchor-id="k-mers-con-windows">10.7 k-mers con <code>windows</code></h2>
+<p>Recordarás el bucle con índices del capítulo 7. La forma idiomática usa <code>windows(k)</code>, que entrega rebanadas contiguas de tamaño k ya deslizadas:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::collections::</span>HashMap<span class="op">;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> dna <span class="op">=</span> <span class="st">"ATGGCCTTTTAA"</span><span class="op">;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> conteo<span class="op">:</span> HashMap<span class="op">&lt;</span><span class="dt">String</span><span class="op">,</span> <span class="dt">usize</span><span class="op">&gt;</span> <span class="op">=</span> <span class="pp">HashMap::</span>new()<span class="op">;</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> ventana <span class="kw">in</span> dna<span class="op">.</span>as_bytes()<span class="op">.</span>windows(<span class="dv">3</span>) <span class="op">{</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> kmer <span class="op">=</span> <span class="pp">std::</span><span class="dt">str</span><span class="pp">::</span>from_utf8(ventana)<span class="op">.</span>expect(<span class="st">"se requiere ASCII"</span>)<span class="op">;</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>        <span class="op">*</span>conteo<span class="op">.</span>entry(kmer<span class="op">.</span>to_string())<span class="op">.</span>or_insert(<span class="dv">0</span>) <span class="op">+=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"{} k-mers distintos; TTT × {}"</span><span class="op">,</span> conteo<span class="op">.</span>len()<span class="op">,</span> conteo[<span class="st">"TTT"</span>])<span class="op">;</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="co">// 9 k-mers distintos; TTT × 2</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>as_bytes()</code> da el iterador de bytes, <code>windows(3)</code> las ventanas de tres, y <code>str::from_utf8</code> reinterpreta cada ventana como texto (con <code>expect</code> porque una secuencia con caracteres no-UTF8 no puede existir en un <code>&amp;str</code> de origen). Sin índices, sin aritmética de rangos, imposible salir del límite: el compilador lo garantiza.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Cero costo, de verdad
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Los iteradores de Rust no son los iteradores lentos de otros lenguajes: compilan al mismo código de máquina que el bucle <code>for</code> escrito a mano (frecuentemente mejor, porque el optimizador los razona como un todo). Usar pipelines es <strong>gratis</strong>: elige siempre la versión más clara.</p>
+</div>
+</div>
+</section>
+<section id="ejercicios" class="level2">
+<h2 data-anchor-id="ejercicios">Ejercicios</h2>
+<section id="ejercicio-10.1-bases-a-vec" class="level3">
+<h3 data-anchor-id="ejercicio-10.1-bases-a-vec">Ejercicio 10.1 · Bases a <code>Vec</code></h3>
+<p>Escribe <code>fn base_vector(dna: &amp;str) -&gt; Vec&lt;char&gt;</code> que devuelva las bases en un vector, y <code>fn solo_purinas(dna: &amp;str) -&gt; Vec&lt;char&gt;</code> que filtre solo purinas (A, G), ambas en una línea con <code>collect()</code>.</p>
+<details>
+<summary>
+Solución
+</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> base_vector(dna<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">char</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    dna<span class="op">.</span>chars()<span class="op">.</span>collect()</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> solo_purinas(dna<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">char</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    dna<span class="op">.</span>chars()<span class="op">.</span>filter(<span class="op">|&amp;</span>c<span class="op">|</span> c <span class="op">==</span> <span class="ch">'A'</span> <span class="op">||</span> c <span class="op">==</span> <span class="ch">'G'</span>)<span class="op">.</span>collect()</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"{:?}"</span><span class="op">,</span> base_vector(<span class="st">"ATGC"</span>))<span class="op">;</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"{:?}"</span><span class="op">,</span> solo_purinas(<span class="st">"ATGGCCTTTTAA"</span>))<span class="op">;</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="co">// ['A', 'T', 'G', 'C']</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="co">// ['A', 'G', 'G']</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Dos lecciones en dos líneas. Primera: <code>collect</code> construye la colección que el contexto pida — aquí un <code>Vec&lt;char&gt;</code> por el tipo de retorno, y un <code>String</code> en el <code>transcribir</code> del capítulo. Segunda: la closure de <code>filter</code> recibe <code>&amp;char</code>, y el patrón <code>|&amp;c|</code> lo desestructura para que <code>c</code> ya sea un <code>char</code> comparable — la forma más cómoda de evitarse el doble <code>**</code>.</p>
+</details>
+</section>
+<section id="ejercicio-10.2-densidad-de-mutaciones" class="level3">
+<h3 data-anchor-id="ejercicio-10.2-densidad-de-mutaciones">Ejercicio 10.2 · Densidad de mutaciones</h3>
+<p>Con <code>zip</code>, calcula la <strong>densidad de mutaciones</strong> (diferencias / longitud) entre <code>ATGGCCTAGTAA</code> y <code>ATCGCTTAGTAA</code> y expresa el resultado en mutaciones/kb multiplicando por 1000.</p>
+<details>
+<summary>
+Solución
+</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> referencia <span class="op">=</span> <span class="st">"ATGGCCTAGTAA"</span><span class="op">;</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> variante <span class="op">=</span> <span class="st">"ATCGCTTAGTAA"</span><span class="op">;</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> diferencias <span class="op">=</span> referencia</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>chars()</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>zip(variante<span class="op">.</span>chars())</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>filter(<span class="op">|</span>(r<span class="op">,</span> a)<span class="op">|</span> r <span class="op">!=</span> a)</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>count() <span class="kw">as</span> <span class="dt">f64</span><span class="op">;</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> por_kb <span class="op">=</span> diferencias <span class="op">/</span> referencia<span class="op">.</span>len() <span class="kw">as</span> <span class="dt">f64</span> <span class="op">*</span> <span class="dv">1000.0</span><span class="op">;</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"{} diferencias: {:.1} mutaciones/kb"</span><span class="op">,</span> diferencias <span class="kw">as</span> <span class="dt">usize</span><span class="op">,</span> por_kb)<span class="op">;</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="co">// 3 diferencias: 250.0 mutaciones/kb</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Tres diferencias en 12 pb equivalen a 250 por mil: una densidad astronómica que en un genoma real solo verías entre especies muy distantes (o en un experimento de mutagénesis dirigida, que es justo donde se aplica este cálculo). El patrón <code>count → cast → dividir</code> es el mismo del contenido GC; solo cambió la fuente de los datos.</p>
+</details>
+</section>
+<section id="ejercicio-10.3-lecturas-que-pasan-el-filtro" class="level3">
+<h3 data-anchor-id="ejercicio-10.3-lecturas-que-pasan-el-filtro">Ejercicio 10.3 · Lecturas que pasan el filtro</h3>
+<p>Dado un <code>Vec&lt;LecturaFastq&gt;</code> (capítulo 5), usa <code>filter</code> + <code>collect</code> para construir el subconjunto de lecturas con calidad promedio ≥ 30 e imprime cuántas son. Pista: el método <code>calidad_promedio</code> ya existe.</p>
+<details>
+<summary>
+Solución
+</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> LecturaFastq <span class="op">{</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    id<span class="op">:</span> <span class="dt">String</span><span class="op">,</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    secuencia<span class="op">:</span> <span class="dt">String</span><span class="op">,</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    calidad<span class="op">:</span> <span class="dt">String</span><span class="op">,</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> LecturaFastq <span class="op">{</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> calidad_promedio(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">f64</span> <span class="op">{</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> <span class="kw">mut</span> suma <span class="op">=</span> <span class="dv">0u32</span><span class="op">;</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> c <span class="kw">in</span> <span class="kw">self</span><span class="op">.</span>calidad<span class="op">.</span>chars() <span class="op">{</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>            suma <span class="op">+=</span> (c <span class="kw">as</span> <span class="dt">u8</span> <span class="op">-</span> <span class="dv">33</span>) <span class="kw">as</span> <span class="dt">u32</span><span class="op">;</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>        suma <span class="kw">as</span> <span class="dt">f64</span> <span class="op">/</span> <span class="kw">self</span><span class="op">.</span>calidad<span class="op">.</span>len() <span class="kw">as</span> <span class="dt">f64</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> lecturas <span class="op">=</span> <span class="pp">vec!</span>[</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>        LecturaFastq <span class="op">{</span> id<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"l1"</span>)<span class="op">,</span> secuencia<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"ATGG"</span>)<span class="op">,</span> calidad<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"II5I"</span>) <span class="op">},</span></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>        LecturaFastq <span class="op">{</span> id<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"l2"</span>)<span class="op">,</span> secuencia<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"GGTT"</span>)<span class="op">,</span> calidad<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"####"</span>) <span class="op">},</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>        LecturaFastq <span class="op">{</span> id<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"l3"</span>)<span class="op">,</span> secuencia<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"TAAA"</span>)<span class="op">,</span> calidad<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"IIII"</span>) <span class="op">},</span></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>    ]<span class="op">;</span></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> buenas<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;&amp;</span>LecturaFastq<span class="op">&gt;</span> <span class="op">=</span> lecturas</span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>iter()</span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>filter(<span class="op">|</span>l<span class="op">|</span> l<span class="op">.</span>calidad_promedio() <span class="op">&gt;=</span> <span class="dv">30.0</span>)</span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>collect()<span class="op">;</span></span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"{} de {} lecturas pasan el filtro"</span><span class="op">,</span> buenas<span class="op">.</span>len()<span class="op">,</span> lecturas<span class="op">.</span>len())<span class="op">;</span></span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> l <span class="kw">in</span> <span class="op">&amp;</span>buenas <span class="op">{</span></span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>        <span class="pp">println!</span>(<span class="st">"  {} (Q{:.1})"</span><span class="op">,</span> l<span class="op">.</span>id<span class="op">,</span> l<span class="op">.</span>calidad_promedio())<span class="op">;</span></span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a><span class="co">// 2 de 3 lecturas pasan el filtro</span></span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a><span class="co">//   l1 (Q35.0)</span></span>
+<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a><span class="co">//   l3 (Q40.0)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Verificación: l1 = (40+40+20+40)/4 = 35.0 ✓, l2 = (8×4)/4 = 8.0 (fuera), l3 = 40.0 ✓. El <code>Vec&lt;&amp;LecturaFastq&gt;</code> resultante contiene <strong>prestamos</strong>: las lecturas originales siguen en <code>lecturas</code>, y la lista de buenas es una vista — la opción más eficiente cuando el filtrado es solo para reportar.</p>
+</details>
+</section>
+<section id="ejercicio-10.4-primer-codón-de-paro-versión-elegante" class="level3">
+<h3 data-anchor-id="ejercicio-10.4-primer-codón-de-paro-versión-elegante">Ejercicio 10.4 · Primer codón de paro, versión elegante</h3>
+<p>Con <code>position</code> (o <code>find</code> sobre <code>windows</code>), encuentra el índice del primer codón de paro (<code>TAA</code>, <code>TAG</code> o <code>TGA</code>) en <code>ATGGCCTTTTAA</code> y repórtalo en posición biológica.</p>
+<details>
+<summary>
+Solución
+</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> dna <span class="op">=</span> <span class="st">"ATGGCCTTTTAA"</span><span class="op">;</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> indice <span class="op">=</span> (<span class="dv">0</span><span class="op">..</span>dna<span class="op">.</span>len())</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>step_by(<span class="dv">3</span>)</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>find(<span class="op">|&amp;</span>i<span class="op">|</span> <span class="op">&amp;</span>dna[i<span class="op">..</span>i <span class="op">+</span> <span class="dv">3</span>] <span class="op">==</span> <span class="st">"TAA"</span> <span class="op">||</span> <span class="op">&amp;</span>dna[i<span class="op">..</span>i <span class="op">+</span> <span class="dv">3</span>] <span class="op">==</span> <span class="st">"TAG"</span> <span class="op">||</span> <span class="op">&amp;</span>dna[i<span class="op">..</span>i <span class="op">+</span> <span class="dv">3</span>] <span class="op">==</span> <span class="st">"TGA"</span>)<span class="op">;</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">match</span> indice <span class="op">{</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>        <span class="cn">Some</span>(i) <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">"Primer codón de paro en la posición {}"</span><span class="op">,</span> i <span class="op">+</span> <span class="dv">1</span>)<span class="op">,</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>        <span class="cn">None</span> <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">"Sin codones de paro en este marco"</span>)<span class="op">,</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="co">// Primer codón de paro en la posición 10</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>(0..len).step_by(3)</code> recorre el marco de lectura 0, y <code>find</code> devuelve <code>Option&lt;usize&gt;</code> — la composición de rangos del capítulo 3 con la caja del capítulo 6. El resultado Some(9) → posición 10 coincide con el final del mini-gen, como debe ser: la proteína termina ahí.</p>
+</details>
+</section>
+<section id="ejercicio-10.5-promedio-con-fold" class="level3">
+<h3 data-anchor-id="ejercicio-10.5-promedio-con-fold">Ejercicio 10.5 · Promedio con <code>fold</code></h3>
+<p>Reescribe el cálculo del promedio PHRED de <code>"II5I35FFII"</code> usando <strong>exclusivamente</strong> <code>fold</code> (sin <code>sum</code> ni <code>count</code>): el acumulador puede ser una tupla <code>(suma, cantidad)</code>.</p>
+<details>
+<summary>
+Solución
+</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> linea <span class="op">=</span> <span class="st">"II5I35FFII"</span><span class="op">;</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> (suma<span class="op">,</span> cantidad) <span class="op">=</span> linea<span class="op">.</span>chars()<span class="op">.</span>fold((<span class="dv">0u32</span><span class="op">,</span> <span class="dv">0u32</span>)<span class="op">,</span> <span class="op">|</span>(s<span class="op">,</span> n)<span class="op">,</span> c<span class="op">|</span> <span class="op">{</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>        (s <span class="op">+</span> (c <span class="kw">as</span> <span class="dt">u8</span> <span class="op">-</span> <span class="dv">33</span>) <span class="kw">as</span> <span class="dt">u32</span><span class="op">,</span> n <span class="op">+</span> <span class="dv">1</span>)</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span>)<span class="op">;</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"Suma: {}, bases: {}, promedio: Q{:.1}"</span><span class="op">,</span> suma<span class="op">,</span> cantidad<span class="op">,</span> suma <span class="kw">as</span> <span class="dt">f64</span> <span class="op">/</span> cantidad <span class="kw">as</span> <span class="dt">f64</span>)<span class="op">;</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Suma: 332, bases: 10, promedio: Q33.2</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>La tupla <code>(suma, cantidad)</code> viaja por el iterador acumulándose: cada vuelta produce la pareja nueva, y el patrón <code>|(s, n), c|</code> desempaqueta acumulador y elemento de un plumazo. Con <code>fold</code> puedes calcular cualquier estadístico de una pasada: media y varianza juntas, mínimo y máximo a la vez, o los cuatro conteos de bases en un solo recorrido.</p>
+</details>
+</section>
+<section id="ejercicio-10.6-pipeline-maestro-gc-y-n50-de-un-lote" class="level3">
+<h3 data-anchor-id="ejercicio-10.6-pipeline-maestro-gc-y-n50-de-un-lote">Ejercicio 10.6 · Pipeline maestro: GC y N50 de un lote</h3>
+<p>Une todo: dado <code>Vec&lt;(String, String)&gt;</code> de pares <code>(id, secuencia)</code>, produce con un pipeline el <code>Vec</code> de ids cuya secuencia tiene contenido GC ≥ 50%, ordenado alfabéticamente. Datos de prueba: <code>("gc1", "GCCGGC")</code>, <code>("at1", "ATTAAT")</code>, <code>("mix", "ATGGCC")</code>.</p>
+<details>
+<summary>
+Solución
+</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> secuencias <span class="op">=</span> <span class="pp">vec!</span>[</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>        (<span class="dt">String</span><span class="pp">::</span>from(<span class="st">"gc1"</span>)<span class="op">,</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"GCCGGC"</span>))<span class="op">,</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>        (<span class="dt">String</span><span class="pp">::</span>from(<span class="st">"at1"</span>)<span class="op">,</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"ATTAAT"</span>))<span class="op">,</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>        (<span class="dt">String</span><span class="pp">::</span>from(<span class="st">"mix"</span>)<span class="op">,</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"ATGGCC"</span>))<span class="op">,</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    ]<span class="op">;</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> ids_gc_alta<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;</span> <span class="op">=</span> secuencias</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>iter()</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>filter(<span class="op">|</span>(_<span class="op">,</span> seq)<span class="op">|</span> <span class="op">{</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>            <span class="kw">let</span> gc <span class="op">=</span> seq<span class="op">.</span>bytes()<span class="op">.</span>filter(<span class="op">|</span>b<span class="op">|</span> <span class="op">*</span>b <span class="op">==</span> <span class="ch">b'G'</span> <span class="op">||</span> <span class="op">*</span>b <span class="op">==</span> <span class="ch">b'C'</span>)<span class="op">.</span>count()<span class="op">;</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>            gc <span class="kw">as</span> <span class="dt">f64</span> <span class="op">/</span> seq<span class="op">.</span>len() <span class="kw">as</span> <span class="dt">f64</span> <span class="op">*</span> <span class="dv">100.0</span> <span class="op">&gt;=</span> <span class="dv">50.0</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span>)</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>map(<span class="op">|</span>(id<span class="op">,</span> _)<span class="op">|</span> id<span class="op">.</span>clone())</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>collect()<span class="op">;</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>    ids_gc_alta<span class="op">.</span>sort()<span class="op">;</span></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"Secuencias con GC ≥ 50%: {:?}"</span><span class="op">,</span> ids_gc_alta)<span class="op">;</span></span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a><span class="co">// Secuencias con GC ≥ 50%: ["gc1", "mix"]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Anatomía del pipeline: <code>iter</code> presta los pares; el <code>filter</code> calcula el GC sobre la secuencia (el patrón <code>(_, seq)</code> ignora el id); el <code>map</code> extrae un clon del id (clonado porque el par sigue prestado); <code>collect</code> arma el <code>Vec</code>; y <code>sort</code> lo ordena para el reporte. Seis conceptos del curso encadenados en una expresión legible — este es el Rust intermedio que queríamos alcanzar, y es la columna vertebral del analizador del capítulo 15.</p>
+</details>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/bioden\.github\.io\/bioden_website\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Semillero de Biología del Desarrollo y Plasticidad Neural © 2025. All content licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Sitio web desarrollado por Xavier Clemente García Cevallos</p>
+</div>   
+    <div class="nav-footer-center">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/bioden">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="mailto:bioden@unicauca.edu.co">
+      <i class="bi bi-envelope" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    <div class="cookie-consent-footer"><a href="#" id="open_preferences_center">Cookie Preferences</a></div></div>
+    <div class="nav-footer-right">
+<p>Made with <a href="https://www.r-project.org/"><img src="https://www.r-project.org/Rlogo.png" alt="R" width="25px"></a> and <a href="https://quarto.org/"><img src="https://quarto.org/quarto.png" alt="Quarto" width="65px"></a>.</p>
+</div>
+  </div>
+</footer>
+
+
+
+
+<script src="../../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

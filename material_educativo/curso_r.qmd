@@ -16,17 +16,17 @@ Este módulo introduce el uso del lenguaje R como herramienta fundamental para e
 
 ### Competencias esperadas:
 
--   Comprender los principios básicos de programación y análisis reproducible.
+- Comprender los principios básicos de programación y análisis reproducible.
 
--   Importar, limpiar y transformar datos biológicos en R.
+- Importar, limpiar y transformar datos biológicos en R.
 
--   Aplicar pruebas estadísticas adecuadas a diferentes tipos de datos experimentales.
+- Aplicar pruebas estadísticas adecuadas a diferentes tipos de datos experimentales.
 
--   Realizar análisis ecológicos y ómicos con paquetes especializados.
+- Realizar análisis ecológicos y ómicos con paquetes especializados.
 
--   Generar figuras y reportes reproducibles de calidad científica.
+- Generar figuras y reportes reproducibles de calidad científica.
 
 ### Capítulos
 
--   [Capítulo 1: Fundamentos básicos de R y lógica de programación](capitulos_r/Capitulo1.qmd)
--   [Capítulo 2: Estadística descriptiva y pruebas básicas en R](capitulos_r/Capitulo2.qmd)
+- [Capítulo 1: Fundamentos básicos de R y lógica de programación](capitulos_r/Capitulo1.qmd)
+- [Capítulo 2: Estadística descriptiva y pruebas básicas en R](capitulos_r/Capitulo2.qmd)

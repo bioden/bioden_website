@@ -1,0 +1,543 @@
+---
+title: "Capítulo 6: Enums y Option"
+subtitle: "Variantes con datos y el tipo que eliminó el null de Rust"
+format:
+  html:
+    toc: true
+---
+
+Los structs del capítulo anterior agrupan datos que van **juntos** (una
+secuencia tiene id, descripción y bases). Este capítulo presenta su espejo
+complementario: los **enums** modelan datos que son **una de varias
+alternativas** —un registro puede ser genoma, lectura o anotación, pero no
+las tres cosas a la vez— y el tipo `Option<T>`, que usa esa misma idea para
+resolver el problema más viejo de la programación: ¿qué devuelvo cuando el
+dato no existe?
+
+## 6.1 Enumerar alternativas
+
+Un enum declara sus variantes posibles. La versión mínima es un conjunto
+fijo de estados, como nuestras bases nitrogenadas:
+
+```rust
+enum Base {
+    A,
+    C,
+    G,
+    T,
+}
+
+fn main() {
+    let base = Base::G;
+    let complemento = match base {
+        Base::A => Base::T,
+        Base::T => Base::A,
+        Base::C => Base::G,
+        Base::G => Base::C,
+    };
+    println!("la complementaria de G es {:?}", complemento);
+}
+```
+
+Ojo con ese último `println!`: para imprimir un enum hace falta que derive
+`Debug` (lo recordaremos abajo). Fíjate también en la sintaxis `Base::G`: las
+variantes viven en el espacio de nombres del enum, lo que deja claro de qué
+"A" hablamos —crucial en un programa donde `'A'`, `Base::A` y `"A"` son cosas
+distintas.
+
+## 6.2 Variantes con datos
+
+La potencia real aparece cuando cada variante **carga datos propios**,
+distintos por variante. Un archivo de un repositorio de secuencias puede
+contener distintos tipos de registro:
+
+```rust
+enum Registro {
+    Genoma { especie: String, tamano_pb: u64 },
+    Lectura { id: String, phred_medio: f64 },
+    Anotacion { gen: String, funcion: String },
+}
+
+fn main() {
+    let muestra = Registro::Anotacion {
+        gen: String::from("BRCA1"),
+        funcion: String::from("reparación de ADN"),
+    };
+
+    match muestra {
+        Registro::Genoma { especie, tamano_pb } => {
+            println!("Genoma de {}: {} pb", especie, tamano_pb);
+        }
+        Registro::Lectura { id, phred_medio } => {
+            println!("Lectura {}: Q{:.1}", id, phred_medio);
+        }
+        Registro::Anotacion { gen, funcion } => {
+            println!("{} participa en {}", gen, funcion);
+        }
+    }
+}
+// BRCA1 participa en reparación de ADN
+```
+
+El `match` hace dos trabajos a la vez: elige la variante **y desestructura
+sus datos** en variables usables (`especie`, `tamano_pb`). Además, es
+exhaustivo: si mañana agregas la variante `Proteoma`, todo `match` sobre
+`Registro` dejará de compilar hasta que lo atiendas. Esa "alergia al caso
+olvidado" es una de las mayores virtudes de Rust para pipelines
+bioinformáticos que crecen durante meses.
+
+## 6.3 Enums con métodos
+
+Como los structs, los enums tienen sus `impl` y métodos. Un `Base` completo
+de laboratorio:
+
+```rust
+#[derive(Debug)]
+enum Base {
+    A,
+    C,
+    G,
+    T,
+}
+
+impl Base {
+    fn como_char(&self) -> char {
+        match self {
+            Base::A => 'A',
+            Base::C => 'C',
+            Base::G => 'G',
+            Base::T => 'T',
+        }
+    }
+
+    fn es_purina(&self) -> bool {
+        matches!(self, Base::A | Base::G) // atajo para un match booleano
+    }
+}
+
+fn main() {
+    let b = Base::A;
+    println!("{} es purina: {}", b.como_char(), b.es_purina());
+}
+// A es purina: true
+```
+
+La macro `matches!(valor, patrón)` evalúa si el valor coincide con el
+patrón y devuelve un `bool`; es la forma compacta de los `match` que solo
+preguntan pertenencia.
+
+## 6.4 `Option<T>`: la ausencia como tipo
+
+Tony Hoare, inventor de la referencia nula, la llamó su "error de mil
+millones de dólares": cuando `NULL` puede colarse en cualquier variable,
+todo acceso es una apuesta. Rust eliminó el null del lenguaje y lo
+reemplazó con un enum de la biblioteca estándar:
+
+```rust
+enum Option<T> {
+    Some(T), // hay un valor
+    None,    // no hay valor
+}
+```
+
+La `<T>` indica que `Option` es genérico: existe `Option<usize>`,
+`Option<f64>`, `Option<Base>`... Lo importante es que ahora la **posible
+ausencia es parte del tipo** del valor. Una función que busca algo devuelve
+`Option`, y el compilador te obliga a considerar ambos casos antes de usar
+el resultado. ¿Dónde ya te cruzaste con esto? En el capítulo 5,
+`.get(posicion)` de un arreglo devolvía `Option<&char>` mientras que
+`arreglo[posicion]` entraba en pánico si la posición no existía: la versión
+segura usa `Option`.
+
+Escribamos el ejemplo insignia: buscar la primera ocurrencia de un motivo
+(un sitio de unión, un codón) en una secuencia:
+
+```rust
+fn buscar_motivo(dna: &str, motivo: &str) -> Option<usize> {
+    if motivo.is_empty() || motivo.len() > dna.len() {
+        return None;
+    }
+    let m = motivo.len();
+    for i in 0..=(dna.len() - m) {
+        if &dna[i..i + m] == motivo {
+            return Some(i); // índice 0-based de la primera coincidencia
+        }
+    }
+    None // se recorrió todo sin encontrarlo
+}
+
+fn main() {
+    let gen = "ATGGCCTTTTAA";
+
+    println!("Sitio 'GCC': {:?}", buscar_motivo(gen, "GCC"));
+    println!("Sitio 'GATTACA': {:?}", buscar_motivo(gen, "GATTACA"));
+}
+// Sitio 'GCC': Some(3)
+// Sitio 'GATTACA': None
+```
+
+La función recorre las ventanas de la secuencia (slices del capítulo 4) y
+devuelve `Some(i)` apenas encuentra el motivo, o `None` si termina sin
+suerte. La firma `Option<usize>` es un contrato: *puede que no esté*. En la
+práctica, `"ATGGCC".find("GCC")` de la biblioteca estándar hace esto mismo
+y devuelven `Option<usize>`; construir la nuestra nos deja entender qué
+compran esas letras.
+
+## 6.5 Consumir un `Option`
+
+El `Option` no se puede usar directamente como si fuera el valor: hay que
+"abrir la caja" declarando el caso vacío. La forma explícita es `match`:
+
+```rust
+fn main() {
+    let gen = "ATGGCCTTTTAA";
+    match buscar_motivo(gen, "TAA") {
+        Some(pos) => println!("Codón de paro TAA en el índice {}", pos),
+        None => println!("Sin codón de paro en esta hebra"),
+    }
+}
+// Codón de paro TAA en el índice 9
+```
+
+Cuando el caso `None` no merece tratamiento, `if let` es más directo:
+
+```rust
+fn main() {
+    let gen = "ATGGCCTTTTAA";
+    if let Some(pos) = buscar_motivo(gen, "ATG") {
+        println!("El codón de inicio está en {}", pos);
+    }
+}
+// El codón de inicio está en 0
+```
+
+Y para transformar o encadenar sin abrir la caja, los **combinators**
+ahorran ceremonia. `map` aplica una función al valor interior si existe;
+`unwrap_or` entrega un valor por omisión cuando no existe:
+
+```rust
+fn main() {
+    let encontrado = buscar_motivo("ATGGCCTTTTAA", "GCC");
+
+    // posición 1-based, o 0 si no está
+    let posicion_biologica = encontrado.map(|i| i + 1).unwrap_or(0);
+    println!("Posición biológica: {}", posicion_biologica);
+}
+// Posición biológica: 4
+```
+
+Ese `|i| i + 1` es una *closure* (una mini función anónima) —las
+estudiaremos a fondo en el capítulo 10; por hoy lee la línea como "al valor
+de adentro, súmale 1; si no hay nada, usa 0". Encontrado en índice 3, más
+uno: posición 4, que es donde un biólogo esperaría el sitio.
+
+::: {.callout-warning}
+## `unwrap()` y `expect()`: dinamita controlada
+`option.unwrap()` devuelve el valor interior y **revienta el programa** si
+era `None` (con `expect("mensaje")` eliges el mensaje). Usarlos en análisis
+reales es apostar a que el dato siempre existe: basta un archivo truncado
+para tirar todo el pipeline. Aceptables en prototipos y ejemplos de
+aprendizaje; prohibidos en el código del proyecto final.
+:::
+
+## 6.6 Proyecto del capítulo: parsear bases con validación
+
+Cerremos uniendo enum, `Option` y métodos: convertir un carácter arbitrario
+—que puede llegar de un archivo con errores— en una `Base` confiable:
+
+```rust
+#[derive(Debug, PartialEq)]
+enum Base {
+    A,
+    C,
+    G,
+    T,
+}
+
+fn parsear_base(c: char) -> Option<Base> {
+    match c {
+        'A' => Some(Base::A),
+        'C' => Some(Base::C),
+        'G' => Some(Base::G),
+        'T' => Some(Base::T),
+        _ => None, // N, R, Y, minúsculas, basura...
+    }
+}
+
+fn main() {
+    let candidatos = ['A', 'N', 'g', 'T'];
+
+    for c in candidatos {
+        match parsear_base(c) {
+            Some(base) => println!("'{}' -> {:?}", c, base),
+            None => println!("'{}' -> base no canónica: se ignora", c),
+        }
+    }
+}
+// 'A' -> A
+// 'N' -> base no canónica: se ignora
+// 'g' -> base no canónica: se ignora
+// 'T' -> T
+```
+
+Este patrón —una función de parseo que devuelve `Option` o (próximo
+capítulo, spoiler) `Result`— es el estándar de facto para leer datos
+biológicos del mundo real. Nótese que hasta `parse()` de números, que usamos
+con `expect` en el capítulo 2, devuelve un `Result`, la versión con
+*información del error* de esta misma idea. El diseño "la función devuelve
+lo que pidió, o una señal explícita de que no pudo" es la firma de estilo
+que Rust llama *making illegal states unrepresentable*: el programa no puede
+siquiera expresar "uso una base que no existe".
+
+## Ejercicios
+
+### Ejercicio 6.1 · Detectar codón de paro
+
+Usa `buscar_motivo` y un `for` para buscar los tres codones de paro (`TAA`,
+`TAG`, `TGA`) en `ATGGCCTTTTAA`, imprimiendo la posición 1-based de cada uno
+que aparezca.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+fn buscar_motivo(dna: &str, motivo: &str) -> Option<usize> {
+    if motivo.is_empty() || motivo.len() > dna.len() {
+        return None;
+    }
+    let m = motivo.len();
+    for i in 0..=(dna.len() - m) {
+        if &dna[i..i + m] == motivo {
+            return Some(i);
+        }
+    }
+    None
+}
+
+fn main() {
+    let gen = "ATGGCCTTTTAA";
+    for paro in ["TAA", "TAG", "TGA"] {
+        if let Some(i) = buscar_motivo(gen, paro) {
+            println!("{} encontrado en la posición {}", paro, i + 1);
+        }
+    }
+}
+// TAA encontrado en la posición 10
+```
+
+Solo `TAA` aparece, en el índice 9 (posición biológica 10), exactamente al
+final del mini-gen. El `for` sobre un arreglo de `&str` y el `if let`
+mantienen el código sin anidamiento innecesario.
+
+</details>
+
+### Ejercicio 6.2 · PHRED opcional
+
+Escribe `fn phred_desde_texto(s: &str) -> Option<u8>` que use
+`s.parse().ok()` (el método `.ok()` convierte el `Result` del parseo en un
+`Option`: `Some` si pudo, `None` si no) y pruébala con `"30"`, `"hola"` y
+`"300"`. ¿Por qué el tercer caso falla si 300 sí es un número?
+
+<details>
+<summary>Solución</summary>
+
+```rust
+fn phred_desde_texto(s: &str) -> Option<u8> {
+    s.parse::<u8>().ok()
+}
+
+fn main() {
+    for texto in ["30", "hola", "300"] {
+        println!("{:?} -> {:?}", texto, phred_desde_texto(texto));
+    }
+}
+// "30" -> Some(30)
+// "hola" -> None
+// "300" -> None
+```
+
+`300` no cabe en un `u8` (máximo 255), así que el parseo falla y `.ok()`
+lo traduce a `None`. El tipo numérico actúa como rango de validez
+científica: un PHRED de 300 es tan imposible que ni el tipo lo admite. Para
+leer PHRED de máquinas que sí producen valores >255 (raro, pero existe),
+cambiar `u8` por `u16` en un solo lugar.
+
+</details>
+
+### Ejercicio 6.3 · Conteo de bases confiable
+
+Usando `parsear_base`, escribe `fn contar_canonicas(dna: &str) -> usize`
+que cuente cuántos caracteres de la secuencia son bases canónicas, y
+pruébala con `"ATGNgaCXT"`.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+fn parsear_base(c: char) -> Option<Base> {
+    match c {
+        'A' => Some(Base::A),
+        'C' => Some(Base::C),
+        'G' => Some(Base::G),
+        'T' => Some(Base::T),
+        _ => None,
+    }
+}
+
+fn contar_canonicas(dna: &str) -> usize {
+    let mut n = 0;
+    for c in dna.chars() {
+        if parsear_base(c).is_some() {
+            n += 1;
+        }
+    }
+    n
+}
+
+fn main() {
+    println!("Bases canónicas: {}", contar_canonicas("ATGNgaCXT"));
+}
+// Bases canónicas: 5
+```
+
+`is_some()` (y su hermano `is_none()`) son la forma de preguntar por la
+caja sin abrirla. De las 9 letras, A, T, G, C y la segunda T son canónicas:
+5. Las minúsculas se cuentan como no canónicas porque así las definimos;
+una versión tolerante haría `c.to_uppercase()` antes de parsear.
+
+</details>
+
+### Ejercicio 6.4 · Resumen de registros
+
+Define el enum `Registro` del capítulo con sus tres variantes, crea un
+`Vec` con un ejemplar de cada una (adelanto del próximo capítulo) y
+escribe un `for` con `match` que imprima un resumen distinto por variante.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+enum Registro {
+    Genoma { especie: String, tamano_pb: u64 },
+    Lectura { id: String, phred_medio: f64 },
+    Anotacion { gen: String, funcion: String },
+}
+
+fn main() {
+    let registros = vec![
+        Registro::Genoma {
+            especie: String::from("E. coli K-12"),
+            tamano_pb: 4_641_652,
+        },
+        Registro::Lectura {
+            id: String::from("SRR001_1"),
+            phred_medio: 35.2,
+        },
+        Registro::Anotacion {
+            gen: String::from("gyrA"),
+            funcion: String::from("ADN girasa"),
+        },
+    ];
+
+    for r in &registros {
+        match r {
+            Registro::Genoma { especie, tamano_pb } => {
+                println!("[GENOMA] {} ({} pb)", especie, tamano_pb);
+            }
+            Registro::Lectura { id, phred_medio } => {
+                println!("[LECTURA] {} Q{:.1}", id, phred_medio);
+            }
+            Registro::Anotacion { gen, funcion } => {
+                println!("[ANOTACIÓN] {}: {}", gen, funcion);
+            }
+        }
+    }
+}
+// [GENOMA] E. coli K-12 (4641652 pb)
+// [LECTURA] SRR001_1 Q35.2
+// [ANOTACIÓN] gyrA: ADN girasa
+```
+
+El `match` dentro del `for` es el "centro de despacho" de todo pipeline que
+procesa registros heterogéneos: cada variante recibe exactamente el
+tratamiento que le corresponde, y agregar una variante nueva te obliga a
+actualizar este punto (a diferencia de un `if` olvidado en Python, que
+simplemente ignora el caso).
+
+</details>
+
+### Ejercicio 6.5 · Complemento inverso validado
+
+Reescribe el complemento inverso del capítulo 3 usando tipos: la función
+`fn complemento_inverso_seguro(dna: &str) -> Option<String>` devuelve
+`Some(secuencia)` solo si **todas** las bases son canónicas; ante cualquier
+carácter raro, `None`. Pista: acumula los complementos en un `String` con
+`push` y usa `parsear_base` más el método `complementaria` que vimos.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+#[derive(Debug)]
+enum Base {
+    A,
+    C,
+    G,
+    T,
+}
+
+impl Base {
+    fn complementaria(&self) -> Base {
+        match self {
+            Base::A => Base::T,
+            Base::T => Base::A,
+            Base::C => Base::G,
+            Base::G => Base::C,
+        }
+    }
+
+    fn como_char(&self) -> char {
+        match self {
+            Base::A => 'A',
+            Base::C => 'C',
+            Base::G => 'G',
+            Base::T => 'T',
+        }
+    }
+}
+
+fn parsear_base(c: char) -> Option<Base> {
+    match c {
+        'A' => Some(Base::A),
+        'C' => Some(Base::C),
+        'G' => Some(Base::G),
+        'T' => Some(Base::T),
+        _ => None,
+    }
+}
+
+fn complemento_inverso_seguro(dna: &str) -> Option<String> {
+    let mut resultado = String::new();
+    for c in dna.chars().rev() {
+        let base = parsear_base(c)?; // propaga None: ¡adelanto del cap. 8!
+        resultado.push(base.complementaria().como_char());
+    }
+    Some(resultado)
+}
+
+fn main() {
+    println!("{:?}", complemento_inverso_seguro("ATGGCCTTTTAA"));
+    println!("{:?}", complemento_inverso_seguro("ATGN"));
+}
+// Some("TTAAAAGGCCAT")
+// None
+```
+
+El signo `?` tras `parsear_base(c)` es un regalo adelantado del capítulo 8:
+si la llamada devuelve `None`, la función entera retorna `None`
+inmediatamente; si devuelve `Some(base)`, extrae la base y continúa. La
+validación se convierte así en una línea en vez de una escalera de `if`.
+Compara el resultado con el del capítulo 3: mismo `TTAAAAGGCCAT`, pero
+ahora con garantía tipada de que no había basura en la entrada.
+
+</details>

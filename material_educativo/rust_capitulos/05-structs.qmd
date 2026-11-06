@@ -1,0 +1,556 @@
+---
+title: "Capítulo 5: Structs"
+subtitle: "Modelando secuencias, especímenes y lecturas con datos y métodos propios"
+format:
+  html:
+    toc: true
+---
+
+Hasta ahora, cada dato biológico vivía en una variable suelta: la secuencia
+en un `String`, su identificador en otro, la longitud calculada al vuelo. Los
+programas reales agrupan datos que pertenecen juntos, y en Rust la herramienta
+fundamental para eso es el `struct`: un tipo propio con campos con nombre, al
+que además puedes darle comportamiento con métodos. En este capítulo
+construimos los tipos que usarás en todo el resto del curso: `Secuencia`,
+`Especimen` y `LecturaFastq`.
+
+## 5.1 Definir e instanciar
+
+Un struct se define con `struct Nombre { campos }`, cada campo con su tipo:
+
+```rust
+struct Secuencia {
+    id: String,
+    descripcion: String,
+    bases: String,
+}
+
+fn main() {
+    let gen = Secuencia {
+        id: String::from("genA"),
+        descripcion: String::from("mini-gen de ejemplo"),
+        bases: String::from("ATGGCCTTTTAA"),
+    };
+
+    println!("{} contiene {} pb", gen.id, gen.bases.len());
+}
+// genA contiene 12 pb
+```
+
+La instanciación nombra cada campo (así los errores de compilación hablan de
+`bases` y no de "el argumento 3"), y el acceso usa la sintaxis de punto:
+`gen.id`, `gen.bases.len()`. Como siempre en Rust, la instancia completa es
+inmutable por defecto; para modificar un campo, toda la variable se declara
+`mut`:
+
+```rust
+let mut gen = Secuencia { /* ... campos como arriba ... */ };
+gen.bases.push_str("GGG"); // ahora la secuencia crece
+```
+
+::: {.callout-note}
+## Struct y ownership, de la mano
+Los campos `String` hacen al struct dueño de sus datos: cuando `gen` salga
+de su ámbito, sus tres textos se liberan automáticamente (capítulo 4). Un
+struct es, en la práctica, un dueño colectivo: las reglas de posesión se
+aplican al conjunto.
+:::
+
+## 5.2 Atajos de instanciación
+
+Dos azúcares sintácticos ahorran teclado. El **field init shorthand**:
+cuando una variable local tiene el mismo nombre que el campo, no se repite:
+
+```rust
+fn main() {
+    let id = String::from("genB");
+    let bases = String::from("ATGCGATCGA");
+
+    let gen = Secuencia { id, bases, descripcion: String::from("atajo") };
+    println!("{}: {}", gen.id, gen.bases);
+}
+// genB: ATGCGATCGA
+```
+
+Y el **struct update syntax**, que crea una instancia partiendo de otra y
+cambiando solo algunos campos con `..`:
+
+```rust
+#[derive(Clone)]
+struct Especimen {
+    especie: String,
+    colector: String,
+    latitud: f64,
+    longitud: f64,
+    individuos: u32,
+}
+
+fn main() {
+    let original = Especimen {
+        especie: String::from("Espeletia pycnophylla"),
+        colector: String::from("X. Clemente"),
+        latitud: 0.2512,
+        longitud: -78.4520,
+        individuos: 34,
+    };
+
+    let replica = Especimen { individuos: 12, ..original.clone() };
+
+    println!("{}: {} individuos (réplica: {})",
+             original.especie, original.individuos, replica.individuos);
+}
+// Espeletia pycnophylla: 34 individuos (réplica: 12)
+```
+
+El detalle fino: `..original` tomaría prestados o movería los campos del
+original; al escribir `..original.clone()` (con `#[derive(Clone)]` en el
+struct) la réplica es independiente y `original` sigue usable. Es la versión
+struct de la lección de `clone` del capítulo 4.
+
+## 5.3 Tupla structs y unit structs
+
+Cuando un dato es esencialmente un valor con etiqueta, la *tupla struct* da
+nombre al tipo sin nombrar campos: `struct Coordenada(f64, f64);` se accede
+con `.0` y `.1`. Es ideal para unidades científicas que andan sueltas:
+
+```rust
+struct Phred(u8);
+
+fn main() {
+    let calidad = Phred(37);
+    if calidad.0 >= 30 {
+        println!("Lectura confiable (Q{})", calidad.0);
+    }
+}
+// Lectura confiable (Q37)
+```
+
+El beneficio es de seguridad semántica: `Phred` y un `u8` cualquiera ya no
+son intercambiables por accidente. Existe también el *unit struct*
+(`struct Marcador;`), sin campos, útil como etiqueta; lo veremos de pasada
+en el ecosistema de crates.
+
+## 5.4 Métodos con `impl`
+
+El superpoder de los structs es darles comportamiento: dentro de un bloque
+`impl` (implementación) se definen métodos que reciben `self` en alguna de
+sus formas. Recuperemos nuestras funciones bioinformáticas del capítulo 2,
+ahora como métodos de `Secuencia`:
+
+```rust
+struct Secuencia {
+    id: String,
+    descripcion: String,
+    bases: String,
+}
+
+impl Secuencia {
+    fn longitud(&self) -> usize {
+        self.bases.len()
+    }
+
+    fn contenido_gc(&self) -> f64 {
+        let g = self.bases.matches('G').count();
+        let c = self.bases.matches('C').count();
+        (g + c) as f64 / self.bases.len() as f64 * 100.0
+    }
+}
+
+fn main() {
+    let gen = Secuencia {
+        id: String::from("genA"),
+        descripcion: String::from("mini-gen de ejemplo"),
+        bases: String::from("ATGGCCTTTTAA"),
+    };
+
+    println!("{}: {} pb, {:.1}% GC", gen.id, gen.longitud(), gen.contenido_gc());
+}
+// genA: 12 pb, 41.7% GC
+```
+
+El parámetro `&self` (abreviatura de `self: &Secuencia`) es un préstamo de
+la instancia, exactamente como en el capítulo 4: el método lee el struct sin
+apropiárselo. Se llama con la sintaxis de punto, `gen.contenido_gc()`, sin
+pasar nada explícito. La elección de receptor sigue las reglas conocidas:
+`&self` para leer, `&mut self` para modificar, y `self` (por valor, poco
+común) cuando el método consume la instancia.
+
+## 5.5 Funciones asociadas: constructores
+
+Además de métodos, un `impl` puede definir funciones **asociadas** que no
+reciben `self`: se llaman con la sintaxis `Tipo::funcion()`. La más
+importante es la convención `new`, nuestro constructor:
+
+```rust
+impl Secuencia {
+    fn nueva(id: &str, descripcion: &str, bases: &str) -> Secuencia {
+        Secuencia {
+            id: String::from(id),
+            descripcion: String::from(descripcion),
+            bases: String::from(bases),
+        }
+    }
+}
+
+fn main() {
+    let gen = Secuencia::nueva("genA", "mini-gen de ejemplo", "ATGGCCTTTTAA");
+    let arn = Secuencia::nueva("rnA", "transcrito", "AUGGCCUUUUAA");
+
+    println!("{} -> {} pb", gen.id, gen.longitud());
+    println!("{} -> {} pb", arn.id, arn.longitud());
+}
+// genA -> 12 pb
+// rnA -> 12 pb
+```
+
+Nota el diseño: la función asociada recibe `&str` (préstamos cómodos) y
+construye los `String` propios del struct. El struct nace siendo dueño de
+sus datos y el llamador nunca se pregunta quién posee qué.
+
+## 5.6 Métodos que modifican: `&mut self`
+
+Un método con receptor `&mut self` puede transformar la instancia. Caso de
+uso directo: introducir una sustitución puntual en la secuencia:
+
+```rust
+impl Secuencia {
+    fn mutar(&mut self, posicion: usize, nueva_base: char) {
+        // sustitución puntual (posiciones 0-based; secuencias ASCII)
+        self.bases.replace_range(posicion..posicion + 1, &nueva_base.to_string());
+    }
+}
+
+fn main() {
+    let mut gen = Secuencia::nueva("genA", "mini-gen", "ATGGCCTTTTAA");
+
+    println!("Antes:  {}", gen.bases);
+    gen.mutar(2, 'C');
+    println!("Después: {}", gen.bases);
+}
+// Antes:  ATGGCCTTTTAA
+// Después: ATCGCCTTTTAA
+```
+
+La llamada requiere que `gen` sea `mut` —la regla de siempre— y
+`replace_range` reemplaza un fragmento del texto por otro. Nuestra versión
+asume secuencias ASCII (una letra por byte), suposición razonable para FASTA
+en mayúsculas que ya discutimos en el capítulo 4; hacerla robusta a
+cualquier Unicode sería un excelente proyecto personal tras el capítulo 10.
+
+## 5.7 `derive`: ventajas gratis
+
+Hay capacidades tan comunes que Rust puede generarlas por ti con la
+anotación `#[derive(...)]` sobre el struct:
+
+```rust
+#[derive(Debug, Clone, PartialEq)]
+struct Secuencia {
+    id: String,
+    descripcion: String,
+    bases: String,
+}
+
+fn main() {
+    let a = Secuencia::nueva("genA", "ejemplo", "ATGGCCTTTTAA");
+    let b = a.clone();
+
+    println!("¿Son iguales? {}", a == b);       // PartialEq
+    println!("Copia debug: {:?}", a);           // Debug
+}
+// ¿Son iguales? true
+// Copia debug: Secuencia { id: "genA", descripcion: "ejemplo", bases: "ATGGCCTTTTAA" }
+```
+
+`Debug` habilita la impresión con `{:?}` (y la bonita con `{:#?}`),
+`Clone` la copia explícita, y `PartialEq` la comparación con `==`. Otra
+derivación útil es `Default`, que produce el valor "vacío" del struct
+(campos en `0`, `0.0` o `String::new()`), perfecta para parámetros de
+simulación con valores por omisión:
+
+```rust
+#[derive(Debug, Default)]
+struct ParametrosSimulacion {
+    tasa_mutacion: f64,   // default: 0.0
+    generaciones: u32,    // default: 0
+    poblacion: u32,       // default: 0
+}
+
+fn main() {
+    let params = ParametrosSimulacion {
+        tasa_mutacion: 0.001,
+        poblacion: 500,
+        ..Default::default() // el resto, con sus valores por omisión
+    };
+    println!("{:?}", params);
+}
+// ParametrosSimulacion { tasa_mutacion: 0.001, generaciones: 0, poblacion: 500 }
+```
+
+Este patrón —`Default` más struct update— es la forma idiomática de manejar
+configuraciones, y te evitará funciones con diez argumentos opcionales.
+
+::: {.callout-tip}
+## ¿Qué es realmente `derive`?
+`#[derive(Debug)]` genera automáticamente una implementación del *trait*
+`Debug` para tu tipo. Los traits son la gran abstracción de Rust y tienen su
+capítulo propio (el 9); por ahora disfruta el atajo sabiendo qué hay debajo.
+:::
+
+## 5.8 Proyecto del capítulo: `LecturaFastq`
+
+Cerramos con un tipo que usaremos en el proyecto final: una lectura de
+secuenciación con su línea de calidad, tal como viene en archivos FASTQ:
+
+```rust
+#[derive(Debug, Clone)]
+struct LecturaFastq {
+    id: String,
+    secuencia: String,
+    calidad: String, // un carácter PHRED+33 por base
+}
+
+impl LecturaFastq {
+    fn nueva(id: &str, secuencia: &str, calidad: &str) -> LecturaFastq {
+        LecturaFastq {
+            id: String::from(id),
+            secuencia: String::from(secuencia),
+            calidad: String::from(calidad),
+        }
+    }
+
+    fn calidad_promedio(&self) -> f64 {
+        let mut suma = 0u32;
+        for c in self.calidad.chars() {
+            suma += (c as u8 - 33) as u32; // PHRED = ASCII - 33
+        }
+        suma as f64 / self.calidad.len() as f64
+    }
+
+    fn pasa_filtro(&self, minimo: f64) -> bool {
+        self.calidad_promedio() >= minimo
+    }
+}
+
+fn main() {
+    let lectura = LecturaFastq::nueva("lectura_001", "ATGGCCTTTT", "II5I35FFII");
+
+    println!("{}: calidad promedio Q{:.1}", lectura.id, lectura.calidad_promedio());
+    if lectura.pasa_filtro(30.0) {
+        println!("-> pasa el filtro de calidad");
+    } else {
+        println!("-> se descarta");
+    }
+}
+// lectura_001: calidad promedio Q33.2
+// -> pasa el filtro de calidad
+```
+
+Las piezas ya son todas conocidas: `c as u8` obtiene el código ASCII del
+carácter (el PHRED se codifica sumando 33: `'I'` es 73, o sea Q40), el
+método `calidad_promedio` promedia con la conversión a `f64` de rigor, y
+`pasa_filtro` compone un método sobre otro: los structs se leen como una
+conversación entre funciones que comparten los mismos datos.
+
+## Ejercicios
+
+### Ejercicio 5.1 · Composición de métodos
+
+Agrega a `Secuencia` el método `es_valida(&self) -> bool`, que verifique que
+la secuencia solo contiene A, C, G o T (pista: un `for` sobre `self.bases.chars()`
+con un `match` del capítulo 3, o `matches!` si te animas). Prueba con
+`ATGGCCTTTTAA` y con `ATGX`.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+impl Secuencia {
+    fn es_valida(&self) -> bool {
+        for base in self.bases.chars() {
+            match base {
+                'A' | 'C' | 'G' | 'T' => {}
+                _ => return false,
+            }
+        }
+        true
+    }
+}
+
+fn main() {
+    let buena = Secuencia::nueva("genA", "ejemplo", "ATGGCCTTTTAA");
+    let rara = Secuencia::nueva("genX", "con error", "ATGX");
+
+    println!("{} válida: {}", buena.id, buena.es_valida());
+    println!("{} válida: {}", rara.id, rara.es_valida());
+}
+// genA válida: true
+// genX válida: false
+```
+
+El `return` anticipado corta en la primera base sospechosa; si el bucle
+termina sin novedad, la secuencia es válida. Esta versión corta al primer
+problema, algo que en archivos largos agradece el procesador.
+
+</details>
+
+### Ejercicio 5.2 · Masa molecular del peptido
+
+Define `struct Peptido { secuencia: String }` con el método
+`masa_monoisotopica(&self) -> f64` que sume las masas monoisotópicas de los
+residuos usando un `match`: G 57.02, A 71.04, S 87.03, P 97.05, V 99.13, T
+101.05, C 103.01, L/I 113.08, y devuelve 0.0 para caracteres desconocidos.
+Calcula la masa de `"GAVC"` (el prefijo N-terminal `H` y el `OH` C-terminal
+suman 18.01 adicionales si quieres la masa completa).
+
+<details>
+<summary>Solución</summary>
+
+```rust
+struct Peptido {
+    secuencia: String,
+}
+
+impl Peptido {
+    fn masa_monoisotopica(&self) -> f64 {
+        let mut masa = 0.0;
+        for aa in self.secuencia.chars() {
+            masa += match aa {
+                'G' => 57.02,
+                'A' => 71.04,
+                'S' => 87.03,
+                'P' => 97.05,
+                'V' => 99.13,
+                'T' => 101.05,
+                'C' => 103.01,
+                'L' | 'I' => 113.08,
+                _ => 0.0,
+            };
+        }
+        masa + 18.01 // H al inicio + OH al final
+    }
+}
+
+fn main() {
+    let pep = Peptido { secuencia: String::from("GAVC") };
+    println!("Masa de GAVC: {:.2} Da", pep.masa_monoisotopica());
+}
+// Masa de GAVC: 348.21 Da
+```
+
+Verificación manual: 57.02 + 71.04 + 99.13 + 103.01 = 330.20 Da en
+residuos, más 18.01 Da del N-terminal `H` y el C-terminal `OH` da 348.21 Da,
+la masa monoisotópica del péptido completo. El punto del ejercicio es el
+patrón `match` como tabla de consulta científica: nueva tabla, misma
+estructura de código.
+
+</details>
+
+### Ejercicio 5.3 · Dos mutaciones
+
+Partiendo de `Secuencia::nueva("genM", "mutagénesis", "ATGGCCTTTTAA")`,
+aplica las mutaciones (4, 'A') y (9, 'C') con el método `mutar` e imprime
+la secuencia tras cada paso.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+fn main() {
+    let mut gen = Secuencia::nueva("genM", "mutagénesis", "ATGGCCTTTTAA");
+
+    println!("Original: {}", gen.bases);
+    gen.mutar(4, 'A');
+    println!("Mutación 1: {}", gen.bases);
+    gen.mutar(9, 'C');
+    println!("Mutación 2: {}", gen.bases);
+}
+// Original: ATGGCCTTTTAA
+// Mutación 1: ATGGACTTTTAA
+// Mutación 2: ATGGACTTTCAA
+```
+
+Las posiciones son 0-based: el índice 4 es la quinta base (la segunda `C`),
+y el 9 es la décima (la cuarta `T` de la carrera de T). Registrar
+mutaciones como pares (posición, base) es exactamente el formato que
+usaremos en el proyecto final.
+
+</details>
+
+### Ejercicio 5.4 · Configuración de simulación con `Default`
+
+Crea `ParametrosSimulacion` (con `#[derive(Debug, Default)]`) y escribe un
+programa que genere la configuración "estándar de laboratorio":
+`tasa_mutacion: 0.0001`, `poblacion: 1000`, dejando `generaciones` en su
+valor por omisión, y luego otra "rápida" con `generaciones: 100` que
+reutilice la estándar.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+#[derive(Debug, Default, Clone)]
+struct ParametrosSimulacion {
+    tasa_mutacion: f64,
+    generaciones: u32,
+    poblacion: u32,
+}
+
+fn main() {
+    let estandar = ParametrosSimulacion {
+        tasa_mutacion: 0.0001,
+        poblacion: 1000,
+        ..Default::default()
+    };
+
+    let rapida = ParametrosSimulacion {
+        generaciones: 100,
+        ..estandar.clone()
+    };
+
+    println!("Estándar: {:?}", estandar);
+    println!("Rápida:   {:?}", rapida);
+}
+// Estándar: ParametrosSimulacion { tasa_mutacion: 0.0001, generaciones: 0, poblacion: 1000 }
+// Rápida:   ParametrosSimulacion { tasa_mutacion: 0.0001, generaciones: 100, poblacion: 1000 }
+```
+
+`Default` + struct update reemplaza a los "argumentos opcionales" de otros
+lenguajes: cada configuración declara explícitamente en qué se diferencia de
+la base, y las defaults están en un solo lugar.
+
+</details>
+
+### Ejercicio 5.5 · Filtro de lecturas en lote
+
+Declara tres `LecturaFastq` con calidades `"II5I35FFII"`, `"##########"` y
+`"IIIIIIIIII"`, y escribe un programa que imprima cuáles pasan un filtro
+Q≥30, usando los métodos del capítulo.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+fn main() {
+    let lecturas = vec![
+        LecturaFastq::nueva("l1", "ATGGCCTTTT", "II5I35FFII"),
+        LecturaFastq::nueva("l2", "GGTTAACCCT", "##########"),
+        LecturaFastq::nueva("l3", "TAAAACGGGT", "IIIIIIIIII"),
+    ];
+
+    for lectura in &lecturas {
+        let veredicto = if lectura.pasa_filtro(30.0) { "pasa" } else { "descarta" };
+        println!("{} (Q{:.1}) -> {}", lectura.id, lectura.calidad_promedio(), veredicto);
+    }
+}
+// l1 (Q33.2) -> pasa
+// l2 (Q8.0) -> descarta
+// l3 (Q40.0) -> pasa
+```
+
+El adelanto del día: `vec![...]` construye un `Vec`, la colección de tamaño
+variable del próximo capítulo, y `for lectura in &lecturas` recorre sus
+elementos **prestados** (nótese el `&`). Con lo que sabes de structs más
+este adelanto de dos líneas, acabas de escribir un filtro de calidad FASTQ
+funcional, el abuelo humilde del proyecto final.
+
+</details>

@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.19">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Capítulo 9: Traits y genéricos – BIODEN</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../logo.png" rel="icon" type="image/png">
+<script src="../../site_libs/cookie-consent/cookie-consent.js"></script>
+<link href="../../site_libs/cookie-consent/cookie-consent.css" rel="stylesheet">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-70f92796293836dceea0045bd755b5b1.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-1242ccc02940432acd87c1b818d9cd49.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-70f92796293836dceea0045bd755b5b1.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+<script type="text/javascript" charset="UTF-8">
+document.addEventListener('DOMContentLoaded', function () {
+cookieconsent.run({
+  "notice_banner_type":"interstitial",
+  "consent_type":"express",
+  "palette":"dark",
+  "language":"en",
+  "page_load_consent_levels":["strictly-necessary"],
+  "notice_banner_reject_button_hide":false,
+  "preferences_center_close_button_hide":false,
+  "website_name":""
+  ,
+"language":"en"
+  });
+});
+</script> 
+  
+<style>html{ scroll-behavior: smooth; }</style>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../logo.png" alt="" class="navbar-logo light-content">
+    <img src="../../logo.png" alt="" class="navbar-logo dark-content">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">BIODEN</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Inicio</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-proyectos" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Proyectos</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-proyectos">    
+        <li>
+    <a class="dropdown-item" href="https://bioden.github.io/XIII_CCB_curso/">
+ <span class="dropdown-text">De la Botánica a la Bioinformática</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../investigacion.html"> 
+<span class="menu-text">Investigación</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../integrantes.html"> 
+<span class="menu-text">Integrantes</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../biosistalks/biosistalks.html"> 
+<span class="menu-text">Biosis Talks</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../material_educativo.html"> 
+<span class="menu-text">Material educativo</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../suplementario.html"> 
+<span class="menu-text">Servicios</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.instagram.com/dbg_unicauca/"> <i class="bi bi-instagram" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.facebook.com/profile.php?id=61583453722433"> <i class="bi bi-facebook" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:bioden@unicauca.edu.co"> <i class="bi bi-envelope" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar"><div class="quarto-margin-header"><div class="margin-header-item">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../../logos/semillero.png" class="img-fluid figure-img"></p>
+<figcaption>Universidad del Cauca</figcaption>
+</figure>
+</div>
+</div></div>
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#el-problema-del-código-duplicado" id="toc-el-problema-del-código-duplicado" class="nav-link active" data-scroll-target="#el-problema-del-código-duplicado">9.1 El problema del código duplicado</a></li>
+  <li><a href="#un-trait-es-un-contrato" id="toc-un-trait-es-un-contrato" class="nav-link" data-scroll-target="#un-trait-es-un-contrato">9.2 Un trait es un contrato</a></li>
+  <li><a href="#genéricos-con-límites-de-trait" id="toc-genéricos-con-límites-de-trait" class="nav-link" data-scroll-target="#genéricos-con-límites-de-trait">9.3 Genéricos con límites de trait</a></li>
+  <li><a href="#structs-genéricos" id="toc-structs-genéricos" class="nav-link" data-scroll-target="#structs-genéricos">9.4 Structs genéricos</a></li>
+  <li><a href="#los-traits-que-ya-usabas" id="toc-los-traits-que-ya-usabas" class="nav-link" data-scroll-target="#los-traits-que-ya-usabas">9.5 Los traits que ya usabas</a></li>
+  <li><a href="#dyn-trait-mezclar-tipos-en-una-colección" id="toc-dyn-trait-mezclar-tipos-en-una-colección" class="nav-link" data-scroll-target="#dyn-trait-mezclar-tipos-en-una-colección">9.6 <code>dyn Trait</code>: mezclar tipos en una colección</a></li>
+  <li><a href="#guía-de-elección" id="toc-guía-de-elección" class="nav-link" data-scroll-target="#guía-de-elección">9.7 Guía de elección</a></li>
+  <li><a href="#ejercicios" id="toc-ejercicios" class="nav-link" data-scroll-target="#ejercicios">Ejercicios</a>
+  <ul class="collapse">
+  <li><a href="#ejercicio-9.1-el-trait-de-los-especímenes" id="toc-ejercicio-9.1-el-trait-de-los-especímenes" class="nav-link" data-scroll-target="#ejercicio-9.1-el-trait-de-los-especímenes">Ejercicio 9.1 · El trait de los especímenes</a></li>
+  <li><a href="#ejercicio-9.2-reporte-genérico" id="toc-ejercicio-9.2-reporte-genérico" class="nav-link" data-scroll-target="#ejercicio-9.2-reporte-genérico">Ejercicio 9.2 · Reporte genérico</a></li>
+  <li><a href="#ejercicio-9.3-muestras-genéricas-con-método" id="toc-ejercicio-9.3-muestras-genéricas-con-método" class="nav-link" data-scroll-target="#ejercicio-9.3-muestras-genéricas-con-método">Ejercicio 9.3 · Muestras genéricas con método</a></li>
+  <li><a href="#ejercicio-9.4-catálogo-mixto" id="toc-ejercicio-9.4-catálogo-mixto" class="nav-link" data-scroll-target="#ejercicio-9.4-catálogo-mixto">Ejercicio 9.4 · Catálogo mixto</a></li>
+  <li><a href="#ejercicio-9.5-display-para-secuenciabiologica" id="toc-ejercicio-9.5-display-para-secuenciabiologica" class="nav-link" data-scroll-target="#ejercicio-9.5-display-para-secuenciabiologica">Ejercicio 9.5 · Display para SecuenciaBiologica</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Capítulo 9: Traits y genéricos</h1>
+<p class="subtitle lead">Un solo contenido_gc para ADN, ARN y cualquier secuencia futura</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Llega el momento de preguntar qué tienen en común un ADN y un ARN: ambos tienen bases, longitud y contenido de GC, aunque sean tipos distintos. Los <strong>traits</strong> (rasgos) definen esa capacidad compartida —un contrato de comportamiento— y los <strong>genéricos</strong> escriben código que funciona con cualquier tipo que cumpla el contrato. Ya llevas tiempo usándolos sin saberlo: <code>Debug</code>, <code>Clone</code> y <code>PartialEq</code> del capítulo 5, y el <code>Display</code> que implementaste para tu error en el capítulo 8, son traits. Hoy pasas de consumidor a diseñador.</p>
+<section id="el-problema-del-código-duplicado" class="level2">
+<h2 data-anchor-id="el-problema-del-código-duplicado">9.1 El problema del código duplicado</h2>
+<p>Con lo aprendido, modelar ADN y ARN como structs distintos es directo. El problema aparece al escribir sus análisis: <code>contenido_gc_dna</code>, <code>contenido_gc_rna</code>, <code>resumen_dna</code>, <code>resumen_rna</code>… funciones gemelas que se diferencian solo en el tipo del parámetro. En un laboratorio con veinte formatos de datos, esa duplicación se convierte en veinte oportunidades de que una corrección llegue a diecinueve. Los traits invierten la pregunta: en vez de “¿qué tipo es?”, preguntan “¿qué sabe hacer?”.</p>
+</section>
+<section id="un-trait-es-un-contrato" class="level2">
+<h2 data-anchor-id="un-trait-es-un-contrato">9.2 Un trait es un contrato</h2>
+<p>Un trait declara un conjunto de métodos que un tipo puede comprometerse a implementar. Definamos el contrato de “secuencia biológica”:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">trait</span> SecuenciaBiologica <span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> bases(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="op">&amp;</span><span class="dt">str</span><span class="op">;</span>        <span class="co">// obligatorio: entregar sus bases</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> longitud(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">usize</span> <span class="op">{</span>  <span class="co">// opcional: implementación por defecto</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>bases()<span class="op">.</span>len()</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> contenido_gc(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">f64</span> <span class="op">{</span> <span class="co">// también por defecto, reutilizando bases()</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> g <span class="op">=</span> <span class="kw">self</span><span class="op">.</span>bases()<span class="op">.</span>matches(<span class="ch">'G'</span>)<span class="op">.</span>count()<span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> c <span class="op">=</span> <span class="kw">self</span><span class="op">.</span>bases()<span class="op">.</span>matches(<span class="ch">'C'</span>)<span class="op">.</span>count()<span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>        (g <span class="op">+</span> c) <span class="kw">as</span> <span class="dt">f64</span> <span class="op">/</span> <span class="kw">self</span><span class="op">.</span>bases()<span class="op">.</span>len() <span class="kw">as</span> <span class="dt">f64</span> <span class="op">*</span> <span class="dv">100.0</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Los métodos sin cuerpo son <strong>obligatorios</strong>; los que traen cuerpo son <strong>métodos por defecto</strong> que cualquier implementación recibe gratis (y puede sobreescribir). Es un diseño “dime lo mínimo y te regalo el resto”. Ahora, los structs cumplen el contrato con <code>impl Trait for Tipo</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Dna <span class="op">{</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    id<span class="op">:</span> <span class="dt">String</span><span class="op">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    bases<span class="op">:</span> <span class="dt">String</span><span class="op">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Rna <span class="op">{</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    id<span class="op">:</span> <span class="dt">String</span><span class="op">,</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    bases<span class="op">:</span> <span class="dt">String</span><span class="op">,</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> SecuenciaBiologica <span class="cf">for</span> Dna <span class="op">{</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> bases(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="op">&amp;</span><span class="dt">str</span> <span class="op">{</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>        <span class="op">&amp;</span><span class="kw">self</span><span class="op">.</span>bases</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> SecuenciaBiologica <span class="cf">for</span> Rna <span class="op">{</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> bases(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="op">&amp;</span><span class="dt">str</span> <span class="op">{</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>        <span class="op">&amp;</span><span class="kw">self</span><span class="op">.</span>bases</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> dna <span class="op">=</span> Dna <span class="op">{</span> id<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"genA"</span>)<span class="op">,</span> bases<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"ATGGCCTTTTAA"</span>) <span class="op">};</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> arn <span class="op">=</span> Rna <span class="op">{</span> id<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"rnA"</span>)<span class="op">,</span> bases<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"AUGGCCUUUUAA"</span>) <span class="op">};</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"{}: {} pb, {:.1}% GC"</span><span class="op">,</span> dna<span class="op">.</span>id<span class="op">,</span> dna<span class="op">.</span>longitud()<span class="op">,</span> dna<span class="op">.</span>contenido_gc())<span class="op">;</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"{}: {} pb, {:.1}% GC"</span><span class="op">,</span> arn<span class="op">.</span>id<span class="op">,</span> arn<span class="op">.</span>longitud()<span class="op">,</span> arn<span class="op">.</span>contenido_gc())<span class="op">;</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="co">// genA: 12 pb, 41.7% GC</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="co">// rnA: 12 pb, 41.7% GC</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Cada tipo implementó <strong>solo</strong> <code>bases</code>; <code>longitud</code> y <code>contenido_gc</code> llegaron por defecto. Y si un día el ARN necesitara un cálculo especial (por ejemplo, excluir las U de un denominador), basta sobreescribir ese método en su <code>impl</code>. El contrato es la misma sintaxis que usaste con <code>fmt::Display</code> en el capítulo 8: ahora sabes que ese bloque era “implementar el trait Display para mi tipo de error”.</p>
+</section>
+<section id="genéricos-con-límites-de-trait" class="level2">
+<h2 data-anchor-id="genéricos-con-límites-de-trait">9.3 Genéricos con límites de trait</h2>
+<p>La función genérica que soñábamos acepta “cualquier cosa que sea <code>SecuenciaBiologica</code>”:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> resumen<span class="op">&lt;</span>S<span class="op">:</span> SecuenciaBiologica<span class="op">&gt;</span>(sec<span class="op">:</span> <span class="op">&amp;</span>S) <span class="op">-&gt;</span> <span class="dt">String</span> <span class="op">{</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="pp">format!</span>(<span class="st">"{} pb con {:.1}% GC"</span><span class="op">,</span> sec<span class="op">.</span>longitud()<span class="op">,</span> sec<span class="op">.</span>contenido_gc())</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> dna <span class="op">=</span> Dna <span class="op">{</span> id<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"genA"</span>)<span class="op">,</span> bases<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"ATGGCCTTTTAA"</span>) <span class="op">};</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> arn <span class="op">=</span> Rna <span class="op">{</span> id<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"rnA"</span>)<span class="op">,</span> bases<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"AUGGCCUUUUAA"</span>) <span class="op">};</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"ADN:  {}"</span><span class="op">,</span> resumen(<span class="op">&amp;</span>dna))<span class="op">;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"ARN:  {}"</span><span class="op">,</span> resumen(<span class="op">&amp;</span>arn))<span class="op">;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="co">// ADN:  12 pb con 41.7% GC</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="co">// ARN:  12 pb con 41.7% GC</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>La <code>&lt;S: SecuenciaBiologica&gt;</code> declara: “S es un tipo todavía desconocido, pero garantizado secuencial”. Dentro de la función solo puedes llamar métodos del contrato —y esa disciplina es la bendición: la función compila para cualquier S presente o <strong>futuro</strong> que implemente el trait. No hay duplicación y no habrá. Cuando los límites crecen, la cláusula <code>where</code> los ordena:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> reportar<span class="op">&lt;</span>S<span class="op">&gt;</span>(sec<span class="op">:</span> <span class="op">&amp;</span>S) <span class="op">-&gt;</span> <span class="dt">String</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">where</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    S<span class="op">:</span> SecuenciaBiologica <span class="op">+</span> <span class="pp">std::fmt::</span><span class="bu">Debug</span><span class="op">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">{</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="pp">format!</span>(<span class="st">" {:?} -&gt; {} pb"</span><span class="op">,</span> sec<span class="op">,</span> sec<span class="op">.</span>longitud())</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>El <code>+</code> exige ambos contratos a la vez (con <code>#[derive(Debug)]</code> en los structs, claro). Para tipos con muchos límites, <code>where</code> es el formato preferido por legibilidad.</p>
+</section>
+<section id="structs-genéricos" class="level2">
+<h2 data-anchor-id="structs-genéricos">9.4 Structs genéricos</h2>
+<p>La genericidad también modela contenedores de datos científicos: una <code>Muestra</code> de campo cuyo valor medido cambia de tipo según el protocolo:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Muestra<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    codigo<span class="op">:</span> <span class="dt">String</span><span class="op">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    valor<span class="op">:</span> T<span class="op">,</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span><span class="op">&lt;</span>T<span class="op">&gt;</span> Muestra<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> nueva(codigo<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span><span class="op">,</span> valor<span class="op">:</span> T) <span class="op">-&gt;</span> Muestra<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>        Muestra <span class="op">{</span> codigo<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(codigo)<span class="op">,</span> valor <span class="op">}</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> concentracion <span class="op">=</span> <span class="pp">Muestra::</span>nueva(<span class="st">"M-001"</span><span class="op">,</span> <span class="dv">42.5</span>)<span class="op">;</span>      <span class="co">// Muestra&lt;f64&gt;</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> phred <span class="op">=</span> <span class="pp">Muestra::</span>nueva(<span class="st">"M-002"</span><span class="op">,</span> <span class="dv">38u8</span>)<span class="op">;</span>              <span class="co">// Muestra&lt;u8&gt;</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> banda <span class="op">=</span> <span class="pp">Muestra::</span>nueva(<span class="st">"M-003"</span><span class="op">,</span> <span class="cn">true</span>)<span class="op">;</span>              <span class="co">// Muestra&lt;bool&gt;</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"{}: {} ng/µL"</span><span class="op">,</span> concentracion<span class="op">.</span>codigo<span class="op">,</span> concentracion<span class="op">.</span>valor)<span class="op">;</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"{}: Q{}"</span><span class="op">,</span> phred<span class="op">.</span>codigo<span class="op">,</span> phred<span class="op">.</span>valor)<span class="op">;</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"{}: banda presente = {}"</span><span class="op">,</span> banda<span class="op">.</span>codigo<span class="op">,</span> banda<span class="op">.</span>valor)<span class="op">;</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="co">// M-001: 42.5 ng/µL</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="co">// M-002: Q38</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a><span class="co">// M-003: banda presente = true</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>Muestra&lt;T&gt;</code> es una sola definición que el compilador especializa a <code>Muestra&lt;f64&gt;</code>, <code>Muestra&lt;u8&gt;</code>, etc. — sin costo en ejecución, porque cada versión se genera en compilación. Fíjate en el <code>impl&lt;T&gt;</code>: el bloque es genérico para que <code>nueva</code> acepte cualquier <code>T</code>.</p>
+</section>
+<section id="los-traits-que-ya-usabas" class="level2">
+<h2 data-anchor-id="los-traits-que-ya-usabas">9.5 Los traits que ya usabas</h2>
+<p>Vale la pena recolocar los conocimientos previos sobre esta base formal:</p>
+<ul>
+<li><code>#[derive(Debug)]</code> genera un <code>impl Debug for MiTipo</code> automático (impresión con <code>{:?}</code>); <code>Clone</code> y <code>PartialEq</code>/<code>PartialOrd</code> son lo mismo para copiar, comparar y <strong>ordenar</strong>. Ordeneemos especímenes de colecta por abundancia:</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Debug</span><span class="at">)]</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Especimen <span class="op">{</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    especie<span class="op">:</span> <span class="dt">String</span><span class="op">,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    individuos<span class="op">:</span> <span class="dt">u32</span><span class="op">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> especimenes <span class="op">=</span> <span class="pp">vec!</span>[</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>        Especimen <span class="op">{</span> especie<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"Espeletia pycnophylla"</span>)<span class="op">,</span> individuos<span class="op">:</span> <span class="dv">34</span> <span class="op">},</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>        Especimen <span class="op">{</span> especie<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"Polylepis incana"</span>)<span class="op">,</span> individuos<span class="op">:</span> <span class="dv">12</span> <span class="op">},</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>        Especimen <span class="op">{</span> especie<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"Oreomyrrhis andicola"</span>)<span class="op">,</span> individuos<span class="op">:</span> <span class="dv">58</span> <span class="op">},</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    ]<span class="op">;</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    especimenes<span class="op">.</span>sort_by_key(<span class="op">|</span>e<span class="op">|</span> e<span class="op">.</span>individuos)<span class="op">;</span> <span class="co">// de menor a mayor</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> e <span class="kw">in</span> <span class="op">&amp;</span>especimenes <span class="op">{</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>        <span class="pp">println!</span>(<span class="st">"{:&gt;3} × {}"</span><span class="op">,</span> e<span class="op">.</span>individuos<span class="op">,</span> e<span class="op">.</span>especie)<span class="op">;</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="co">//  12 × Polylepis incana</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a><span class="co">//  34 × Espeletia pycnophylla</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="co">//  58 × Oreomyrrhis andicola</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Ese <code>|e| e.individuos</code> es una <em>closure</em>, la función anónima estrella del próximo capítulo; <code>sort_by_key</code> ordena por la llave que ella produce, de menor a mayor. Para orden descendente, invierte la comparación con <code>sort_by(|a, b| b.individuos.cmp(&amp;a.individuos))</code>. El formato <code>{:&gt;3}</code> alinea a la derecha en 3 caracteres: reportes de consola presentables sin librerías.</p>
+<ul>
+<li><code>Display</code> es el trait de la impresión humana (con <code>{}</code>). Ya lo implementaste para un error; hagámoslo para la <code>Base</code> del capítulo 6:</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> <span class="pp">std::</span>fmt<span class="op">;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>derive<span class="at">(</span><span class="bu">Debug</span><span class="at">)]</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> Base <span class="op">{</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    A<span class="op">,</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    C<span class="op">,</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    G<span class="op">,</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    T<span class="op">,</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> <span class="pp">fmt::</span><span class="bu">Display</span> <span class="cf">for</span> Base <span class="op">{</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> fmt(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> f<span class="op">:</span> <span class="op">&amp;</span><span class="kw">mut</span> <span class="pp">fmt::</span>Formatter) <span class="op">-&gt;</span> <span class="pp">fmt::</span><span class="dt">Result</span> <span class="op">{</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> letra <span class="op">=</span> <span class="cf">match</span> <span class="kw">self</span> <span class="op">{</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>            <span class="pp">Base::</span>A <span class="op">=&gt;</span> <span class="ch">'A'</span><span class="op">,</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>            <span class="pp">Base::</span>C <span class="op">=&gt;</span> <span class="ch">'C'</span><span class="op">,</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>            <span class="pp">Base::</span>G <span class="op">=&gt;</span> <span class="ch">'G'</span><span class="op">,</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>            <span class="pp">Base::</span>T <span class="op">=&gt;</span> <span class="ch">'T'</span><span class="op">,</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>        <span class="op">};</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>        <span class="pp">write!</span>(f<span class="op">,</span> <span class="st">"{}"</span><span class="op">,</span> letra)</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> b <span class="op">=</span> <span class="pp">Base::</span>G<span class="op">;</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"La base es {} (y en debug: {:?})"</span><span class="op">,</span> b<span class="op">,</span> b)<span class="op">;</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a><span class="co">// La base es G (y en debug: Base::G)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="dyn-trait-mezclar-tipos-en-una-colección" class="level2">
+<h2 data-anchor-id="dyn-trait-mezclar-tipos-en-una-colección">9.6 <code>dyn Trait</code>: mezclar tipos en una colección</h2>
+<p>La genericidad de <code>resumen&lt;S&gt;</code> compila <strong>una versión por tipo</strong>: perfecta para rendimiento, pero un <code>Vec&lt;S&gt;</code> no puede contener un <code>Dna</code> y un <code>Rna</code> a la vez (serían Vec<dna> o Vec<rna>). Cuando el lote es genuinamente mixto, se usan <strong>objetos trait</strong>: un puntero (<code>Box</code>) a “algo que implementa el trait”, decidido en ejecución:</rna></dna></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> lotes<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> SecuenciaBiologica<span class="op">&gt;&gt;</span> <span class="op">=</span> <span class="pp">vec!</span>[</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Box</span><span class="pp">::</span>new(Dna <span class="op">{</span> id<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"genA"</span>)<span class="op">,</span> bases<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"ATGGCCTTTTAA"</span>) <span class="op">}</span>)<span class="op">,</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Box</span><span class="pp">::</span>new(Rna <span class="op">{</span> id<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"rnA"</span>)<span class="op">,</span> bases<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"AUGGCCUUUUAA"</span>) <span class="op">}</span>)<span class="op">,</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Box</span><span class="pp">::</span>new(Dna <span class="op">{</span> id<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"genB"</span>)<span class="op">,</span> bases<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"GCCGGCCTTAAGGC"</span>) <span class="op">}</span>)<span class="op">,</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    ]<span class="op">;</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> sec <span class="kw">in</span> <span class="op">&amp;</span>lotes <span class="op">{</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>        <span class="pp">println!</span>(<span class="st">"{} pb, {:.1}% GC"</span><span class="op">,</span> sec<span class="op">.</span>longitud()<span class="op">,</span> sec<span class="op">.</span>contenido_gc())<span class="op">;</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="co">// 12 pb, 41.7% GC</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="co">// 12 pb, 41.7% GC</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="co">// 14 pb, 71.4% GC</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>Box::new(...)</code> guarda cada valor en el heap y borra de la etiqueta la pregunta “¿Dna o Rna?”: lo único que se sabe de cada elemento es que cumple el contrato. ¿Te suena? Es exactamente el <code>Box&lt;dyn Error&gt;</code> del capítulo 8: “una caja con cualquier error dentro”. La contrapartida del <code>dyn</code> es una indirección mínima en ejecución —irrelevante al nivel de un bucle de reporte— y que los métodos por defecto se resuelven igual de bien.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>La regla del huérfano
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Puedes implementar tus traits para tus tipos, y traits ajenos para tus tipos (como <code>Display</code> para <code>Base</code>), pero no tus traits ni implementaciones para tipos ajenos-ajenos (por ejemplo, <code>impl MiTrait para i32</code> sí; <code>impl Display para Vec&lt;i32&gt;</code> no). Esta “regla del huérfano” evita que dos librerías implementen el mismo trait para el mismo tipo de formas incompatibles.</p>
+</div>
+</div>
+</section>
+<section id="guía-de-elección" class="level2">
+<h2 data-anchor-id="guía-de-elección">9.7 Guía de elección</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 30%">
+<col style="width: 30%">
+<col style="width: 39%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Necesito…</th>
+<th>Herramienta</th>
+<th>Se decide en…</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Comportamiento compartido por tipos</td>
+<td>trait</td>
+<td>diseño</td>
+</tr>
+<tr class="even">
+<td>Función que sirva para muchos tipos</td>
+<td>genérico <code>&lt;T: Trait&gt;</code></td>
+<td>compilación</td>
+</tr>
+<tr class="odd">
+<td>Colección con tipos mezclados</td>
+<td><code>Vec&lt;Box&lt;dyn Trait&gt;&gt;</code></td>
+<td>ejecución</td>
+</tr>
+<tr class="even">
+<td>Copiar, comparar, depurar, ordenar</td>
+<td><code>#[derive(...)]</code></td>
+<td>una línea</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="ejercicios" class="level2">
+<h2 data-anchor-id="ejercicios">Ejercicios</h2>
+<section id="ejercicio-9.1-el-trait-de-los-especímenes" class="level3">
+<h3 data-anchor-id="ejercicio-9.1-el-trait-de-los-especímenes">Ejercicio 9.1 · El trait de los especímenes</h3>
+<p>Define el trait <code>Colectable</code> con método obligatorio <code>coordenadas(&amp;self) -&gt; (f64, f64)</code> y método por defecto <code>en_hemisferio_sur(&amp;self) -&gt; bool</code> que devuelva si la latitud es negativa. Implementa para <code>Especimen</code> (agrega campos <code>latitud</code>/<code>longitud</code>) y prueba ambos métodos.</p>
+<details>
+<summary>
+Solución
+</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">trait</span> Colectable <span class="op">{</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> coordenadas(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> (<span class="dt">f64</span><span class="op">,</span> <span class="dt">f64</span>)<span class="op">;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> en_hemisferio_sur(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">bool</span> <span class="op">{</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>coordenadas()<span class="op">.</span><span class="dv">0</span> <span class="op">&lt;</span> <span class="dv">0.0</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Especimen <span class="op">{</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    especie<span class="op">:</span> <span class="dt">String</span><span class="op">,</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    latitud<span class="op">:</span> <span class="dt">f64</span><span class="op">,</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    longitud<span class="op">:</span> <span class="dt">f64</span><span class="op">,</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> Colectable <span class="cf">for</span> Especimen <span class="op">{</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> coordenadas(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> (<span class="dt">f64</span><span class="op">,</span> <span class="dt">f64</span>) <span class="op">{</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>        (<span class="kw">self</span><span class="op">.</span>latitud<span class="op">,</span> <span class="kw">self</span><span class="op">.</span>longitud)</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> a <span class="op">=</span> Especimen <span class="op">{</span> especie<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"Polylepis incana"</span>)<span class="op">,</span> latitud<span class="op">:</span> <span class="dv">0.2512</span><span class="op">,</span> longitud<span class="op">:</span> <span class="op">-</span><span class="dv">78.4520</span> <span class="op">};</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> b <span class="op">=</span> Especimen <span class="op">{</span> especie<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"Nothofagus pumilio"</span>)<span class="op">,</span> latitud<span class="op">:</span> <span class="op">-</span><span class="dv">41.13</span><span class="op">,</span> longitud<span class="op">:</span> <span class="op">-</span><span class="dv">71.31</span> <span class="op">};</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"{}: {:?}"</span><span class="op">,</span> a<span class="op">.</span>especie<span class="op">,</span> a<span class="op">.</span>coordenadas())<span class="op">;</span></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"{} ¿sur?: {}"</span><span class="op">,</span> b<span class="op">.</span>especie<span class="op">,</span> b<span class="op">.</span>en_hemisferio_sur())<span class="op">;</span></span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a><span class="co">// Polylepis incana: (0.2512, -78.4520)</span></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a><span class="co">// Nothofagus pumilio ¿sur?: true</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>El método por defecto usa <code>.0</code> de la tupla devuelta por el método obligatorio: los traits se construyen unos sobre otros, igual que los métodos de un struct. Una especie ecuatoriana (latitud ~0) y una patagónica dan la respuesta esperada en cada hemisferio.</p>
+</details>
+</section>
+<section id="ejercicio-9.2-reporte-genérico" class="level3">
+<h3 data-anchor-id="ejercicio-9.2-reporte-genérico">Ejercicio 9.2 · Reporte genérico</h3>
+<p>Escribe la función genérica <code>fn ficha&lt;C: Colectable&gt;(c: &amp;C) -&gt; String</code> que devuelva <code>"lat X, lon Y"</code> usando <code>format!("{:.2}", ...)</code> sobre las coordenadas, y comprueba que funciona con dos tipos distintos que implementen el trait (inventa un <code>PuntoMuestreo</code> además de <code>Especimen</code>).</p>
+<details>
+<summary>
+Solución
+</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">trait</span> Colectable <span class="op">{</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> coordenadas(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> (<span class="dt">f64</span><span class="op">,</span> <span class="dt">f64</span>)<span class="op">;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Especimen <span class="op">{</span> especie<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> latitud<span class="op">:</span> <span class="dt">f64</span><span class="op">,</span> longitud<span class="op">:</span> <span class="dt">f64</span> <span class="op">}</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> PuntoMuestreo <span class="op">{</span> codigo<span class="op">:</span> <span class="dt">u32</span><span class="op">,</span> latitud<span class="op">:</span> <span class="dt">f64</span><span class="op">,</span> longitud<span class="op">:</span> <span class="dt">f64</span> <span class="op">}</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> Colectable <span class="cf">for</span> Especimen <span class="op">{</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> coordenadas(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> (<span class="dt">f64</span><span class="op">,</span> <span class="dt">f64</span>) <span class="op">{</span> (<span class="kw">self</span><span class="op">.</span>latitud<span class="op">,</span> <span class="kw">self</span><span class="op">.</span>longitud) <span class="op">}</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> Colectable <span class="cf">for</span> PuntoMuestreo <span class="op">{</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> coordenadas(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> (<span class="dt">f64</span><span class="op">,</span> <span class="dt">f64</span>) <span class="op">{</span> (<span class="kw">self</span><span class="op">.</span>latitud<span class="op">,</span> <span class="kw">self</span><span class="op">.</span>longitud) <span class="op">}</span></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> ficha<span class="op">&lt;</span>C<span class="op">:</span> Colectable<span class="op">&gt;</span>(c<span class="op">:</span> <span class="op">&amp;</span>C) <span class="op">-&gt;</span> <span class="dt">String</span> <span class="op">{</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> (lat<span class="op">,</span> lon) <span class="op">=</span> c<span class="op">.</span>coordenadas()<span class="op">;</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>    <span class="pp">format!</span>(<span class="st">"lat {:.2}, lon {:.2}"</span><span class="op">,</span> lat<span class="op">,</span> lon)</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> e <span class="op">=</span> Especimen <span class="op">{</span> especie<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"P. incana"</span>)<span class="op">,</span> latitud<span class="op">:</span> <span class="dv">0.2512</span><span class="op">,</span> longitud<span class="op">:</span> <span class="op">-</span><span class="dv">78.4520</span> <span class="op">};</span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> p <span class="op">=</span> PuntoMuestreo <span class="op">{</span> codigo<span class="op">:</span> <span class="dv">7</span><span class="op">,</span> latitud<span class="op">:</span> <span class="op">-</span><span class="dv">1.65</span><span class="op">,</span> longitud<span class="op">:</span> <span class="op">-</span><span class="dv">78.65</span> <span class="op">};</span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"Especimen: {}"</span><span class="op">,</span> ficha(<span class="op">&amp;</span>e))<span class="op">;</span></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"Punto:     {}"</span><span class="op">,</span> ficha(<span class="op">&amp;</span>p))<span class="op">;</span></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a><span class="co">// Especimen: lat 0.25, lon -78.45</span></span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a><span class="co">// Punto:     lat -1.65, lon -78.65</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Una sola <code>ficha</code>, dos (o dos mil) tipos clientes: el objetivo del capítulo cumplido. El compilador genera <code>ficha::&lt;Especimen&gt;</code> y <code>ficha::&lt;PuntoMuestreo&gt;</code> por separado, sin costo en ejecución.</p>
+</details>
+</section>
+<section id="ejercicio-9.3-muestras-genéricas-con-método" class="level3">
+<h3 data-anchor-id="ejercicio-9.3-muestras-genéricas-con-método">Ejercicio 9.3 · Muestras genéricas con método</h3>
+<p>Amplía <code>Muestra&lt;T&gt;</code> con el método <code>es_mayor_que(&amp;self, otra: &amp;Muestra&lt;T&gt;) -&gt; bool</code> que exija <code>T: PartialOrd</code> y compare los valores. Prueba con concentraciones (<code>f64</code>) y con PHRED (<code>u8</code>).</p>
+<details>
+<summary>
+Solución
+</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Muestra<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    codigo<span class="op">:</span> <span class="dt">String</span><span class="op">,</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    valor<span class="op">:</span> T<span class="op">,</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span><span class="op">&lt;</span>T<span class="op">:</span> <span class="bu">PartialOrd</span><span class="op">&gt;</span> Muestra<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> es_mayor_que(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> otra<span class="op">:</span> <span class="op">&amp;</span>Muestra<span class="op">&lt;</span>T<span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="dt">bool</span> <span class="op">{</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>valor <span class="op">&gt;</span> otra<span class="op">.</span>valor</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> m1 <span class="op">=</span> Muestra <span class="op">{</span> codigo<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"A"</span>)<span class="op">,</span> valor<span class="op">:</span> <span class="dv">42.5f64</span> <span class="op">};</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> m2 <span class="op">=</span> Muestra <span class="op">{</span> codigo<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"B"</span>)<span class="op">,</span> valor<span class="op">:</span> <span class="dv">41.9f64</span> <span class="op">};</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> q1 <span class="op">=</span> Muestra <span class="op">{</span> codigo<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"Q1"</span>)<span class="op">,</span> valor<span class="op">:</span> <span class="dv">38u8</span> <span class="op">};</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> q2 <span class="op">=</span> Muestra <span class="op">{</span> codigo<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"Q2"</span>)<span class="op">,</span> valor<span class="op">:</span> <span class="dv">40u8</span> <span class="op">};</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"¿A &gt; B?: {}"</span><span class="op">,</span> m1<span class="op">.</span>es_mayor_que(<span class="op">&amp;</span>m2))<span class="op">;</span></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"¿Q1 &gt; Q2?: {}"</span><span class="op">,</span> q1<span class="op">.</span>es_mayor_que(<span class="op">&amp;</span>q2))<span class="op">;</span></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a><span class="co">// ¿A &gt; B?: true</span></span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a><span class="co">// ¿Q1 &gt; Q2?: false</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>El límite se declara en el <code>impl</code> (<code>impl&lt;T: PartialOrd&gt;</code>), así que el método existe solo para <code>Muestra&lt;T&gt;</code> comparables: una <code>Muestra&lt;String&gt;</code> simplemente no tendría <code>es_mayor_que</code>, y el compilador lo hace respetar. Los floats usan <code>PartialOrd</code> (y no <code>Ord</code>) porque <code>NaN</code> no es ordenable con todo — detalle que Rust te obliga a conocer en vez de escondértelo.</p>
+</details>
+</section>
+<section id="ejercicio-9.4-catálogo-mixto" class="level3">
+<h3 data-anchor-id="ejercicio-9.4-catálogo-mixto">Ejercicio 9.4 · Catálogo mixto</h3>
+<p>Crea un <code>Vec&lt;Box&lt;dyn SecuenciaBiologica&gt;&gt;</code> con dos <code>Dna</code> y un <code>Rna</code>, y escribe un <code>for</code> que imprima longitud y contenido GC de cada uno (métodos por defecto del trait), señalando el de mayor longitud al final.</p>
+<details>
+<summary>
+Solución
+</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">trait</span> SecuenciaBiologica <span class="op">{</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> bases(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="op">&amp;</span><span class="dt">str</span><span class="op">;</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> longitud(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">usize</span> <span class="op">{</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>bases()<span class="op">.</span>len()</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> contenido_gc(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">f64</span> <span class="op">{</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> g <span class="op">=</span> <span class="kw">self</span><span class="op">.</span>bases()<span class="op">.</span>matches(<span class="ch">'G'</span>)<span class="op">.</span>count()<span class="op">;</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> c <span class="op">=</span> <span class="kw">self</span><span class="op">.</span>bases()<span class="op">.</span>matches(<span class="ch">'C'</span>)<span class="op">.</span>count()<span class="op">;</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>        (g <span class="op">+</span> c) <span class="kw">as</span> <span class="dt">f64</span> <span class="op">/</span> <span class="kw">self</span><span class="op">.</span>bases()<span class="op">.</span>len() <span class="kw">as</span> <span class="dt">f64</span> <span class="op">*</span> <span class="dv">100.0</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Dna <span class="op">{</span> id<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> bases<span class="op">:</span> <span class="dt">String</span> <span class="op">}</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Rna <span class="op">{</span> id<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> bases<span class="op">:</span> <span class="dt">String</span> <span class="op">}</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> SecuenciaBiologica <span class="cf">for</span> Dna <span class="op">{</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> bases(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="op">&amp;</span><span class="dt">str</span> <span class="op">{</span> <span class="op">&amp;</span><span class="kw">self</span><span class="op">.</span>bases <span class="op">}</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> SecuenciaBiologica <span class="cf">for</span> Rna <span class="op">{</span></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> bases(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="op">&amp;</span><span class="dt">str</span> <span class="op">{</span> <span class="op">&amp;</span><span class="kw">self</span><span class="op">.</span>bases <span class="op">}</span></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> catalogo<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> SecuenciaBiologica<span class="op">&gt;&gt;</span> <span class="op">=</span> <span class="pp">vec!</span>[</span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Box</span><span class="pp">::</span>new(Dna <span class="op">{</span> id<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"genA"</span>)<span class="op">,</span> bases<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"ATGGCCTTTTAA"</span>) <span class="op">}</span>)<span class="op">,</span></span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Box</span><span class="pp">::</span>new(Rna <span class="op">{</span> id<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"rnA"</span>)<span class="op">,</span> bases<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"AUGGCCUUUUAA"</span>) <span class="op">}</span>)<span class="op">,</span></span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Box</span><span class="pp">::</span>new(Dna <span class="op">{</span> id<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"genB"</span>)<span class="op">,</span> bases<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"GCCGGCCTTAAGGCTA"</span>) <span class="op">}</span>)<span class="op">,</span></span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a>    ]<span class="op">;</span></span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> mayor <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> sec <span class="kw">in</span> <span class="op">&amp;</span>catalogo <span class="op">{</span></span>
+<span id="cb12-35"><a href="#cb12-35" aria-hidden="true" tabindex="-1"></a>        <span class="pp">println!</span>(<span class="st">"{} pb, {:.1}% GC"</span><span class="op">,</span> sec<span class="op">.</span>longitud()<span class="op">,</span> sec<span class="op">.</span>contenido_gc())<span class="op">;</span></span>
+<span id="cb12-36"><a href="#cb12-36" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> sec<span class="op">.</span>longitud() <span class="op">&gt;</span> mayor <span class="op">{</span></span>
+<span id="cb12-37"><a href="#cb12-37" aria-hidden="true" tabindex="-1"></a>            mayor <span class="op">=</span> sec<span class="op">.</span>longitud()<span class="op">;</span></span>
+<span id="cb12-38"><a href="#cb12-38" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb12-39"><a href="#cb12-39" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb12-40"><a href="#cb12-40" aria-hidden="true" tabindex="-1"></a>    <span class="pp">println!</span>(<span class="st">"La secuencia más larga tiene {} pb"</span><span class="op">,</span> mayor)<span class="op">;</span></span>
+<span id="cb12-41"><a href="#cb12-41" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb12-42"><a href="#cb12-42" aria-hidden="true" tabindex="-1"></a><span class="co">// 12 pb, 41.7% GC</span></span>
+<span id="cb12-43"><a href="#cb12-43" aria-hidden="true" tabindex="-1"></a><span class="co">// 12 pb, 41.7% GC</span></span>
+<span id="cb12-44"><a href="#cb12-44" aria-hidden="true" tabindex="-1"></a><span class="co">// 16 pb, 62.5% GC</span></span>
+<span id="cb12-45"><a href="#cb12-45" aria-hidden="true" tabindex="-1"></a><span class="co">// La secuencia más larga tiene 16 pb</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>El mismo bucle pregunta por el contrato (<code>longitud</code>, <code>contenido_gc</code>) sin saber jamás si detrás hay un <code>Dna</code> o un <code>Rna</code>. Verifica el tercer caso: <code>GCCGGCCTTAAGGCTA</code> tiene 16 bases con 10 GC → 62.5% ✓. Este catálogo mixto es el esqueleto exacto del lector multi-registro del capítulo 12.</p>
+</details>
+</section>
+<section id="ejercicio-9.5-display-para-secuenciabiologica" class="level3">
+<h3 data-anchor-id="ejercicio-9.5-display-para-secuenciabiologica">Ejercicio 9.5 · Display para SecuenciaBiologica</h3>
+<p>Agrega al trait <code>SecuenciaBiologica</code> un método por defecto <code>encabezado_fasta(&amp;self) -&gt; String</code> que devuelva un encabezado FASTA válido <code>"&gt;"</code> seguido de la longitud, y úsalo para imprimir los tres registros del catálogo anterior.</p>
+<details>
+<summary>
+Solución
+</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode rust code-with-copy"><code class="sourceCode rust"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">trait</span> SecuenciaBiologica <span class="op">{</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> id(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="op">&amp;</span><span class="dt">str</span><span class="op">;</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> bases(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="op">&amp;</span><span class="dt">str</span><span class="op">;</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> longitud(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">usize</span> <span class="op">{</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>bases()<span class="op">.</span>len()</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> encabezado_fasta(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">String</span> <span class="op">{</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>        <span class="pp">format!</span>(<span class="st">"&gt;{} len={}"</span><span class="op">,</span> <span class="kw">self</span><span class="op">.</span>id()<span class="op">,</span> <span class="kw">self</span><span class="op">.</span>longitud())</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Dna <span class="op">{</span> id<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> bases<span class="op">:</span> <span class="dt">String</span> <span class="op">}</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Rna <span class="op">{</span> id<span class="op">:</span> <span class="dt">String</span><span class="op">,</span> bases<span class="op">:</span> <span class="dt">String</span> <span class="op">}</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> SecuenciaBiologica <span class="cf">for</span> Dna <span class="op">{</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> id(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="op">&amp;</span><span class="dt">str</span> <span class="op">{</span> <span class="op">&amp;</span><span class="kw">self</span><span class="op">.</span>id <span class="op">}</span></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> bases(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="op">&amp;</span><span class="dt">str</span> <span class="op">{</span> <span class="op">&amp;</span><span class="kw">self</span><span class="op">.</span>bases <span class="op">}</span></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> SecuenciaBiologica <span class="cf">for</span> Rna <span class="op">{</span></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> id(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="op">&amp;</span><span class="dt">str</span> <span class="op">{</span> <span class="op">&amp;</span><span class="kw">self</span><span class="op">.</span>id <span class="op">}</span></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> bases(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="op">&amp;</span><span class="dt">str</span> <span class="op">{</span> <span class="op">&amp;</span><span class="kw">self</span><span class="op">.</span>bases <span class="op">}</span></span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> main() <span class="op">{</span></span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> catalogo<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> SecuenciaBiologica<span class="op">&gt;&gt;</span> <span class="op">=</span> <span class="pp">vec!</span>[</span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Box</span><span class="pp">::</span>new(Dna <span class="op">{</span> id<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"genA"</span>)<span class="op">,</span> bases<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"ATGGCCTTTTAA"</span>) <span class="op">}</span>)<span class="op">,</span></span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>        <span class="dt">Box</span><span class="pp">::</span>new(Rna <span class="op">{</span> id<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"rnA"</span>)<span class="op">,</span> bases<span class="op">:</span> <span class="dt">String</span><span class="pp">::</span>from(<span class="st">"AUGGCCUUUUAA"</span>) <span class="op">}</span>)<span class="op">,</span></span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>    ]<span class="op">;</span></span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> sec <span class="kw">in</span> <span class="op">&amp;</span>catalogo <span class="op">{</span></span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>        <span class="pp">println!</span>(<span class="st">"{}"</span><span class="op">,</span> sec<span class="op">.</span>encabezado_fasta())<span class="op">;</span></span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a>        <span class="pp">println!</span>(<span class="st">"{}"</span><span class="op">,</span> sec<span class="op">.</span>bases())<span class="op">;</span></span>
+<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a><span class="co">// &gt;genA len=12</span></span>
+<span id="cb13-39"><a href="#cb13-39" aria-hidden="true" tabindex="-1"></a><span class="co">// ATGGCCTTTTAA</span></span>
+<span id="cb13-40"><a href="#cb13-40" aria-hidden="true" tabindex="-1"></a><span class="co">// &gt;rnA len=12</span></span>
+<span id="cb13-41"><a href="#cb13-41" aria-hidden="true" tabindex="-1"></a><span class="co">// AUGGCCUUUUAA</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>El método por defecto combina otros dos métodos del trait (<code>id</code> y <code>longitud</code>): esa composición interna es lo que hace que agregar capacidad a un trait no obligue a reescribir sus implementaciones. La salida es FASTA válido, listo para <code>blast</code> o para el lector del capítulo 12 — que, si todo va bien, ya empieza a parecer poco mágico.</p>
+</details>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/bioden\.github\.io\/bioden_website\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Semillero de Biología del Desarrollo y Plasticidad Neural © 2025. All content licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Sitio web desarrollado por Xavier Clemente García Cevallos</p>
+</div>   
+    <div class="nav-footer-center">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/bioden">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="mailto:bioden@unicauca.edu.co">
+      <i class="bi bi-envelope" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    <div class="cookie-consent-footer"><a href="#" id="open_preferences_center">Cookie Preferences</a></div></div>
+    <div class="nav-footer-right">
+<p>Made with <a href="https://www.r-project.org/"><img src="https://www.r-project.org/Rlogo.png" alt="R" width="25px"></a> and <a href="https://quarto.org/"><img src="https://quarto.org/quarto.png" alt="Quarto" width="65px"></a>.</p>
+</div>
+  </div>
+</footer>
+
+
+
+
+<script src="../../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

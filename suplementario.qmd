@@ -1,0 +1,47 @@
+---
+title: "Servicios educativos y de capacitación"
+format:
+  html:
+    toc: true
+    css: card.css
+---
+
+Aquí encontrará diferentes servicios a los que puede acceder el estudiante de la Universidad del Cauca.
+
+### Servicios Bioinformáticos
+
+Los investigadores y estudiantes adscritos a la Universidad del Cauca podrán acceder a capacitaciones en temas relacionados con las fortalezas del semillero:
+
+*NOTA:* Estudiantes o docentes externos deberán escribir al correo del mentor o de los coordinadores.
+
+Para solicitar una capacitación en alguno de los temas a continuación puede comunicarse con:
+
+**Mentor:** [Willian Orlando Castillo Ordóñez, PhD](wocastillo@unicauca.edu.co)
+
+**Coordinador:** [Xavier Clemente García Cevallos](xgarcia@unicauca.edu.co)
+
+**Coordinadora:** Ariadna Vasquez Ledezma
+
+**Servicios de capacitación**
+
+- Farmacología y cálculo de propiedades ADMET.
+
+- Uso de software en filogenética molecular.
+
+- Usos de paquetes bibliométricos para análisis académicos.
+
+- Acoplamiento molecular o Docking Molecular
+
+- Diseño de modelos farmacóforos
+
+- Establecimiento de redes de genes Cytoscape
+
+### Material suplementario
+
+### **Plantilla institucional de la Universidad del Cauca**
+
+NOTA: Para los estudiantes de la Universidad del Cauca, podrán acceder a la plantilla institucional de la institución desde este [enlace](https://www.unicauca.edu.co/wp-content/uploads/2024/08/PE-GS-2.2-OD-10-Plantilla-Powerpoint-Institucional-V4.pptx) (Repositorio de la Universidad del Cauca)
+
+### **Póster del Semillero para modalidades presenciales**
+
+Nota: Este póster se utiliza para colocar como pendón informativo Puede ser descargado en el siguiente [enlace](https://drive.google.com/file/d/1sAPWVXWg4zfMRXJ8qCQrstTp_Zw9gAze/view?usp=sharing).

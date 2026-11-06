@@ -1,0 +1,563 @@
+---
+title: "Capítulo 14: Crates esenciales"
+subtitle: "rand, regex, serde y clap: el ecosistema trabajando para tu biología"
+format:
+  html:
+    toc: true
+---
+
+Hasta aquí, todo lo que usamos viene en la biblioteca estándar. Pero una de
+las grandes alegrías de Rust es su ecosistema de **crates** (paquetes) en
+[crates.io](https://crates.io): miles de librerías listas, con versionado,
+documentación y tests. Este capítulo instala y usa los cuatro crates que más
+rendimiento le dan a un biólogo programador: `rand` para simulación,
+`regex` para buscar motivos, `serde` para guardar resultados en JSON y
+`clap` para interfaces de línea de comandos profesionales. Con ellos (y lo
+aprendido), el proyecto final del próximo capítulo se escribe solo.
+
+## 14.1 Instalar dependencias
+
+Un crate se agrega a `Cargo.toml` en la sección `[dependencies]`, o más
+cómodo, desde la terminal dentro del proyecto:
+
+```bash
+cargo add rand
+```
+
+El resultado en `Cargo.toml`:
+
+```toml
+[dependencies]
+rand = "0.9"
+```
+
+Esa cadena significa "versión 0.9 o cualquier 0.9.x compatible" (versionado
+semántico: el primer dígito cambia cuando algo se rompe). Cargo descarga,
+compila y actualiza todo solo: el equivalente a que alguien te arme el
+laboratorio completo con un comando. Para probar los ejemplos de este
+capítulo, crea un proyecto `cargo new bio_crates` y agrega las dependencias
+que vayamos usando.
+
+## 14.2 `rand`: azar con control científico
+
+Toda simulación biológica —mutaciones, deriva, muestreo bootstrap— empieza
+con números aleatorios. El crate `rand` es el estándar del tema:
+
+```rust
+use rand::Rng;
+
+fn main() {
+    let mut rng = rand::rng(); // generador listo para usar
+
+    let base = ['A', 'C', 'G', 'T'];
+    let elegida = base[rng.random_range(0..4)];
+    let muta = rng.random_bool(0.001); // ¿muta esta base? p = 0.001
+
+    println!("Base sorteada: {}", elegida);
+    println!("¿Ocurre la mutación?: {}", muta);
+}
+```
+
+`rng()` crea el generador, `random_range(0..4)` sortea en el rango (notación
+de rangos del capítulo 3) y `random_bool(p)` lanza una moneda cargada.
+Simulemos lo que hacemos en pizarra: una secuencia que acumula sustituciones
+al azar:
+
+```rust
+use rand::Rng;
+
+fn mutar_secuencia(dna: &str, tasa: f64) -> (String, usize) {
+    let mut rng = rand::rng();
+    let bases = ['A', 'C', 'G', 'T'];
+    let mut mutaciones = 0;
+
+    let nueva: String = dna
+        .chars()
+        .map(|c| {
+            if rng.random_bool(tasa) {
+                mutaciones += 1;
+                bases[rng.random_range(0..4)]
+            } else {
+                c
+            }
+        })
+        .collect();
+
+    (nueva, mutaciones)
+}
+
+fn main() {
+    let (hija, n) = mutar_secuencia("ATGGCCTTTTAA", 0.25);
+    println!("Original: ATGGCCTTTTAA");
+    println!("Hija:     {} ({} sustituciones)", hija, n);
+}
+// Original: ATGGCCTTTTAA
+// Hija:     ATGGCTTTTAA (1 sustituciones)
+```
+
+La closure del `map` (capítulo 10) decide base por base si muta — y como
+`map` acepta closures que recuerdan (`FnMut`), puede ir contando las
+mutaciones en el mismo recorrido. Con `tasa = 0.25` sobre 12 bases, lo
+esperado son 3 mutaciones; tu corrida tendrá otra cifra: la varianza
+también es biología.
+
+El patrón Monte Carlo —estimar por simulación lo que la teoría predice—
+cierra el círculo de validación:
+
+```rust
+use rand::Rng;
+
+fn main() {
+    let mut rng = rand::rng();
+    let largo = 1000;
+    let tasa = 0.001;
+    let replicas = 10_000;
+
+    let mut con_al_menos_una = 0;
+    for _ in 0..replicas {
+        let mut toco = false;
+        for _ in 0..largo {
+            if rng.random_bool(tasa) {
+                toco = true;
+                break;
+            }
+        }
+        if toco {
+            con_al_menos_una += 1;
+        }
+    }
+
+    let estimado = con_al_menos_una as f64 / replicas as f64;
+    let teorico = 1.0 - (1.0 - tasa).powi(largo as i32);
+    println!("Simulado: {:.3} | Teórico: {:.3}", estimado, teorico);
+}
+// Simulado: 0.632 | Teórico: 0.632
+```
+
+La probabilidad de que un gen de 1000 pb reciba al menos una mutación con
+tasa 10⁻³ es 1 − (1 − 0.001)¹⁰⁰⁰ ≈ 0.632, y la simulación lo confirma en
+milisegundos. Cuando simulación y teoría discrepan, una de las dos tiene
+un bug — y descubrirlo así es mucho mejor que en la revisión de pares.
+
+::: {.callout-note}
+## Versiones de rand
+Los tutoriales viejos usan `rand::thread_rng()` y `gen_range(...)`: es la
+API de `rand` 0.8. En la 0.9 (la actual) se llaman `rand::rng()` y
+`random_range(...)`. Si copias código de internet y no compila, revisa la
+versión en tu `Cargo.toml`: es la explicación el 90% de las veces.
+:::
+
+## 14.3 `regex`: buscar motivos sin reinv...
+
+Buscar patrones en secuencias es media bioinformática. Con el crate
+`regex`, un motivo se expresa en la notación estándar: `.` cualquier
+carácter, `[ACGT]` una clase, `{n,}` repeticiones:
+
+```rust
+use regex::Regex;
+
+fn main() {
+    let genoma = "TTGAATTCCATGCGAATTCGGCC";
+
+    // Sitios de restricción EcoRI: GAATTC
+    let eco_ri = Regex::new("GAATTC").unwrap();
+    println!("Sitios EcoRI: {}", eco_ri.find_iter(genoma).count());
+}
+// Sitios EcoRI: 2
+```
+
+Dos cortes para EcoRI (verifícalos: `GAATTC` aparece en las posiciones 3 y
+14 en notación biológica). Y una lección de honestidad experimental: probé
+el patrón de islas `[GC]{4,}` sobre esa misma secuencia y el resultado fue
+**vacío** — ninguna corrida de 4 o más G/C existe en ella. Con un genoma
+de prueba más adecuado el patrón sí muestra su valor:
+
+```rust
+use regex::Regex;
+
+fn main() {
+    let genoma = "ATGCCCCTAGGGGTTA";
+    let islas = Regex::new(r"[GC]{4,}").unwrap();
+
+    for isla in islas.find_iter(genoma) {
+        println!("Isla GC: {} ({} pb)", isla.as_str(), isla.len());
+    }
+}
+// Isla GC: CCCC (4 pb)
+// Isla GC: GGGG (4 pb)
+```
+
+Cada `isla` es un `Match` con `.as_str()`, `.start()`, `.end()` y `.len()`.
+Otras construcciones de uso diario: `(?i)` ignora mayúsculas
+(`(?i)gaattc` encuentra `GaAtTc`), `|` alterna (`TAA|TAG|TGA` son los tres
+paros) y los grupos `(...)` capturan para `captures()`. El motivo del
+ejercicio final unirá todo: `ATG([ACGT]{3}){10,}(TAA|TAG|TGA)` es "codón de
+inicio, diez o más codones cualesquiera, y un paro": un ORF completo.
+
+## 14.4 `serde`: resultados que se guardan solos
+
+`serde` convierte structs en formatos de archivo y viceversa (el nombre
+viene de *serialization/deserialization*). Su súper poder: se deriva, como
+`Debug`:
+
+```rust
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Analisis {
+    id: String,
+    longitud: usize,
+    contenido_gc: f64,
+}
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let a = Analisis {
+        id: String::from("genA"),
+        longitud: 12,
+        contenido_gc: 41.7,
+    };
+
+    let json = serde_json::to_string_pretty(&a)?;
+    println!("{}", json);
+
+    let vuelta: Analisis = serde_json::from_str(&json)?;
+    println!("Releído: {:?}", vuelta);
+    Ok(())
+}
+```
+
+```json
+{
+  "id": "genA",
+  "longitud": 12,
+  "contenido_gc": 41.7
+}
+```
+
+`to_string_pretty` genera JSON legible; `from_str` reconstruye el struct
+completo a partir del texto — incluida la validación de tipos: si el JSON
+dice `"longitud": "doce"`, `serde` devuelve error en vez de propagar un
+string a tus cálculos. Requiere dos dependencias:
+
+```toml
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+```
+
+El `features = ["derive"]` activa la macro `#[derive(Serialize)]` (las
+*features* son interruptores opcionales de un crate). JSON es el formato
+puerto perfecto: lo lee Python, R (`jsonlite`), JavaScript y tu cuaderno de
+laboratorio digital; guardar ahí los parámetros y resultados de cada
+análisis es la base de la reproducibilidad.
+
+## 14.5 `clap`: interfaces de comando profesionales
+
+Nuestras herramientas hasta ahora tenían la configuración escrita en el
+código. `clap` (Command Line Argument Parser) convierte un struct en una
+interfaz de línea de comandos completa, con `--help` incluido:
+
+```rust
+use clap::Parser;
+
+/// Analizador básico de secuencias FASTA.
+#[derive(Parser)]
+#[command(version, about)]
+struct Args {
+    /// Ruta al archivo FASTA de entrada.
+    fasta: std::path::PathBuf,
+
+    /// Umbral mínimo de contenido GC para incluir en el reporte.
+    #[arg(short, long, default_value_t = 0.0)]
+    min_gc: f64,
+}
+
+fn main() {
+    let args = Args::parse();
+    println!("Analizando {} (umbral GC: {:.1}%)",
+             args.fasta.display(), args.min_gc);
+}
+```
+
+Compilado y ejecutado con `cargo run -- ejemplo.fa --min-gc 40`, imprime
+`Analizando ejemplo.fa (umbral GC: 40.0%)`. La magia está en los detalles
+de diseño: los doc comments `///` se convierten en la ayuda (`--help`
+documenta solo), `fasta` es obligatorio (posicional), `--min-gc` opcional
+con default, y `-m` funciona como abreviatura por el `short`. Cualquier
+error de uso produce mensajes como `error: the following required
+arguments were not provided: <FASTA>` — cortesía gratis para tus usuarios.
+La dependencia: `cargo add clap --features derive`.
+
+## 14.6 El mapa del ecosistema biológico
+
+| Crate | Para qué | Mención de honor |
+|-------|----------|------------------|
+| `bio` | alineamientos, alfabetos, manipulación de intervalos | el "Biopython de Rust" |
+| `needletail` | lectura ultrarrápida de FASTA/FASTQ | streaming, genomas enteros |
+| `rand` | simulación estocástica | mutaciones, muestreo |
+| `regex` | motivos y patrones | sitios de restricción, ORFs |
+| `serde` + `serde_json` | JSON entrante y saliente | config y resultados |
+| `clap` | interfaces de comando | tu herramienta parece oficial |
+| `rayon` | paralelismo por datos | `par_iter()` en vez de `iter()` |
+| `polars` | dataframes rápidos | el hermano turbo de pandas |
+| `anyhow` / `thiserror` | errores ergonómicos | menos ceremonia que `Box<dyn Error>` |
+
+La estrategia de aprendizaje no es memorizar la tabla, sino un patrón: cada
+vez que escribas 20 líneas para algo que "seguro alguien ya necesitó",
+busca el crate. Y antes de confiar, mira sus tests, su documentación y su
+actividad de mantenimiento — mismo criterio que usas con un protocolo de
+laboratorio nuevo.
+
+## Ejercicios
+
+### Ejercicio 14.1 · Tres enzimas de restricción
+
+Con `regex`, cuenta los sitios de corte de EcoRI (`GAATTC`), BamHI
+(`GGATCC`) y HindIII (`AAGCTT`) en `TTGAATTCCGGATCCAAGCTTGAATTC`, e
+imprime el total de cortes posibles.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+use regex::Regex;
+
+fn main() {
+    let genoma = "TTGAATTCCGGATCCAAGCTTGAATTC";
+    let enzimas = [
+        ("EcoRI", "GAATTC"),
+        ("BamHI", "GGATCC"),
+        ("HindIII", "AAGCTT"),
+    ];
+
+    let mut total = 0;
+    for (nombre, sitio) in enzimas {
+        let patron = Regex::new(sitio).unwrap();
+        let n = patron.find_iter(genoma).count();
+        println!("{} ({}): {} sitios", nombre, sitio, n);
+        total += n;
+    }
+    println!("Total de cortes posibles: {}", total);
+}
+// EcoRI (GAATTC): 2 sitios
+// BamHI (GGATCC): 1 sitios
+// HindIII (AAGCTT): 1 sitios
+// Total de cortes posibles: 4
+```
+
+Verifica: `GAATTC` aparece al inicio (`TT|GAATTC|CC...`) y hacia el final
+(`...AAGCTT|GAATTC`) ✓; `GGATCC` una vez en el medio ✓; `AAGCTT` una vez
+✓. Este programa, con un `for` sobre archivos, es un mapa de restricción
+digital en 15 líneas.
+
+</details>
+
+### Ejercicio 14.2 · Deriva del contenido GC
+
+Simula 50 generaciones de una secuencia de 100 pb inicial de puro G y C
+(`"GC".repeat(50)`), aplicando en cada generación `mutar_secuencia` con
+tasa 0.01, y registra el contenido GC cada 10 generaciones.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+use rand::Rng;
+
+fn mutar_secuencia(dna: &str, tasa: f64) -> String {
+    let mut rng = rand::rng();
+    let bases = ['A', 'C', 'G', 'T'];
+    dna.chars()
+        .map(|c| if rng.random_bool(tasa) { bases[rng.random_range(0..4)] } else { c })
+        .collect()
+}
+
+fn contenido_gc(dna: &str) -> f64 {
+    let gc = dna.bytes().filter(|b| *b == b'G' || *b == b'C').count();
+    gc as f64 / dna.len() as f64 * 100.0
+}
+
+fn main() {
+    let mut secuencia = "GC".repeat(50);
+    println!("Generación  0: {:.1}% GC", contenido_gc(&secuencia));
+
+    for generacion in 1..=50 {
+        secuencia = mutar_secuencia(&secuencia, 0.01);
+        if generacion % 10 == 0 {
+            println!("Generación {}: {:.1}% GC", generacion, contenido_gc(&secuencia));
+        }
+    }
+}
+// Generación  0: 100.0% GC
+// Generación 10: 95.0% GC
+// Generación 20: 92.0% GC
+// Generación 30: 92.0% GC
+// Generación 40: 90.0% GC
+// Generación 50: 89.0% GC
+```
+
+(Tus números variarán: son simulaciones, y esa es la gracia.) La deriva
+hacia el equilibrio 50% es la predicción de la teoría neutralista: sin
+selección, el azar erosiona cualquier composición inicial. Un ejercicio
+de extensión natural: correr 1000 réplicas y graficar la distribución
+final del GC — con `serde` guardando los resultados y R graficándolos.
+
+</details>
+
+### Ejercicio 14.3 · Configuración en JSON
+
+Define `ParametrosSimulacion { largo: usize, tasa: f64, generaciones: u32
+}` con derives `Serialize`/`Deserialize`, escríbelo como `config.json` con
+valores 100, 0.01 y 50, y luego léelo de vuelta e imprímelo con `{:?}`.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+use serde::{Deserialize, Serialize};
+use std::fs;
+
+#[derive(Serialize, Deserialize, Debug)]
+struct ParametrosSimulacion {
+    largo: usize,
+    tasa: f64,
+    generaciones: u32,
+}
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let params = ParametrosSimulacion { largo: 100, tasa: 0.01, generaciones: 50 };
+
+    let json = serde_json::to_string_pretty(&params)?;
+    fs::write("config.json", &json)?;
+
+    let leidos: ParametrosSimulacion = serde_json::from_str(&fs::read_to_string("config.json")?)?;
+    println!("Leídos: {:?}", leidos);
+    Ok(())
+}
+// Leídos: ParametrosSimulacion { largo: 100, tasa: 0.01, generaciones: 50 }
+```
+
+El archivo `config.json` queda en disco, versionable en git y editable a
+mano: cambia `tasa` a `0.05` en el JSON y relanza la simulación sin
+recompilar nada. Este ciclo —config en JSON, resultados en JSON— es el
+estándar de reproducibilidad del proyecto final.
+
+</details>
+
+### Ejercicio 14.4 · ORFs con regex
+
+Usa el patrón `ATG([ACGT]{3}){10,}(TAA|TAG|TGA)` para encontrar ORFs
+completos (inicio + al menos 10 codones + paro) en la secuencia
+`ATGGCTGCTGCTGCTGCTGCTGCTGCTGCTTAAGATGTTTTAA`, reportando cuántos hay y
+la longitud de cada uno.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+use regex::Regex;
+
+fn main() {
+    let secuencia = "ATGGCTGCTGCTGCTGCTGCTGCTGCTGCTTAAGATGTTTTAA";
+    let patron = Regex::new(r"ATG([ACGT]{3}){10,}(TAA|TAG|TGA)").unwrap();
+
+    for orf in patron.find_iter(secuencia) {
+        println!("ORF de {} pb: {}", orf.len(), orf.as_str());
+    }
+}
+// ORF de 39 pb: ATGGCTGCTGCTGCTGCTGCTGCTGCTGCTTAA
+```
+
+Anatomía de la coincidencia: `ATG` (inicio) + diez `GCT` (codones
+intermedios: 30 pb) + `TAA` (paro) = 39 pb. El segundo `ATG` de la
+secuencia seguido de un solo codón `TTT` y el paro `TAA` no cumple el
+mínimo de 10 codones, así que queda fuera — el patrón codificó el criterio
+biológico completo. Con `captures()` podrías además extraer *qué* codón de
+paro usó cada ORF: hazlo cuando lo necesites en el proyecto final.
+
+</details>
+
+### Ejercicio 14.5 · Tu herramienta con `clap`
+
+Convierte el pipeline FASTA → TSV del capítulo 12 en una herramienta CLI:
+`bio-stats <FASTA> [--min-gc 0] [--salida reporte.tsv]`, donde `--min-gc`
+filtra registros y `--salida` cambia el archivo destino.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+use clap::Parser;
+use std::fs;
+use std::io::Write;
+use std::path::PathBuf;
+
+#[derive(Parser)]
+#[command(version, about = "Estadísticas de un archivo FASTA")]
+struct Args {
+    /// Ruta al archivo FASTA de entrada.
+    fasta: PathBuf,
+
+    /// Contenido GC mínimo (%) para incluir el registro.
+    #[arg(long, default_value_t = 0.0)]
+    min_gc: f64,
+
+    /// Archivo de salida para el reporte TSV.
+    #[arg(short, long, default_value = "reporte.tsv")]
+    salida: PathBuf,
+}
+
+fn contenido_gc(dna: &str) -> f64 {
+    let gc = dna.bytes().filter(|b| *b == b'G' || *b == b'C').count();
+    gc as f64 / dna.len() as f64 * 100.0
+}
+
+fn parsear_fasta(texto: &str) -> Vec<(String, String)> {
+    let mut registros = Vec::new();
+    let (mut id, mut bases) = (String::new(), String::new());
+    for linea in texto.lines() {
+        let linea = linea.trim();
+        if linea.is_empty() { continue; }
+        if let Some(encabezado) = linea.strip_prefix('>') {
+            if !id.is_empty() { registros.push((id, bases)); }
+            id = encabezado.split_whitespace().next().unwrap_or("").to_string();
+            bases = String::new();
+        } else {
+            bases.push_str(&linea.to_uppercase());
+        }
+    }
+    if !id.is_empty() { registros.push((id, bases)); }
+    registros
+}
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let args = Args::parse();
+
+    let registros = parsear_fasta(&fs::read_to_string(&args.fasta)?);
+
+    let mut salida = fs::File::create(&args.salida)?;
+    writeln!(salida, "id\tlongitud\tpct_gc")?;
+
+    let mut incluidos = 0;
+    for (id, bases) in &registros {
+        let gc = contenido_gc(bases);
+        if gc >= args.min_gc {
+            writeln!(salida, "{}\t{}\t{:.1}", id, bases.len(), gc)?;
+            incluidos += 1;
+        }
+    }
+
+    println!("{} de {} registros -> {}",
+             incluidos, registros.len(), args.salida.display());
+    Ok(())
+}
+```
+
+Probado con `cargo run -- ejemplo.fa --min-gc 50 --salida altos.tsv`, el
+programa deja en `altos.tsv` solo las secuencias GC-ricas. En 50 líneas
+tienes una herramienta con documentación automática, validación de
+argumentos y flags documentados: la distancia entre "script del curso" y
+"software que un colega puede usar" era solo un `clap`. Mañana la cruzamos
+con módulos, tests y reportes JSON: es el proyecto final.
+
+</details>

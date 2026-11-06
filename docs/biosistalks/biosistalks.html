@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.38">
+<meta name="generator" content="quarto-1.10.19">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -12,10 +12,13 @@
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
 */
-code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
-div.columns{display: flex; gap: min(4vw, 1.5em);}
-div.column{flex: auto; overflow-x: auto;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
 div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 ul.task-list{list-style: none;}
 ul.task-list li input[type="checkbox"] {
@@ -43,14 +46,14 @@ ul.task-list li input[type="checkbox"] {
 <script src="../site_libs/quarto-html/popper.min.js"></script>
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-e1406263e20c823954d4057e13043a76.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-b82a8e178c632e86601320a4062c3b24.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../site_libs/bootstrap/bootstrap-e1406263e20c823954d4057e13043a76.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-70f92796293836dceea0045bd755b5b1.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-1242ccc02940432acd87c1b818d9cd49.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-70f92796293836dceea0045bd755b5b1.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -128,7 +131,7 @@ cookieconsent.run({
 <style>html{ scroll-behavior: smooth; }</style>
 
   <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
 
 <script type="text/javascript">
 const typesetMath = (el) => {
@@ -374,6 +377,10 @@ window.Quarto = {
     <a class="nav-link" href="../material_educativo.html"> 
 <span class="menu-text">Material educativo</span></a>
   </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../suplementario.html"> 
+<span class="menu-text">Servicios</span></a>
+  </li>  
 </ul>
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item compact">
@@ -406,7 +413,7 @@ window.Quarto = {
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar"><div class="quarto-margin-header"><div class="margin-header-item">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="..\logos/semillero.png" class="img-fluid figure-img"></p>
+<p><img src="../logos/semillero.png" class="img-fluid figure-img"></p>
 <figcaption>Universidad del Cauca</figcaption>
 </figure>
 </div>
@@ -439,7 +446,69 @@ window.Quarto = {
 <p>Aquí podrás revisar el calendario histórico de todas las charlas que se han abordado en el marco de Biosis Talks y junto con los Webinar NeuroLabs del Semillero de Biología del Desarrollo y Plasticidad Neural - Bioden</p>
 <div id="listing-biosistalks" class="quarto-listing quarto-listing-container-grid">
 <div class="list grid quarto-listing-cols-3">
-<div class="g-col-1" data-index="0" data-categories="ZXRoaW9sb2dpY2FsJTJDc2lnbmF0dXJlcyUyQ25ldXJhbCUyQ2Rvcm1hbmN5JTJDY2lyY3VpdHJ5" data-listing-date-sort="1776747600000" data-listing-file-modified-sort="1783628913376" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="234">
+<div class="g-col-1" data-index="0" data-categories="RXhlcmNpc2UlMkNTY2llbmNlJTJDbWV0YWJvbGlzbSUyQ05ldXJvYmlvbG9neSUyQ0FnZWluZw==" data-listing-date-sort="1792990800000" data-listing-file-modified-sort="1793949071276" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="72">
+<a href="../biosistalks/sprenger/index.html" class="quarto-grid-link">
+<div class="quarto-grid-item card h-100 card-left">
+<p class="card-img-top">
+<img loading="lazy" src="../biosistalks/sprenger/sprenger.jpeg" class="thumbnail-image card-img" style="height: 225px;">
+</p>
+<div class="card-body post-contents">
+<h5 class="no-anchor card-title listing-title">
+10° BiosisTalks
+</h5>
+<div class="listing-categories">
+
+<div class="listing-category" onclick="window.quartoListingCategory('RXhlcmNpc2U='); return false;">Exercise</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('U2NpZW5jZQ=='); return false;">Science</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('bWV0YWJvbGlzbQ=='); return false;">metabolism</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('TmV1cm9iaW9sb2d5'); return false;">Neurobiology</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('QWdlaW5n'); return false;">Ageing</div>
+
+</div>
+<div class="card-attribution card-text-small end">
+<div class="listing-date">
+Oct 26, 2026
+</div>
+</div>
+</div>
+</div></a>
+</div>
+<div class="g-col-1" data-index="1" data-categories="QWx6aGVpbWVyJTJDQ2llbmNpYSUyQ1BzaWNvbG9nJUMzJUFEYSUyQ05ldXJvYmlvbG9nJUMzJUFEYSUyQ0VudmVqZWNpbWllbnRv" data-listing-date-sort="1790053200000" data-listing-file-modified-sort="1793949474460" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="79">
+<a href="../biosistalks/forero/index.html" class="quarto-grid-link">
+<div class="quarto-grid-item card h-100 card-left">
+<p class="card-img-top">
+<img loading="lazy" src="../biosistalks/forero/forero.jpeg" class="thumbnail-image card-img" style="height: 225px;">
+</p>
+<div class="card-body post-contents">
+<h5 class="no-anchor card-title listing-title">
+9° BiosisTalks
+</h5>
+<div class="listing-categories">
+
+<div class="listing-category" onclick="window.quartoListingCategory('QWx6aGVpbWVy'); return false;">Alzheimer</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('Q2llbmNpYQ=='); return false;">Ciencia</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('UHNpY29sb2clQzMlQURh'); return false;">Psicología</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('TmV1cm9iaW9sb2clQzMlQURh'); return false;">Neurobiología</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('RW52ZWplY2ltaWVudG8='); return false;">Envejecimiento</div>
+
+</div>
+<div class="card-attribution card-text-small end">
+<div class="listing-date">
+Sep 22, 2026
+</div>
+</div>
+</div>
+</div></a>
+</div>
+<div class="g-col-1" data-index="2" data-categories="ZXRoaW9sb2dpY2FsJTJDc2lnbmF0dXJlcyUyQ25ldXJhbCUyQ2Rvcm1hbmN5JTJDY2lyY3VpdHJ5" data-listing-date-sort="1776747600000" data-listing-file-modified-sort="1783628913000" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="234">
 <a href="../biosistalks/gilbert/index.html" class="quarto-grid-link">
 <div class="quarto-grid-item card h-100 card-left">
 <p class="card-img-top">
@@ -470,7 +539,7 @@ Apr 21, 2026
 </div>
 </div></a>
 </div>
-<div class="g-col-1" data-index="1" data-categories="ZXRoaW9sb2dpY2FsJTJDc2lnbmF0dXJlcyUyQ25ldXJhbCUyQ2Rvcm1hbmN5JTJDY2lyY3VpdHJ5" data-listing-date-sort="1776229200000" data-listing-file-modified-sort="1783628773496" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="88">
+<div class="g-col-1" data-index="3" data-categories="ZXRoaW9sb2dpY2FsJTJDc2lnbmF0dXJlcyUyQ25ldXJhbCUyQ2Rvcm1hbmN5JTJDY2lyY3VpdHJ5" data-listing-date-sort="1776229200000" data-listing-file-modified-sort="1783628773000" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="88">
 <a href="../biosistalks/chirinos/index.html" class="quarto-grid-link">
 <div class="quarto-grid-item card h-100 card-left">
 <p class="card-img-top">
@@ -501,7 +570,7 @@ Apr 15, 2026
 </div>
 </div></a>
 </div>
-<div class="g-col-1" data-index="2" data-categories="bWljcm9jJUMzJUFEdGljbyUyQ2MlQzMlQTFuY2VyJTJDYmlvaW5mb3JtJUMzJUExdGljYSUyQ1JOQS1zZXElMkNtYWNyJUMzJUIzZmFnb3M=" data-listing-date-sort="1773810000000" data-listing-file-modified-sort="1783628239747" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="101">
+<div class="g-col-1" data-index="4" data-categories="bWljcm9jJUMzJUFEdGljbyUyQ2MlQzMlQTFuY2VyJTJDYmlvaW5mb3JtJUMzJUExdGljYSUyQ1JOQS1zZXElMkNtYWNyJUMzJUIzZmFnb3M=" data-listing-date-sort="1773810000000" data-listing-file-modified-sort="1783628239000" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="101">
 <a href="../biosistalks/zamora/index.html" class="quarto-grid-link">
 <div class="quarto-grid-item card h-100 card-left">
 <p class="card-img-top">
@@ -532,7 +601,7 @@ Mar 18, 2026
 </div>
 </div></a>
 </div>
-<div class="g-col-1" data-index="3" data-categories="TUFFcyUyQ2MlQzMlQTFuY2VyJTJDcmFkaW90ZXJhcGlhJTJDQmlvaW5nZW5pZXIlQzMlQURh" data-listing-date-sort="1773464400000" data-listing-file-modified-sort="1783628739826" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="80">
+<div class="g-col-1" data-index="5" data-categories="TUFFcyUyQ2MlQzMlQTFuY2VyJTJDcmFkaW90ZXJhcGlhJTJDQmlvaW5nZW5pZXIlQzMlQURh" data-listing-date-sort="1773464400000" data-listing-file-modified-sort="1783628739000" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="80">
 <a href="../biosistalks/caballero/index.html" class="quarto-grid-link">
 <div class="quarto-grid-item card h-100 card-left">
 <p class="card-img-top">
@@ -561,7 +630,7 @@ Mar 14, 2026
 </div>
 </div></a>
 </div>
-<div class="g-col-1" data-index="4" data-categories="bWljcm9jJUMzJUFEdGljbyUyQ2MlQzMlQTFuY2VyJTJDYmlvaW5mb3JtJUMzJUExdGljYSUyQ1JOQS1zZXElMkNtYWNyJUMzJUIzZmFnb3M=" data-listing-date-sort="1772514000000" data-listing-file-modified-sort="1783627183049" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="73">
+<div class="g-col-1" data-index="6" data-categories="bWljcm9jJUMzJUFEdGljbyUyQ2MlQzMlQTFuY2VyJTJDYmlvaW5mb3JtJUMzJUExdGljYSUyQ1JOQS1zZXElMkNtYWNyJUMzJUIzZmFnb3M=" data-listing-date-sort="1772514000000" data-listing-file-modified-sort="1783627183000" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="73">
 <a href="../biosistalks/caceres/index.html" class="quarto-grid-link">
 <div class="quarto-grid-item card h-100 card-left">
 <p class="card-img-top">
@@ -592,7 +661,7 @@ Mar 3, 2026
 </div>
 </div></a>
 </div>
-<div class="g-col-1" data-index="5" data-categories="aHUlQzMlQTlzcGVkLW1pY3JvYmlvJTJDY2llbmNpYSUyQ2MlQzMlQTFuY2VyJTJDYmlvbG9nJUMzJUFEYSUyQ21pY3JvYmlvdGE=" data-listing-date-sort="1772082000000" data-listing-file-modified-sort="1783625735922" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="126">
+<div class="g-col-1" data-index="7" data-categories="aHUlQzMlQTlzcGVkLW1pY3JvYmlvJTJDY2llbmNpYSUyQ2MlQzMlQTFuY2VyJTJDYmlvbG9nJUMzJUFEYSUyQ21pY3JvYmlvdGE=" data-listing-date-sort="1772082000000" data-listing-file-modified-sort="1793949094246" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="125">
 <a href="../biosistalks/zegarra/index.html" class="quarto-grid-link">
 <div class="quarto-grid-item card h-100 card-left">
 <p class="card-img-top">
@@ -623,7 +692,7 @@ Feb 26, 2026
 </div>
 </div></a>
 </div>
-<div class="g-col-1" data-index="6" data-categories="RGl2dWxnYWNpJUMzJUIzbiUyQ2NpZW5jaWElMkNldm9sdWNpJUMzJUIzbiUyQ2Jpb2xvZyVDMyVBRGElMkNCSU9DT1JF" data-listing-date-sort="1771218000000" data-listing-file-modified-sort="1783625239630" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="103">
+<div class="g-col-1" data-index="8" data-categories="RGl2dWxnYWNpJUMzJUIzbiUyQ2NpZW5jaWElMkNldm9sdWNpJUMzJUIzbiUyQ2Jpb2xvZyVDMyVBRGElMkNCSU9DT1JF" data-listing-date-sort="1771218000000" data-listing-file-modified-sort="1783625239000" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="103">
 <a href="../biosistalks/guarnizo/index.html" class="quarto-grid-link">
 <div class="quarto-grid-item card h-100 card-left">
 <p class="card-img-top">
@@ -654,7 +723,7 @@ Feb 16, 2026
 </div>
 </div></a>
 </div>
-<div class="g-col-1" data-index="7" data-categories="bWljcm9iaW9sb2clQzMlQURhJTJDYmlvdGVjbm9sb2clQzMlQURhJTJDYXBsaWNhY2klQzMlQjNuJTJDcmVhbCUyQ2xhYm9yYXRvcmlv" data-listing-date-sort="1770613200000" data-listing-file-modified-sort="1783625293907" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="69">
+<div class="g-col-1" data-index="9" data-categories="bWljcm9iaW9sb2clQzMlQURhJTJDYmlvdGVjbm9sb2clQzMlQURhJTJDYXBsaWNhY2klQzMlQjNuJTJDcmVhbCUyQ2xhYm9yYXRvcmlv" data-listing-date-sort="1770613200000" data-listing-file-modified-sort="1783625293000" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="69">
 <a href="../biosistalks/herrera/index.html" class="quarto-grid-link">
 <div class="quarto-grid-item card h-100 card-left">
 <p class="card-img-top">
@@ -685,7 +754,7 @@ Feb 9, 2026
 </div>
 </div></a>
 </div>
-<div class="g-col-1" data-index="8" data-categories="QmlkZW5zJTJDYWdyb2Vjb2xvZyVDMyVBRGElMkNtYSVDMyVBRHolMkNjdWx0aXZvJTJDU2NoaW51cw==" data-listing-date-sort="1764133200000" data-listing-file-modified-sort="1783628221346" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="75">
+<div class="g-col-1" data-index="10" data-categories="QmlkZW5zJTJDYWdyb2Vjb2xvZyVDMyVBRGElMkNtYSVDMyVBRHolMkNjdWx0aXZvJTJDU2NoaW51cw==" data-listing-date-sort="1764133200000" data-listing-file-modified-sort="1783628221000" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="75">
 <a href="../biosistalks/huaman/index.html" class="quarto-grid-link">
 <div class="quarto-grid-item card h-100 card-left">
 <p class="card-img-top">
@@ -716,7 +785,7 @@ Nov 26, 2025
 </div>
 </div></a>
 </div>
-<div class="g-col-1" data-index="9" data-categories="ZXNjbGVyb3NpcyUyQ3Npc3RlbWljYSUyQ21lZGljaW5hJTJDZXNjbGVyb2Rlcm1pYSUyQ2Z1dHVybw==" data-listing-date-sort="1763528400000" data-listing-file-modified-sort="1783628212353" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="98">
+<div class="g-col-1" data-index="11" data-categories="ZXNjbGVyb3NpcyUyQ3Npc3RlbWljYSUyQ21lZGljaW5hJTJDZXNjbGVyb2Rlcm1pYSUyQ2Z1dHVybw==" data-listing-date-sort="1763528400000" data-listing-file-modified-sort="1783628212000" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="98">
 <a href="../biosistalks/gallego/index.html" class="quarto-grid-link">
 <div class="quarto-grid-item card h-100 card-left">
 <p class="card-img-top">
@@ -747,7 +816,7 @@ Nov 19, 2025
 </div>
 </div></a>
 </div>
-<div class="g-col-1" data-index="10" data-categories="ZXRoaW9sb2dpY2FsJTJDc2lnbmF0dXJlcyUyQ25ldXJhbCUyQ2Rvcm1hbmN5JTJDY2lyY3VpdHJ5" data-listing-date-sort="1763355600000" data-listing-file-modified-sort="1783628201344" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="121">
+<div class="g-col-1" data-index="12" data-categories="ZXRoaW9sb2dpY2FsJTJDc2lnbmF0dXJlcyUyQ25ldXJhbCUyQ2Rvcm1hbmN5JTJDY2lyY3VpdHJ5" data-listing-date-sort="1763355600000" data-listing-file-modified-sort="1783628201000" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="121">
 <a href="../biosistalks/meiselman/index.html" class="quarto-grid-link">
 <div class="quarto-grid-item card h-100 card-left">
 <p class="card-img-top">
@@ -778,7 +847,7 @@ Nov 17, 2025
 </div>
 </div></a>
 </div>
-<div class="g-col-1" data-index="11" data-categories="ZXh0cmFjdG8lMkNwbGFudGFzJTJDZml0b3F1JUMzJUFEbWljYSUyQ2Zhcm1hY29sb2clQzMlQURhJTJDcXVpbWlvbWV0ciVDMyVBRGE=" data-listing-date-sort="1762750800000" data-listing-file-modified-sort="1783628810872" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="103">
+<div class="g-col-1" data-index="13" data-categories="ZXh0cmFjdG8lMkNwbGFudGFzJTJDZml0b3F1JUMzJUFEbWljYSUyQ2Zhcm1hY29sb2clQzMlQURhJTJDcXVpbWlvbWV0ciVDMyVBRGE=" data-listing-date-sort="1762750800000" data-listing-file-modified-sort="1783628810000" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="103">
 <a href="../biosistalks/aguirre/index.html" class="quarto-grid-link">
 <div class="quarto-grid-item card h-100 card-left">
 <p class="card-img-top">
@@ -809,7 +878,7 @@ Nov 10, 2025
 </div>
 </div></a>
 </div>
-<div class="g-col-1" data-index="12" data-categories="Uk5BJTJDQWxwaGFGb2xkJTJDS2loYXJhJTJDTW9kZWxsaW5nJTJDQmlvbW9sZWN1bGFy" data-listing-date-sort="1762491600000" data-listing-file-modified-sort="1783620376150" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="98">
+<div class="g-col-1" data-index="14" data-categories="Uk5BJTJDQWxwaGFGb2xkJTJDS2loYXJhJTJDTW9kZWxsaW5nJTJDQmlvbW9sZWN1bGFy" data-listing-date-sort="1762491600000" data-listing-file-modified-sort="1783620376000" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="98">
 <a href="../biosistalks/kihara/index.html" class="quarto-grid-link">
 <div class="quarto-grid-item card h-100 card-left">
 <p class="card-img-top">
@@ -840,7 +909,7 @@ Nov 7, 2025
 </div>
 </div></a>
 </div>
-<div class="g-col-1" data-index="13" data-categories="WmFudGhveHlsdW0lMkNhZ29uaXN0YXMlMkNyZWNlcHRvciUyQ2V4dHJhY3RvJTJDbWV0Y29yZQ==" data-listing-date-sort="1759208400000" data-listing-file-modified-sort="1783619741506" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="92">
+<div class="g-col-1" data-index="15" data-categories="WmFudGhveHlsdW0lMkNhZ29uaXN0YXMlMkNyZWNlcHRvciUyQ2V4dHJhY3RvJTJDbWV0Y29yZQ==" data-listing-date-sort="1759208400000" data-listing-file-modified-sort="1783619741000" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="92">
 <a href="../biosistalks/daniel/index.html" class="quarto-grid-link">
 <div class="quarto-grid-item card h-100 card-left">
 <p class="card-img-top">
@@ -871,7 +940,7 @@ Sep 30, 2025
 </div>
 </div></a>
 </div>
-<div class="g-col-1" data-index="14" data-categories="aW52ZXN0aWdhY2klQzMlQjNuJTJDZGVzY3VicmltaWVudG9zJTJDaW5jZXJ0aWR1bWJyZSUyQ2R1ZGFzJTJDYyVDMyVBOWx1bGFz" data-listing-date-sort="1758517200000" data-listing-file-modified-sort="1783616644415" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="100">
+<div class="g-col-1" data-index="16" data-categories="aW52ZXN0aWdhY2klQzMlQjNuJTJDZGVzY3VicmltaWVudG9zJTJDaW5jZXJ0aWR1bWJyZSUyQ2R1ZGFzJTJDYyVDMyVBOWx1bGFz" data-listing-date-sort="1758517200000" data-listing-file-modified-sort="1783616644000" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="100">
 <a href="../biosistalks/alissen/index.html" class="quarto-grid-link">
 <div class="quarto-grid-item card h-100 card-left">
 <p class="card-img-top">

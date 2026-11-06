@@ -1,5 +1,35 @@
 [
   {
+    "listing": "/material_educativo.html",
+    "items": [
+      "/material_educativo/curso_python.html",
+      "/material_educativo/curso_r.html",
+      "/material_educativo/adicionales.html"
+    ]
+  },
+  {
+    "listing": "/biosistalks/biosistalks.html",
+    "items": [
+      "/biosistalks/sprenger/index.html",
+      "/biosistalks/forero/index.html",
+      "/biosistalks/gilbert/index.html",
+      "/biosistalks/chirinos/index.html",
+      "/biosistalks/zamora/index.html",
+      "/biosistalks/caballero/index.html",
+      "/biosistalks/caceres/index.html",
+      "/biosistalks/zegarra/index.html",
+      "/biosistalks/guarnizo/index.html",
+      "/biosistalks/herrera/index.html",
+      "/biosistalks/huaman/index.html",
+      "/biosistalks/gallego/index.html",
+      "/biosistalks/meiselman/index.html",
+      "/biosistalks/aguirre/index.html",
+      "/biosistalks/kihara/index.html",
+      "/biosistalks/daniel/index.html",
+      "/biosistalks/alissen/index.html"
+    ]
+  },
+  {
     "listing": "/integrantes.html",
     "items": [
       "/integrantes/Willian_Castillo.html",
@@ -23,34 +53,6 @@
       "/integrantes/sscalante.html",
       "/integrantes/stefany.html",
       "/integrantes/vanessa_meneses.html"
-    ]
-  },
-  {
-    "listing": "/biosistalks/biosistalks.html",
-    "items": [
-      "/biosistalks/gilbert/index.html",
-      "/biosistalks/chirinos/index.html",
-      "/biosistalks/zamora/index.html",
-      "/biosistalks/caballero/index.html",
-      "/biosistalks/caceres/index.html",
-      "/biosistalks/zegarra/index.html",
-      "/biosistalks/guarnizo/index.html",
-      "/biosistalks/herrera/index.html",
-      "/biosistalks/huaman/index.html",
-      "/biosistalks/gallego/index.html",
-      "/biosistalks/meiselman/index.html",
-      "/biosistalks/aguirre/index.html",
-      "/biosistalks/kihara/index.html",
-      "/biosistalks/daniel/index.html",
-      "/biosistalks/alissen/index.html"
-    ]
-  },
-  {
-    "listing": "/material_educativo.html",
-    "items": [
-      "/material_educativo/curso_python.html",
-      "/material_educativo/curso_r.html",
-      "/material_educativo/adicionales.html"
     ]
   }
 ]

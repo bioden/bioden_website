@@ -1,0 +1,486 @@
+---
+title: "Capítulo 8: Manejo de errores"
+subtitle: "panic! no es la única opción: Result, el operador ? y errores a la medida"
+format:
+  html:
+    toc: true
+---
+
+En los capítulos anteriores esquivamos los errores con `expect()` y
+seguimos adelante. En un análisis real eso no se puede: los archivos llegan
+truncados, las líneas traen basura y los parámetros vienen mal escritos. Este
+capítulo es el manual de defensa de Rust: cómo distinguir un error fatal de
+un dato sospechoso, cómo propagar fallos sin anidar diez `if`, y cómo
+construir tipos de error que te digan *qué* falló y *dónde*.
+
+## 8.1 Dos filosofías de error
+
+Rust clasifica los problemas en dos familias, y elegir bien la familia es
+media solución:
+
+- **Errores irrecuperables** (*bugs*): índices fuera de rango, violaciones
+  de invariantes, estados imposibles. Si ocurren, el programa está mal
+  escrito y no hay nada sensato que hacer: se detiene con `panic!`.
+- **Errores recuperables** (datos del mundo real): un PHRED mal escrito, un
+  archivo que no existe, una secuencia con caracteres extraños. El programa
+  está bien; el mundo no coopera. La respuesta es el tipo `Result`.
+
+La distinción es biológica además de técnica: una muestra con un dato faltante
+no invalida el experimento (se excluye y se reporta), pero un pipeteo en
+orden invertido sí invalida todo (se repite desde cero).
+
+## 8.2 `panic!`: la alarma de laboratorio
+
+`panic!` detiene el programa de inmediato, imprimiendo un mensaje y (si
+activas `RUST_BACKTRACE=1` en la terminal) la traza de llamadas que llevó
+hasta él. Ya lo viste en acción: cada índice fuera de rango y cada `unwrap`
+sobre un `None` terminan así. También puedes dispararlo a mano cuando
+detectas lo imposible:
+
+```rust
+fn valor_heterocigocidad(n_alelos: usize) -> f64 {
+    if n_alelos == 0 {
+        panic!("la heterocigocidad no está definida sin alelos");
+    }
+    1.0 - 1.0 / n_alelos as f64
+}
+
+fn main() {
+    println!("H promedio (2 alelos): {:.3}", valor_heterocigocidad(2));
+}
+// H promedio (2 alelos): 0.500
+```
+
+(Para n alelos iguales, la heterocigocidad esperada es 1 − 1/n: con 2
+alelos, 0.5. El caso n = 0 es una violación matemática del modelo, no un
+dato sucio: `panic!` es la respuesta honesta.)
+
+## 8.3 `Result<T, E>`: el error como valor
+
+El corazón del sistema es otro enum de la biblioteca estándar, gemelo de
+`Option` pero con información del fallo:
+
+```rust
+enum Result<T, E> {
+    Ok(T),  // funcionó: aquí está el valor
+    Err(E), // falló: aquí está el motivo
+}
+```
+
+El clásico: convertir texto a número. `parse` devuelve `Result` porque el
+texto puede no ser un número, y tratarlo como valor obliga a mirar ambos
+casos:
+
+```rust
+fn main() {
+    let texto = "57";
+
+    match texto.parse::<u8>() {
+        Ok(phred) => println!("PHRED válido: Q{}", phred),
+        Err(motivo) => println!("No se pudo interpretar: {}", motivo),
+    }
+}
+// PHRED válido: Q57
+```
+
+Con `"cincuenta y siete"` la salida sería el mensaje de `Err` con la
+explicación del `ParseIntError` ("invalid digit found in string"). Todo lo
+que aprendiste de `Option` se traslada: `is_ok()`, `map`, `unwrap_or`
+(aquí `unwrap_or_default()`), y el `match` exhaustivo.
+
+## 8.4 Combinators de bolsillo
+
+Para no escribir un `match` completo cada vez, `Result` trae atajos. Los
+tres que más usarás:
+
+```rust
+fn main() {
+    // 1. valor por omisión cuando el dato llega mal
+    let phred: u8 = "trinta".parse().unwrap_or(20);
+    println!("PHRED (por omisión si falla): {}", phred);
+
+    // 2. transformar el error para dar contexto (map_err)
+    let resultado = "x".parse::<u8>().map_err(|_| String::from("PHRED corrupto en el archivo"));
+    println!("{:?}", resultado);
+
+    // 3. descartar el motivo y quedarte con un Option (ya lo usamos en el cap. 6)
+    let quizas: Option<u8> = "41".parse().ok();
+    println!("{:?}", quizas);
+}
+// PHRED (por omisión si falla): 20
+// Err("PHRED corrupto en el archivo")
+// Some(41)
+```
+
+`unwrap_or` rescata configuraciones con defaults generosos; `map_err`
+reempaqueta un error técnico en uno con contexto científico ("la línea 47
+del archivo de parámetros"); `.ok()` convierte `Result` en `Option` cuando
+el motivo del fallo no te importa.
+
+## 8.5 El operador `?`: propagar sin ceremonia
+
+La verdadera magia llega al **componer** pasos que pueden fallar. Sin
+atajos, cada llamada exigiría un `match` que solo sirve para reenviar el
+error hacia arriba. El operador `?` hace exactamente eso reenvío en un solo
+carácter:
+
+```rust
+use std::num::ParseIntError;
+
+fn suma_phred(a: &str, b: &str) -> Result<u8, ParseIntError> {
+    let a: u8 = a.parse()?; // si es Err, la función retorna ese Err YA
+    let b: u8 = b.parse()?;
+    Ok(a + b)
+}
+
+fn main() {
+    println!("{:?}", suma_phred("30", "12"));
+    println!("{:?}", suma_phred("30", "baja"));
+}
+// Ok(42)
+// Err(ParseIntError { kind: InvalidDigit })
+```
+
+Lee `a.parse()?` así: "intenta el parseo; si falla, devuelve el error de
+esta función y termina; si funciona, dame el valor". Tres líneas hacen el
+trabajo de tres bloques `match`, y la firma `Result<..., ParseIntError>`
+anuncia a quien llame que aquí puede haber fallo. Regla fina: `?` exige que
+la función que lo contiene devuelva un `Result` compatible; por eso `main`
+normal no puede usarlo... a menos que la arreglemos.
+
+## 8.6 `main` que puede fallar
+
+Para scripts de análisis —que abren archivos y parsean parámetros— la forma
+idiomática es un `main` que devuelve `Result`:
+
+```rust
+use std::error::Error;
+
+fn suma_phred(a: &str, b: &str) -> Result<u8, std::num::ParseIntError> {
+    let a: u8 = a.parse()?;
+    let b: u8 = b.parse()?;
+    Ok(a + b)
+}
+
+fn main() -> Result<(), Box<dyn Error>> {
+    let total = suma_phred("30", "12")?;
+    println!("Calidad combinada: Q{}", total);
+    Ok(())
+}
+// Calidad combinada: Q42
+```
+
+`Box<dyn Error>` se lee como "cualquier error razonable, en una caja": es
+el comodín de errores que acepta desde `ParseIntError` hasta errores de
+archivos del capítulo 12. La palabra `dyn` adelanta los *trait objects* del
+próximo capítulo; por ahora trátalo como el tipo estándar de "main con
+permiso para fallar limpiamente". Cuando `main` retorna `Err`, Rust imprime
+el mensaje y el programa termina con código de error — perfectamente
+integrable en un pipeline de consola.
+
+## 8.7 Tu propio tipo de error
+
+El patrón profesional cierra el círculo: un enum propio que enumera los
+modos de fallo de tu dominio, con los datos del contexto. Validemos
+secuencias de ADN reportando la posición exacta del problema:
+
+```rust
+use std::fmt;
+
+#[derive(Debug)]
+enum ErrorSecuencia {
+    Vacia,
+    BaseInvalida { posicion: usize, caracter: char },
+}
+
+impl fmt::Display for ErrorSecuencia {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            ErrorSecuencia::Vacia => write!(f, "la secuencia está vacía"),
+            ErrorSecuencia::BaseInvalida { posicion, caracter } => {
+                write!(f, "base inválida '{}' en la posición {}", caracter, posicion + 1)
+            }
+        }
+    }
+}
+
+impl std::error::Error for ErrorSecuencia {}
+
+fn validar_dna(dna: &str) -> Result<(), ErrorSecuencia> {
+    if dna.is_empty() {
+        return Err(ErrorSecuencia::Vacia);
+    }
+    for (i, c) in dna.chars().enumerate() {
+        match c {
+            'A' | 'C' | 'G' | 'T' => {}
+            otro => return Err(ErrorSecuencia::BaseInvalida { posicion: i, caracter: otro }),
+        }
+    }
+    Ok(())
+}
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let muestra = "ATGGCCXTTTTAA";
+
+    println!("Validando {}...", muestra);
+    validar_dna(muestra)?;
+    println!("Secuencia válida ({} pb): lista para traducir", muestra.len());
+    Ok(())
+}
+```
+
+Ejecutado, el programa imprime la validación y termina con
+`Error: base inválida 'X' en la posición 7` — la posición en notación
+biológica (índice 6 + 1), lista para ir a mirar esa línea del archivo. Los
+dos bloques `impl` son el precio del profesionalismo: `Display` define cómo
+se imprime el error (el `impl ... for ...` que ves ahí es *implementar un
+trait*, la estrella del próximo capítulo) y el `impl std::error::Error`
+vacío lo acredita como error oficial de Rust, lo que le da pase directo a
+`Box<dyn Error>` y al operador `?` de `main`.
+
+::: {.callout-tip}
+## Tarjeta de decisión
+- ¿Es un bug del programa? → `panic!` (o deja que el índice lo provoque).
+- ¿Es un dato del mundo real que puede fallar? → `Result` + `?`.
+- ¿Valor por omisión razonable si falla? → `unwrap_or`.
+- ¿Prototipo de pizarra donde prometes que no fallará? → `unwrap` con
+  conciencia de que no debe llegar al análisis final.
+:::
+
+## Ejercicios
+
+### Ejercicio 8.1 · Traductor defensivo, primera versión
+
+Escribe `fn phred_seguro(texto: &str) -> Result<u8, String>` que parsee el
+texto y, si falla, devuelva un `String` con el mensaje
+`"PHRED inválido: '<texto>'"` (pista: `map_err`). Prueba con `"30"` y con
+`"q30"`.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+fn phred_seguro(texto: &str) -> Result<u8, String> {
+    texto.parse::<u8>().map_err(|_| format!("PHRED inválido: '{}'", texto))
+}
+
+fn main() {
+    println!("{:?}", phred_seguro("30"));
+    println!("{:?}", phred_seguro("q30"));
+}
+// Ok(30)
+// Err("PHRED inválido: 'q30'")
+```
+
+El tipo de error pasa de `ParseIntError` (técnico) a `String` (con
+contexto): quien llame puede imprimirlo directamente sin saber de parsers.
+Cambiar el tipo de E es barato y hace los mensajes de tu pipeline
+comprensibles para quien no programa.
+
+</details>
+
+### Ejercicio 8.2 · Propagación encadenada
+
+Usa el operador `?` para escribir `fn configurar(tasa: &str, gens: &str)
+-> Result<(f64, u32), std::num::ParseFloatError>` que parsee ambos
+parámetros y devuelva la tupla. Verifica que un error en el segundo parámetro
+se propague íntegro.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+fn configurar(tasa: &str, gens: &str) -> Result<(f64, u32), String> {
+    let tasa: f64 = tasa.parse().map_err(|e| format!("tasa: {}", e))?;
+    let generaciones: u32 = gens.parse().map_err(|e| format!("generaciones: {}", e))?;
+    Ok((tasa, generaciones))
+}
+
+fn main() {
+    println!("{:?}", configurar("0.001", "100"));
+    println!("{:?}", configurar("0.001", "cien"));
+}
+// Ok((0.001, 100))
+// Err("generaciones: invalid digit found in string")
+```
+
+Hay un detalle de diseño escondido: los dos parseos producen errores
+distintos (`ParseFloatError` y `ParseIntError`), y una función solo puede
+devolver un tipo de error. `map_err` los unifica en `String` y de paso les
+dice **qué parámetro** falló — contexto que agradecerás a las 3 a.m.
+antes de una entrega.
+
+</details>
+
+### Ejercicio 8.3 · Amplía tu tipo de error
+
+Agrega a `ErrorSecuencia` la variante `LongitudInvalida { obtenida: usize,
+esperada: usize }` y haz que `validar_dna_con_marco(dna, multiplo)` valide
+además que la longitud sea múltiplo de `multiplo` (para traducción, 3).
+Reporta el caso `"ATGGCC"` con marco 3 y `"ATGN"` con marco 3.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+use std::fmt;
+
+#[derive(Debug)]
+enum ErrorSecuencia {
+    Vacia,
+    BaseInvalida { posicion: usize, caracter: char },
+    LongitudInvalida { obtenida: usize, esperada_multiplo: usize },
+}
+
+impl fmt::Display for ErrorSecuencia {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            ErrorSecuencia::Vacia => write!(f, "la secuencia está vacía"),
+            ErrorSecuencia::BaseInvalida { posicion, caracter } => {
+                write!(f, "base inválida '{}' en la posición {}", caracter, posicion + 1)
+            }
+            ErrorSecuencia::LongitudInvalida { obtenida, esperada_multiplo } => {
+                write!(f, "longitud {} no es múltiplo de {}", obtenida, esperada_multiplo)
+            }
+        }
+    }
+}
+
+fn validar_dna_con_marco(dna: &str, multiplo: usize) -> Result<(), ErrorSecuencia> {
+    if dna.is_empty() {
+        return Err(ErrorSecuencia::Vacia);
+    }
+    if dna.len() % multiplo != 0 {
+        return Err(ErrorSecuencia::LongitudInvalida {
+            obtenida: dna.len(),
+            esperada_multiplo: multiplo,
+        });
+    }
+    for (i, c) in dna.chars().enumerate() {
+        match c {
+            'A' | 'C' | 'G' | 'T' => {}
+            otro => return Err(ErrorSecuencia::BaseInvalida { posicion: i, caracter: otro }),
+        }
+    }
+    Ok(())
+}
+
+fn main() {
+    println!("{:?}", validar_dna_con_marco("ATGGCC", 3).map(|_| "ok"));
+    println!("{}", validar_dna_con_marco("ATGN", 3).unwrap_err());
+}
+// Ok("ok")
+// base inválida 'N' en la posición 4
+```
+
+Dos trucos nuevos en el `main`: `.map(|_| "ok")` convierte el `Ok(())` en
+un `Ok` con contenido visible para el `{:?}`, y `unwrap_err()` hace el
+inverso de `unwrap`: exige que haya error y entrega su valor (útil para
+probar mensajes). El orden de las validaciones (longitud antes que bases)
+decide cuál error reportas primero: otra decisión de diseño que ahora te
+pertenece.
+
+</details>
+
+### Ejercicio 8.4 · Pipeline completo con `?`
+
+Encadena todo: `fn traducir_validado(dna: &str) -> Result<String, Box<dyn
+std::error::Error>>` que valide la secuencia (ejercicio 8.3), verifique
+marco de lectura 3 y traduzca con la `tabla_codones` del capítulo 7.
+Prueba con `ATGGCCTTTTAA`, `ATGGCCX` y `ATG`.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+use std::collections::HashMap;
+use std::error::Error;
+
+fn tabla_codones() -> HashMap<&'static str, char> {
+    HashMap::from([
+        ("ATG", 'M'), ("GCC", 'A'), ("TTT", 'F'),
+        ("TAA", '*'), ("TAG", '*'), ("TGA", '*'),
+    ])
+}
+
+fn validar_dna(dna: &str) -> Result<(), String> {
+    if dna.len() % 3 != 0 {
+        return Err(format!("longitud {} no es múltiplo de 3", dna.len()));
+    }
+    for (i, c) in dna.chars().enumerate() {
+        match c {
+            'A' | 'C' | 'G' | 'T' => {}
+            otro => return Err(format!("base inválida '{}' en la posición {}", otro, i + 1)),
+        }
+    }
+    Ok(())
+}
+
+fn traducir(dna: &str) -> String {
+    let tabla = tabla_codones();
+    let mut proteina = String::new();
+    for i in (0..dna.len()).step_by(3) {
+        let aa = tabla.get(&dna[i..i + 3]).copied().unwrap_or('X');
+        proteina.push(aa);
+    }
+    proteina
+}
+
+fn traducir_validado(dna: &str) -> Result<String, Box<dyn Error>> {
+    validar_dna(dna)?;                      // error String -> Box<dyn Error>: automático
+    Ok(traducir(dna))
+}
+
+fn main() {
+    for dna in ["ATGGCCTTTTAA", "ATGGCCX", "ATG"] {
+        match traducir_validado(dna) {
+            Ok(proteina) => println!("{} -> {}", dna, proteina),
+            Err(e) => println!("{} -> ERROR: {}", dna, e),
+        }
+    }
+}
+// ATGGCCTTTTAA -> MAF*
+// ATGGCCX -> ERROR: longitud 7 no es múltiplo de 3
+// ATG -> M
+```
+
+El conjunto de pruebas cubre los tres caminos: éxito completo (`MAF*`),
+fallo de validación (la X queda atrapada por el control de longitud que se
+ejecuta primero) y el caso mínimo `ATG`, un solo codón que valida y traduce
+a `M`. El punto central es la estructura: `traducir_validado` son tres
+líneas porque cada pieza (validar, traducir) confía en las demás y el `?`
+las conecta. `Box<dyn Error>` acepta `String` como error mediante una
+conversión automática: otra comodidad del comodín. Este patrón —validar,
+transformar, reportar— es exactamente el esqueleto del analizador FASTA
+del capítulo 15.
+
+</details>
+
+### Ejercicio 8.5 · ¿panic o Result?
+
+Clasifica estos cinco incidentes de un pipeline genómico como `panic!` o
+`Result`, con justificación de una línea: (a) un FASTA con 0 secuencias;
+(b) pedir el elemento 10 de un vector de 3; (c) un parámetro de línea de
+comando que no es número; (d) una resta de coberturas que da negativo cuando
+el invariante dice imposible; (e) un archivo de configuración ausente.
+
+<details>
+<summary>Solución</summary>
+
+- (a) `Result`: un FASTA vacío es raro pero es un dato posible del mundo;
+  reportarlo y terminar limpiamente (o seguir con cero registros) es
+  razonable.
+- (b) `panic`: índice fuera de rango es un bug del programador; el índice
+  de Rust ya entra en pánico solo.
+- (c) `Result`: entrada del usuario; se devuelve un mensaje de uso y un
+  código de error.
+- (d) `panic`: si el invariante interno dice que las coberturas están
+  ordenadas, una resta negativa revela un bug estructural, no un dato.
+- (e) `Result`: archivos ausentes son la condición más normal del mundo;
+  en el capítulo 12 veremos que abrir archivos devuelve `Result` nativamente.
+
+El examen de admisión para esta decisión es una pregunta: "¿este fallo es
+previsible en datos reales y el programa podría seguir con otro camino?"
+Si sí, `Result`; si no, `panic!`.
+
+</details>

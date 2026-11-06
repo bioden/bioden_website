@@ -1,0 +1,505 @@
+---
+title: "Capítulo 10: Iteradores y closures"
+subtitle: "map, filter, fold y zip: pensar en pipelines de datos biológicos"
+format:
+  html:
+    toc: true
+---
+
+Hemos usado iteradores desde el capítulo 3 (`chars()`, `enumerate()`,
+`windows`) sin levantar la tapa. Es hora de ver el motor completo: los
+**iteradores** producen valores uno a uno, los **adaptadores** los
+transforman en cadena (como una pipa de Unix) y los **consumidores** extraen
+el resultado final. Las **closures**, esas funciones anónimas `|x| ...` que
+ya se nos escaparon en capítulos anteriores, son el combustible de todo el
+sistema. Al terminar, funciones que te tomaron diez líneas serán pipelines
+de una.
+
+## 10.1 Closures: funciones de bolsillo
+
+Una closure es una función sin nombre, declarada con barras verticales:
+`|parámetros| expresión`. A diferencia de las funciones `fn`, no necesitan
+anotar tipos (se infieren del uso) y pueden **capturar** variables del
+entorno:
+
+```rust
+fn main() {
+    let factor_dilucion = 0.5;
+
+    let diluir = |concentracion: f64| concentracion * factor_dilucion;
+
+    println!("42.0 ng/µL diluido: {} ng/µL", diluir(42.0));
+    println!("18.0 ng/µL diluido: {} ng/µL", diluir(18.0));
+}
+// 42.0 ng/µL diluido: 21 ng/µL
+// 18.0 ng/µL diluido: 9 ng/µL
+```
+
+La closure `diluir` usa `factor_dilucion` sin que se lo pasen: la "capturó"
+del entorno (por referencia, siguiendo las reglas de préstamo del capítulo
+4). Cuando una closure necesita apropiarse de un dato capturado —típico al
+crear hilos en el capítulo 15— se marca con `move`:
+`move |x| ...`. Guarda una closure en una variable y pásala como argumento:
+es el comportamiento que llena de sentido a lo que sigue.
+
+## 10.2 Las tres puertas del iterador
+
+Todo `Vec`, `String` y la mayoría de colecciones ofrecen tres formas de
+producir un iterador:
+
+```rust
+fn main() {
+    let mut phreds = vec![37, 12, 29, 41];
+
+    // 1) iter(): presta cada elemento (&T) — el Vec sigue intacto
+    for q in phreds.iter() {
+        print!("{} ", q);
+    }
+    println!();
+
+    // 2) iter_mut(): presta mutable (&mut T) — permite transformar
+    for q in phreds.iter_mut() {
+        *q = q.saturating_sub(1); // envejece la calidad en 1
+    }
+    println!("{:?}", phreds);
+
+    // 3) into_iter(): entrega cada elemento por valor (T) — consume el Vec
+    let suma: i32 = phreds.into_iter().sum();
+    println!("Suma: {}", suma);
+    // println!("{:?}", phreds); // ⛔ NO COMPILA: phreds fue consumido
+}
+// 37 12 29 41
+// [36, 11, 28, 40]
+// Suma: 115
+```
+
+La tercera puerta es la más drástica y la más expresiva: entregar la
+propiedad de los elementos al pipeline. El `for x in &coleccion` que usamos
+todo el curso es azúcar de la primera puerta.
+
+## 10.3 Adaptadores: la pipa de Unix
+
+Los adaptadores reciben un iterador y devuelven otro iterador,
+transformando en el camino. Los esenciales para análisis de datos:
+
+| Adaptador | Hace | Ejemplo biológico |
+|-----------|------|-------------------|
+| `map(f)` | transforma cada valor | ADN → ARN (T→U) |
+| `filter(f)` | deja pasar los que cumplen | lecturas con Q ≥ 30 |
+| `enumerate()` | agrega el índice | posición de cada base |
+| `zip(otro)` | empareja dos iteradores | comparar referencia vs. variante |
+| `take(n)` / `skip(n)` | corta / salta | solo los primeros 100 registros |
+| `rev()` | invierte | recorrer el gen 3'→5' |
+| `step_by(n)` | avanza de n en n | marcos de lectura |
+| `flat_map(f)` | transforma y aplana | todos los k-mers de varias secuencias |
+
+Y la propiedad que los hace "gratis": son **perezosos**. Esta línea no hace
+absolutamente nada:
+
+```rust
+let pipeline = phreds.iter().map(|q| q + 1).filter(|q| *q >= 30);
+```
+
+Nada se ejecuta hasta que un **consumidor** (`collect`, `sum`, `for`,
+`count`...) reclama valores. Recién entonces los elementos fluyen uno a uno
+por toda la pipa, sin construir colecciones intermedias: ni vectores
+temporales, ni copias del genoma.
+
+## 10.4 Consumidores: cerrar la pipa
+
+| Consumidor | Devuelve | Ejemplo |
+|------------|----------|---------|
+| `collect()` | colección (Vec, HashMap, String...) | bases filtradas a `Vec` |
+| `sum()` / `count()` / `max()` / `min()` | totales | masa total, cuántas pasan |
+| `fold(inicio, f)` | acumulador libre | score de alineamiento |
+| `any(f)` / `all(f)` | `bool` | ¿hay algún `N`? ¿todas Q≥30? |
+| `position(f)` / `find(f)` | `Option<usize>` / `Option<T>` | índice del primer motivo |
+
+`collect()` merece atención: produce la colección que le indiques (a veces
+hay que decírselo con la sintaxis *turbofish* `::<>`):
+
+```rust
+fn main() {
+    let phreds = vec![37, 12, 29, 41, 8, 35];
+
+    let buenas: Vec<&i32> = phreds.iter().filter(|q| **q >= 30).collect();
+    let cuantas: usize = phreds.iter().filter(|q| **q >= 30).count();
+    let suma_buenas: i32 = buenas.iter().map(|q| **q).sum();
+
+    println!("{} buenas de {}: suma Q {}", cuantas, phreds.len(), suma_buenas);
+    println!("{:?}", buenas);
+}
+// 3 buenas de 6: suma Q 104
+// [37, 41, 35]
+```
+
+Ese doble `**q` es la primera sorpresa de `filter`: su closure recibe `&&i32`
+(referencia a la referencia que entrega el iterador), y comparar exige
+deshacer ambas capas. Es la fricción típica hasta que el radar de préstamos
+se calibra; alternativa elegante: `filter(|q| **q >= 30)` o
+`filter(|&&q| q >= 30)` (destructurando la referencia en el patrón).
+
+## 10.5 Reescribiendo el curso en pipelines
+
+El mejor resumen del capítulo es reescribir funciones que ya escribiste con
+bucles. El contenido de GC, versión pipeline:
+
+```rust
+fn contenido_gc(dna: &str) -> f64 {
+    let gc = dna.bytes().filter(|b| *b == b'G' || *b == b'C').count();
+    gc as f64 / dna.len() as f64 * 100.0
+}
+```
+
+`bytes()` itera los bytes, `filter` deja pasar G y C (comparando contra los
+literales de byte `b'G'`), y `count` cierra la pipa: tres conceptos, una
+línea, cero variables mutables.
+
+La transcripción del capítulo 3, sin `String` manual:
+
+```rust
+fn transcribir(dna: &str) -> String {
+    dna.chars().map(|c| if c == 'T' { 'U' } else { c }).collect()
+}
+```
+
+`map` transforma cada carácter y `collect` junta el resultado en `String` —
+el tipo de destino se infiere del retorno de la función. Comparado con el
+`for` + `push` original: mismo resultado, menos ceremonia, y el *qué* (T
+se vuelve U) gana protagonismo sobre el *cómo*.
+
+Contar sustituciones entre una referencia y una variante — el clásico de
+genómica de poblaciones — es el trabajo perfecto de `zip`:
+
+```rust
+fn main() {
+    let referencia = "ATGGCCTAGTAA";
+    let variante = "ATCGCTTAGTAA";
+
+    let mutaciones = referencia
+        .chars()
+        .zip(variante.chars())
+        .filter(|(r, a)| r != a)
+        .count();
+
+    println!("{} sitios difieren entre las secuencias", mutaciones);
+}
+// 3 sitios difieren entre las secuencias
+```
+
+`zip` empareja cada base de la referencia con su homóloga, y el patrón
+`|(r, a)|` desempaqueta la tupla directamente en los parámetros de la
+closure: dentro, compararlas es trivial. Nota de seguridad: `zip` se corta
+en la secuencia más corta; para secuencias de longitudes distintas, valida
+antes (la distancia de longitud también es información biológica).
+
+El promedio de calidad de una línea PHRD (capítulo 5) en una expresión:
+
+```rust
+fn main() {
+    let linea = "II5I35FFII";
+
+    let promedio = linea.chars().map(|c| (c as u8 - 33) as f64).sum::<f64>()
+        / linea.chars().count() as f64;
+
+    println!("Calidad promedio: Q{:.1}", promedio);
+}
+// Calidad promedio: Q33.2
+```
+
+`map` decodifica cada carácter a su puntaje y `sum::<f64>` acumula (el
+turbofish le dice a `sum` que el acumulador es `f64`). Verifica a mano:
+I, I, 5, I, 3, 5, F, F, I, I → 40+40+20+40+18+20+37+37+40+40 = 332, y
+332/10 = 33.2 ✓.
+
+## 10.6 `fold`: el consumidor universal
+
+Cuando ningún consumidor encaja, `fold` lo hace todo: recibe un valor
+inicial y una closure `(acumulador, elemento) -> nuevo acumulador`. Un score
+de alineamiento simplificado (+1 coincidencia, −1 diferencia):
+
+```rust
+fn main() {
+    let refe = "ATGGCCTAGTAA";
+    let alt = "ATCGCTTAGTAA";
+
+    let score = refe.chars().zip(alt.chars()).fold(0i32, |acc, (r, a)| {
+        if r == a { acc + 1 } else { acc - 1 }
+    });
+
+    println!("Score de alineamiento simple: {}", score);
+}
+// Score de alineamiento simple: 6
+```
+
+Doce posiciones, tres diferencias: (9 − 3) = 6 ✓. `fold` es el bisturí
+general: sirve para promedios ponderados, construir mapas, calcular
+probabilidades acumuladas... cualquier recorrido con memoria.
+
+## 10.7 k-mers con `windows`
+
+Recordarás el bucle con índices del capítulo 7. La forma idiomática usa
+`windows(k)`, que entrega rebanadas contiguas de tamaño k ya deslizadas:
+
+```rust
+use std::collections::HashMap;
+
+fn main() {
+    let dna = "ATGGCCTTTTAA";
+    let mut conteo: HashMap<String, usize> = HashMap::new();
+
+    for ventana in dna.as_bytes().windows(3) {
+        let kmer = std::str::from_utf8(ventana).expect("se requiere ASCII");
+        *conteo.entry(kmer.to_string()).or_insert(0) += 1;
+    }
+
+    println!("{} k-mers distintos; TTT × {}", conteo.len(), conteo["TTT"]);
+}
+// 9 k-mers distintos; TTT × 2
+```
+
+`as_bytes()` da el iterador de bytes, `windows(3)` las ventanas de tres, y
+`str::from_utf8` reinterpreta cada ventana como texto (con `expect` porque
+una secuencia con caracteres no-UTF8 no puede existir en un `&str` de
+origen). Sin índices, sin aritmética de rangos, imposible salir del
+límite: el compilador lo garantiza.
+
+::: {.callout-tip}
+## Cero costo, de verdad
+Los iteradores de Rust no son los iteradores lentos de otros lenguajes:
+compilan al mismo código de máquina que el bucle `for` escrito a mano
+(frecuentemente mejor, porque el optimizador los razona como un todo).
+Usar pipelines es **gratis**: elige siempre la versión más clara.
+:::
+
+## Ejercicios
+
+### Ejercicio 10.1 · Bases a `Vec`
+
+Escribe `fn base_vector(dna: &str) -> Vec<char>` que devuelva las bases en
+un vector, y `fn solo_purinas(dna: &str) -> Vec<char>` que filtre solo
+purinas (A, G), ambas en una línea con `collect()`.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+fn base_vector(dna: &str) -> Vec<char> {
+    dna.chars().collect()
+}
+
+fn solo_purinas(dna: &str) -> Vec<char> {
+    dna.chars().filter(|&c| c == 'A' || c == 'G').collect()
+}
+
+fn main() {
+    println!("{:?}", base_vector("ATGC"));
+    println!("{:?}", solo_purinas("ATGGCCTTTTAA"));
+}
+// ['A', 'T', 'G', 'C']
+// ['A', 'G', 'G']
+```
+
+Dos lecciones en dos líneas. Primera: `collect` construye la colección
+que el contexto pida — aquí un `Vec<char>` por el tipo de retorno, y un
+`String` en el `transcribir` del capítulo. Segunda: la closure de `filter`
+recibe `&char`, y el patrón `|&c|` lo desestructura para que `c` ya sea un
+`char` comparable — la forma más cómoda de evitarse el doble `**`.
+
+</details>
+
+### Ejercicio 10.2 · Densidad de mutaciones
+
+Con `zip`, calcula la **densidad de mutaciones** (diferencias / longitud)
+entre `ATGGCCTAGTAA` y `ATCGCTTAGTAA` y expresa el resultado en
+mutaciones/kb multiplicando por 1000.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+fn main() {
+    let referencia = "ATGGCCTAGTAA";
+    let variante = "ATCGCTTAGTAA";
+
+    let diferencias = referencia
+        .chars()
+        .zip(variante.chars())
+        .filter(|(r, a)| r != a)
+        .count() as f64;
+
+    let por_kb = diferencias / referencia.len() as f64 * 1000.0;
+
+    println!("{} diferencias: {:.1} mutaciones/kb", diferencias as usize, por_kb);
+}
+// 3 diferencias: 250.0 mutaciones/kb
+```
+
+Tres diferencias en 12 pb equivalen a 250 por mil: una densidad
+astronómica que en un genoma real solo verías entre especies muy distantes
+(o en un experimento de mutagénesis dirigida, que es justo donde se aplica
+este cálculo). El patrón `count → cast → dividir` es el mismo del contenido
+GC; solo cambió la fuente de los datos.
+
+</details>
+
+### Ejercicio 10.3 · Lecturas que pasan el filtro
+
+Dado un `Vec<LecturaFastq>` (capítulo 5), usa `filter` + `collect` para
+construir el subconjunto de lecturas con calidad promedio ≥ 30 e imprime
+cuántas son. Pista: el método `calidad_promedio` ya existe.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+struct LecturaFastq {
+    id: String,
+    secuencia: String,
+    calidad: String,
+}
+
+impl LecturaFastq {
+    fn calidad_promedio(&self) -> f64 {
+        let mut suma = 0u32;
+        for c in self.calidad.chars() {
+            suma += (c as u8 - 33) as u32;
+        }
+        suma as f64 / self.calidad.len() as f64
+    }
+}
+
+fn main() {
+    let lecturas = vec![
+        LecturaFastq { id: String::from("l1"), secuencia: String::from("ATGG"), calidad: String::from("II5I") },
+        LecturaFastq { id: String::from("l2"), secuencia: String::from("GGTT"), calidad: String::from("####") },
+        LecturaFastq { id: String::from("l3"), secuencia: String::from("TAAA"), calidad: String::from("IIII") },
+    ];
+
+    let buenas: Vec<&LecturaFastq> = lecturas
+        .iter()
+        .filter(|l| l.calidad_promedio() >= 30.0)
+        .collect();
+
+    println!("{} de {} lecturas pasan el filtro", buenas.len(), lecturas.len());
+    for l in &buenas {
+        println!("  {} (Q{:.1})", l.id, l.calidad_promedio());
+    }
+}
+// 2 de 3 lecturas pasan el filtro
+//   l1 (Q35.0)
+//   l3 (Q40.0)
+```
+
+Verificación: l1 = (40+40+20+40)/4 = 35.0 ✓, l2 = (8×4)/4 = 8.0 (fuera), l3
+= 40.0 ✓. El `Vec<&LecturaFastq>` resultante contiene **prestamos**: las
+lecturas originales siguen en `lecturas`, y la lista de buenas es una vista
+— la opción más eficiente cuando el filtrado es solo para reportar.
+
+</details>
+
+### Ejercicio 10.4 · Primer codón de paro, versión elegante
+
+Con `position` (o `find` sobre `windows`), encuentra el índice del primer
+codón de paro (`TAA`, `TAG` o `TGA`) en `ATGGCCTTTTAA` y repórtalo en
+posición biológica.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+fn main() {
+    let dna = "ATGGCCTTTTAA";
+
+    let indice = (0..dna.len())
+        .step_by(3)
+        .find(|&i| &dna[i..i + 3] == "TAA" || &dna[i..i + 3] == "TAG" || &dna[i..i + 3] == "TGA");
+
+    match indice {
+        Some(i) => println!("Primer codón de paro en la posición {}", i + 1),
+        None => println!("Sin codones de paro en este marco"),
+    }
+}
+// Primer codón de paro en la posición 10
+```
+
+`(0..len).step_by(3)` recorre el marco de lectura 0, y `find` devuelve
+`Option<usize>` — la composición de rangos del capítulo 3 con la caja del
+capítulo 6. El resultado Some(9) → posición 10 coincide con el final del
+mini-gen, como debe ser: la proteína termina ahí.
+
+</details>
+
+### Ejercicio 10.5 · Promedio con `fold`
+
+Reescribe el cálculo del promedio PHRED de `"II5I35FFII"` usando
+**exclusivamente** `fold` (sin `sum` ni `count`): el acumulador puede ser
+una tupla `(suma, cantidad)`.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+fn main() {
+    let linea = "II5I35FFII";
+
+    let (suma, cantidad) = linea.chars().fold((0u32, 0u32), |(s, n), c| {
+        (s + (c as u8 - 33) as u32, n + 1)
+    });
+
+    println!("Suma: {}, bases: {}, promedio: Q{:.1}", suma, cantidad, suma as f64 / cantidad as f64);
+}
+// Suma: 332, bases: 10, promedio: Q33.2
+```
+
+La tupla `(suma, cantidad)` viaja por el iterador acumulándose: cada vuelta
+produce la pareja nueva, y el patrón `|(s, n), c|` desempaqueta acumulador y
+elemento de un plumazo. Con `fold` puedes calcular cualquier estadístico de
+una pasada: media y varianza juntas, mínimo y máximo a la vez, o los cuatro
+conteos de bases en un solo recorrido.
+
+</details>
+
+### Ejercicio 10.6 · Pipeline maestro: GC y N50 de un lote
+
+Une todo: dado `Vec<(String, String)>` de pares `(id, secuencia)`, produce
+con un pipeline el `Vec` de ids cuya secuencia tiene contenido GC ≥ 50%,
+ordenado alfabéticamente. Datos de prueba: `("gc1", "GCCGGC")`,
+`("at1", "ATTAAT")`, `("mix", "ATGGCC")`.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+fn main() {
+    let secuencias = vec![
+        (String::from("gc1"), String::from("GCCGGC")),
+        (String::from("at1"), String::from("ATTAAT")),
+        (String::from("mix"), String::from("ATGGCC")),
+    ];
+
+    let mut ids_gc_alta: Vec<String> = secuencias
+        .iter()
+        .filter(|(_, seq)| {
+            let gc = seq.bytes().filter(|b| *b == b'G' || *b == b'C').count();
+            gc as f64 / seq.len() as f64 * 100.0 >= 50.0
+        })
+        .map(|(id, _)| id.clone())
+        .collect();
+
+    ids_gc_alta.sort();
+
+    println!("Secuencias con GC ≥ 50%: {:?}", ids_gc_alta);
+}
+// Secuencias con GC ≥ 50%: ["gc1", "mix"]
+```
+
+Anatomía del pipeline: `iter` presta los pares; el `filter` calcula el GC
+sobre la secuencia (el patrón `(_, seq)` ignora el id); el `map` extrae un
+clon del id (clonado porque el par sigue prestado); `collect` arma el
+`Vec`; y `sort` lo ordena para el reporte. Seis conceptos del curso
+encadenados en una expresión legible — este es el Rust intermedio que
+queríamos alcanzar, y es la columna vertebral del analizador del capítulo
+15.
+
+</details>

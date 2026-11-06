@@ -1,0 +1,96 @@
+---
+title: "Rust para biólogos: de cero a intermedio con datos biológicos"
+subtitle: "En este curso se abordan los conceptos básicos e intermedios que un biólogo debe saber sobre este lenguaje de programación, con ejemplos aplicados a la bioinformática: secuencias de ADN, contenido de GC, tablas de codones y archivos FASTA."
+image: multimedia/Rust.png
+format:
+  html:
+    toc: true
+    css: card.css
+margin-header: |
+  ![Xavier Clemente García Cevallos](multimedia/Rust.png)
+---
+
+Bienvenidos a **Rust para biólogos**, un curso diseñado para que cualquier persona con formación en ciencias biológicas y sin experiencia previa programando en Rust. Este curso está diseñado para que llegue a un nivel intermedio del lenguaje, aplicando cada concepto a problemas reales de bioinformática: calcular el contenido de GC de una secuencia, construir la hebra complementaria, traducir codones a aminoácidos, parsear archivos FASTA y, al final, construir una herramienta de análisis de secuencias completa.
+
+Rust tiene la fama de ser un lenguaje difícil, pero esa fama viene sobre todo de que obliga a pensar cosas que otros lenguajes esconden debajo de la alfombra. En este curso iremos paso a paso: cada capítulo introduce un solo concepto grande, lo ilustra con ejemplos biológicos y termina con ejercicios resueltos. Si alguna vez sentiste que tus análisis en Python o R se volvían lentos cuando los datos crecían, este curso es para ti.
+
+## ¿Por qué aprender Rust siendo biólogo?
+
+La mayoría de biólogos analizamos datos con Python o R, y eso está muy bien: son lenguajes excelentes para explorar, graficar y diseñar estadística. El problema aparece cuando la escala crece: alinear miles de lecturas, procesar genomas completos, simular millones de eventos de mutación o simplemente iterar millones de veces sobre un vector. Ahí es donde Rust brilla, porque combina dos propiedades que rara vez van juntas:
+
+- **Velocidad de primer nivel**: Rust compila a código de máquina y su rendimiento es comparable al de C y C++, decenas o cientos de veces más rápido que Python para bucles intensivos.
+- **Seguridad de memoria**: el compilador de Rust verifica, *antes de ejecutar tu programa*, que no accederás a memoria inválida, no olvidarás liberar recursos ni corromperás silenciosamente tus datos. Ese tipo de errores silenciosos son una pesadilla en análisis científicos, porque no siempre crashean: a veces solo producen resultados equivocados.
+
+Además, aprender Rust te hará mejor programador en cualquier otro lenguaje: su sistema de *ownership* te obliga a entender qué le pasa a tus datos en memoria, y ese entendimiento se traslada a Python, R y C por igual.
+
+## ¿Qué necesitas para empezar?
+
+- Una computadora con Windows, macOS o Linux (el capítulo 1 muestra cómo instalar Rust en cada sistema).
+- **No necesitas experiencia previa en Rust**. Si ya programas en Python o R, reconocerás muchos conceptos; si nunca has programado, el curso arranca desde cero.
+- Ganas de leer mensajes del compilador. Suena a broma, pero el compilador de Rust es tu mejor profesor: te dice qué está mal, dónde y cómo arreglarlo.
+
+## ¿Cómo está organizado el curso?
+
+El curso tiene 15 capítulos agrupados en cuatro bloques. Cada capítulo termina con ejercicios cuyas soluciones están plegadas: inténtalos antes de abrirlas.
+
+### Bloque I · Primeros pasos
+
+| Cap. | Título | Qué aprenderás |
+|-----------------|------------------|-------------------------------------|
+| 1 | [¿Por qué Rust en biología?](rust_capitulos/01-introduccion.qmd) | Qué es Rust, cómo instalarlo, Cargo y tu primer programa |
+| 2 | [Variables, tipos y funciones](rust_capitulos/02-variables-tipos-funciones.qmd) | `let`, `mut`, tipos numéricos, `char`, funciones y tu primera función bioinformática |
+| 3 | [Control de flujo](rust_capitulos/03-control-de-flujo.qmd) | `if`, bucles, rangos y `match`: transcripción de ADN a ARN |
+
+### Bloque II · El corazón de Rust
+
+| Cap. | Título | Qué aprenderás |
+|-----------------|------------------|-------------------------------------|
+| 4 | [Posesión y préstamos](rust_capitulos/04-ownership-borrowing.qmd) | Ownership, referencias y slices: por qué Rust es seguro sin recolector de basura |
+| 5 | [Structs](rust_capitulos/05-structs.qmd) | Modelar secuencias, especímenes y lecturas con datos y métodos |
+| 6 | [Enums y Option](rust_capitulos/06-enums-option.qmd) | Variantes con datos y el tipo que eliminó el `null` |
+| 7 | [Colecciones](rust_capitulos/07-colecciones.qmd) | `Vec`, `String` y `HashMap`: contar nucleótidos y k-mers |
+| 8 | [Manejo de errores](rust_capitulos/08-manejo-errores.qmd) | `panic!` vs `Result`, el operador `?` y errores a la medida |
+
+### Bloque III · Rust intermedio
+
+| Cap. | Título | Qué aprenderás |
+|-----------------|------------------|-------------------------------------|
+| 9 | [Traits y genéricos](rust_capitulos/09-traits-genericos.qmd) | Código reutilizable para ADN, ARN y proteínas sin duplicar |
+| 10 | [Iteradores y closures](rust_capitulos/10-iteradores-closures.qmd) | `map`, `filter`, `fold` y `zip`: pensar en pipelines de datos |
+| 11 | [Módulos](rust_capitulos/11-modulos-organizacion.qmd) | Organizar un proyecto bioinformático en varios archivos |
+| 12 | [Archivos](rust_capitulos/12-archivos-datos-biologicos.qmd) | Leer y escribir FASTA, reportes TSV y rutas de archivo |
+
+### Bloque IV · Diseño de un proyecto
+
+| Cap. | Título | Qué aprenderás |
+|-----------------|------------------|-------------------------------------|
+| 13 | [Testing](rust_capitulos/13-testing-cargo.qmd) | `cargo test`, tests unitarios, de integración y doc-tests |
+| 14 | [Crates esenciales](rust_capitulos/14-crates-esenciales.qmd) | `rand`, `regex`, `serde` y `clap`: el ecosistema a tu favor |
+| 15 | [Proyecto final](rust_capitulos/15-proyecto-final.qmd) | `bio-analyzer`: un analizador de FASTA completo, con reportes y concurrencia |
+
+## Convenciones del curso
+
+- Los ejemplos de código se muestran así, y la salida esperada aparece como comentario al final del bloque:
+
+``` rust
+let dna = "ATGGCCTTTTAA";
+println!("Longitud: {} pb", dna.len());
+// Longitud: 12 pb
+```
+
+- Puedes ejecutar todo el código en tu computadora con Cargo (capítulo 1) o sin instalar nada en el [Rust Playground](https://play.rust-lang.org/).
+- Los bloques tipo aviso resaltan consejos, advertencias y notas:
+
+::: callout-tip
+## Antes de empezar
+
+No hace falta leer los 15 capítulos de una sentada. Rust se disfruta a pequeñas dosis: un capítulo por sentada, con los ejercicios hechos a mano, vale más que tres capítulos leídos de corrido.
+:::
+
+::: callout-warning
+## Sobre los ejercicios
+
+Las soluciones están plegadas debajo de cada ejercicio. La tentación de abrirlas de inmediato es real (le pasó a quien escribe), pero el músculo de programar se entrena intentándolo primero.
+:::
+
+Cuando estés listo, empieza por el [capítulo 1: ¿Por qué Rust en biología?](rust_capitulos/01-introduccion.qmd)

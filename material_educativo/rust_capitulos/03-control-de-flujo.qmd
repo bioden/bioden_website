@@ -1,0 +1,522 @@
+---
+title: "Capítulo 3: Control de flujo"
+subtitle: "if, bucles, rangos y match: la lógica que transcribe ADN y clasifica variantes"
+format:
+  html:
+    toc: true
+---
+
+Un programa que solo ejecuta líneas en orden no puede tomar decisiones
+biológicas: filtrar una lectura por su calidad, transcribir una hebra, o
+decidir si una variante es una transición o una transversión. En este capítulo
+aprendemos las estructuras que dan lógica a tus programas —`if`, los bucles
+`loop`/`while`/`for`, y el potente `match`— y las aplicamos de inmediato a
+secuencias. Al final tendrás tu primera función de transcripción funcionando.
+
+## 3.1 `if` y `else`
+
+La sintaxis de `if` en Rust es directa: la condición no lleva paréntesis
+(obligatorio omitirlos) y las llaves son obligatorias, incluso para una sola
+línea:
+
+```rust
+fn main() {
+    let phred = 27;
+
+    if phred >= 30 {
+        println!("Lectura confiable: se incorpora al análisis");
+    } else if phred >= 20 {
+        println!("Lectura marginal: requiere revisión");
+    } else {
+        println!("Lectura pobre: se descarta");
+    }
+}
+// Lectura marginal: requiere revisión
+```
+
+La condición debe ser exactamente un `bool`: a diferencia de Python, Rust no
+interpreta `0` o `""` como falso, así que las condiciones siempre se escriben
+explícitas (`x > 0`, `dna.is_empty()`). Menos atajos, menos ambigüedad.
+
+## 3.2 `if` como expresión
+
+Aquí aparece la distinción entre declaración y expresión del capítulo
+anterior: en Rust, `if` **produce un valor**, por lo que puede asignarse
+directamente a una variable:
+
+```rust
+fn main() {
+    let phred = 27;
+    let estado = if phred >= 30 { "confiable" } else { "descartar" };
+
+    println!("Decisión: {}", estado);
+}
+// Decisión: descartar
+```
+
+Fíjate en los detalles: las ramas no llevan punto y coma antes de la llave de
+cierre (son expresiones) y **ambas deben devolver el mismo tipo** —aquí dos
+textos—. Si una rama devuelve `"confiable"` y la otra `30`, el programa no
+compila. Esto reemplaza la construcción ternaria `a ? b : c` de otros
+lenguajes y es más legible.
+
+## 3.3 `loop` y `while`
+
+`loop` repite un bloque indefinidamente hasta que un `break` lo corta. Lo
+especial de Rust es que `break` puede **devolver un valor**, convirtiendo el
+bucle entero en una expresión:
+
+```rust
+fn main() {
+    let mut lecturas = 1;
+    let objetivo = 1000;
+
+    let resultado = loop {
+        lecturas *= 2;
+        if lecturas >= objetivo {
+            break lecturas;
+        }
+    };
+    println!("Se alcanzaron {} lecturas", resultado);
+}
+// Se alcanzaron 1024 lecturas
+```
+
+`while` repite mientras la condición se cumpla, y es la herramienta natural
+para procesos que evolucionan hasta cruzar un umbral. Un clásico ecológico:
+el crecimiento exponencial de una población:
+
+```rust
+fn main() {
+    let mut poblacion = 100.0;
+    let tasa = 0.05; // 5% por generación
+    let umbral = 200.0;
+    let mut generaciones = 0;
+
+    while poblacion < umbral {
+        poblacion = poblacion * (1.0 + tasa);
+        generaciones += 1;
+    }
+    println!("Umbral superado en la generación {} ({:.0} individuos)",
+             generaciones, poblacion);
+}
+// Umbral superado en la generación 15 (208 individuos)
+```
+
+::: {.callout-warning}
+## El bucle infinito accidental
+Si la condición de un `while` nunca se vuelve falsa, el programa corre para
+siempre. Con tasas negativas el ejemplo anterior nunca cruza el umbral.
+Cuando un programa "se cuelga", revisa primero las variables que controlan
+la condición del bucle: ¿realmente cambian dentro del bloque?
+:::
+
+## 3.4 `for` y los rangos
+
+El bucle más usado es `for`, que recorre rangos o colecciones. Los rangos se
+escriben `inicio..fin` (fin exclusivo) o `inicio..=fin` (fin inclusivo):
+
+```rust
+fn main() {
+    print!("0..3  -> ");
+    for i in 0..3 {
+        print!("{} ", i);
+    }
+    print!("\n0..=3 -> ");
+    for i in 0..=3 {
+        print!("{} ", i);
+    }
+    println!();
+}
+// 0..3  -> 0 1 2
+// 0..=3 -> 0 1 2 3
+```
+
+Y lo más útil para nosotros: `for` recorre los caracteres de un texto con
+`.chars()`, con o sin su posición mediante `.enumerate()` (adelantamos aquí
+dos herramientas de iteradores que el capítulo 10 explicará a fondo):
+
+```rust
+fn main() {
+    let dna = "ATGC";
+    for (i, base) in dna.chars().enumerate() {
+        println!("posición {}: {}", i, base);
+    }
+}
+// posición 0: A
+// posición 1: T
+// posición 2: G
+// posición 3: C
+```
+
+Recuerda la lección del capítulo 2: los índices empiezan en cero, así que la
+"posición 3 del gen" (notación biológica) es el índice 2. Con `enumerate()`
+la conversión es explícita y sin confusiones.
+
+## 3.5 `break`, `continue` y las etiquetas
+
+Dentro de cualquier bucle, `break` lo termina y `continue` salta directo a la
+siguiente vuelta. Por ejemplo, contar solo las bases canónicas ignorando las
+ambiguas (`N`):
+
+```rust
+fn main() {
+    let secuencia = "ATGNCGGTNT";
+    let mut canonica = 0;
+
+    for base in secuencia.chars() {
+        if base == 'N' {
+            continue; // esta base no se cuenta, seguimos con la siguiente
+        }
+        canonica += 1;
+    }
+    println!("Bases canónicas: {} de {}", canonica, secuencia.len());
+}
+// Bases canónicas: 8 de 10
+```
+
+Cuando hay bucles anidados, `break` solo corta el más interno. Para cortar
+el externo se usan **etiquetas**, nombres con apóstrofo que marcan un bucle:
+
+```rust
+fn main() {
+    'muestras: for muestra in 1..=3 {
+        for replica in 1..=5 {
+            if muestra * replica > 6 {
+                println!("Umbral excedido: muestra {} réplica {}", muestra, replica);
+                break 'muestras;
+            }
+        }
+    }
+}
+// Umbral excedido: muestra 2 réplica 4
+```
+
+## 3.6 `match`: el bisturí de las decisiones
+
+`match` compara un valor contra una serie de **patrones** y ejecuta el brazo
+que coincide. Es la estructura de decisión más poderosa de Rust y su
+característica más importante es que debe ser **exhaustiva**: si olvidas un
+caso posible, el programa no compila. Empecemos clasificando una base:
+
+```rust
+fn main() {
+    let base = 'G';
+
+    let tipo = match base {
+        'A' | 'G' => "purina",     // varias alternativas con |
+        'C' | 'T' => "pirimidina",
+        _ => "ambigua",            // _ cubre todo lo demás
+    };
+    println!("La base {} es una {}", base, tipo);
+}
+// La base G es una purina
+```
+
+Recuerda la bioquímica: adenina y guanina son purinas; citosina y timina,
+pirimidinas. Los patrones admiten rangos, ideal para puntajes PHRED:
+
+```rust
+fn main() {
+    let phred = 27u8;
+    let calidad = match phred {
+        0..=9 => "mala",
+        10..=19 => "regular",
+        20..=29 => "buena",
+        _ => "excelente",
+    };
+    println!("Calidad de la lectura: {}", calidad);
+}
+// Calidad de la lectura: buena
+```
+
+Y como buen `if`, `match` también es una expresión que produce valor. Donde
+realmente brilla es comparando **varios valores a la vez**, mediante tuplas.
+Clasificar una sustitución como transición (cambio entre purinas o entre
+pirimidinas) o transversión (cambio entre clases):
+
+```rust
+fn clase_variante(refe: char, alt: char) -> &'static str {
+    match (refe, alt) {
+        ('A', 'G') | ('G', 'A') | ('C', 'T') | ('T', 'C') => "transición",
+        _ => "transversión",
+    }
+}
+
+fn main() {
+    println!("G>A: {}", clase_variante('G', 'A'));
+    println!("G>C: {}", clase_variante('G', 'C'));
+}
+// G>A: transición
+// G>C: transversión
+```
+
+El patrón `(refe, alt)` empareja una tupla de dos caracteres, y `|`
+encadena los cuatro casos que son transiciones. El tipo de retorno
+`&'static str` indica "un texto fijo dentro del programa" (los literales
+viven todo el proceso); es la primera vez que ves una duración (`'static`),
+y por ahora basta saber que es la firma correcta para funciones que
+devuelven literales.
+
+## 3.7 Proyecto del capítulo: transcripción y complemento inverso
+
+Cerremos uniendo todo. La transcripción del ADN al ARN mensajero, en su
+versión de hebra codificante, es la sustitución de cada timina por uracilo.
+Con `for` + `match` + un `String` que crece con `push`:
+
+```rust
+fn transcribir(dna: &str) -> String {
+    let mut arn = String::new();
+    for base in dna.chars() {
+        match base {
+            'T' => arn.push('U'),
+            otra => arn.push(otra), // A, C y G pasan iguales
+        }
+    }
+    arn
+}
+
+fn main() {
+    let gen = "ATGGCCTTTTAA";
+    println!("ADN:  {}", gen);
+    println!("ARN:  {}", transcribir(gen));
+}
+// ADN:  ATGGCCTTTTAA
+// ARN:  AUGGCCUUUUAA
+```
+
+Dos detalles nuevos. El patrón `otra => ...` liga cualquier carácter que no
+sea `'T'` a la variable `otra` y lo usa en el brazo: es el comodín con
+nombre. Y `arn` se construye con `push`, que agrega un solo `char` (su
+hermana `push_str` agregaba un texto completo). El resultado es el ARN
+correcto para nuestro mini-gen: `AUGGCCUUUUAA`, que codifica
+metionina–alanina–fenilalanina–paro.
+
+El segundo clásico bioinformático es el **complemento inverso** de una
+hebra: la hebra que se aparea en dirección contraria (A↔T, C↔G, leída al
+revés). Se construye recorriendo la secuencia al revés y complementando cada
+base:
+
+```rust
+fn complemento_inverso(dna: &str) -> String {
+    let mut resultado = String::new();
+    for base in dna.chars().rev() {
+        let complementaria = match base {
+            'A' => 'T',
+            'T' => 'A',
+            'C' => 'G',
+            'G' => 'C',
+            otra => otra, // bases ambiguas pasan sin cambiar
+        };
+        resultado.push(complementaria);
+    }
+    resultado
+}
+
+fn main() {
+    let gen = "ATGGCCTTTTAA";
+    println!("Hebra directa:       5'-{}-3'", gen);
+    println!("Complemento inverso: 5'-{}-3'", complemento_inverso(gen));
+}
+// Hebra directa:       5'-ATGGCCTTTTAA-3'
+// Complemento inverso: 5'-TTAAAAGGCCAT-3'
+```
+
+Aquí `.rev()` invierte el orden del recorrido y el `match` actúa como
+expresión cuyo resultado se guarda en `complementaria` antes de agregarse.
+Verifica a mano la primera base del resultado: la última base del gen es
+`A`, su complemento es `T`, y efectivamente el resultado empieza con `TT`.
+Ese hábito de verificación manual te ahorrará horas de debugging durante
+todo el curso.
+
+## Ejercicios
+
+### Ejercicio 3.1 · Clasificador de calidad
+
+Escribe la función `clasificar_phred(phred: u8) -> &'static str` que
+devuelva `"descartar"` para Q < 10, `"revisar"` para 10..=19, `"aceptar"`
+para 20..=29 y `"excelente"` para 30 o más. Pruébala con los valores 7, 15,
+27 y 38.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+fn clasificar_phred(phred: u8) -> &'static str {
+    match phred {
+        0..=9 => "descartar",
+        10..=19 => "revisar",
+        20..=29 => "aceptar",
+        _ => "excelente",
+    }
+}
+
+fn main() {
+    for phred in [7, 15, 27, 38] {
+        println!("Q{} -> {}", phred, clasificar_phred(phred));
+    }
+}
+// Q7 -> descartar
+// Q15 -> revisar
+// Q27 -> aceptar
+// Q38 -> excelente
+```
+
+Bonus aprendido: `for` también recorre arreglos directamente (capítulo 2), y
+`match` con rangos evita la escalera de `if`/`else if`.
+
+</details>
+
+### Ejercicio 3.2 · Transcripción desde la hebra molde
+
+La función `transcribir` del capítulo asume que recibes la hebra
+codificante. Escribe `transcribir_molde` para la hebra **molde** (la que
+lee la ARN polimerasa): el ARN es su complemento cambiando T por U, es decir
+A→U, T→A, C→G, G→C. Prueba con la molde `TACCGGAAATTT` y comprueba que el
+ARN empieza en `AUG`.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+fn transcribir_molde(molde: &str) -> String {
+    let mut arn = String::new();
+    for base in molde.chars() {
+        let nucleotido = match base {
+            'A' => 'U',
+            'T' => 'A',
+            'C' => 'G',
+            'G' => 'C',
+            otra => otra,
+        };
+        arn.push(nucleotido);
+    }
+    arn
+}
+
+fn main() {
+    let molde = "TACCGGAAATTT";
+    println!("Molde: {}", molde);
+    println!("ARNm:  {}", transcribir_molde(molde));
+}
+// Molde: TACCGGAAATTT
+// ARNm:  AUGGCCUUUAAA
+```
+
+La diferencia entre ambas funciones es solo la tabla del `match`. Que un
+cambio conceptual (¿qué hebra tengo?) se traduzca en un cambio local y
+visible es una de las satisfacciones silenciosas de programar bien.
+
+</details>
+
+### Ejercicio 3.3 · Conteo de bases
+
+Escribe un programa que cuente cuántas A, T, G y C tiene `ATGGCCTTTTAA`
+usando un `for` con `match` que incremente el contador correspondiente.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+fn main() {
+    let dna = "ATGGCCTTTTAA";
+    let (mut a, mut t, mut g, mut c) = (0, 0, 0, 0);
+
+    for base in dna.chars() {
+        match base {
+            'A' => a += 1,
+            'T' => t += 1,
+            'G' => g += 1,
+            'C' => c += 1,
+            _ => {} // ignora cualquier otra cosa
+        }
+    }
+    println!("A={} T={} G={} C={}", a, t, g, c);
+}
+// A=3 T=5 G=2 C=2
+```
+
+El brazo `_ => {}` hace "nada" y es obligatorio para que el `match` cubra
+todos los caracteres posibles. Verificación: 3+5+2+2 = 12 bases, que es la
+longitud del gen. En el capítulo 7 repetiremos este conteo con un
+`HashMap` en tres líneas.
+
+</details>
+
+### Ejercicio 3.4 · Crecimiento bacteriano
+
+Una población de 1 000 bacterias se duplica cada 30 minutos. Con un `while`,
+calcula cuántas duplicaciones y cuántos minutos necesita para superar los
+mil millones de individuos.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+fn main() {
+    let mut poblacion: f64 = 1_000.0;
+    let objetivo: f64 = 1_000_000_000.0;
+    let mut duplicaciones = 0;
+
+    while poblacion < objetivo {
+        poblacion *= 2.0;
+        duplicaciones += 1;
+    }
+    println!("{} duplicaciones ({:.0} bacterias) en {} minutos",
+             duplicaciones, poblacion, duplicaciones * 30);
+}
+// 20 duplicaciones (1048576000 bacterias) en 600 minutos
+```
+
+Se necesitan 20 duplicaciones porque 2²⁰ ≈ 1.05 millones, y 1 000 × 1.05 M
+≈ 1 050 millones: 600 minutos, es decir, 10 horas. La exponencial siempre
+impresiona: de un matraz a mil millones en una jornada de laboratorio.
+
+</details>
+
+### Ejercicio 3.5 · Transiciones y transversiones
+
+Dadas dos variantes de un gen guardadas como arreglos de caracteres,
+cuenta las sustituciones que son transiciones y las que son transversiones,
+y reporta la razón Ti/Tv:
+
+```rust
+let referencia = ['A', 'G', 'C', 'T', 'G', 'C'];
+let alternativa = ['A', 'A', 'T', 'A', 'A', 'T'];
+```
+
+<details>
+<summary>Solución</summary>
+
+```rust
+fn clase_variante(refe: char, alt: char) -> &'static str {
+    match (refe, alt) {
+        ('A', 'G') | ('G', 'A') | ('C', 'T') | ('T', 'C') => "transición",
+        _ => "transversión",
+    }
+}
+
+fn main() {
+    let referencia = ['A', 'G', 'C', 'T', 'G', 'C'];
+    let alternativa = ['A', 'A', 'T', 'A', 'A', 'T'];
+    let (mut ti, mut tv) = (0, 0);
+
+    for i in 0..referencia.len() {
+        if referencia[i] != alternativa[i] {
+            match clase_variante(referencia[i], alternativa[i]) {
+                "transición" => ti += 1,
+                _ => tv += 1,
+            }
+        }
+    }
+    println!("Transiciones: {} | Transversiones: {} | Ti/Tv = {}", ti, tv, ti as f64 / tv as f64);
+}
+// Transiciones: 4 | Transversiones: 1 | Ti/Tv = 4
+```
+
+La razón Ti/Tv es un control de calidad clásico de genómica: en variantes
+reales suele rondar 2–3, y valores muy distintos sugieren contaminación o
+errores de llamado. Este pequeño programa es, en esencia, un filtro
+científico completo.
+
+</details>

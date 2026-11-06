@@ -1,0 +1,561 @@
+---
+title: "Capítulo 7: Colecciones"
+subtitle: "Vec, String y HashMap: contando nucleótidos, k-mers y traduciendo codones"
+format:
+  html:
+    toc: true
+---
+
+Las variables sueltas alcanzan para ejemplos de pizarra; los datos
+biológicos reales llegan en cantidades. Este capítulo cubre las tres
+colecciones de la biblioteca estándar que usarás a diario: `Vec` para listas
+ordenadas de valores (secuencias de bases, lotes de lecturas), `String` para
+texto que se construye dinámicamente, y `HashMap` para asociar claves con
+valores —la estructura detrás de todo conteo de frecuencias, desde
+nucleótidos hasta k-mers. Al final traduciremos nuestro primer gen a
+proteína usando una tabla de codones.
+
+## 7.1 `Vec<T>`: la lista que crece
+
+Un vector guarda cero o más valores del mismo tipo, uno tras otro en el
+heap. Se crea con `Vec::new()` (vacío) o con la macro `vec![...]` (con
+contenido inicial), y crece con `push`:
+
+```rust
+fn main() {
+    let mut bases = Vec::new(); // el tipo se infiere del primer push
+    bases.push('A');
+    bases.push('T');
+    bases.push('G');
+
+    let fases = vec![95.0, 55.0, 72.0]; // con contenido inicial
+
+    println!("{} bases, {} fases de PCR", bases.len(), fases.len());
+    println!("Última base: {}", bases[bases.len() - 1]);
+}
+// 3 bases, 3 fases de PCR
+// Última base: G
+```
+
+El acceso por índice usa corchetes —y como aprendimos con los arreglos, el
+índice fuera de rango entra en pánico. La alternativa segura es `.get(i)`,
+que devuelve `Option`:
+
+```rust
+fn main() {
+    let bases = vec!['A', 'T', 'G'];
+
+    println!("índice 1: {}", bases[1]);            // directo (o pánico)
+    println!("índice 9: {:?}", bases.get(9));      // Option: seguro
+}
+// índice 1: T
+// índice 9: None
+```
+
+Recorrer un `Vec` prestado —la forma más común— se hace con `for` sobre
+`&vector`, y para modificarlo en el recorrido, sobre `&mut vector`:
+
+```rust
+fn main() {
+    let phreds = vec![37, 12, 29, 41];
+    let mut aprobados = 0;
+
+    for q in &phreds {              // presta cada elemento
+        if q >= &30 {                // o simplemente: *q >= 30
+            aprobados += 1;
+        }
+    }
+    println!("{} de {} lecturas pasan Q30", aprobados, phreds.len());
+}
+// 3 de 4 lecturas pasan Q30
+```
+
+Fíjate en el detalle de los préstamos: `q` es un `&i32` (una referencia al
+elemento), y comparar `q >= &30` es el truco idiomático para no escribir
+`*q`. Ambas formas son legítimas; la segunda es más explícita para quien
+empieza. Otras operaciones útiles: `pop()` quita y devuelve el último
+elemento (como `Option`), `remove(i)` borra por índice, `is_empty()` y
+`contains(&valor)` preguntan por el contenido.
+
+El tipo de los elementos es libre mientras sea único: `Vec<Base>` con
+nuestro enum del capítulo 6, `Vec<Secuencia>` con structs del capítulo 5, o
+`Vec<String>` con identificadores de lecturas.
+
+## 7.2 `String` a fondo
+
+Ya conocemos la dualidad `&str` (préstamo de solo lectura) y `String` (dueño
+que crece). Volvamos sobre `String` con las operaciones de construcción que
+necesitarás en cada reporte:
+
+```rust
+fn main() {
+    let mut encabezado = String::from(">genA");
+    encabezado.push_str(" mini-gen de ejemplo");   // agrega texto
+    encabezado.push('\n');                         // agrega un carácter
+    println!("{}", encabezado);
+
+    let id = "genB";
+    let descripcion = "región codificante";
+    let linea = format!(">{} {}", id, descripcion); // junta sin mover nada
+    println!("{}", linea);
+}
+// >genA mini-gen de ejemplo
+//
+// >genB región codificante
+```
+
+`format!` es el caballo de batalla: construye un `String` nuevo con la misma
+sintaxis de `println!`, sin apropiarse de sus ingredientes. En cambio, el
+operador `+` **consume** su operando izquierdo (`encabezado + otro` mueve
+`encabezado`, capítulo 4), así que en código nuevo verás casi siempre
+`format!` o `push_str`.
+
+Para examinar texto, los métodos clave son `chars()` (itera caracteres),
+`bytes()` (itera bytes crudos), `to_uppercase()`/`to_lowercase()` (devuelven
+un `String` nuevo) y `trim()` (quita espacios y saltos de línea de los
+extremos — oro puro al leer archivos, próximo capítulo grande):
+
+```rust
+fn main() {
+    let linea_sucia = "  atgccc\n";
+    let limpia = linea_sucia.trim().to_uppercase();
+    println!("'{}' -> '{}'", linea_sucia, limpia);
+    println!("¿Está vacía? {}", limpia.is_empty());
+}
+// '  atgccc
+// ' -> 'ATGCCC'
+// ¿Está vacía? false
+```
+
+## 7.3 `HashMap<K, V>`: la tabla de asociación
+
+Un `HashMap` asocia claves con valores: "por cada base, su conteo"; "por
+cada k-mer, sus apariciones"; "por cada especie, sus registros". Se crea con
+`HashMap::new()` (agregando `use std::collections::HashMap;` arriba del
+archivo) y se llena con `insert`:
+
+```rust
+use std::collections::HashMap;
+
+fn main() {
+    let mut masas = HashMap::new(); // aminoácido -> masa monoisotópica (Da)
+    masas.insert('G', 57.02);
+    masas.insert('A', 71.04);
+    masas.insert('S', 87.03);
+
+    match masas.get(&'G') {
+        Some(masa) => println!("La glicina pesa {} Da", masa),
+        None => println!("aminoácido desconocido"),
+    }
+    println!("¿Tenemos la W (triptófano)? {}", masas.contains_key(&'W'));
+}
+// La glicina pesa 57.02 Da
+// ¿Tenemos la W (triptófano)? false
+```
+
+`.get(clave)` devuelve `Option<&V>` — la clave puede no estar, y ya sabes
+exactamente cómo lidiar con eso. Reinsertar una clave existente **reemplaza**
+su valor. Para recorrer, un `for` sobre pares `(clave, valor)`:
+
+```rust
+for (aa, masa) in &masas {
+    println!("{} = {} Da", aa, masa);
+}
+```
+
+con una advertencia importante: el orden de recorrido de un `HashMap` es
+**arbitrario** y cambia entre ejecuciones. Para reportes ordenados alfabética
+o numéricamente, su primo `BTreeMap` mantiene las claves ordenadas siempre
+—misma API, distinta estructura interna.
+
+### El patrón `entry`: contar sin mirar dos veces
+
+Contar frecuencias choca con un problema de gallina y huevo: si la clave aún
+no existe hay que insertarla con 1, y si existe hay que sumarle 1. El patrón
+`entry` lo resuelve en una línea:
+
+```rust
+use std::collections::HashMap;
+
+fn contar_bases(dna: &str) -> HashMap<char, usize> {
+    let mut conteo = HashMap::new();
+    for base in dna.chars() {
+        let contador = conteo.entry(base).or_insert(0);
+        *contador += 1;
+    }
+    conteo
+}
+
+fn main() {
+    let conteo = contar_bases("ATGGCCTTTTAA");
+    for (base, n) in &conteo {
+        println!("{}: {}", base, n);
+    }
+}
+// A: 3
+// T: 5
+// G: 2
+// C: 2
+```
+
+La línea mágica es `conteo.entry(base).or_insert(0)`: busca la entrada de
+`base` y, si no existe, la crea con 0; cualquiera sea el caso, devuelve una
+**referencia mutable** al contador (`&mut usize`), que desreferenciamos con
+`*` para incrementarla. Compara esto con las cuatro variables contadoras del
+ejercicio 3.3: mismo resultado, pero sin límite de categorías ni código
+duplicado — funciona igual con 4 bases, 20 aminoácidos o 4ⁿ k-mers.
+
+## 7.4 Contar k-mers
+
+Los k-mers (subsecuencias de longitud k) son la unidad de trabajo de la
+genómica moderna: ensambladores, búsquedas de especies en metagenómica y
+detección de sesgos de secuenciación se construyen sobre conteos de k-mers.
+Nuestra versión recorre ventanas de tamaño k con slices:
+
+```rust
+use std::collections::HashMap;
+
+fn contar_kmers(dna: &str, k: usize) -> HashMap<String, usize> {
+    let mut kmers = HashMap::new();
+    if k == 0 || dna.len() < k {
+        return kmers; // nada que contar
+    }
+    for i in 0..=(dna.len() - k) {
+        let kmer = &dna[i..i + k];
+        *kmers.entry(kmer.to_string()).or_insert(0) += 1;
+    }
+    kmers
+}
+
+fn main() {
+    let conteo = contar_kmers("ATGGCCTTTTAA", 3);
+    println!("Hay {} k-mers distintos", conteo.len());
+    println!("El k-mer TTT aparece {} veces", conteo["TTT"]);
+}
+// Hay 9 k-mers distintos
+// El k-mer TTT aparece 2 veces
+```
+
+Dos novedades. La cláusula de guarda del inicio evita rangos imposibles
+(cuando la secuencia es más corta que k): nota cómo devolver temprano un
+`HashMap` vacío simplifica el resto. Y `conteo["TTT"]` es el acceso índice
+por clave —pánico si la clave no existe; su versión segura es
+`conteo.get("TTT")`, de nuevo un `Option`.
+
+## 7.5 Proyecto del capítulo: traducción con tabla de codones
+
+La pieza central de la biología molecular también es un problema de
+asociación: el código genético mapea cada triplete de ADN a un aminoácido.
+Con un `HashMap` y las ventanas de 3 en 3 (`step_by`), nuestro mini-gen se
+convierte en proteína:
+
+```rust
+use std::collections::HashMap;
+
+fn tabla_codones() -> HashMap<&'static str, char> {
+    // subconjunto ilustrativo; el ejercicio 7.5 te reta a completarla
+    HashMap::from([
+        ("ATT", 'I'), ("GCT", 'A'), ("GCC", 'A'), ("GCA", 'A'),
+        ("TTC", 'F'), ("TTT", 'F'), ("ATG", 'M'), ("TGG", 'W'),
+        ("GAA", 'E'), ("CAA", 'Q'), ("TAA", '*'), ("TAG", '*'),
+        ("TGA", '*'),
+    ])
+}
+
+fn traducir(dna: &str) -> String {
+    let tabla = tabla_codones();
+    let mut proteina = String::new();
+
+    for i in (0..dna.len()).step_by(3) {
+        if i + 3 > dna.len() {
+            break; // el final no completa un codón: se ignora
+        }
+        let codon = &dna[i..i + 3];
+        let aa = tabla.get(codon).copied().unwrap_or('X'); // 'X' = desconocido
+        proteina.push(aa);
+    }
+    proteina
+}
+
+fn main() {
+    let gen = "ATGGCCTTTTAA";
+    println!("ADN:      {}", gen);
+    println!("Proteína: {}", traducir(gen));
+}
+// ADN:      ATGGCCTTTTAA
+// Proteína: MAF*
+```
+
+Repasemos lo que hace `traducir`: recorre índices de 3 en 3 (el marco de
+lectura), corta el codón con un slice, lo busca en la tabla y agrega el
+aminoácido a la proteína. `.copied()` convierte el `Option<&char>` del
+`get` en `Option<char>`, y `unwrap_or('X')` traduce los codones que no
+están en la tabla como 'X' — la convención estándar para aminoácido
+desconocido. Para `ATGGCCTTTTAA`: ATG→M, GCC→A, TTT→F, TAA→\*, la proteína
+`MAF*`, metionina–alanina–fenilalanina–paro. El dogma central, en 30 líneas
+de Rust.
+
+## 7.6 ¿Qué estructura elegir?
+
+| Estructura | Orden | Acceso | Uso biológico típico |
+|------------|-------|--------|----------------------|
+| `Vec<T>` | por posición | índice O(1) | lista de lecturas, de bases, de muestras |
+| `String` | por posición | índice O(1) | secuencias que se construyen dinámicamente |
+| `HashMap<K,V>` | ninguno | clave O(1) | conteos: bases, k-mers, aminoácidos |
+| `BTreeMap<K,V>` | por clave | clave O(log n) | conteos que deben imprimirse ordenados |
+
+Regla rápida: si tu dato tiene "posición natural" (una secuencia es una
+lista ordenada), usa `Vec` o `String`; si tu pregunta es "¿cuántas veces
+aparece X?" o "¿qué valor corresponde a X?", usa `HashMap`, y cambia a
+`BTreeMap` cuando el orden de salida importe.
+
+## Ejercicios
+
+### Ejercicio 7.1 · Conteo ordenado
+
+Usando `contar_bases`, imprime el conteo de `ATGGCCTTTTAA` **ordenado
+alfabéticamente** por base. Pista: recolecta las claves en un `Vec`,
+ordénalo con `.sort()` y consulta el mapa dentro del `for`.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+use std::collections::HashMap;
+
+fn contar_bases(dna: &str) -> HashMap<char, usize> {
+    let mut conteo = HashMap::new();
+    for base in dna.chars() {
+        *conteo.entry(base).or_insert(0) += 1;
+    }
+    conteo
+}
+
+fn main() {
+    let conteo = contar_bases("ATGGCCTTTTAA");
+    let mut bases: Vec<char> = conteo.keys().copied().collect();
+    bases.sort();
+
+    for base in bases {
+        println!("{}: {}", base, conteo[&base]);
+    }
+}
+// A: 3
+// C: 2
+// G: 2
+// T: 5
+```
+
+`.keys()` itera las claves, `.copied()` convierte `&char` en `char`,
+`.collect()` junta todo en un `Vec` (el capítulo 10 explica esta orquesta
+completa) y `.sort()` ordena en su lugar. La alternativa de una línea es
+usar `BTreeMap` desde el inicio: `let conteo: BTreeMap<char, usize> =
+...`, y su recorrido ya sale ordenado.
+
+</details>
+
+### Ejercicio 7.2 · El k-mer más frecuente
+
+Escribe `fn kmer_dominante(dna: &str, k: usize) -> (String, usize)` que
+devuelva el k-mer más frecuente y su conteo. Pista: recorre el mapa y
+conserva el mejor par con un `if`. Prueba con k=3 en `ATGGCCTTTTAA`.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+use std::collections::HashMap;
+
+fn contar_kmers(dna: &str, k: usize) -> HashMap<String, usize> {
+    let mut kmers = HashMap::new();
+    if k == 0 || dna.len() < k {
+        return kmers;
+    }
+    for i in 0..=(dna.len() - k) {
+        let kmer = &dna[i..i + k];
+        *kmers.entry(kmer.to_string()).or_insert(0) += 1;
+    }
+    kmers
+}
+
+fn kmer_dominante(dna: &str, k: usize) -> (String, usize) {
+    let conteo = contar_kmers(dna, k);
+    let mut mejor = (String::new(), 0);
+
+    for (kmer, n) in conteo {
+        if n > mejor.1 {
+            mejor = (kmer, n);
+        }
+    }
+    mejor
+}
+
+fn main() {
+    let (kmer, n) = kmer_dominante("ATGGCCTTTTAA", 3);
+    println!("El k-mer dominante es {} ({} veces)", kmer, n);
+}
+// El k-mer dominante es TTT (2 veces)
+```
+
+La función devuelve una **tupla** `(String, usize)`, que `main` desempaca
+en `kmer` y `n`. En secuencias reales, el k-mer dominante suele ser un
+satélite repetido o un artefacto de PCR; en metagenómica comparativa, los
+perfiles de k-mers son la firma de cada especie.
+
+</details>
+
+### Ejercicio 7.3 · Lote de secuencias
+
+Crea tres `Secuencia` (capítulo 5) en un `Vec` y escribe un `for` que
+imprima el id y el contenido GC de cada una, señalando al final cuál tiene
+el mayor contenido GC.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+struct Secuencia {
+    id: String,
+    bases: String,
+}
+
+impl Secuencia {
+    fn nueva(id: &str, bases: &str) -> Secuencia {
+        Secuencia { id: String::from(id), bases: String::from(bases) }
+    }
+
+    fn contenido_gc(&self) -> f64 {
+        let g = self.bases.matches('G').count();
+        let c = self.bases.matches('C').count();
+        (g + c) as f64 / self.bases.len() as f64 * 100.0
+    }
+}
+
+fn main() {
+    let secuencias = vec![
+        Secuencia::nueva("gc_rica", "GCCGGCCTTAAGGC"),
+        Secuencia::nueva("at_rica", "ATTAATATTAAT"),
+        Secuencia::nueva("mixta", "ATGGCCTTTTAA"),
+    ];
+
+    let mut mejor_id = String::new();
+    let mut mejor_gc = -1.0;
+
+    for s in &secuencias {
+        let gc = s.contenido_gc();
+        println!("{}: {:.1}% GC", s.id, gc);
+        if gc > mejor_gc {
+            mejor_gc = gc;
+            mejor_id = s.id.clone();
+        }
+    }
+    println!("Mayor contenido GC: {} ({:.1}%)", mejor_id, mejor_gc);
+}
+// gc_rica: 71.4% GC
+// at_rica: 0.0% GC
+// mixta: 41.7% GC
+// Mayor contenido GC: gc_rica (71.4%)
+```
+
+El recorrido es **prestado** (`&secuencias`), así que el `Vec` conserva sus
+secuencias para el reporte final. `mejor_id` guarda un clon del id ganador
+porque `s` (prestado) no puede ceder la propiedad de su campo en medio del
+bucle. Verifica a mano: `GCCGGCCTTAAGGC` tiene 10 GC de 14 bases ≈ 71.4%.
+
+</details>
+
+### Ejercicio 7.4 · Encabezados FASTA limpios
+
+Una línea de encabezado FASTA llega como `"  >genX |  región hipotética  "`
+(con espacios sobrantes). Escribe código que la normalice a
+`">genX región hipotética"` usando `trim()`, y que construya con `format!`
+un bloque FASTA completo (encabezado + secuencia) para `ATGGCCTTTTAA`.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+fn main() {
+    let crudo = "  >genX |  región hipotética  ";
+    let limpio = crudo.trim().replace(" |  ", " ");
+    let secuencia = "ATGGCCTTTTAA";
+
+    let registro_fasta = format!("{}\n{}", limpio, secuencia);
+    println!("{}", registro_fasta);
+}
+// >genX región hipotética
+// ATGGCCTTTTAA
+```
+
+`trim()` limpia los extremos y `replace` normaliza el separador interno;
+`\n` en un `String` es el salto de línea. El bloque resultante es un FASTA
+válido listo para escribirse a disco —exactamente lo que haremos en el
+capítulo 12— y para leerlo con cualquier herramienta del laboratorio.
+
+</details>
+
+### Ejercicio 7.5 · Completa el código genético
+
+Amplía `tabla_codones` hasta cubrir los 64 codones estándar (busca "tabla
+de codones ADN" en tu texto de genética favorito) y traduce
+`ATGTGGGAACAA` (pista: M, W, E, Q... y el `*` final si le agregas un paro).
+Como verificación de sanidad: `ATG` siempre debe mapear a `M`, los seis
+serina (TCT, TCC, TCA, TCG, AGT, AGC) a `S`, y los tres paros a `*`.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+use std::collections::HashMap;
+
+fn tabla_codones() -> HashMap<&'static str, char> {
+    HashMap::from([
+        ("TTT", 'F'), ("TTC", 'F'), ("TTA", 'L'), ("TTG", 'L'),
+        ("CTT", 'L'), ("CTC", 'L'), ("CTA", 'L'), ("CTG", 'L'),
+        ("ATT", 'I'), ("ATC", 'I'), ("ATA", 'I'), ("ATG", 'M'),
+        ("GTT", 'V'), ("GTC", 'V'), ("GTA", 'V'), ("GTG", 'V'),
+        ("TCT", 'S'), ("TCC", 'S'), ("TCA", 'S'), ("TCG", 'S'),
+        ("CCT", 'P'), ("CCC", 'P'), ("CCA", 'P'), ("CCG", 'P'),
+        ("ACT", 'T'), ("ACC", 'T'), ("ACA", 'T'), ("ACG", 'T'),
+        ("GCT", 'A'), ("GCC", 'A'), ("GCA", 'A'), ("GCG", 'A'),
+        ("TAT", 'Y'), ("TAC", 'Y'), ("TAA", '*'), ("TAG", '*'),
+        ("CAT", 'H'), ("CAC", 'H'), ("CAA", 'Q'), ("CAG", 'Q'),
+        ("AAT", 'N'), ("AAC", 'N'), ("AAA", 'K'), ("AAG", 'K'),
+        ("GAT", 'D'), ("GAC", 'D'), ("GAA", 'E'), ("GAG", 'E'),
+        ("TGT", 'C'), ("TGC", 'C'), ("TGA", '*'), ("TGG", 'W'),
+        ("CGT", 'R'), ("CGC", 'R'), ("CGA", 'R'), ("CGG", 'R'),
+        ("AGT", 'S'), ("AGC", 'S'), ("AGA", 'R'), ("AGG", 'R'),
+        ("GGT", 'G'), ("GGC", 'G'), ("GGA", 'G'), ("GGG", 'G'),
+    ])
+}
+
+fn traducir(dna: &str) -> String {
+    let tabla = tabla_codones();
+    let mut proteina = String::new();
+    for i in (0..dna.len()).step_by(3) {
+        if i + 3 > dna.len() {
+            break;
+        }
+        let aa = tabla.get(&dna[i..i + 3]).copied().unwrap_or('X');
+        proteina.push(aa);
+    }
+    proteina
+}
+
+fn main() {
+    println!("{} -> {}", "ATGTGGGAACAA", traducir("ATGTGGGAACAA"));
+    println!("{} -> {}", "ATGGCCTTTTAATGA", traducir("ATGGCCTTTTAATGA"));
+}
+// ATGTGGGAACAA -> MWEQ
+// ATGGCCTTTTAATGA -> MAF**
+```
+
+La tabla completa son 64 entradas y sigue cabiendo cómodamente en una
+pantalla; el patrón (mapa + ventana + búsqueda) no cambia. Con esto tienes
+un traductor de genes funcional, y queda lista la pieza central del analizador del
+proyecto final. ¿Notaste el `MAF**`? La secuencia tiene dos codones de paro
+consecutivos: la traducción estándar se detiene en el primero, pero
+nuestra versión los imprime todos — un detalle que podrás refinar cuando
+los ejercicios del capítulo 15 lo pidan.
+
+</details>

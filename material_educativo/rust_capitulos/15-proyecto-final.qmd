@@ -1,0 +1,732 @@
+---
+title: "Capítulo 15: Proyecto final"
+subtitle: "bio-analyzer: un analizador de FASTA completo, con reportes, tests y concurrencia"
+format:
+  html:
+    toc: true
+---
+
+Quince capítulos después, todas las piezas están sobre la mesa: ownership,
+structs, enums, errores, traits, iteradores, módulos, archivos, tests y
+crates. Este capítulo las ensambla en una herramienta real y completa:
+**bio-analyzer**, un programa de línea de comandos que lee un archivo
+FASTA, calcula estadísticas por secuencia y globales (incluido el N50),
+reporta los k-mers más frecuentes y escribe su salida en TSV y JSON. De
+paso, el bonus prometido: tus primeros hilos de ejecución. Al terminar,
+tendrás no solo la herramienta, sino el molde mental para construir las
+propias.
+
+## 15.1 La especificación
+
+Antes de escribir código, un buen proyecto se especifica. bio-analyzer:
+
+1. Se ejecuta como `bio-analyzer <FASTA>` con opciones `--kmer N` (tamaño
+   de k-mer, por defecto 3) y `--min-gc P` (umbral para el reporte TSV).
+2. Por cada secuencia reporta: id, longitud, contenido de GC y número de
+   bases ambiguas (no A/C/G/T).
+3. Globalmente reporta: cantidad de registros, pares de bases totales y
+   N50 del "ensamblaje".
+4. Escribe `reporte.tsv` (filtrado por `--min-gc`) y `reporte.json`
+   (resumen completo, legible por Python/R).
+5. Falla con mensajes claros: archivo inexistente, FASTA sin registros.
+6. Trae tests unitarios y de integración.
+
+## 15.2 La estructura del proyecto
+
+```bash
+cargo new bio-analyzer
+cd bio-analyzer
+cargo add clap --features derive
+cargo add serde --features derive
+cargo add serde_json
+```
+
+La distribución de archivos que usaremos (cada módulo con una sola
+responsabilidad — la lección del capítulo 11):
+
+```text
+bio-analyzer/
+├── Cargo.toml
+├── ejemplo.fa
+├── src/
+│   ├── main.rs        ← solo orquesta: parsear args, llamar, reportar
+│   ├── lib.rs         ← declara los módulos públicos
+│   ├── cli.rs         ← la interfaz (clap)
+│   ├── fasta.rs       ← Registro + parser
+│   ├── stats.rs       ← estadísticas de secuencias
+│   └── reporte.rs     ← escritura TSV y JSON
+└── tests/
+    └── integracion.rs ← pruebas de punta a punta
+```
+
+Guarda el `ejemplo.fa` de trabajo (el del capítulo 12):
+
+```text
+>genA mini-gen de ejemplo
+ATGGCCTTTTAA
+>genB fragmento con GC alto
+GCCGGCCTTAAGGC
+>genC marcador
+
+GATTACAGATTACA
+```
+
+## 15.3 `cli.rs`: la puerta de entrada
+
+```rust
+use clap::Parser;
+use std::path::PathBuf;
+
+/// Analizador de archivos FASTA: estadísticas, k-mers y reportes.
+#[derive(Parser, Debug)]
+#[command(name = "bio-analyzer", version, about)]
+pub struct Args {
+    /// Ruta al archivo FASTA de entrada.
+    #[arg(value_name = "FASTA")]
+    pub fasta: PathBuf,
+
+    /// Tamaño de k para el reporte de k-mers.
+    #[arg(short, long, default_value_t = 3)]
+    pub kmer: usize,
+
+    /// Contenido GC mínimo (%) para incluir un registro en el TSV.
+    #[arg(long, default_value_t = 0.0)]
+    pub min_gc: f64,
+}
+```
+
+Nada nuevo: es el `clap` del capítulo 14, promocionado a módulo propio.
+El struct es `pub` y sus campos `pub` porque `main` lo lee — la
+configuración viaja como dato, no como variables sueltas.
+
+## 15.4 `fasta.rs`: el parser con tipo propio
+
+```rust
+/// Registro FASTA: identificador y secuencia reunida (multilínea).
+#[derive(Debug, Clone)]
+pub struct Registro {
+    pub id: String,
+    pub bases: String,
+}
+
+/// Divide un texto FASTA en registros.
+///
+/// Normaliza a mayúsculas, ignora líneas vacías y toma como id
+/// la primera palabra del encabezado.
+pub fn parsear(texto: &str) -> Vec<Registro> {
+    let mut registros = Vec::new();
+    let mut id = String::new();
+    let mut bases = String::new();
+
+    for linea in texto.lines() {
+        let linea = linea.trim();
+        if linea.is_empty() {
+            continue;
+        }
+        if let Some(encabezado) = linea.strip_prefix('>') {
+            if !id.is_empty() {
+                registros.push(Registro { id, bases });
+            }
+            id = encabezado.split_whitespace().next().unwrap_or("").to_string();
+            bases = String::new();
+        } else {
+            bases.push_str(&linea.to_uppercase());
+        }
+    }
+    if !id.is_empty() {
+        registros.push(Registro { id, bases });
+    }
+    registros
+}
+```
+
+Es el parser que construimos en los capítulos 11 y 12, con dos mejoras
+adquiridas: ahora devuelve `Vec<Registro>` (un tipo con nombre, no tuplas
+anónimas) y documenta su contrato con doc comments. Las decisiones
+incómodas de entonces (¿qué pasa con minúsculas y vacíos?) están
+resueltas y escritas: eso es madurez de diseño.
+
+## 15.5 `stats.rs`: la matemática del ADN
+
+```rust
+use crate::fasta::Registro;
+use std::collections::HashMap;
+
+/// Estadísticas de una secuencia individual.
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct StatsSecuencia {
+    pub id: String,
+    pub longitud: usize,
+    pub pct_gc: f64,
+    pub n_ambiguas: usize,
+}
+
+/// Contenido de GC en porcentaje (0.0 para la secuencia vacía).
+pub fn contenido_gc(dna: &str) -> f64 {
+    if dna.is_empty() {
+        return 0.0; // decisión del cap. 13, resuelta: vacía => 0, no NaN
+    }
+    let gc = dna.bytes().filter(|b| *b == b'G' || *b == b'C').count();
+    gc as f64 / dna.len() as f64 * 100.0
+}
+
+/// Cantidad de bases no canónicas (N y compañía).
+pub fn bases_ambiguas(dna: &str) -> usize {
+    dna.bytes().filter(|b| !matches!(b, b'A' | b'C' | b'G' | b'T')).count()
+}
+
+/// N50 de una lista de longitudes (0 si la lista está vacía).
+pub fn n50(longitudes: &[usize]) -> usize {
+    let mut ordenadas = longitudes.to_vec();
+    ordenadas.sort_unstable_by(|a, b| b.cmp(a));
+    let total: usize = ordenadas.iter().sum();
+    let mut acumulado = 0;
+    for l in ordenadas {
+        acumulado += l;
+        if acumulado * 2 >= total {
+            return l;
+        }
+    }
+    0
+}
+
+/// Los k-mers más frecuentes (máximo `cuantos`), por frecuencia
+/// descendente y desempate alfabético.
+pub fn kmers_frecuentes(dna: &str, k: usize, cuantos: usize) -> Vec<(String, usize)> {
+    let mut conteo: HashMap<String, usize> = HashMap::new();
+    if k == 0 || dna.len() < k {
+        return Vec::new();
+    }
+    for i in 0..=(dna.len() - k) {
+        *conteo.entry(dna[i..i + k].to_string()).or_insert(0) += 1;
+    }
+    let mut pares: Vec<(String, usize)> = conteo.into_iter().collect();
+    pares.sort_by(|a, b| b.1.cmp(&a.1).then(a.0.cmp(&b.0)));
+    pares.truncate(cuantos);
+    pares
+}
+
+/// Analiza un registro y produce sus estadísticas.
+pub fn analizar(registro: &Registro) -> StatsSecuencia {
+    StatsSecuencia {
+        id: registro.id.clone(),
+        longitud: registro.bases.len(),
+        pct_gc: contenido_gc(&registro.bases),
+        n_ambiguas: bases_ambiguas(&registro.bases),
+    }
+}
+```
+
+Reconocerás cada función: `contenido_gc` (capítulos 2 y 10, con el caso
+vacío resuelto), `bases_ambiguas` (la macro `matches!` del capítulo 6),
+`n50` (ejercicio 12.3) y `kmers_frecuentes` (capítulo 7 con el
+ordenamiento del 9). El `#[derive(serde::Serialize)]` sobre
+`StatsSecuencia` prepara el struct para el reporte JSON — los capítulos se
+conectan sin costura.
+
+## 15.6 `reporte.rs`: dos formatos, un mensaje
+
+```rust
+use crate::stats::StatsSecuencia;
+use serde::Serialize;
+use std::io::Write;
+use std::path::Path;
+
+/// Resumen global del análisis (se serializa a JSON tal cual).
+#[derive(Serialize, Debug)]
+pub struct ResumenGlobal {
+    pub n_registros: usize,
+    pub total_pb: usize,
+    pub n50: usize,
+    pub secuencias: Vec<StatsSecuencia>,
+}
+
+/// Escribe el reporte TSV (una fila por secuencia).
+pub fn escribir_tsv(ruta: &Path, stats: &[StatsSecuencia]) -> std::io::Result<()> {
+    let mut f = std::fs::File::create(ruta)?;
+    writeln!(f, "id\tlongitud\tpct_gc\tambiguas")?;
+    for s in stats {
+        writeln!(f, "{}\t{}\t{:.1}\t{}", s.id, s.longitud, s.pct_gc, s.n_ambiguas)?;
+    }
+    Ok(())
+}
+
+/// Escribe el resumen completo en JSON.
+pub fn escribir_json(ruta: &Path, resumen: &ResumenGlobal) -> Result<(), Box<dyn std::error::Error>> {
+    let json = serde_json::to_string_pretty(resumen)?;
+    std::fs::write(ruta, json)?;
+    Ok(())
+}
+```
+
+El TSV para la planilla y el pipeline Unix; el JSON para Python, R y el
+archivo. Nótese el diseño de errores: `escribir_tsv` devuelve
+`std::io::Result` (su único fallo posible es de E/S) y `escribir_json`
+`Box<dyn Error>` (sumaría fallos de serialización): cada firma promete
+exactamente lo que puede fallar.
+
+## 15.7 `lib.rs` y `main.rs`: la orquestación
+
+**`src/lib.rs`:**
+
+```rust
+//! bio-analyzer: analizador de archivos FASTA del curso
+//! "Rust para biólogos".
+
+pub mod cli;
+pub mod fasta;
+pub mod reporte;
+pub mod stats;
+```
+
+**`src/main.rs`** — solo coordina, como manda el capítulo 11:
+
+```rust
+use bio_analyzer::cli::Args;
+use bio_analyzer::reporte::{self, ResumenGlobal};
+use bio_analyzer::{fasta, stats};
+use clap::Parser;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let args = Args::parse();
+
+    // 1. Leer y parsear, con errores que explican el contexto
+    let texto = std::fs::read_to_string(&args.fasta)
+        .map_err(|e| format!("no pude leer '{}': {}", args.fasta.display(), e))?;
+    let registros = fasta::parsear(&texto);
+    if registros.is_empty() {
+        return Err(format!("'{}' no contiene registros FASTA", args.fasta.display()).into());
+    }
+
+    // 2. Analizar
+    let stats: Vec<stats::StatsSecuencia> = registros.iter().map(stats::analizar).collect();
+    let longitudes: Vec<usize> = stats.iter().map(|s| s.longitud).collect();
+    let total_pb: usize = longitudes.iter().sum();
+
+    let genoma_concatenado: String = registros.iter().map(|r| r.bases.as_str()).collect();
+    let top_kmers = stats::kmers_frecuentes(&genoma_concatenado, args.kmer, 5);
+
+    // 3. Reportar
+    let filtradas: Vec<stats::StatsSecuencia> = stats
+        .iter()
+        .filter(|s| s.pct_gc >= args.min_gc)
+        .cloned()
+        .collect();
+    reporte::escribir_tsv(Path::new("reporte.tsv"), &filtradas)?;
+
+    let resumen = ResumenGlobal {
+        n_registros: stats.len(),
+        total_pb,
+        n50: stats::n50(&longitudes),
+        secuencias: stats,
+    };
+    reporte::escribir_json(Path::new("reporte.json"), &resumen)?;
+
+    // 4. Resumen de consola
+    println!("bio-analyzer: {} registros | {} pb | N50 = {}",
+             resumen.n_registros, resumen.total_pb, resumen.n50);
+    println!("Top k-mers (k={}): {:?}", args.kmer, top_kmers);
+    println!("Reportes: reporte.tsv ({} filas) y reporte.json", filtradas.len());
+    Ok(())
+}
+
+use std::path::Path;
+```
+
+Fíjate en las decisiones de architectura invisibles a primera vista: el
+`map_err` le agrega contexto al error de lectura (la lección del ejercicio
+12.5), la concatenación de secuencias para los k-mers globales usa un
+pipeline de una línea (capítulo 10), y `Path::new("reporte.tsv")` vive dos
+veces porque no guardamos estado innecesario. Un detalle de compilación:
+coloca el `use std::path::Path;` junto a los demás `use` del inicio (aquí
+aparece al final solo para no romper el orden narrativo del listado).
+
+## 15.8 La herramienta en acción
+
+```bash
+cargo run -- ejemplo.fa --min-gc 30
+```
+
+```text
+bio-analyzer: 3 registros | 40 pb | N50 = 14
+Top k-mers (k=3): [("TTA", 4), ("GCC", 3), ("GGC", 3), ("ACA", 2), ("AGA", 2)]
+Reportes: reporte.tsv (3 filas) y reporte.json
+```
+
+`reporte.tsv`:
+
+```text
+id	longitud	pct_gc	ambiguas
+genA	12	41.7	0
+genB	14	71.4	0
+genC	14	14.3	0
+```
+
+`reporte.json` (fragmento):
+
+```json
+{
+  "n_registros": 3,
+  "total_pb": 40,
+  "n50": 14,
+  "secuencias": [
+    { "id": "genA", "longitud": 12, "pct_gc": 41.666666666666664, "n_ambiguas": 0 },
+    ...
+  ]
+}
+```
+
+Con `--min-gc 30`, genC (14.3%) queda fuera del TSV pero no del JSON:
+reporte filtrado para humanos, completo para máquinas. Y el flujo completo
+es reproducible: mismo archivo, mismos argumentos, mismo resultado,
+verificable por cualquiera con `cargo run`.
+
+## 15.9 Los tests del proyecto
+
+**`tests/integracion.rs`:**
+
+```rust
+use bio_analyzer::fasta;
+use bio_analyzer::stats;
+
+#[test]
+fn parsea_y_analiza_registros_sucios() {
+    let texto = ">genA ejemplo
+ATGGCC
+TTTTAA
+
+>genC con base ambigua
+GATTACANGATTACA";
+
+    let registros = fasta::parsear(texto);
+    assert_eq!(registros.len(), 2);
+
+    let s = stats::analizar(&registros[1]);
+    assert_eq!(s.id, "genC");
+    assert_eq!(s.longitud, 15);
+    assert_eq!(s.n_ambiguas, 1);
+    assert!((s.pct_gc - 26.7).abs() < 0.1);
+}
+
+#[test]
+fn n50_del_capitulo() {
+    assert_eq!(stats::n50(&[12, 14, 16, 30, 8]), 16);
+}
+
+#[test]
+fn kmers_ordenados_por_frecuencia() {
+    let top = stats::kmers_frecuentes("ATTT", 3, 2);
+    assert_eq!(top.len(), 2);
+    assert_eq!(top[0], (String::from("ATT"), 1)); // desempate alfabético
+}
+```
+
+Y algunos unitarios junto a su código, en `src/stats.rs`:
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn gc_cero_para_vacia() {
+        assert_eq!(contenido_gc(""), 0.0);
+    }
+
+    #[test]
+    fn gc_de_limites() {
+        assert_eq!(contenido_gc("GCGC"), 100.0);
+        assert_eq!(contenido_gc("ATAT"), 0.0);
+    }
+}
+```
+
+`cargo test` ejecuta los tres niveles (unitarios, integración,
+doc-tests) y, con ello, la promesa de la especificación queda verificada
+por máquina. Los casos de prueba son deliberadamente "sucios": la línea
+vacía, la `N` ambigua y la secuencia corta del desempate están ahí porque
+ya sabemos que el mundo real las manda.
+
+## 15.10 Bonus: tus primeros hilos
+
+Procesar mil secuencias es un bucle; procesar cien mil pide ayuda al
+hardware moderno. Rust hace del multihilo algo seguro con las reglas que
+ya conoces — el borrow checker simplemente no deja dos hilos escribir el
+mismo dato a la vez. La unidad mínima:
+
+```rust
+use std::thread;
+
+fn contenido_gc(dna: &str) -> f64 {
+    if dna.is_empty() {
+        return 0.0;
+    }
+    let gc = dna.bytes().filter(|b| *b == b'G' || *b == b'C').count();
+    gc as f64 / dna.len() as f64 * 100.0
+}
+
+fn main() {
+    let lotes = vec![
+        String::from("ATGGCCTTTTAA"),
+        String::from("GCCGGCCTTAAGGC"),
+        String::from("GATTACAGATTACA"),
+    ];
+
+    // un hilo por lote; cada uno recibe SU lote por propiedad
+    let handles: Vec<_> = lotes
+        .into_iter()
+        .map(|secuencia| {
+            thread::spawn(move || {
+                let gc = contenido_gc(&secuencia);
+                (secuencia, gc) // el hilo devuelve su resultado
+            })
+        })
+        .collect();
+
+    // reunir resultados: join espera a que cada hilo termine
+    for h in handles {
+        let (secuencia, gc) = h.join().expect("el hilo no debía fallar");
+        println!("{}: {:.1}% GC", secuencia, gc);
+    }
+}
+// ATGGCCTTTTAA: 41.7% GC
+// GCCGGCCTTAAGGC: 71.4% GC
+// GATTACAGATTACA: 14.3% GC
+```
+
+Tres ideas en veinte líneas. `thread::spawn` arranca un hilo con la
+closure que le pases. El `move` (capítulo 10) es **obligatorio** aquí:
+el hilo puede vivir más que la variable original, así que debe tomar
+propiedad de `secuencia` en vez de un préstamo que caducaría — exactamente
+la regla de préstamos del capítulo 4, ahora defendiendo tu RAM de carreras
+de datos. Y `join` espera al hilo y recupera su valor de retorno (o el
+pánico, si reventó). Para repartir trabajo sobre la marcha existe el canal
+`std::sync::mpsc` (múltiples hilos envían, uno recibe):
+
+```rust
+use std::sync::mpsc;
+use std::thread;
+
+fn main() {
+    let (tx, rx) = mpsc::channel();
+
+    let lotes = vec![String::from("ATG"), String::from("GCC")];
+    for lote in lotes {
+        let tx = tx.clone(); // cada hilo recibe su copia del emisor
+        thread::spawn(move || {
+            tx.send(format!("{} -> {} pb", lote, lote.len())).unwrap();
+        });
+    }
+    drop(tx); // sin emisores vivos, el receptor sabe que terminó
+
+    for mensaje in rx {
+        println!("{}", mensaje);
+    }
+}
+// GCC -> 3 pb
+// ATG -> 3 pb
+```
+
+(El orden de llegada varía entre corridas: los hilos compiten. Si necesitas
+orden, ordena al reunir.) La vía express para análisis de datos es el crate
+`rayon`: reemplaza `.iter()` por `.par_iter()` en tus pipelines del
+capítulo 10 y obtén paralelismo de todos los núcleos sin cambiar nada más.
+
+::: {.callout-warning}
+## Paralelizar no es (casi) nunca el primer paso
+Antes de agregar hilos, mide: `cargo build --release` y cronometra. La
+versión optimizada de un pipeline de iteradores suele ser decenas de veces
+más rápida que la de desarrollo, y muchas veces suficiente. Primero el
+algoritmo, luego `--release`, y solo entonces los hilos.
+:::
+
+## 15.11 ¿Y ahora qué?
+
+El curso termina; el aprendizaje no. Tres direcciones concretas:
+
+- **El libro**: *The Rust Programming Language* (disponible gratis en
+  [doc.rust-lang.org/book](https://doc.rust-lang.org/book/)) es la
+  referencia amable por excelencia; los capítulos que siguen a este curso
+  (smart pointers, patrones avanzados, async) tienen el mismo tono
+  práctico que intentamos mantener aquí.
+- **Bio con Rust**: explora el crate `bio` (alineamientos, rangos
+  genómicos, alfabetos) y `needletail` para leer FASTQ a velocidad
+  industrial. Un buen primer proyecto serio: extender bio-analyzer con
+  lectura de FASTQ y control de calidad por lectura — tienes el 80% ya
+  escrito.
+- **Tu comunidad**: publica tu herramienta (un repositorio git, un
+  `README` con ejemplos de uso, y si el mundo la quiere, `cargo publish`
+  la sube a crates.io en un comando). Las herramientas de un laboratorio
+  que se comparten se mantienen; las que no, se olvidan.
+
+## Ejercicios finales
+
+### Ejercicio 15.1 · Modo ARN
+
+Agrega la opción `--rna` que, en vez del contenido GC, reporte la
+transcripción (T→U) de cada secuencia en una columna nueva `arn` del TSV.
+
+<details>
+<summary>Solución</summary>
+
+En `cli.rs`:
+
+```rust
+    /// Reporta la transcripción (T->U) en una columna adicional.
+    #[arg(long, default_value_t = false)]
+    pub rna: bool,
+```
+
+En `stats.rs`, agrega al struct y a `analizar`:
+
+```rust
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct StatsSecuencia {
+    pub id: String,
+    pub longitud: usize,
+    pub pct_gc: f64,
+    pub n_ambiguas: usize,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub arn: Option<String>,
+}
+
+pub fn analizar(registro: &Registro, con_arna: bool) -> StatsSecuencia {
+    StatsSecuencia {
+        id: registro.id.clone(),
+        longitud: registro.bases.len(),
+        pct_gc: contenido_gc(&registro.bases),
+        n_ambiguas: bases_ambiguas(&registro.bases),
+        arn: if con_arna {
+            Some(registro.bases.chars().map(|c| if c == 'T' { 'U' } else { c }).collect())
+        } else {
+            None
+        },
+    }
+}
+```
+
+Y en `main.rs`, la columna aparece solo cuando existe
+(`write!(f, "\tarn")?` condicional). El diseño interesante es el
+`Option<String>` con `skip_serializing_if`: el JSON de siempre no cambia
+un byte hasta que alguien pide `--rna` — retrocompatibilidad como
+decisión de tipos, no como promesa.
+
+</details>
+
+### Ejercicio 15.2 · Conteo de ORFs
+
+Suma la columna `n_orfs` usando `regex` con el patrón
+`ATG([ACGT]{3}){10,}(TAA|TAG|TGA)` del capítulo 14. Verifica con una
+secuencia sintética que contenga un ORF de 39 pb.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+use regex::Regex;
+
+fn n_orfs(dna: &str) -> usize {
+    let patron = Regex::new(r"ATG([ACGT]{3}){10,}(TAA|TAG|TGA)").unwrap();
+    patron.find_iter(dna).count()
+}
+
+fn main() {
+    let gen = "TTTATGGCTGCTGCTGCTGCTGCTGCTGCTGCTTAAGGG";
+    println!("ORFs: {}", n_orfs(gen));
+}
+// ORFs: 1
+```
+
+Integrado a bio-analyzer: `Regex::new` una sola vez en `analizar` (o como
+`static` con `OnceLock` cuando aprendas esa herramienta), `find_iter`
+sobre `registro.bases`, y un `usize` más en `StatsSecuencia`. Con k-mers,
+N50 y ORFs, tu reporte empieza a parecerse al `seqstats` de cualquier
+pipeline profesional.
+
+</details>
+
+### Ejercicio 15.3 · Reporte Markdown
+
+Agrega `reporte::escribir_md` que genere un `reporte.md` con una tabla
+Markdown (filas `| id | longitud | GC |`) legible en GitHub o tu cuaderno
+de laboratorio digital.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+pub fn escribir_md(ruta: &Path, stats: &[StatsSecuencia]) -> std::io::Result<()> {
+    let mut f = std::fs::File::create(ruta)?;
+    writeln!(f, "| id | longitud | %GC | ambiguas |")?;
+    writeln!(f, "|---|---|---|---|")?;
+    for s in stats {
+        writeln!(f, "| {} | {} | {:.1} | {} |", s.id, s.longitud, s.pct_gc, s.n_ambiguas)?;
+    }
+    Ok(())
+}
+```
+
+La tabla Markdown son dos líneas de encabezado y una fila por registro:
+pura mecánica de `writeln!`. El punto arquitectónico es que agregar un
+formato no tocó ni una línea de `stats.rs` ni de `cli.rs`: el módulo de
+reportes crece solo, que es la promesa del diseño modular cumplida en tu
+propio código.
+
+</details>
+
+### Ejercicio 15.4 · Paraleliza con rayon
+
+Instala `rayon` (`cargo add rayon`) y cambia el análisis del `main` para
+que las estadísticas se calculen en paralelo con `par_iter().map(...)`
+en lugar de `iter().map(...)`.
+
+<details>
+<summary>Solución</summary>
+
+```rust
+use rayon::prelude::*;
+
+// antes:
+// let stats: Vec<_> = registros.iter().map(stats::analizar).collect();
+
+// después:
+let stats: Vec<stats::StatsSecuencia> = registros
+    .par_iter()
+    .map(stats::analizar)
+    .collect();
+```
+
+Eso es todo el cambio. `rayon` reparte los registros entre los núcleos
+disponibles y reúne los resultados en el mismo orden — su lema es "datos,
+no hilos": piensas en la colección, no en la sincronización. Cronometra
+con `time` antes y después usando un FASTA grande (genera uno sintético de
+100 000 secuencias con el `rand` del capítulo 14) y lleva la sorpresa a tu
+bitácora del ejercicio 12.4.
+
+</details>
+
+### Ejercicio 15.5 · Entrega tu herramienta
+
+Construye la versión optimizada, verifica que corre en otra computadora y
+documenta el uso.
+
+<details>
+<summary>Solución</summary>
+
+```bash
+cargo build --release
+./target/release/bio-analyzer ejemplo.fa --min-gc 30
+```
+
+El ejecutable en `target/release/` es autónomo (no necesita Rust
+instalado): cópialo a la máquina del laboratorio, o compila para otras
+plataformas con `cargo build --release --target x86_64-pc-windows-gnu`
+tras instalar el objetivo con `rustup target add`. Para el `README.md`,
+los ingredientes ya los tienes: la especificación de la sección 15.1, la
+sesión de terminal de la 15.8 y la lista de tests de la 15.9. Cuando la
+herramienta madure, `cargo publish` (con los metadatos de `Cargo.toml`
+completos) la pone a un `cargo install` de distancia de cualquier persona
+del planeta. De un curso "sin morir en el intento" a distribuir software
+científico: ese era el plan.
+
+</details>

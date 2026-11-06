@@ -32,6 +32,8 @@ website:
       - href: biosistalks/biosistalks.qmd
       - href: material_educativo.qmd
         text: Material educativo
+      - href: suplementario.qmd
+        text: Servicios
 
     right: 
       - icon: instagram

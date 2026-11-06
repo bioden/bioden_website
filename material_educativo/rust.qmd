@@ -36,7 +36,7 @@ El curso tiene 15 capítulos agrupados en cuatro bloques. Cada capítulo termina
 ### Bloque I · Primeros pasos
 
 | Cap. | Título | Qué aprenderás |
-|-----------------|------------------|-------------------------------------|
+|----|----|----|
 | 1 | [¿Por qué Rust en biología?](rust_capitulos/01-introduccion.qmd) | Qué es Rust, cómo instalarlo, Cargo y tu primer programa |
 | 2 | [Variables, tipos y funciones](rust_capitulos/02-variables-tipos-funciones.qmd) | `let`, `mut`, tipos numéricos, `char`, funciones y tu primera función bioinformática |
 | 3 | [Control de flujo](rust_capitulos/03-control-de-flujo.qmd) | `if`, bucles, rangos y `match`: transcripción de ADN a ARN |
@@ -44,7 +44,7 @@ El curso tiene 15 capítulos agrupados en cuatro bloques. Cada capítulo termina
 ### Bloque II · El corazón de Rust
 
 | Cap. | Título | Qué aprenderás |
-|-----------------|------------------|-------------------------------------|
+|----|----|----|
 | 4 | [Posesión y préstamos](rust_capitulos/04-ownership-borrowing.qmd) | Ownership, referencias y slices: por qué Rust es seguro sin recolector de basura |
 | 5 | [Structs](rust_capitulos/05-structs.qmd) | Modelar secuencias, especímenes y lecturas con datos y métodos |
 | 6 | [Enums y Option](rust_capitulos/06-enums-option.qmd) | Variantes con datos y el tipo que eliminó el `null` |
@@ -54,7 +54,7 @@ El curso tiene 15 capítulos agrupados en cuatro bloques. Cada capítulo termina
 ### Bloque III · Rust intermedio
 
 | Cap. | Título | Qué aprenderás |
-|-----------------|------------------|-------------------------------------|
+|----|----|----|
 | 9 | [Traits y genéricos](rust_capitulos/09-traits-genericos.qmd) | Código reutilizable para ADN, ARN y proteínas sin duplicar |
 | 10 | [Iteradores y closures](rust_capitulos/10-iteradores-closures.qmd) | `map`, `filter`, `fold` y `zip`: pensar en pipelines de datos |
 | 11 | [Módulos](rust_capitulos/11-modulos-organizacion.qmd) | Organizar un proyecto bioinformático en varios archivos |
@@ -63,7 +63,7 @@ El curso tiene 15 capítulos agrupados en cuatro bloques. Cada capítulo termina
 ### Bloque IV · Diseño de un proyecto
 
 | Cap. | Título | Qué aprenderás |
-|-----------------|------------------|-------------------------------------|
+|----|----|----|
 | 13 | [Testing](rust_capitulos/13-testing-cargo.qmd) | `cargo test`, tests unitarios, de integración y doc-tests |
 | 14 | [Crates esenciales](rust_capitulos/14-crates-esenciales.qmd) | `rand`, `regex`, `serde` y `clap`: el ecosistema a tu favor |
 | 15 | [Proyecto final](rust_capitulos/15-proyecto-final.qmd) | `bio-analyzer`: un analizador de FASTA completo, con reportes y concurrencia |

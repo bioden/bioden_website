@@ -2,6 +2,7 @@
   {
     "listing": "/material_educativo.html",
     "items": [
+      "/material_educativo/rust.html",
       "/material_educativo/curso_python.html",
       "/material_educativo/curso_r.html",
       "/material_educativo/adicionales.html"

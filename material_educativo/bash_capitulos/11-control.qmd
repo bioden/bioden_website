@@ -1,0 +1,542 @@
+---
+title: "Capítulo 11: Estructuras de control: if, case, test"
+---
+
+# Capítulo 11: Estructuras de control: if, case, test
+
+Hasta ahora hemos usado Bash en **modo one-liner**: comandos sueltos unidos por pipes. Para escribir scripts realistas — pipelines que comprueban entradas, deciden qué hacer según la extensión de un archivo o validan precondiciones — necesitamos **estructuras de control**: `if`, `case` y el comando `test` que las alimenta.
+
+En este capítulo aprenderás a construir condiciones robustas en Bash: comparar enteros y cadenas, testear archivos (¿existe? ¿es legible? ¿es más nuevo que otro?), combinar condiciones con `&&`/`||`, escribir `case` para dispatching por patrón y entender los **exit codes** como columna vertebral del control de flujo. Verás ejemplos bioinformáticos reales: validar que un FASTA existe antes de indexarlo, comprobar argumentos de un script, decidir el comando según la extensión del archivo, etc.
+
+## 11.1. La estructura `if`
+
+```bash
+if [ condición ]; then
+    comandos
+elif [ condición2 ]; then
+    comandos
+else
+    comandos
+fi
+```
+
+- La palabra clave `then` va **en la línea siguiente** o tras un `;`.
+- `elif` y `else` son opcionales.
+- Se cierra con `fi` (que es `if` invertido).
+
+```bash
+if [[ -f "ref.fa" ]]; then
+    echo "El genoma existe"
+else
+    echo "Falta el genoma"
+fi
+```
+
+## 11.2. El comando `test` y sus sinónimos
+
+La **condición** dentro de `if` no es más que un comando que devuelve 0 (éxito) o 1-255 (fallo). `if` ejecuta los comandos del `then` si el comando devuelve 0. Hay tres formas equivalentes para hacer tests:
+
+| Forma | Compatibilidad | Notas |
+|-------|----------------|-------|
+| `test condición` | POSIX | La forma clásica, poco usada |
+| `[ condición ]` | POSIX | Equivale a `test`, requiere espacios alrededor de `[` y `]` |
+| `[[ condición ]]` | Bash/ksh/Zsh | Más seguro, soporta `&&`, `||`, `<`, `>` sin escapar, pattern matching con `=~` |
+
+::: callout-warning
+## Espacios obligatorios en `[` y `[[`
+Esto falla:
+```bash
+if [$a -gt 5]; then ...        # ERROR: [$a no es un comando válido
+```
+Esto funciona:
+```bash
+if [ "$a" -gt 5 ]; then ...    # OK
+```
+Los corchetes son **comandos**, no simples delimitadores. Necesitan espacios. Y **siempre** entrecomilla las variables para evitar errores si están vacías: `[ "$a" -gt 5 ]` en lugar de `[ $a -gt 5 ]`.
+:::
+
+### Por qué preferir `[[ ]]`
+
+- No hace falta entrecomillar variables: `[[ $a = "" ]]` es seguro.
+- Soporta `&&` y `||` dentro: `[[ -f "$f" && -r "$f" ]]`.
+- Soporta pattern matching: `[[ "$archivo" == *.fastq.gz ]]`.
+- Soporta regex: `[[ "$hostname" =~ ^node[0-9]+$ ]]`.
+
+Salvo que necesites scripts estrictamente POSIX, usa `[[ ]]`.
+
+## 11.3. Comparación de enteros
+
+| Operador | Significado |
+|----------|-------------|
+| `-eq` | equal (==) |
+| `-ne` | not equal (!=) |
+| `-lt` | less than (<) |
+| `-le` | less or equal (<=) |
+| `-gt` | greater than (>) |
+| `-ge` | greater or equal (>=) |
+
+```bash
+if [[ $# -gt 0 ]]; then echo "Tienes argumentos"; fi
+if [ "$1" -eq 1 ]; then echo "modo verboso"; fi
+```
+
+### Aritmética con `(( ))`
+
+Para comparaciones puramente numéricas, `(( ))` es más cómodo porque usa los operadores clásicos `<`, `>`, `==`:
+
+```bash
+a=10
+if (( a > 5 )); then echo "mayor"; fi
+(( a == 10 )) && echo "igual a 10"
+```
+
+Operador ternario:
+
+```bash
+edad=20
+(( edad >= 18 )) && echo "adulto" || echo "menor"
+```
+
+## 11.4. Comparación de cadenas
+
+| Operador | Significado |
+|----------|-------------|
+| `=` o `==` | Igual |
+| `!=` | Distinto |
+| `<` | Menor (orden lexicográfico) |
+| `>` | Mayor |
+| `-z s` | Cadena vacía |
+| `-n s` | Cadena no vacía |
+
+```bash
+if [[ "$1" == "verbose" ]]; then echo "Modo verboso activado"; fi
+if [[ -z "$muestra" ]]; then echo "Falta el nombre de muestra"; exit 1; fi
+```
+
+::: callout-warning
+## `==` vs `=`
+En `[ ]` POSIX, el estándar es `=` (un solo igual). En `[[ ]]` ambos funcionan. Para evitar confusiones, usa `==` en `[[ ]]` (más legible) y `=` en `[ ]`.
+:::
+
+## 11.5. Tests de archivos
+
+| Operador | Significado |
+|----------|-------------|
+| `-e archivo` | Existe (cualquier tipo) |
+| `-f archivo` | Es un archivo regular |
+| `-d archivo` | Es un directorio |
+| `-L archivo` o `-h` | Es un enlace simbólico |
+| `-r archivo` | Legible |
+| `-w archivo` | Escribible |
+| `-x archivo` | Ejecutable |
+| `-s archivo` | No está vacío (tiene tamaño > 0) |
+| `-O archivo` | Pertenece al usuario actual |
+| `-G archivo` | Pertenece al grupo actual |
+| `archivo1 -nt archivo2` | archivo1 más reciente que archivo2 |
+| `archivo1 -ot archivo2` | archivo1 más antiguo que archivo2 |
+| `archivo1 -ef archivo2` | Mismo archivo (mismo inodo) |
+
+```bash
+if [[ -f "alineado.bam" ]]; then echo "El BAM existe"; fi
+if [[ ! -f "alineado.bam.bai" ]]; then samtools index "alineado.bam"; fi
+if [[ "resultado.txt" -nt "input.txt" ]]; then echo "resultado más reciente"; fi
+```
+
+## 11.6. Operadores lógicos
+
+| Contexto | AND | OR | NOT |
+|----------|-----|----|-----|
+| `[ ]` (POSIX) | `-a` | `-o` | `!` |
+| `[[ ]]` (Bash) | `&&` | `||` | `!` |
+
+```bash
+# Forma POSIX
+if [ -f "$f" -a -r "$f" ]; then ...; fi
+
+# Forma Bash (preferida)
+if [[ -f "$f" && -r "$f" ]]; then ...; fi
+```
+
+::: callout-note
+## Evita `-a` y `-o`
+POSIX desaconseja `-a` y `-o` porque su comportamiento es ambiguo con expresiones complejas. Usa `[[ ]]` con `&&`/`||`, o encadena comandos `[ ]` con operadores del shell: `[ -f "$f" ] && [ -r "$f" ]`.
+:::
+
+## 11.7. La estructura `case`
+
+`case` ejecuta uno de varios bloques según el valor de una variable. Es la forma idiomática de Bash para hacer *dispatching*:
+
+```bash
+case "$var" in
+    patrón1)
+        comandos
+        ;;
+    patrón2|patrón3)
+        comandos
+        ;;
+    *)
+        comandos por defecto
+        ;;
+esac
+```
+
+- Cada patrón termina con `)`.
+- Cada bloque termina con `;;`.
+- `|` permite alternativas dentro de un mismo patrón.
+- `*)` es el *catch-all* por defecto.
+- Se cierra con `esac` (case invertido).
+
+### Patrones glob en `case`
+
+`case` usa **patrones glob** del shell (no regex):
+
+- `*` — cualquier cadena
+- `?` — un carácter
+- `[abc]` — un carácter de los listados
+- `[a-z]` — un carácter del rango
+
+```bash
+case "$ext" in
+    fa|fasta)    echo "FASTA" ;;
+    fq|fastq)    echo "FASTQ" ;;
+    f[a-z]?)     echo "formato desconocido que empieza por f" ;;
+    *)           echo "otro" ;;
+esac
+```
+
+## 11.8. Exit codes
+
+Cada comando devuelve un número entre 0 y 255 al terminar, llamado **exit code** o **status**. Por convenio:
+
+- **0** = éxito.
+- **1–255** = error (cada programa define el suyo).
+
+`$?` guarda el exit code del último comando:
+
+```bash
+grep "BRCA1" genes.txt
+echo "Exit code: $?"
+```
+
+Operadores de control basados en exit codes:
+
+| Operador | Significado |
+|----------|-------------|
+| `cmd1 && cmd2` | Ejecuta `cmd2` solo si `cmd1` tuvo éxito (exit 0) |
+| `cmd1 || cmd2` | Ejecuta `cmd2` solo si `cmd1` falló |
+| `cmd1 ; cmd2`  | Ejecuta `cmd2` siempre, sin importar el resultado |
+
+```bash
+mkdir -p resultados && samtools sort -o resultados/alineado.bam in.bam
+bwa index ref.fa || { echo "Falló la indexación"; exit 1; }
+fastqc muestra.fastq.gz && multiqc . || echo "Algo falló"
+```
+
+### Comandos `true`, `false` y `:`
+
+- `true` siempre devuelve 0.
+- `false` siempre devuelve 1.
+- `:` (dos puntos) es un **no-op**: no hace nada y devuelve 0.
+
+```bash
+while true; do
+    # bucle infinito, salir con break
+done
+
+if : ; then echo "siempre"; fi
+```
+
+### `exit` en un script
+
+```bash
+exit 0        # éxito
+exit 1        # error genérico
+exit 2        # error de sintaxis
+exit 127      # comando no encontrado
+```
+
+Es **buena práctica** devolver siempre un exit code distinto de 0 cuando algo falla en tu script, para que otros scripts o pipelines puedan detectarlo con `&&`/`||`.
+
+## 11.9. Combinación con subshells y `$()`
+
+Puedes usar la salida de un comando como condición usando `$()` y comparando el resultado:
+
+```bash
+if [[ $(ls *.fastq.gz 2>/dev/null | wc -l) -gt 0 ]]; then
+    echo "Hay archivos FASTQ"
+fi
+```
+
+El `2>/dev/null` silencia los errores de `ls` si no hay coincidencias, evitando mensajes espurios.
+
+::: callout-tip
+## `if` y subshells
+Recuerda que `if` evalúa **exit code**, no salida. Para evaluar la **salida** de un comando (como el conteo anterior) hay que envolverlo en `$(...)` y comparar dentro de `[[ ]]` o `[ ]`.
+:::
+
+## 11.10. Ejemplos bioinformáticos
+
+### Verificar que un FASTA existe antes de indexarlo
+
+```bash
+if [[ -f "$fasta" ]]; then
+    bwa index "$fasta"
+else
+    echo "Error: $fasta no existe" >&2
+    exit 1
+fi
+```
+
+El `>&2` manda el mensaje a **stderr**, lo que es correcto para los errores.
+
+### Comprobar que se pasó un argumento
+
+```bash
+if [[ $# -eq 0 ]]; then
+    echo "Uso: $0 <archivo>" >&2
+    exit 1
+fi
+archivo="$1"
+```
+
+`$#` es el número de argumentos; `$0` es el nombre del script.
+
+### Dispatching por extensión con `case`
+
+```bash
+archivo="$1"
+case "$archivo" in
+    *.fastq.gz) fastqc "$archivo" ;;
+    *.bam)      samtools index "$archivo" ;;
+    *.vcf)      bcftools stats "$archivo" ;;
+    *)          echo "Formato no soportado: $archivo" >&2; exit 1 ;;
+esac
+```
+
+### Asegurar que el BAM está indexado
+
+```bash
+bam="alineados/muestra.bam"
+if [[ ! -f "${bam}.bai" && ! -f "${bam%.*}.bai" ]]; then
+    samtools index "$bam"
+fi
+```
+
+`samtools index` produce `muestra.bam.bai` o `muestra.bai` según la versión; aquí cubrimos ambos casos.
+
+### Detectar si hay FASTQ en el directorio
+
+```bash
+if [[ $(ls *.fastq.gz 2>/dev/null | wc -l) -gt 0 ]]; then
+    echo "Hay reads para procesar"
+else
+    echo "No se encontraron FASTQ. Abortando." >&2
+    exit 1
+fi
+```
+
+### Validar que un binario está instalado
+
+```bash
+if ! command -v samtools &>/dev/null; then
+    echo "samtools no está instalado. Instálalo con: sudo apt install samtools" >&2
+    exit 1
+fi
+```
+
+`command -v X` devuelve 0 si `X` es un comando disponible en `PATH`. Es la forma portable (mejor que `which`).
+
+::: callout-note
+## En WSL2
+`command -v` funciona igual que en Ubuntu nativo. Recuerda que si instalas herramientas en WSL2 con `apt`, estarán disponibles tanto en el shell de WSL como en cualquier script que invoques desde PowerShell vía `wsl bash -c "..."`.
+:::
+
+## 11.11. Ejercicios
+
+### Ejercicio 1
+
+Escribe `validar_entrada.sh` que reciba un argumento (ruta a archivo) y:
+
+1. Si **no** se pasa argumento → mostrar uso y salir con código 1.
+2. Si el archivo **no existe** → mostrar error y salir con código 2.
+3. Si existe pero **no es legible** → error y salir con código 3.
+4. Si todo OK → mostrar `"Archivo válido: $1"` y salir con 0.
+
+### Ejercicio 2
+
+Escribe `procesar.sh` que reciba un nombre de archivo y use `case` para decidir la acción según su extensión:
+
+- `.fasta` → `head -n 2`
+- `.fastq.gz` → `zcat | head -n 4`
+- `.bam` → `samtools view -H | head`
+- `.vcf` → `grep -v "^##" | head`
+- cualquier otra → error con código 1
+
+### Ejercicio 3
+
+Escribe un script que verifique las **precondiciones** para correr un pipeline de alineamiento:
+
+(a) el genoma de referencia existe y está indexado por BWA (deben existir los archivos `.fa`, `.fa.bwt`, `.fa.pac`, `.fa.sa`),
+(b) los reads R1 y R2 existen,
+(c) el directorio de salida existe o se puede crear.
+
+Si **todas** las condiciones se cumplen → mostrar `"OK, listo para correr"`. Si no → listar los problemas encontrados y salir con código 1.
+
+## 11.12. Soluciones
+
+### Solución 1
+
+```bash
+#!/usr/bin/env bash
+# validar_entrada.sh
+
+# (1) Comprobamos que se pasó exactamente un argumento
+if [[ $# -eq 0 ]]; then
+    echo "Uso: $0 <archivo>" >&2
+    exit 1
+fi
+
+archivo="$1"
+
+# (2) ¿Existe el archivo?
+if [[ ! -e "$archivo" ]]; then
+    echo "Error: el archivo '$archivo' no existe" >&2
+    exit 2
+fi
+
+# (3) ¿Es legible?
+if [[ ! -r "$archivo" ]]; then
+    echo "Error: el archivo '$archivo' no es legible" >&2
+    exit 3
+fi
+
+# (4) Todo OK
+echo "Archivo válido: $archivo"
+exit 0
+```
+
+Comentarios:
+
+- `$# -eq 0` chequea el número de argumentos.
+- `-e` comprueba existencia (cualquier tipo: archivo, directorio, enlace).
+- `-r` comprueba permiso de lectura para el usuario actual.
+- `>&2` redirige los mensajes de error a stderr.
+- Cada rama termina con un `exit` distinto, lo que permite a otros scripts distinguir qué falló.
+
+### Solución 2
+
+```bash
+#!/usr/bin/env bash
+# procesar.sh
+
+archivo="$1"
+
+# Comprobamos argumento
+if [[ -z "$archivo" ]]; then
+    echo "Uso: $0 <archivo.{fasta,fastq.gz,bam,vcf}>" >&2
+    exit 1
+fi
+
+case "$archivo" in
+    *.fasta)
+        head -n 2 "$archivo"
+        ;;
+    *.fastq.gz)
+        # zcat descomprime sin tocar el archivo; head toma 4 líneas (1 record FASTQ)
+        zcat "$archivo" | head -n 4
+        ;;
+    *.bam)
+        # samtools view -H imprime solo la cabecera del BAM
+        samtools view -H "$archivo" | head
+        ;;
+    *.vcf)
+        # grep -v elimina las líneas de metadatos ## y nos quedamos con los datos
+        grep -v "^##" "$archivo" | head
+        ;;
+    *)
+        echo "Error: formato no soportado para '$archivo'" >&2
+        echo "Formatos válidos: .fasta, .fastq.gz, .bam, .vcf" >&2
+        exit 1
+        ;;
+esac
+```
+
+Comentarios:
+
+- `[[ -z "$archivo" ]]` detecta una cadena vacía.
+- El `case` usa patrones glob: `*.fastq.gz` encaja con cualquier nombre que termine así.
+- En cada rama se ejecuta el comando apropiado y luego `;;` cierra el bloque.
+- `*)` es el *catch-all*: si el patrón no encaja con ninguno anterior, se ejecuta y se sale con 1.
+
+### Solución 3
+
+```bash
+#!/usr/bin/env bash
+# precondiciones.sh
+
+ref="data/ref.fa"
+r1="reads/muestra_R1.fastq.gz"
+r2="reads/muestra_R2.fastq.gz"
+outdir="resultados/"
+
+errores=0
+
+# Función helper: si el archivo no existe, incrementa el contador
+check_file() {
+    if [[ ! -f "$1" ]]; then
+        echo "  [Falta] $1"
+        errores=$((errores + 1))
+    fi
+}
+
+echo "Verificando precondiciones..."
+
+# (a) Genoma de referencia y archivos de índice BWA
+echo "Genoma de referencia:"
+check_file "$ref"
+check_file "${ref}.bwt"
+check_file "${ref}.pac"
+check_file "${ref}.sa"
+
+# (b) Reads R1 y R2
+echo "Reads:"
+check_file "$r1"
+check_file "$r2"
+
+# (c) Directorio de salida: si no existe, intenta crearlo
+echo "Directorio de salida:"
+if [[ ! -d "$outdir" ]]; then
+    if mkdir -p "$outdir" 2>/dev/null; then
+        echo "  [Creado] $outdir"
+    else
+        echo "  [No se pudo crear] $outdir"
+        errores=$((errores + 1))
+    fi
+else
+    echo "  [OK] $outdir ya existe"
+fi
+
+# Resumen final
+if [[ $errores -eq 0 ]]; then
+    echo "OK, listo para correr"
+    exit 0
+else
+    echo "Se encontraron $errores problema(s). Corrige antes de lanzar el pipeline." >&2
+    exit 1
+fi
+```
+
+Comentarios:
+
+- `check_file` es una función de usuario (las veremos más en el capítulo de scripts). Recibe un path y, si el archivo **no es regular** (`! -f`), incrementa el contador `errores`.
+- `${ref}.bwt` etc. construyen los nombres esperados de los archivos de índice de BWA concatenando la extensión.
+- Para el directorio usamos `-d` (es directorio) y `mkdir -p` (crea sin error si ya existe).
+- Al final, si `errores` sigue en 0, todo OK; si no, listamos cuántos problemas hubo y salimos con 1.
+- `2>/dev/null` silencia errores de `mkdir` (por ejemplo, falta de permisos) para que no se mezclen con nuestra propia salida.
+
+::: callout-important
+## Exit codes son la base de los pipelines
+Cuando un script bioinformático falla sin devolver un exit code distinto de 0, los pipelines basados en `set -e` o en `&&`/`||` no se enteran y siguen ejecutando pasos que van a generar basura. **Acostúmbrate a devolver siempre un exit code correcto**: 0 si todo fue bien, distinto de 0 si algo falló. Tu yo del futuro te lo agradecerá.
+:::
+
+Con `if`, `case` y `test` ya puedes escribir scripts que deciden qué hacer según el estado del sistema. En el siguiente capítulo los cerraremos con los **bucles** (`for`, `while`, `until`, `select`), que permitirán ejecutar las mismas acciones sobre **conjuntos** de muestras, archivos o líneas.

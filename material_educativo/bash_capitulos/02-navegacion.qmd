@@ -1,0 +1,482 @@
+---
+title: "Capítulo 2: Navegación por el sistema de archivos"
+---
+
+# Capítulo 2: Navegación por el sistema de archivos
+
+## 2.1. La jerarquía del sistema de archivos (FHS)
+
+Linux sigue el **Filesystem Hierarchy Standard (FHS)**, una convención que define qué contiene cada directorio del árbol. A diferencia de Windows, donde cada unidad tiene su letra (`C:`, `D:`), en Linux **todo cuelga de una raíz única llamada `/`** (barra inclinada).
+
+```text
+/
+├── bin/     # binarios esenciales (ls, cp, bash, mv...)
+├── sbin/    # binarios del sistema (fdisk, reboot, mount...)
+├── etc/     # archivos de configuración del sistema
+├── home/    # directorios personales de usuarios
+├── root/    # home del usuario root
+├── usr/     # programas de usuario (Unix System Resources)
+├── var/     # datos variables: logs, cache, colas, bbdd
+├── tmp/     # archivos temporales (se borra al reiniciar)
+├── opt/     # software opcional de terceros
+├── dev/     # dispositivos (todo es un fichero en Linux)
+├── proc/    # información del kernel y procesos (virtual)
+├── sys/     # interfaz con dispositivos y kernel (virtual)
+└── mnt/     # puntos de montaje temporales
+```
+
+::: callout-note
+## `/mnt` en WSL
+En WSL2 los discos de Windows se montan automáticamente bajo `/mnt`:
+- `C:\` → `/mnt/c/`
+- `D:\` → `/mnt/d/`
+
+Así puedes navegar a tu carpeta de Windows desde Linux con `cd /mnt/c/Users/TuUsuario/`.
+:::
+
+### Diferencia conceptual con Windows
+
+| Windows | Linux |
+|---------|-------|
+| `C:\Users\bioinfo\Docs` | `/home/bioinfo/Docs` |
+| `D:\data\seqrun` | `/mnt/d/data/seqrun` (WSL) o `/data/seqrun` (nativo) |
+| Barras `\` invertidas | Barras `/` normales |
+| Sin distinción mayúsculas/minúsculas | **Sensible a mayúsculas/minúsculas** |
+
+::: callout-warning
+## Sensible a mayúsculas/minúsculas
+En Linux, `Genoma.fa`, `genoma.fa` y `GENOMA.FA` son **tres archivos distintos**. Esto suele causar errores a quien viene de Windows. Sé consistente: usa minúsculas para archivos de datos.
+:::
+
+## 2.2. `pwd`: ¿dónde estoy?
+
+`pwd` (**print working directory**) imprime la ruta absoluta del directorio actual.
+
+```bash
+pwd
+```
+
+```text
+/home/bioinfo/proyectos/tesis/reads
+```
+
+Úsalo siempre que estés desorientado en un servidor. Es la forma más rápida de saber dónde estás antes de ejecutar algo destructivo.
+
+## 2.3. `ls`: listar el contenido
+
+`ls` es probablemente el comando que más usarás. Sus opciones más útiles:
+
+| Opción | Significado |
+|--------|-------------|
+| `-l` | Formato largo: permisos, propietario, tamaño, fecha |
+| `-a` | Muestra archivos ocultos (empiezan con `.`) |
+| `-h` | Tamaños legibles para humanos (K, M, G) |
+| `-t` | Ordena por tiempo de modificación |
+| `-S` | Ordena por tamaño (mayor primero) |
+| `-r` | Invierte el orden |
+| `-R` | Recursivo: lista subdirectorios |
+| `-1` | Un archivo por línea |
+
+Combinaciones frecuentes:
+
+```bash
+ls -lah           # listado largo + ocultos + tamaños legibles
+ls -ltrh          # largo, ordenado por tiempo, en reversa (lo más reciente abajo)
+ls -lSh /data     # ordenado por tamaño descendente
+ls -R resultados/ # recursivo
+```
+
+Salida típica:
+
+```text
+$ ls -lah
+total 24M
+drwxr-xr-x  3 bioinfo bioinfo 4,0K ene 15 09:30 .
+drwxr-xr-x 12 bioinfo bioinfo 4,0K ene 14 18:22 ..
+-rw-r--r--  1 bioinfo bioinfo  12M ene 15 09:29 sample_R1.fastq.gz
+-rw-r--r--  1 bioinfo bioinfo  11M ene 15 09:29 sample_R2.fastq.gz
+-rw-r--r--  1 bioinfo bioinfo 1,2K ene 14 19:01 notas.txt
+```
+
+### Significado de cada columna en `ls -l`
+
+Cada línea tiene **7 campos**:
+
+1. **Permisos** (`-rw-r--r--`): tipo de archivo y permisos (lo veremos en el capítulo 4).
+2. **Número de enlaces** (`1`).
+3. **Propietario** (`bioinfo`).
+4. **Grupo** (`bioinfo`).
+5. **Tamaño** en bytes (`12M` con `-h`).
+6. **Fecha de modificación** (`ene 15 09:29`).
+7. **Nombre** (`sample_R1.fastq.gz`).
+
+::: callout-tip
+## Detectar archivos ocultos
+Los archivos y directorios cuyo nombre empieza por `.` (punto) están ocultos por defecto. Ejemplos: `.bashrc`, `.config/`, `.ssh/`. Solo se ven con `ls -a`.
+:::
+
+## 2.4. `cd`: cambiar de directorio
+
+`cd` (**change directory**) mueve tu contexto a otra carpeta.
+
+### Rutas absolutas vs relativas
+
+- **Absoluta**: empieza por `/` y describe toda la ruta desde la raíz. No depende de dónde estés.
+
+```bash
+cd /home/bioinfo/proyectos/tesis/reads
+```
+
+- **Relativa**: no empieza por `/`; se interpreta respecto al directorio actual.
+
+```bash
+cd proyectos/tesis/reads       # desde /home/bioinfo
+cd ../ensayo2                  # sube un nivel y baja a ensayo2
+```
+
+### Atajos esenciales
+
+| Símbolo | Significado |
+|---------|-------------|
+| `.` | Directorio actual |
+| `..` | Directorio padre (subir un nivel) |
+| `~` | Tu directorio `$HOME` |
+| `-` | El directorio anterior (donde estabas antes del último `cd`) |
+
+Ejemplos:
+
+```bash
+cd              # sin argumentos: va a ~
+cd ~            # explícito: también va a ~
+cd ..           # sube un nivel
+cd ../..        # sube dos niveles
+cd -             # vuelve al directorio anterior
+cd ~/datos      # combina ~ con ruta relativa
+```
+
+::: callout-tip
+## El truco de `cd -`
+Si estás revisando logs en `/var/log` y necesitas volver a tu proyecto, en lugar de memorizar la ruta, simplemente pulsa `cd -` dos veces para alternar entre los dos directorios.
+:::
+
+## 2.5. Autocompletar con `Tab`
+
+Pulsa `Tab` una vez para completar un nombre parcial:
+
+```bash
+cd pro<Tab>         # completa a cd proyectos/ (si es único)
+```
+
+Pulsa `Tab` **dos veces** para ver las opciones disponibles cuando hay ambigüedad:
+
+```bash
+cd s<Tab><Tab>      # muestra: scripts/  resultados/  seqruns/
+```
+
+Aprende a usarlo: ahorra tiempo y evita errores tipográficos.
+
+## 2.6. `pushd` y `popd`: pila de directorios
+
+Para trabajos que requieren saltar entre varias carpetas, en lugar de ir memorizando rutas, existe una **pila de directorios**.
+
+- `pushd /ruta`: añade `/ruta` a la pila y se mueve a ella.
+- `popd`: saca el último directorio de la pila y vuelve al anterior.
+- `dirs -v`: muestra la pila numerada.
+
+Ejemplo:
+
+```bash
+~$ pushd /data/seqruns/2024-01-15/
+~/data/seqruns/2024-01-15 $ pushd /var/log
+/var/log ~/data/seqruns/2024-01-15 ~ $
+/var/log $ dirs -v
+ 0  /var/log
+ 1  /data/seqruns/2024-01-15
+ 2  ~
+/var/log $ popd
+~/data/seqruns/2024-01-15 ~ $
+```
+
+`dirs -v` muestra la pila con índices. Puedes saltar a un nivel concreto con `pushd +N` o `pushd -N`.
+
+::: callout-note
+## Cuándo usar `pushd`
+Es ideal cuando en un análisis necesitas alternar entre:
+- Donde están los reads (`/data/seqruns/...`)
+- Donde guardas scripts (`~/proyectos/tesis/scripts`)
+- Donde se escriben resultados (`/scratch/resultados`)
+:::
+
+## 2.7. El concepto de `$PATH`
+
+`$PATH` es una variable de entorno que contiene una lista de directorios separados por `:`. Cuando escribes un comando (p. ej. `samtools`), Bash busca el ejecutable en cada uno de esos directorios, en orden.
+
+```bash
+echo $PATH
+```
+
+```text
+/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/home/bioinfo/.local/bin
+```
+
+Si instalas una herramienta como `bwa` en `~/bin/bwa` pero ese directorio no está en `$PATH`, tendrás que llamarla con su ruta completa `~/bin/bwa`. Para añadirla:
+
+```bash
+export PATH="$HOME/bin:$PATH"
+```
+
+Y para hacerlo permanente, añádelo a `~/.bashrc`.
+
+::: callout-warning
+## PATH y bioinformática
+Cuando trabajes con Conda/Mamba, cada entorno tiene su propio `$PATH`. Asegúrate de activar el entorno correcto antes de lanzar un pipeline: `conda activate ngs`.
+:::
+
+## 2.8. Variables de entorno útiles
+
+| Variable | Contenido |
+|----------|-----------|
+| `$HOME` | Tu directorio personal |
+| `$PWD` | Directorio actual |
+| `$USER` | Tu nombre de usuario |
+| `$SHELL` | Tu shell por defecto |
+| `$PATH` | Rutas de búsqueda de ejecutables |
+| `$LANG` | Idioma/locale |
+| `$HOSTNAME` | Nombre de la máquina |
+
+Se consultan con `echo`:
+
+```bash
+echo "Estoy en $PWD como $USER en $HOSTNAME"
+```
+
+## 2.9. Ejemplos bioinformáticos
+
+### Navegar a un seqrun concreto
+
+```bash
+cd /data/seqrun/2024-01-15/samples/
+pwd
+# /data/seqrun/2024-01-15/samples
+```
+
+### Listar FASTQs ordenados por tamaño
+
+```bash
+ls -lSh *.fastq.gz
+```
+
+```text
+-rw-r----- 1 bioinfo seq 2,4G ene 15 04:12 paciente7_R1.fastq.gz
+-rw-r----- 1 bioinfo seq 2,4G ene 15 04:12 paciente7_R2.fastq.gz
+-rw-r----- 1 bioinfo seq 1,8G ene 15 04:09 paciente3_R1.fastq.gz
+...
+```
+
+### Verificar que existe una carpeta de proyecto
+
+```bash
+ls -ld ~/proyectos/tesis/reads/
+```
+
+```text
+drwxr-xr-x 3 bioinfo bioinfo 4096 ene 10 11:02 /home/bioinfo/proyectos/tesis/reads/
+```
+
+El `-d` evita entrar dentro del directorio; muestra información del propio directorio.
+
+## 2.10. Trucos avanzados de navegación
+
+### Marcas en el historial con `cd`
+
+`cd -` solo recuerda el directorio anterior inmediato. Si necesitas saltar entre varios sin escribir la ruta completa, hay varias alternativas:
+
+- **Symlinks en `~`**: crea enlaces simbólicos a tus proyectos frecuentes.
+  ```bash
+  ln -s /data/seqruns/2024 ~/seq24
+  cd ~/seq24
+  ```
+- **Variables en `~/.bashrc`**:
+  ```bash
+  export TESIS="/home/bioinfo/proyectos/tesis"
+  cd $TESIS/reads
+  ```
+- **`CDPATH`**: lista de directorios donde `cd` buscará primero. Añade a `~/.bashrc`:
+  ```bash
+  export CDPATH="~:/data/seqruns:/data/ref"
+  ```
+  Ahora `cd reads` (sin ruta) buscará primero en `~`, luego en `/data/seqruns`, etc. Útil pero **cuidado**: rompe la intuición de dónde estás aterrizando.
+
+### Espacios y caracteres raros en rutas
+
+Si un directorio tiene espacios (típico al montar `/mnt/c/Mis Documentos`), usa comillas o barra invertida:
+
+```bash
+cd "/mnt/c/Mis Documentos/proyecto"
+cd /mnt/c/Mis\ Documentos/proyecto     # equivalente
+```
+
+Sin comillas, Bash interpreta el espacio como separador de argumentos y falla.
+
+::: callout-warning
+## Evita espacios en proyectos bioinformáticos
+Las herramientas NGS (`bwa`, `samtools`, `GATK`) pueden dar problemas con rutas que contienen espacios o acentos. Usa minúsculas, guiones bajos y ASCII puro: `paciente_001`, `ensayo_a`.
+:::
+
+### Rutas con `~` para usuarios concretos
+
+`~` se expande a tu `$HOME`, pero `~usuario` se expande al home de ese usuario:
+
+```bash
+cd ~ana                 # /home/ana
+ls ~ana/proyectos       # lista los proyectos de ana (si tienes permiso)
+```
+
+Útil cuando un compañero te cede acceso a una carpeta.
+
+---
+
+## Ejercicios
+
+### Ejercicio 1
+
+Crea una estructura de directorios `~/proyectos/mi_analisis/{raw,qc,aligned,variants}` (puedes usar `mkdir -p` con llaves). Navega a cada subdirectorio usando **rutas absolutas** y muestra el `pwd` en cada uno. Luego vuelve al inicio con `cd -` sucesivas veces y repite el ejercicio con **rutas relativas**.
+
+### Ejercicio 2
+
+Ejecuta `ls -lah /var/log` y explica la salida (qué significa cada columna). A continuación, identifica los **3 archivos más grandes** con:
+
+```bash
+ls -lSh /var/log | head -4
+```
+
+Explica por qué `head -4` y no `head -3`.
+
+### Ejercicio 3
+
+Usa `pushd` y `popd` para navegar entre `~`, `/tmp` y `/var/log` sin usar `cd` reiterado. Muestra la pila con `dirs -v` después de cada `pushd` y al finalizar vuelve a `~` con `popd` sucesivos.
+
+---
+
+## Soluciones
+
+### Solución 1
+
+```bash
+# 1. Crear la estructura (mkdir -p permite crear padres; {a,b,c} expande a subdirectorios)
+mkdir -p ~/proyectos/mi_analisis/{raw,qc,aligned,variants}
+
+# 2. Navegación con rutas ABSOLUTAS
+cd /home/bioinfo/proyectos/mi_analisis/raw       ; pwd
+cd /home/bioinfo/proyectos/mi_analisis/qc        ; pwd
+cd /home/bioinfo/proyectos/mi_analisis/aligned   ; pwd
+cd /home/bioinfo/proyectos/mi_analisis/variants  ; pwd
+
+# 3. Navegación con rutas RELATIVAS (partimos de ~/proyectos/mi_analisis)
+cd ~/proyectos/mi_analisis
+cd raw       ; pwd     # /home/bioinfo/proyectos/mi_analisis/raw
+cd ../qc     ; pwd     # sube y baja a qc
+cd ../aligned ; pwd
+cd ../variants ; pwd
+cd ..         ; pwd     # de vuelta a ~/proyectos/mi_analisis
+```
+
+Salida esperada de cada `pwd`:
+
+```text
+/home/bioinfo/proyectos/mi_analisis/raw
+/home/bioinfo/proyectos/mi_analisis/qc
+/home/bioinfo/proyectos/mi_analisis/aligned
+/home/bioinfo/proyectos/mi_analisis/variants
+```
+
+::: callout-note
+## El truco `{a,b,c}`
+Las llaves `{...}` se expanden en Bash. `mkdir -p proyecto/{a,b,c}` es equivalente a `mkdir -p proyecto/a proyecto/b proyecto/c`. Lo veremos con más profundidad en el capítulo 5.
+:::
+
+### Solución 2
+
+```bash
+ls -lah /var/log
+```
+
+Salida (extracto):
+
+```text
+total 4,5M
+drwxr-xr-x  7 root root 4,0K ene 15 09:30 .
+drwxr-xr-x 20 root root 4,0K ene 14 18:22 ..
+-rw-r--r--  1 root root 1,2M ene 15 09:30 syslog
+-rw-r--r--  1 root root  230K ene 15 09:30 auth.log
+drwxr-xr-x  2 root root 4,0K ene 14 18:22 apt
+...
+```
+
+**Significado de cada columna**:
+
+1. **Permisos** (`drwxr-xr-x`): `d` = directorio, después 9 caracteres que codifican permisos del usuario, grupo y otros (rwx).
+2. **Enlaces** (`7`): número de subdirectorios + 2 (para `.` y `..`), en el caso de directorios.
+3. **Propietario** (`root`).
+4. **Grupo** (`root`).
+5. **Tamaño** (`1,2M` gracias a `-h`).
+6. **Fecha y hora** de la última modificación (`ene 15 09:30`).
+7. **Nombre** (`syslog`).
+
+Para identificar los 3 archivos más grandes:
+
+```bash
+ls -lSh /var/log | head -4
+```
+
+Salida:
+
+```text
+total 4,5M
+-rw-r----- 1 syslog adm 1,2M ene 15 09:30 syslog
+-rw-r----- 1 syslog adm 230K ene 15 09:30 auth.log
+-rw-r--r-- 1 root root 95K ene 14 18:22 dpkg.log
+```
+
+**¿Por qué `head -4`?** Porque la primera línea de `ls -l` es `total 4,5M`, una suma de los tamaños de los bloques de todos los archivos listados. Al pedir 4 líneas obtenemos esa cabecera + los 3 archivos más grandes.
+
+### Solución 3
+
+```bash
+# Estado inicial
+pwd                                   # /home/bioinfo
+dirs -v                               # 0  ~
+
+# Primera navegación
+pushd /tmp                            # /tmp  ~
+dirs -v
+#  0  /tmp
+#  1  ~
+
+# Segunda navegación
+pushd /var/log                        # /var/log  /tmp  ~
+dirs -v
+#  0  /var/log
+#  1  /tmp
+#  2  ~
+
+# Volver con popd (uno por nivel)
+popd                                  # /tmp  ~
+pwd                                   # /tmp
+
+popd                                  # ~
+pwd                                   # /home/bioinfo
+
+dirs -v
+#  0  ~
+```
+
+::: callout-tip
+## Bonus
+Si en algún momento necesitas rotar dentro de la pila sin desapilar, usa `pushd +1` para llevar el directorio 1 a la cima: útil cuando alternas entre dos carpetas.
+:::
+
+::: callout-note
+## Resumen del capítulo
+Hemos aprendido la estructura FHS del sistema de archivos Linux, los comandos `pwd`, `ls`, `cd` con sus opciones y atajos (`~`, `.`, `..`, `-`), el autocompletado con `Tab`, la pila de directorios con `pushd`/`popd`/`dirs`, el significado de `$PATH` y variables como `$HOME` y `$PWD`. En el Capítulo 3 veremos cómo crear, copiar, mover y eliminar archivos y directorios.
+:::

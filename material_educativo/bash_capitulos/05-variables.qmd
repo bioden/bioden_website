@@ -1,0 +1,527 @@
+---
+title: "Capítulo 5: Variables y sustitución en Bash"
+---
+
+# Capítulo 5: Variables y sustitución en Bash
+
+Las **variables** son el primer paso de cualquier programación en Bash. Permiten almacenar rutas, parámetros, salidas de comandos y resultados intermedios. En bioinformática se usan constantemente: el genoma de referencia, el número de threads, los prefijos de las muestras, las fechas de análisis... todos viven como variables dentro de scripts y pipelines.
+
+## 5.1. Qué es una variable en Bash
+
+Una variable es un **nombre simbólico** que apunta a un valor (por defecto, una cadena de texto o *string*). Bash no exige declarar el tipo: si asignas `X=5`, Bash lo trata como la cadena `"5"` hasta que le digas explícitamente que es un número (con `$(( ))`).
+
+## 5.2. Declaración y acceso
+
+### Declaración
+
+```bash
+VAR="valor"
+```
+
+::: callout-danger
+## SIN espacios alrededor del `=`
+Esto es **la trampa número 1** para principiantes:
+```bash
+VAR = "valor"          # ERROR: Bash cree que VAR es un comando a ejecutar
+VAR="valor"            # CORRECTO
+```
+Sin espacios, es asignación. Con espacios, es ejecución de un comando llamado `VAR`.
+:::
+
+### Acceso
+
+```bash
+echo $VAR
+echo ${VAR}            # forma recomendada: evita ambigüedades
+```
+
+La forma `${VAR}` es **preferida** porque elimina ambigüedades al concatenar:
+
+```bash
+FRUTA="manzana"
+echo "Tengo una $FRUTAroja"        # ERROR: Bash busca la variable $FRUTAroja
+echo "Tengo una ${FRUTA}roja"      # CORRECTO: "Tengo una manzanaroja"
+```
+
+## 5.3. Tipos de variables
+
+### Variables locales
+
+Solo existen en el shell o script donde se declaran. No las ven los subprocesos.
+
+```bash
+MENSAJE="Hola"
+bash -c 'echo "$MENSAJE"'          # imprime una línea vacía
+```
+
+### Variables de entorno (exportadas)
+
+Se heredan a los subprocesos. Necesarias para que otros programas (samtools, bwa, R...) "vean" tus configuraciones.
+
+```bash
+export MENSAJE="Hola"
+bash -c 'echo "$MENSAJE"'          # imprime: Hola
+```
+
+### Variables especiales
+
+Bash reserva una serie de variables con significado propio:
+
+| Variable | Significado |
+|----------|-------------|
+| `$?` | Código de salida del último comando (0 = éxito) |
+| `$!` | PID del último proceso en background |
+| `$$` | PID del shell actual |
+| `$0` | Nombre del script |
+| `$1`–`$9` | Argumentos posicionales 1 a 9 |
+| `${10}` | Argumento 10 (requiere llaves) |
+| `$@` | Todos los argumentos como lista |
+| `$*` | Todos los argumentos como una sola cadena |
+| `$#` | Número de argumentos |
+
+Ejemplo:
+
+```bash
+#!/bin/bash
+# Guarda como args.sh y ejecuta: ./args.sh uno dos tres
+echo "Script: $0"
+echo "Argumentos: $@"
+echo "Número de argumentos: $#"
+echo "Primero: $1, segundo: $2"
+echo "Código de salida del último comando: $?"
+```
+
+Salida:
+
+```text
+Script: ./args.sh
+Argumentos: uno dos tres
+Número de argumentos: 3
+Primero: uno, segundo: dos
+Código de salida del último comando: 0
+```
+
+## 5.4. Variables de entorno comunes
+
+| Variable | Contenido | Ejemplo |
+|----------|-----------|---------|
+| `$HOME` | Directorio personal | `/home/bioinfo` |
+| `$USER` | Usuario actual | `bioinfo` |
+| `$PATH` | Rutas de búsqueda | `/usr/local/bin:/usr/bin:...` |
+| `$PWD` | Directorio actual | `/data/seqruns` |
+| `$SHELL` | Shell por defecto | `/bin/bash` |
+| `$LANG` | Locale | `es_ES.UTF-8` |
+| `$HOSTNAME` | Nombre de la máquina | `pc-genomica` |
+| `$RANDOM` | Número aleatorio 0-32767 | cambia cada acceso |
+| `$SECONDS` | Segundos desde que abriste el shell | entero |
+
+## 5.5. Inspección de variables
+
+```bash
+printenv                # lista todas las variables de entorno
+printenv HOME           # imprime solo HOME
+
+env                     # similar a printenv (formato_variable=valor)
+
+set                     # lista TODAS las variables (entorno + locales + funciones)
+```
+
+## 5.6. Eliminar y modificar variables
+
+```bash
+unset VAR               # elimina la variable VAR
+```
+
+::: callout-warning
+## `unset` sin `$`
+`unset $VAR` elimina la variable cuyo nombre es el *valor* de `VAR`, no `VAR` en sí. Siempre usa `unset VAR`.
+:::
+
+Otras formas avanzadas:
+
+```bash
+declare -i N=5          # N es entero
+declare -r PI=3.14      # PI es de solo lectura (constante)
+readonly PI=3.14        # equivalente
+local X="algo"          # dentro de una función: X es local a esa función
+```
+
+## 5.7. Sustitución de comandos
+
+Asigna a una variable el resultado (stdout) de un comando:
+
+```bash
+VAR=$(comando)              # sintaxis moderna, recomendada
+VAR=`comando`               # sintaxis antigua con backticks, EVITAR
+```
+
+Ejemplos:
+
+```bash
+HOY=$(date +%Y%m%d)
+N_READS=$(zcat R1.fastq.gz | wc -l)
+NUM_MUESTRAS=$(ls /data/seqruns/ | wc -l)
+```
+
+::: callout-note
+## `$()` es mejor que los backticks
+`$()` se puede anidar fácilmente: `X=$(echo "Hoy es $(date +%A)")`. Con backticks hay que escaparlos (`\`...\`...\``) y se vuelve ilegible.
+:::
+
+## 5.8. Aritmética
+
+Bash solo maneja **enteros**. Para floats hay que usar `bc`, `awk` o `python`.
+
+```bash
+echo $(( 2 + 3 ))           # 5
+echo $(( 2**10 ))           # 1024 (potencia)
+echo $(( 17 / 5 ))          # 3 (división entera)
+echo $(( 17 % 5 ))          # 2 (módulo)
+
+A=10
+B=3
+echo $(( A + B ))           # 13 (sin $ dentro de $(( ))
+echo $(( A * B ))           # 30
+```
+
+::: callout-warning
+## Sin `$` dentro de `$(( ))`
+Dentro de la expansión aritmética no hace falta `$` antes del nombre de variable: `$((A+B))` es válido. Aunque `$(($A+$B))` también funciona, la primera forma es idiomática.
+:::
+
+Para decimales:
+
+```bash
+echo "scale=2; 17 / 5" | bc     # 3.40
+```
+
+## 5.9. Comillas: dobles, simples y backticks
+
+| Tipo | Comportamiento | Ejemplo |
+|------|----------------|---------|
+| Dobles `" "` | Permiten expansión de variables y sustitución de comandos | `"Hola $USER"` |
+| Simples `' '` | Literal: no expanden nada | `'Hola $USER'` |
+| Backticks `` ` ` `` | Sustitución de comandos (deprecated) | `` `date` `` |
+
+```bash
+echo "Hola $USER, hoy es $(date +%A)"
+# Hola bioinfo, hoy es lunes
+
+echo 'Hola $USER, hoy es $(date +%A)'
+# Hola $USER, hoy es $(date +%A)   ← literal
+
+echo "Hola $USER hoy es \`date +%A\`"     # antiguo, evita
+```
+
+::: callout-tip
+## Cuándo usar cada una
+- **Simples**: cuando el texto no debe expandirse (rutas con `$`, mensajes con literales).
+- **Dobles**: cuando quieres interpolar variables o comandos.
+- **Sin comillas**: solo para strings sin espacios ni caracteres especiales. Mejor siempre entrecomillar.
+:::
+
+## 5.10. Manipulación de cadenas
+
+Bash incluye un potente **conjunto de operaciones** sobre variables tipo string:
+
+```bash
+CADENA="genoma_hg38.fa"
+
+${#CADENA}                     # longitud: 13
+${CADENA:0:6}                  # substring 0-6: "genoma"
+${CADENA:7}                    # desde posición 7: "hg38.fa"
+${CADENA: -3}                  # últimos 3 caracteres: ".fa"  (nota: espacio antes de -)
+${CADENA/genoma/cromosoma}     # sustituye primera coincidencia: "cromosoma_hg38.fa"
+${CADENA//a/A}                 # sustituye TODAS las 'a': "genomA_hg38.fA"
+${CADENA#*_}                   # borra el prefijo hasta _: "hg38.fa"
+${CADENA%.*}                   # borra el sufijo desde el último .: "genoma_hg38"
+${CADENA%%.*}                  # borra desde el primer .: "genoma_hg38"
+```
+
+::: callout-note
+## `#` y `%` para borrar extremos
+- `#` actúa por el **principio** (anterior a un patrón) — piensa en `#` como "head".
+- `%` actúa por el **final** (posterior a un patrón) — piensa en `%` como "tail".
+- `##` y `%%` son las versiones *greedy* (más largo posible).
+:::
+
+## 5.11. Valores por defecto
+
+```bash
+echo ${VAR:-por_defecto}      # si VAR no está definida o es vacía, usa "por_defecto" (sin asignar)
+echo ${VAR:=por_defecto}      # igual, pero ADEMÁS asigna "por_defecto" a VAR
+echo ${VAR:+existe}           # si VAR está definida y NO vacía, imprime "existe"
+```
+
+Útil en scripts que reciben parámetros opcionales:
+
+```bash
+THREADS=${1:-4}               # primer argumento, o 4 si no se pasa
+echo "Usando $THREADS threads"
+```
+
+## 5.12. Input del usuario: `read`
+
+```bash
+read NOMBRE                            # lee una línea y la asigna a NOMBRE
+read -p "Nombre: " NOMBRE              # muestra prompt y lee
+read -s -p "Password: " PASS           # -s: silencioso (no muestra lo escrito)
+read -t 10 NOMBRE                      # timeout de 10 segundos
+read -a ARR                            # lee palabras separadas en array
+```
+
+Ejemplo:
+
+```bash
+read -p "Introduce tu muestra: " MUESTRA
+echo "Procesando $MUESTRA..."
+```
+
+## 5.13. Arrays indexados (introducción)
+
+```bash
+MUESTRAS=(paciente1 paciente2 paciente3)
+echo ${MUESTRAS[0]}                    # paciente1
+echo ${MUESTRAS[1]}                    # paciente2
+echo ${MUESTRAS[@]}                    # todos los elementos
+echo ${#MUESTRAS[@]}                   # número de elementos: 3
+
+MUESTRAS+=("paciente4")                # añade un elemento
+```
+
+Iteración:
+
+```bash
+for m in "${MUESTRAS[@]}"; do
+    echo "Procesando $m..."
+done
+```
+
+::: callout-note
+Los arrays se profundizan en el **Capítulo 14**, pero conviene conocerlos ya para tareas como gestionar una lista de muestras.
+:::
+
+## 5.14. Ejemplos bioinformáticos
+
+### Variable con ruta al genoma de referencia
+
+```bash
+REF="/data/ref/hg38/hg38.fa"
+INDEX="${REF%.fa}"          # /data/ref/hg38/hg38 (sin extensión, para bwa index)
+bwa index "$REF"
+bwa mem -t 8 "$INDEX" R1.fq R2.fq > aln.sam
+```
+
+### Variable con número de threads
+
+```bash
+THREADS=8
+export OMP_NUM_THREADS=$THREADS
+samtools sort -@ $THREADS aln.bam -o aln_sorted.bam
+```
+
+### Sustitución de comandos
+
+```bash
+READS=$(ls *.fastq.gz | wc -l)
+echo "Tienes $READS archivos FASTQ en este directorio"
+```
+
+### Nombre de archivo dinámico
+
+```bash
+SAMPLE="paciente_001"
+OUT="resultados_${SAMPLE}_$(date +%Y%m%d).bam"
+echo "Escribiendo en $OUT"
+# Escribiendo en resultados_paciente_001_20240115.bam
+```
+
+### Extraer prefijo de un FASTQ
+
+```bash
+ARCHIVO="paciente7_R1.fastq.gz"
+PREFIX="${ARCHIVO%_R1.fastq.gz}"      # paciente7
+echo "La muestra es $PREFIX"
+```
+
+---
+
+## Ejercicios
+
+### Ejercicio 1
+
+Crea un script `info.sh` que defina las variables:
+
+- `MUESTRA="paciente_001"`
+- `FECHA=$(date +%Y-%m-%d)`
+- `OUTPUT="alineamiento_${MUESTRA}_${FECHA}.bam"`
+
+Muestra todas con `echo`. Después lista las variables de entorno con `env | grep MUESTRA` y comprueba que **no aparece** (porque es local). Corrígelo añadiendo `export MUESTRA` y vuelve a probar `env | grep MUESTRA`.
+
+### Ejercicio 2
+
+Suponiendo que tienes los archivos `sample_R1.fastq.gz` y `sample_R2.fastq.gz`, usa sustitución de comandos para contar líneas con `zcat` y `wc -l`:
+
+```bash
+R1=$(zcat sample_R1.fastq.gz | wc -l)
+R2=$(zcat sample_R2.fastq.gz | wc -l)
+```
+
+Calcula el total con `TOTAL=$((R1 + R2))` y divídelo entre 4 (ya que cada read ocupa 4 líneas en FASTQ) para obtener el número de reads pareados. Imprime el resultado con un mensaje claro.
+
+### Ejercicio 3
+
+Usa `read -p` para pedir al usuario el nombre del proyecto y la cobertura objetivo. Crea el directorio `~/proyectos/${NOMBRE}_cov${COVERAGE}` y muestra el mensaje "Proyecto creado en $PWD". Verifica que la carpeta existe con `ls -ld`.
+
+---
+
+## Soluciones
+
+### Solución 1
+
+```bash
+#!/bin/bash
+# Archivo: info.sh
+
+MUESTRA="paciente_001"
+FECHA=$(date +%Y-%m-%d)
+OUTPUT="alineamiento_${MUESTRA}_${FECHA}.bam"
+
+echo "Muestra:  $MUESTRA"
+echo "Fecha:    $FECHA"
+echo "Salida:   $OUTPUT"
+
+# Probar si MUESTRA está en el entorno
+echo "---"
+echo "Buscando MUESTRA en el entorno (debería estar vacío):"
+env | grep MUESTRA        # no imprime nada porque MUESTRA es local
+
+# Corrección: exportar
+export MUESTRA
+echo "---"
+echo "Tras export MUESTRA:"
+env | grep MUESTRA
+# MUESTRA=paciente_001
+```
+
+Ejecuta:
+
+```bash
+chmod +x info.sh
+./info.sh
+```
+
+Salida esperada:
+
+```text
+Muestra:  paciente_001
+Fecha:    2024-01-15
+Salida:   alineamiento_paciente_001_2024-01-15.bam
+---
+Buscando MUESTRA en el entorno (debería estar vacío):
+---
+Tras export MUESTRA:
+MUESTRA=paciente_001
+```
+
+::: callout-tip
+## Variables locales vs entorno, regla práctica
+- Usa **local** por defecto dentro de tus scripts.
+- Usa **export** solo cuando necesitas que otro programa (samtools, R, subprocesos) vea esa variable. Por ejemplo: `export PATH="$HOME/bin:$PATH"` o `export OMP_NUM_THREADS=8`.
+:::
+
+### Solución 2
+
+```bash
+#!/bin/bash
+# Archivo: cuenta_reads.sh
+
+# Verificar que los archivos existen
+if [[ ! -f sample_R1.fastq.gz || ! -f sample_R2.fastq.gz ]]; then
+    echo "Faltan archivos FASTQ."
+    exit 1
+fi
+
+# Contar líneas de cada archivo
+R1=$(zcat sample_R1.fastq.gz | wc -l)
+R2=$(zcat sample_R2.fastq.gz | wc -l)
+
+# Calcular totales
+TOTAL=$((R1 + R2))
+READS=$((TOTAL / 4))
+
+echo "Líneas en R1:    $R1"
+echo "Líneas en R2:    $R2"
+echo "Total de líneas: $TOTAL"
+echo "Reads pareados:  $READS"
+```
+
+Salida esperada (con datos reales):
+
+```text
+Líneas en R1:    120000000
+Líneas en R2:    120000000
+Total de líneas: 240000000
+Reads pareados:  60000000
+```
+
+::: callout-note
+## ¿Por qué dividir entre 4?
+El formato FASTQ tiene **4 líneas por read**: (1) `@identificador`, (2) secuencia, (3) `+`, (4) calidad. Por tanto `n_reads = n_líneas / 4`.
+:::
+
+### Solución 3
+
+```bash
+#!/bin/bash
+# Archivo: nuevo_proyecto.sh
+
+read -p "Nombre del proyecto: " NOMBRE
+read -p "Cobertura objetivo (X): " COVERAGE
+
+# Validación simple: comprobar que no están vacíos
+if [[ -z "$NOMBRE" || -z "$COVERAGE" ]]; then
+    echo "Error: ambos campos son obligatorios."
+    exit 1
+fi
+
+# Crear directorio
+DIR=~/proyectos/${NOMBRE}_cov${COVERAGE}
+mkdir -p "$DIR"
+
+# Verificar
+ls -ld "$DIR"
+
+# Mensaje final
+echo "Proyecto creado en $PWD"
+echo "Directorio del proyecto: $DIR"
+```
+
+Ejecuta:
+
+```bash
+chmod +x nuevo_proyecto.sh
+./nuevo_proyecto.sh
+```
+
+Interacción:
+
+```text
+Nombre del proyecto: tesis_ana
+Cobertura objetivo (X): 30
+drwxr-xr-x 2 bioinfo bioinfo 4096 ene 15 11:30 /home/bioinfo/proyectos/tesis_ana_cov30
+Proyecto creado en /home/bioinfo/scripts
+Directorio del proyecto: /home/bioinfo/proyectos/tesis_ana_cov30
+```
+
+::: callout-tip
+## Buenas prácticas
+- **Entrecomilla siempre** las variables que contienen rutas: `"$DIR"` evita errores si hay espacios.
+- **Valida** la entrada del usuario: nunca confíes en que rellenará correctamente.
+- **Usa `mkdir -p`** para no fallar si el padre no existe o si el directorio ya está creado.
+:::
+
+::: callout-note
+## Resumen del capítulo
+Hemos visto cómo declarar variables (sin espacios en el `=`), cómo acceder con `${VAR}`, los tipos (local, entorno, especial), las variables comunes (`$HOME`, `$PATH`, `$PWD`...), las herramientas de inspección (`printenv`, `env`, `set`), la sustitución de comandos con `$()`, la aritmética con `$(( ))`, los tres tipos de comillas, las operaciones de cadenas (longitud, slicing, sustitución, defaults), `read` para entrada de usuario y una introducción a arrays. En el Capítulo 6 profundizaremos en la visualización y edición de contenido de archivos (`cat`, `less`, `nano`, `vim`, `head`, `tail`, `cut`, `sort`, `uniq`, etc.), herramientas clave para inspeccionar FASTQ, BAM, VCF y GTF.
+:::

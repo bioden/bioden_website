@@ -1,0 +1,723 @@
+---
+title: "Capítulo 16: Procesos, señales y gestión de trabajos"
+---
+
+# Capítulo 16: Procesos, señales y gestión de trabajos
+
+Hasta ahora, todos los comandos que ejecutábamos **ocupaban la terminal**: lanzabas `bwa mem` sobre un genoma grande y durante 30 minutos no podías hacer nada más. Eso es ineficiente y, cuando procesas 50 muestras, inviable.
+
+UNIX fue diseñado desde el principio como un sistema **multitarea**. Cualquier comando puede ejecutarse en **background**, soltando la terminal inmediatamente. Puedes lanzar varios en paralelo, suspenderlos, retomarlos, matarlos selectivamente y esperar a que todos terminen. Y todo esto se controla con un puñado de comandos y **señales**.
+
+En este capítulo veremos el modelo de procesos de UNIX, cómo gestionar trabajos en background, cómo paralelizar tareas bioinformáticas, cómo matar procesos selectivamente y cómo usar `trap` para limpiar recursos automáticamente. Es la base para escribir pipelines que se ejecuten en HPC sin perder datos.
+
+## 16.1. El concepto de proceso
+
+Cada vez que ejecutas un comando en Bash, se crea un **proceso**: una instancia en ejecución con su propio PID (Process ID), memoria, archivos abiertos y estado. El shell que estás usando (`bash`) es a su vez un proceso.
+
+Cada proceso tiene:
+
+- **PID**: identificador único numérico.
+- **PPID**: PID del proceso padre (el que lo lanzó).
+- **UID**: usuario que lo ejecuta.
+- **Estado**: running, sleeping, stopped, zombie...
+- **Exit code**: entero 0-255 que comunica éxito/fallo al padre.
+
+Puedes ver tus procesos con `ps`:
+
+```bash
+ps -ef | head -n 5
+```
+
+```text
+UID        PID  PPID  C STIME TTY          TIME CMD
+root         1     0  0 ene14 ?        00:00:08 /sbin/init
+root         2     0  0 ene14 ?        00:00:00 [kthreadd]
+...
+user      1234  1230  0 14:00 pts/0    00:00:00 bash
+user      1240  1234  0 14:01 pts/0    00:00:00 ps -ef
+```
+
+## 16.2. Foreground vs background
+
+Por defecto, un comando se ejecuta en **foreground**: ocupa la terminal hasta que termina. Para que se ejecute en **background** y libere la terminal inmediatamente, añade `&` al final:
+
+```bash
+sleep 60 &
+```
+
+```text
+[1] 12567
+```
+
+- `[1]` es el **job ID** local del shell (numerado desde 1).
+- `12567` es el **PID** real en el sistema.
+
+Ahora puedes seguir usando la terminal mientras el `sleep` corre en background.
+
+### `jobs`: listar trabajos del shell actual
+
+```bash
+sleep 30 &
+sleep 60 &
+sleep 90 &
+jobs
+```
+
+```text
+[1]   Running                 sleep 30 &
+[2]-  Running                 sleep 60 &
+[3]+  Running                 sleep 90 &
+```
+
+- `+` marca el **último** job en background.
+- `-` marca el **penúltimo**.
+
+### `fg %N` y `bg %N`: traer al frente / mandar atrás
+
+```bash
+sleep 100 &
+fg %1       # trae el job 1 al foreground (la terminal se bloquea)
+# Ctrl+Z para suspender
+bg %1       # lo reanuda en background
+```
+
+### `Ctrl+Z`: suspender
+
+Mientras un proceso está en foreground, `Ctrl+Z` lo **suspende** (SIGSTOP): el proceso se pausa pero sigue existiendo, y aparece en `jobs` como `Stopped`. Lo puedes retomar con `fg %N` (en foreground) o `bg %N` (en background).
+
+### `Ctrl+C`: interrumpir
+
+`Ctrl+C` envía **SIGINT** (señal 2) al proceso en foreground: le pide que termine. La mayoría de los programas lo manejan y mueren limpiamente.
+
+### `Ctrl+D`: EOF
+
+`Ctrl+D` cierra el **stdin**. En una shell interactiva, cierra la sesión. En un programa que lee de stdin (como `cat` sin argumentos), señala "fin de entrada".
+
+## 16.3. Señales
+
+Las señales son **interrupciones software**: mensajes asíncronos que el kernel envía a un proceso para notificarle eventos (Ctrl+C, terminal cerrada, hijo terminado, etc.). Cada señal tiene un número, un nombre y un comportamiento por defecto.
+
+Señales más comunes:
+
+| Señal | Núm | Origen típico | Comportamiento por defecto |
+|-------|-----|---------------|----------------------------|
+| `SIGHUP` | 1 | Cierre de terminal | Terminar |
+| `SIGINT` | 2 | `Ctrl+C` | Terminar |
+| `SIGKILL` | 9 | `kill -9` | **Matar** (no se puede atrapar ni ignorar) |
+| `SIGTERM` | 15 | `kill` (default) | Terminar (se puede atrapar) |
+| `SIGSTOP` | 19 | `Ctrl+Z` | Pausar (no se puede atrapar) |
+| `SIGCONT` | 18 | `bg`, `fg` | Reanudar tras SIGSTOP |
+| `SIGUSR1` | 10 | Personalizada | Definida por el programa |
+| `SIGUSR2` | 12 | Personalizada | Definida por el programa |
+| `SIGPIPE` | 13 | Pipe roto | Terminar |
+
+Lista completa:
+
+```bash
+kill -l
+```
+
+```text
+1) SIGHUP       2) SIGINT       3) SIGQUIT      4) SIGILL       5) SIGTRAP
+6) SIGABRT      7) SIGBUS       8) SIGFPE       9) SIGKILL     10) SIGUSR1
+11) SIGSEGV     12) SIGUSR2     13) SIGPIPE     14) SIGALRM     15) SIGTERM
+...
+```
+
+::: callout-warning
+## SIGKILL (9) es el último recurso
+`kill -9 PID` mata el proceso sin dejarle tiempo de limpiar. Esto puede dejar **archivos temporales**, **locks** rotos o bases de datos corruptas. Empieza siempre por `kill` (SIGTERM) y deja SIGKILL solo para procesos que ignoran SIGTERM o están colgados en system calls.
+
+**En bioinformática**: nunca mates `samtools sort` con `-9` si está escribiendo un BAM: puedes dejar el archivo a medias y corrupto. El `trap` (ver 16.7) ayuda a que los programas limpien al recibir SIGTERM.
+:::
+
+## 16.4. `kill`: enviar señales
+
+```bash
+kill PID             # default: SIGTERM (15)
+kill -15 PID         # SIGTERM explícito
+kill -9 PID          # SIGKILL (matar)
+kill -SIGTERM PID    # por nombre
+kill -SIGHUP PID     # por nombre
+kill %1              # por job ID del shell actual
+kill -l              # listar todas las señales
+```
+
+## 16.5. `pkill` y `killall`: matar por nombre
+
+```bash
+pkill bwa                    # mata procesos cuyo nombre es "bwa"
+pkill -f "bwa mem"           # mata procesos cuya línea de comando completa encaja
+pkill -u usuario bwa         # solo procesos del usuario "usuario"
+pkill -9 -f "fastqc"         # SIGKILL a fastqc
+```
+
+`-f` es crucial: por defecto `pkill` solo mira el **nombre del binario** (sin argumentos). Con `-f` mira la línea completa (`bwa mem ref.fa R1.fq R2.fq`), lo que te permite distinguir entre varios `bwa mem` que corren simultáneamente.
+
+```bash
+killall samtools             # mata todos los procesos llamados "samtools"
+```
+
+`killall` (paquete `psmisc`) es similar pero más antiguo y menos potente que `pkill`.
+
+### `pgrep`: buscar sin matar
+
+```bash
+pgrep -af "bwa mem"
+```
+
+```text
+12345 bwa mem ref.fa R1.fq R2.fq
+12346 bwa mem ref.fa R3.fq R4.fq
+```
+
+- `-a` muestra la línea de comando completa.
+- `-f` busca en la línea de comando completa (no solo el nombre).
+
+`pidof bwa` es una alternativa más simple: solo devuelve los PIDs.
+
+## 16.6. `nohup`, `disown`, `setsid`: sobrevivir al cierre de terminal
+
+### El problema
+
+Cuando cierras la terminal o se cae la conexión SSH, el kernel envía **SIGHUP** a todos los procesos que dependían de esa terminal. La mayoría mueren. Si llevabas 2 horas de alineamiento, se pierde.
+
+### Solución 1: `nohup`
+
+`nohup comando &` arranca el comando **ignorando SIGHUP**:
+
+```bash
+nohup bwa mem ref.fa R1.fq R2.fq > aln.sam 2> aln.log &
+```
+
+```text
+nohup: ignoring input and appending output to 'nohup.out'
+```
+
+Si no rediriges stdout/stderr, `nohup` lo manda a `nohup.out`. **Redirige siempre**:
+
+```bash
+nohup ./pipeline.sh > pipeline.log 2>&1 &
+echo "PID: $!"
+```
+
+`$!` es el PID del último comando lanzado en background.
+
+### Solución 2: `disown`
+
+Si ya lanzaste el comando sin `nohup` y quieres "separarlo" del shell para que sobreviva al cierre:
+
+```bash
+sleep 600 &
+disown %1
+```
+
+A partir de aquí, ese job ya no aparece en `jobs` y no recibirá SIGHUP al cerrar la terminal.
+
+### Solución 3: `setsid`
+
+`setsid comando` arranca el comando en una **nueva sesión**, totalmente separada de la terminal actual:
+
+```bash
+setsid bwa mem ref.fa R1.fq R2.fq > aln.sam 2>&1 < /dev/null &
+```
+
+Es la opción más robusta (no se puede matar con SIGHUP ni cerrando la sesión completa).
+
+::: callout-tip
+## Para WSL2 en Windows
+Si trabajas en WSL, **cerrar la ventana de Windows Terminal o el terminal Linux mata SIGHUP a todo lo que estuviera corriendo**. Usa siempre `nohup ... &` o `tmux`/`screen` para procesos largos. `tmux` es especialmente recomendable: mantiene sesiones persistentes a las que puedes reconectarte con `tmux attach`.
+:::
+
+## 16.7. `wait`: esperar a que terminen los jobs
+
+```bash
+wait            # espera a todos los jobs del shell
+wait $PID       # espera a un PID específico
+wait $!         # espera al último job lanzado en background
+wait %1         # espera al job 1
+```
+
+`wait` devuelve el exit code del proceso esperado. Combinado con `&`, da **paralelismo básico**:
+
+```bash
+for f in *.fastq.gz; do
+    fastqc "$f" &
+done
+wait
+echo "Todos los FastQC completados"
+```
+
+Aquí lanzamos un `fastqc` por archivo en background y esperamos a que todos terminen antes de continuar. Es la forma más simple de paralelización en Bash.
+
+### Limitar paralelismo
+
+El bucle anterior lanza `fastqc` para **todos** los archivos a la vez. Si tienes 50 archivos y 4 cores, esto satura la máquina. Para limitar:
+
+```bash
+#!/usr/bin/env bash
+max_parallel=4
+running=0
+
+for f in *.fastq.gz; do
+    fastqc "$f" &
+    running=$((running + 1))
+    if (( running >= max_parallel )); then
+        wait -n        # esperar a que termine CUALQUIERA (Bash 4.3+)
+        running=$((running - 1))
+    fi
+done
+wait
+```
+
+`wait -n` espera a que termine el **siguiente** job (cualquiera). Requiere Bash 4.3+ (Ubuntu 22.04 tiene 5.1).
+
+## 16.8. `xargs -P` y GNU parallel
+
+### `xargs -P N`
+
+```bash
+ls *.fastq.gz | xargs -I{} -P 4 fastqc {}
+```
+
+- `-I{}` define `{}` como placeholder del nombre.
+- `-P 4` lanza hasta 4 procesos en paralelo.
+
+Es la forma más simple de paralelizar un comando sobre una lista de archivos.
+
+### GNU parallel
+
+Más potente, mejor manejo de output, control de reintentos:
+
+```bash
+parallel -j 4 'fastqc {}' ::: *.fastq.gz
+```
+
+Instalación: `sudo apt install parallel` o `mamba install -c conda-forge parallel`.
+
+::: callout-note
+## `xargs -P` vs GNU parallel
+`xargs` viene con el sistema pero es limitado: no controla el orden de salida, no maneja reintentos, no muestra progreso. Para pipelines serios, **GNU parallel** es claramente superior y es estándar de facto en bioinformática. Para un script de una sola línea que paralelice `gzip`, `xargs -P` es suficiente.
+:::
+
+## 16.9. Monitoreo de procesos
+
+### `ps`
+
+```bash
+ps aux            # todos los procesos del sistema
+ps -ef            # equivalente, formato ligeramente distinto
+ps -ef | grep bwa # filtrar
+```
+
+### `top` y `htop`
+
+```bash
+top               # interactivo, viene preinstalado
+htop              # mejor visualización, colores, árbol de procesos
+```
+
+`htop` no viene preinstalado en Ubuntu:
+
+```bash
+sudo apt install htop
+```
+
+::: callout-tip
+## `htop` es esencial
+Aprende sus teclas: `F5` (vista árbol), `F6` (ordenar por columna: CPU, memoria, tiempo), `F9` (matar proceso), `F4` (filtrar por nombre). En bioinformática lo usarás a diario para vigilar pipelines.
+:::
+
+### Otros monitores
+
+- `atop`: histórico de recursos.
+- `glances`: visión global (CPU, RAM, disco, red).
+- `iotop`: I/O por proceso (`sudo iotop`).
+- `nvidia-smi -l 1`: monitorizar GPUs NVIDIA (cada segundo).
+
+### Recursos del sistema
+
+```bash
+uptime           # load average (carga últimos 1, 5, 15 min)
+free -h          # memoria libre/usada (human-readable)
+vmstat 1 5       # estadísticas cada segundo, 5 veces
+iostat -x 1      # I/O de discos
+df -h            # espacio en disco por partición
+```
+
+### Medir tiempo de ejecución
+
+```bash
+time samtools view -bS aln.sam > aln.bam
+```
+
+```text
+real    0m12.345s
+user    0m11.892s
+sys     0m0.453s
+```
+
+- `real`: tiempo total transcurrido (incluyendo esperas).
+- `user`: tiempo de CPU en modo usuario.
+- `sys`: tiempo de CPU en modo kernel.
+
+Para estadísticas más detalladas (memoria máxima, page faults, I/O):
+
+```bash
+/usr/bin/time -v samtools view -bS aln.sam > aln.bam
+```
+
+```text
+Command being timed: "samtools view -bS aln.sam"
+User time (seconds): 11.89
+System time (seconds): 0.45
+Percent of CPU this job got: 99%
+Elapsed (wall clock) time (h:mm:ss or m:ss): 0:12.35
+Maximum resident set size (kbytes): 245632   # memoria pico (~240 MB)
+...
+```
+
+::: callout-warning
+## Hay dos `time`
+`time` es una palabra reservada del shell (muestra real/user/sys). `/usr/bin/time` es un binario externo (soporta `-v` para estadísticas detalladas). Para ver memoria pico y otros detalles, usa **siempre** `/usr/bin/time -v`.
+:::
+
+## 16.10. `trap`: capturar señales en scripts
+
+`trap` permite **interceptar** señales y ejecutar código cuando llegan. Es **la herramienta** para limpiar recursos al interrumpir un script:
+
+```bash
+trap 'echo "Interrumpido, limpiando..."; rm -f tmpfile; exit 1' SIGINT SIGTERM
+```
+
+### Casos típicos
+
+**Limpieza al salir (cualquier motivo):**
+
+```bash
+TMPFILE=$(mktemp)
+trap 'rm -f "$TMPFILE"' EXIT
+# usar $TMPFILE ...
+```
+
+`EXIT` es una **pseudo-señal** que se dispara cuando el script termina por cualquier motivo (fin normal, error, señal). Es la forma más robusta de garantizar limpieza.
+
+**Ignorar Ctrl+C en script crítico:**
+
+```bash
+trap '' SIGINT    # no hace nada al recibir SIGINT
+```
+
+**Mensaje al recibir SIGHUP (p.ej. alguien cerró la terminal):**
+
+```bash
+trap 'echo "HUP recibido, pero sigo trabajando..."' SIGHUP
+```
+
+### Limpieza con varios temporales
+
+```bash
+TMP_DIR=$(mktemp -d)
+TMP_FILE1="$TMP_DIR/f1.tmp"
+TMP_FILE2="$TMP_DIR/f2.tmp"
+
+cleanup() {
+    rm -rf "$TMP_DIR"
+}
+trap cleanup EXIT INT TERM
+
+# trabajo con los temporales...
+```
+
+Aquí definimos una **función** `cleanup` y la registramos con `trap` para tres señales. Cuando cualquiera llegue (o el script termine), se ejecutará la función y borrará todo el directorio temporal.
+
+### Múltiples traps
+
+```bash
+trap 'echo "Saliendo..."; cleanup' EXIT
+trap 'echo "Ctrl+C detectado"; exit 130' SIGINT
+trap 'echo "TERM detectado"; exit 143' SIGTERM
+```
+
+## 16.11. Límites con `ulimit`
+
+```bash
+ulimit -a          # ver todos los límites
+ulimit -n          # número máximo de archivos abiertos
+ulimit -u          # número máximo de procesos por usuario
+ulimit -v 8388608  # limitar memoria virtual a 8 GB
+```
+
+Útil para evitar que un script bug-eaten consuma toda la memoria. Para límites más avanzados y por usuario/servicio, usar cgroups o systemd-run (avanzado).
+
+## 16.12. Ejemplos bioinformáticos
+
+### Lanzar alineamiento en background y seguir trabajando
+
+```bash
+bwa mem ref.fa R1.fq R2.fq > aln.sam 2> aln.log &
+echo "PID: $!"
+echo "Puedes seguir trabajando. Vigílalo con: tail -f aln.log"
+```
+
+### Esperar a que terminen varios alineamientos paralelos
+
+```bash
+for sample in sample1 sample2 sample3; do
+    bwa mem ref.fa ${sample}_R1.fq ${sample}_R2.fq > ${sample}.sam 2> ${sample}.log &
+done
+wait
+echo "Alineamientos completados"
+```
+
+### Lanzar pipeline largo en nohup
+
+```bash
+nohup ./pipeline.sh muestra_001 reads_R1.fastq.gz reads_R2.fastq.gz \
+    > pipeline_001.log 2>&1 &
+echo "PID: $!"
+echo "Vigila con: tail -f pipeline_001.log"
+```
+
+Puedes cerrar la terminal (o que se caiga SSH) y el pipeline seguirá corriendo.
+
+### Trap para limpiar archivos temporales
+
+```bash
+#!/usr/bin/env bash
+TMP=$(mktemp)
+trap 'rm -f "$TMP"' EXIT
+
+echo "Escribiendo a temporal..."
+echo "datos" > "$TMP"
+# ...
+# Al terminar (o si Ctrl+C), rm elimina $TMP
+```
+
+### Ver qué consume más memoria durante alineamiento
+
+```bash
+/usr/bin/time -v bwa mem ref.fa R1.fq R2.fq > aln.sam 2> aln_mem.log
+grep "Maximum resident" aln_mem.log
+# Maximum resident set size (kbytes): 1234567
+```
+
+Saber cuánta memoria consume cada herramienta es **crítico** para dimensionar un HPC o un servidor.
+
+## 16.13. Ejercicios
+
+### Ejercicio 1
+
+Lanza en background tres procesos `sleep 30` asignándolos a variables (`p1`, `p2`, `p3`). Lista con `jobs`, trae uno al foreground con `fg %N`, suspéndelo con `Ctrl+Z`, mata otro con `kill %N`. **Documenta cada paso** con el output esperado.
+
+### Ejercicio 2
+
+Escribe un script que lance `fastqc` en paralelo para todos los archivos `*.fastq.gz` del directorio (un proceso por archivo con `&`), espere con `wait`, y muestre "FastQC completado". **Limita a máximo 4 procesos simultáneos** usando un contador.
+
+### Ejercicio 3
+
+Escribe un script `pipeline_seguro.sh` que use `trap` para:
+- (a) Al recibir **SIGINT** o **SIGTERM**: mostrar "Limpiando archivos temporales..." y eliminar `/tmp/pipeline_*`.
+- (b) Al **EXIT** normal (fin del script): mostrar "Pipeline finalizado".
+
+Prueba el script y luego interrúmpelo con `Ctrl+C` para verificar que el `trap` se ejecuta.
+
+## 16.14. Soluciones
+
+### Solución 1
+
+```bash
+#!/usr/bin/env bash
+# background_demo.sh
+
+# Lanzar tres sleeps en background y capturar sus PIDs con $!
+p1=$(sleep 30 & echo $!)
+p2=$(sleep 30 & echo $!)
+p3=$(sleep 30 & echo $!)
+
+echo "Lanzados tres sleeps con PIDs: $p1, $p2, $p3"
+
+# Listar trabajos
+jobs
+```
+
+```text
+Lanzados tres sleeps con PIDs: 12001, 12002, 12003
+[1]   Running                 sleep 30 &
+[2]-  Running                 sleep 30 &
+[3]+  Running                 sleep 30 &
+```
+
+```bash
+# Traer el job 2 al foreground
+fg %2
+```
+
+```text
+sleep 30
+```
+
+La terminal se bloquea. Pulsas **Ctrl+Z**:
+
+```text
+^Z
+[2]+  Stopped                 sleep 30
+```
+
+El proceso queda pausado (estado `Stopped`). Lo puedes reanudar con `bg %2` o `fg %2`.
+
+```bash
+# Matar el job 1 (sin traerlo al foreground)
+kill %1
+jobs
+```
+
+```text
+[1]   Terminated              sleep 30
+[2]+  Running                 sleep 30 &
+[3]-  Running                 sleep 30 &
+```
+
+```bash
+# Esperar a los que quedan
+wait
+echo "Todos los jobs terminados"
+```
+
+Comentarios:
+
+- `comando & echo $!` captura el PID del comando en background (`$!` es siempre el PID del último job lanzado en background). Es un patrón común.
+- `jobs` solo lista los jobs del **shell actual**. En un script no interactivo, `jobs` puede no mostrar nada a menos que el script espere; para verlos dentro de un script, hay que asegurarse de no haber hecho `wait`.
+- `Ctrl+Z` envía SIGSTOP desde la terminal. No se puede ignorar ni atrapar (es una de las dos señales que no admite `trap`).
+- `kill %N` mata por **job ID** (con `%`), `kill PID` mata por PID.
+- Por defecto `kill` envía SIGTERM (15). El proceso puede atraparlo y negarse a morir; entonces usas `kill -9 %N`.
+
+### Solución 2
+
+```bash
+#!/usr/bin/env bash
+# fastqc_paralelo.sh
+
+set -euo pipefail
+
+# Directorio con los fastq.gz
+DIR="${1:-.}"
+MAX_PARALLEL=4
+
+# Asegurar que fastqc está instalado
+command -v fastqc >/dev/null || { echo "fastqc no encontrado"; exit 1; }
+
+# Asegurar directorio de salida
+mkdir -p fastqc_results
+
+# Contador de procesos en vuelo
+running=0
+
+shopt -s nullglob
+for f in "$DIR"/*.fastq.gz; do
+    echo "Lanzando fastqc para: $(basename "$f")"
+    fastqc -o fastqc_results "$f" > /dev/null 2>&1 &
+    running=$((running + 1))
+
+    # Si llegamos al máximo, esperar a que termine alguno
+    if (( running >= MAX_PARALLEL )); then
+        wait -n    # Bash 4.3+: espera a que termine CUALQUIERA
+        running=$((running - 1))
+    fi
+done
+
+# Esperar a los que queden
+wait
+echo "FastQC completado para $running archivo(s) procesados."
+```
+
+Comentarios:
+
+- `command -v fastqc >/dev/null` comprueba que `fastqc` está en el PATH sin imprimir nada. Si no existe, aborta con exit code 1.
+- `shopt -s nullglob` evita que el bucle intente procesar un literal `*.fastq.gz` si no hay archivos.
+- `wait -n` (Bash 4.3+) espera a que **cualquier** job termine, sin especificar cuál. Es la forma idiomática de limitar paralelismo sin librerías externas.
+- `running=$((running - 1))` decrementa el contador cuando un job termina. No es exacto (no sabemos cuántos jobs terminaron desde el último `wait -n`), pero para mantener el límite de 4 es suficiente.
+- Si `wait -n` no está disponible (Bash < 4.3), una alternativa es `wait` sin argumentos (espera a todos), pero pierdes la capacidad de mantener 4 procesos en marcha todo el tiempo.
+- Alternativa con `xargs -P`:
+  ```bash
+  ls "$DIR"/*.fastq.gz | xargs -I{} -P 4 fastqc -o fastqc_results {}
+  ```
+  Es más corto pero menos control sobre el output.
+
+### Solución 3
+
+```bash
+#!/usr/bin/env bash
+# pipeline_seguro.sh
+
+# Directorio para temporales (usamos mktemp para garantirzar unicidad)
+TMP_DIR=$(mktemp -d /tmp/pipeline_XXXXXX)
+
+# Función de limpieza
+cleanup() {
+    echo "Limpiando archivos temporales..."
+    rm -rf /tmp/pipeline_*
+    # También podríamos borrar $TMP_DIR específicamente
+}
+
+# Trap para señales de interrupción
+trap 'cleanup; exit 130' SIGINT
+trap 'cleanup; exit 143' SIGTERM
+trap 'echo "Pipeline finalizado"' EXIT
+
+echo "=== Inicio del pipeline ==="
+echo "Directorio temporal: $TMP_DIR"
+
+# Simulamos trabajo creando temporales
+echo "Creando temporales..."
+for i in 1 2 3; do
+    echo "datos intermedios $i" > "$TMP_DIR/step_$i.tmp"
+    sleep 2    # simula procesamiento
+done
+
+# Simulamos un paso largo que el usuario podría interrumpir
+echo "Realizando paso largo (5 segundos). Prueba Ctrl+C aquí..."
+sleep 5
+
+echo "=== Pipeline completado con éxito ==="
+# Al terminar, se ejecuta el trap EXIT y muestra "Pipeline finalizado"
+```
+
+Comentarios:
+
+- `mktemp -d /tmp/pipeline_XXXXXX` crea un directorio temporal con nombre **único** (las X se sustituyen por caracteres aleatorios). La ruta base `/tmp/pipeline_` facilita el patrón `/tmp/pipeline_*` para borrar todo.
+- `trap 'cleanup; exit 130' SIGINT`: cuando llega SIGINT (Ctrl+C), ejecuta `cleanup` (que borra los temporales) y luego sale con código **130**. **Convención**: exit code = 128 + número de señal. SIGINT = 2, así que 128+2 = 130. SIGTERM = 15, así que 128+15 = 143.
+- `trap 'echo "Pipeline finalizado"' EXIT`: esta pseudo-señal se dispara en **cualquier** salida del script, sea por fin normal, exit, error con `set -e`, o por una de las señales anteriores. Es el sitio ideal para logs finales.
+- El orden importa: el `trap EXIT` se ejecuta **después** de los traps de SIGINT/SIGTERM (porque esos hacen `exit`), así que verás:
+  ```text
+  Limpiando archivos temporales...
+  Pipeline finalizado
+  ```
+- Para probarlo: ejecuta el script y, durante el `sleep 5`, pulsa `Ctrl+C`. Verás los dos mensajes y el script terminará con exit code 130 (`echo $?` después).
+
+Salida esperada al interrumpir con Ctrl+C durante el `sleep 5`:
+
+```text
+=== Inicio del pipeline ===
+Directorio temporal: /tmp/pipeline_x7Hk2P
+Creando temporales...
+Realizando paso largo (5 segundos). Prueba Ctrl+C aquí...
+^C
+Limpiando archivos temporales...
+Pipeline finalizado
+```
+
+```bash
+echo "Exit code: $?"
+```
+
+```text
+Exit code: 130
+```
+
+::: callout-important
+## `trap` es lo que separa un script amateur de uno profesional
+Un script sin `trap` que se interrumpe con Ctrl+C deja temporales, locks y BAMs a medias que corrompen pipelines. Con `trap EXIT` garantizas limpieza **siempre**, incluso en errores catastróficos. En el capítulo 17, el pipeline integrador usará `trap` para limpiar SAMs intermedios, BAMs temporales y logs. Es **imprescindible** en pipelines serios.
+:::
+
+Con esto dominas la gestión de procesos y señales en Bash. Estás listo para el capítulo final: **un pipeline completo de variant calling bacteriano** que integra todo lo aprendido en los 16 capítulos previos.

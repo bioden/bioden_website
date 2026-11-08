@@ -1,0 +1,426 @@
+---
+title: "Capítulo 4: Permisos, usuarios y grupos"
+---
+
+# Capítulo 4: Permisos, usuarios y grupos
+
+Linux es un sistema **multiusuario** por diseño: varios investigadores pueden trabajar simultáneamente en el mismo servidor sin pisarse. El mecanismo que garantiza que cada uno solo acceda a lo que le corresponde es el **sistema de permisos UNIX**, heredado de los años 70 y aún vigente. Entenderlo es imprescindible cuando compartes datos en un laboratorio o administras un clúster HPC.
+
+## 4.1. El modelo de permisos UNIX
+
+Cada archivo y directorio tiene tres tipos de permisos, que aplican a tres categorías de usuarios:
+
+### Permisos básicos
+
+| Permiso | Letra | Octal | Para archivo | Para directorio |
+|---------|-------|-------|--------------|-----------------|
+| Lectura | `r` | 4 | Ver contenido (`cat`, `less`) | Listar (`ls`) |
+| Escritura | `w` | 2 | Modificar | Crear/borrar dentro |
+| Ejecución | `x` | 1 | Ejecutar como programa | Entrar con `cd` |
+
+### Categorías
+
+| Categoría | Letra | Significado |
+|-----------|-------|-------------|
+| Usuario | `u` | El propietario |
+| Grupo | `g` | El grupo propietario |
+| Otros | `o` | El resto del mundo |
+| Todos | `a` | `u` + `g` + `o` |
+
+## 4.2. Visualización con `ls -l`
+
+```bash
+ls -l analisis.sh
+```
+
+```text
+-rwxr-xr-- 1 bioinfo lab 1024 ene 15 11:02 analisis.sh
+```
+
+Análisis de la primera columna carácter por carácter:
+
+```text
+- r w x r - x r - -
+│ │ │ │ │ │ │ │ │ │
+│ │ │ │ │ │ │ │ │ └── otros: lectura
+│ │ │ │ │ │ │ │ └── otros: no escritura
+│ │ │ │ │ │ │ └── otros: no ejecución
+│ │ │ │ │ │ └── grupo: ejecución
+│ │ │ │ │ └── grupo: no escritura
+│ │ │ │ └── grupo: lectura
+│ │ │ └── usuario: ejecución
+│ │ └── usuario: escritura
+│ └── usuario: lectura
+└── tipo: '-' archivo regular (otros: 'd' directorio, 'l' enlace, etc.)
+```
+
+::: callout-note
+## Tipos especiales en el primer carácter
+- `-` → archivo regular
+- `d` → directorio
+- `l` → enlace simbólico
+- `c` → dispositivo de caracteres (teclado, /dev/null)
+- `b` → dispositivo de bloques (disco, /dev/sda)
+- `p` → tubería con nombre (FIFO)
+- `s` → socket
+:::
+
+## 4.3. Representación octal
+
+Cada permiso tiene un peso: `r = 4`, `w = 2`, `x = 1`. La suma para cada categoría (u, g, o) da un dígito entre 0 y 7. El permiso completo se escribe como tres dígitos octales.
+
+| Permiso simbólico | Octal | Significado |
+|-------------------|-------|-------------|
+| `rwx` | 7 | 4+2+1: lectura, escritura y ejecución |
+| `rw-` | 6 | 4+2: lectura y escritura |
+| `r-x` | 5 | 4+1: lectura y ejecución (sin escritura) |
+| `r--` | 4 | Solo lectura |
+| `-wx` | 3 | Solo escritura y ejecución (raro) |
+| `-w-` | 2 | Solo escritura (muy raro) |
+| `--x` | 1 | Solo ejecución (raro) |
+| `---` | 0 | Sin permisos |
+
+## 4.4. Tabla de permisos comunes
+
+| Octal | Simbólico | Caso de uso típico |
+|-------|-----------|---------------------|
+| `755` | `rwxr-xr-x` | Ejecutable público (script, binario) |
+| `644` | `rw-r--r--` | Archivo regular privado de solo lectura para otros |
+| `600` | `rw-------` | Archivo privado (claves, datos sensibles) |
+| `700` | `rwx------` | Directorio o ejecutable privado |
+| `664` | `rw-rw-r--` | Archivo compartido con un grupo |
+| `775` | `rwxrwxr-x` | Directorio compartido con grupo |
+| `777` | `rwxrwxrwx` | Acceso total a todos (¡peligroso!) |
+
+::: callout-warning
+## 777 casi nunca es la respuesta
+Si estás pensando en `chmod 777`, casi seguro que hay una solución mejor. Exponer escritura a "otros" abre brechas de seguridad. En su lugar, crea un grupo compartido y usa `775` o `664`.
+:::
+
+## 4.5. `chmod`: cambiar permisos
+
+### Sintaxis simbólica
+
+```bash
+chmod u+x archivo            # añade ejecución al usuario
+chmod g-w archivo            # quita escritura al grupo
+chmod o=r archivo            # fija permisos de otros a solo lectura
+chmod a+x archivo            # añade ejecución a todos (a = ugo)
+chmod u+x,g-w,o-w archivo   # varios cambios a la vez
+```
+
+### Sintaxis octal
+
+```bash
+chmod 755 archivo            # rwxr-xr-x
+chmod 644 archivo            # rw-r--r--
+chmod 600 ~/.ssh/id_rsa      # permisos estrictos para claves SSH
+```
+
+### Recursivo
+
+```bash
+chmod -R 755 proyecto/       # aplica a todo el árbol
+chmod -R u+rwX,g+rX,o+rX proyecto/  # X: ejecución solo a directorios y a archivos que ya la tengan
+```
+
+::: callout-tip
+## La `X` mayúscula
+`chmod -R u+rwX,g+rX proyecto/` es muy útil: otorga ejecución **solo a directorios** (y a los archivos que ya tenían `x`), sin convertir por error todos los `.txt` en ejecutables.
+:::
+
+## 4.6. `chown`: cambiar propietario
+
+```bash
+sudo chown ana archivo.txt            # cambia el propietario a ana
+sudo chown ana:lab archivo.txt        # cambia propietario y grupo
+sudo chown -R ana:lab proyecto/       # recursivo
+```
+
+Solo `root` (o el propietario actual) puede cambiar el propietario. Por eso se antepone `sudo`.
+
+## 4.7. `chgrp`: cambiar grupo
+
+```bash
+sudo chgrp lab proyecto/              # cambia el grupo
+sudo chgrp -R lab proyecto/           # recursivo
+```
+
+`chown usuario:grupo` y `chgrp grupo` hacen esencialmente lo mismo para el grupo.
+
+## 4.8. `umask`: permisos por defecto
+
+Cuando creas un archivo, Linux aplica los permisos **por defecto menos la `umask`**. La `umask` es un valor octal que "filtra" los permisos iniciales.
+
+```bash
+umask
+# 0022
+```
+
+- Para **archivos**, el valor por defecto es `666`. `666 - 022 = 644` → `rw-r--r--`.
+- Para **directorios**, el valor por defecto es `777`. `777 - 022 = 755` → `rwxr-xr-x`.
+
+Si quieres compartir más con el grupo, define `umask 0002`:
+
+```bash
+umask 0002
+# Archivos: 666 - 002 = 664  (rw-rw-r--)
+# Directorios: 777 - 002 = 775  (rwxrwxr-x)
+```
+
+Para que sea permanente, añade `umask 0002` a `~/.bashrc` o `/etc/profile` (global).
+
+## 4.9. `id`, `groups`, `who`, `w`
+
+```bash
+id
+# uid=1000(bioinfo) gid=1000(bioinfo) groups=1000(bioinfo),27(sudo),1001(lab)
+
+groups
+# bioinfo sudo lab
+
+who       # lista usuarios conectados
+# bioinfo tty1        2024-01-15 09:00
+# ana     pts/0       2024-01-15 10:30 (192.168.1.20)
+
+w         # información detallada + qué están haciendo
+```
+
+## 4.10. Gestión de usuarios (mención)
+
+```bash
+sudo adduser nueva_persona          # asistido, crea home, pide password
+sudo useradd -m -s /bin/bash usr    # bajo nivel, hay que pasar opciones
+sudo usermod -aG lab bioinfo        # añade bioinfo al grupo lab (-a = append)
+sudo deluser viejo_investigador     # elimina (sin -r mantiene el home)
+sudo deluser --remove-home viejo    # elimina también el home
+```
+
+::: callout-warning
+## `-a` es imprescindible con `-G`
+`usermod -G lab bioinfo` (sin `-a`) **reemplaza** la lista de grupos secundarios por `lab`, perdiendo los demás. Siempre usa `-aG`.
+:::
+
+## 4.11. `sudo` y `/etc/sudoers`
+
+`sudo` permite ejecutar comandos como `root`. La configuración de quién puede usarlo está en `/etc/sudoers`.
+
+::: callout-danger
+## NUNCA edites `/etc/sudoers` directamente
+Si lo haces con un editor normal y cometes un error de sintaxis, **te quedas sin acceso root**. Usa siempre:
+```bash
+sudo visudo
+```
+que valida la sintaxis antes de guardar.
+:::
+
+Para dar permisos de sudo a un usuario, se añade una línea tipo:
+
+```text
+bioinfo ALL=(ALL:ALL) ALL
+```
+
+En WSL2, el usuario que creas al instalar suele pertenecer ya al grupo `sudo`.
+
+## 4.12. Permisos especiales: setuid, setgid, sticky bit
+
+Existen tres permisos adicionales representados por un **cuarto dígito octal** delante del habitual:
+
+| Permiso | Octal | Símbolo | Significado |
+|---------|-------|---------|-------------|
+| setuid | 4 | `u+s` | El ejecutable se ejecuta como el **propietario**, no como quien lo invoca |
+| setgid | 2 | `g+s` | Igual con el grupo; en directorios, hace que los archivos creados hereden el grupo del directorio |
+| sticky bit | 1 | `+t` | En directorios compartidos, solo el propietario puede borrar sus archivos |
+
+Ejemplo:
+
+```bash
+chmod 2775 carpeta_compartida       # setgid + rwxrwxr-x
+chmod 1777 /tmp                     # sticky + rwxrwxrwx (¡así es /tmp!)
+```
+
+En `ls -l` aparecen como:
+
+- `rwsr-xr-x` (setuid: la `x` del usuario es `s`)
+- `rwxr-sr-x` (setgid: la `x` del grupo es `s`)
+- `rwxrwxrwt` (sticky: la `x` de otros es `t`)
+
+::: callout-tip
+## setgid en directorios compartidos del laboratorio
+Si el laboratorio tiene `/data/lab/` y quieres que **todo lo que se cree dentro** sea propiedad del grupo `lab` automáticamente (no del grupo personal de cada usuario), aplica:
+```bash
+sudo chmod 2775 /data/lab
+```
+:::
+
+## 4.13. ACLs (mención)
+
+Los permisos UNIX clásicos tienen solo tres categorías (u, g, o). Cuando necesitas permisos más finos (p. ej., "el usuario X puede leer pero el usuario Y no"), se usan **ACL** (Access Control Lists):
+
+```bash
+sudo apt install acl
+setfacl -m u:ana:rx archivo.txt       # da permisos r-x solo a ana
+setfacl -m g:lab:rw archivo.txt       # da permisos rw al grupo lab
+getfacl archivo.txt                   # consulta los ACL
+```
+
+En `ls -l` aparecerá un `+` después de los permisos: `-rw-r--r--+`.
+
+## 4.14. En WSL: el usuario root
+
+Dentro de WSL, el usuario `root` existe y tiene acceso completo. Por defecto, tu usuario está en `/etc/sudoers`. Puedes entrar como root con:
+
+```bash
+sudo -i      # o: wsl -u root  desde PowerShell
+```
+
+::: callout-important
+## Cuidado con root en WSL
+Aunque WSL es un subsistema, `rm -rf /` dentro de él **destruye completamente tu instalación de Linux** y todos los datos asociados. Trátalo con el mismo respeto que a cualquier Linux.
+:::
+
+## 4.15. Ejemplos bioinformáticos
+
+### Hacer ejecutable un script de pipeline
+
+```bash
+touch pipeline.sh
+chmod +x pipeline.sh
+./pipeline.sh              # solo funciona si tiene +x
+```
+
+### Permisos para datos compartidos del laboratorio
+
+```bash
+# Datos: lectura para todos en el grupo, escritura solo para el grupo
+chmod 664 datos/ensayo.csv
+
+# Scripts: ejecutables para el grupo
+chmod 775 scripts/analisis.sh
+```
+
+### Cambiar propietario de un proyecto
+
+Cuando llega un nuevo investigador y hereda un proyecto:
+
+```bash
+sudo chown -R ana:lab /data/proyectos/tesis_ana/
+sudo chmod -R g+rwX /data/proyectos/tesis_ana/
+```
+
+---
+
+## Ejercicios
+
+### Ejercicio 1
+
+Crea el archivo `analisis.sh` con `touch`. Verifica los permisos iniciales con `ls -l`. Cámbialos a `755` con `chmod` octal. Luego cámbialos a `rwxr-x---` (750) usando **notación simbólica**. Verifica con `ls -l` después de cada cambio.
+
+### Ejercicio 2
+
+Crea el directorio `compartido/` con permisos `775`. Dentro, crea el archivo `datos.csv` con permisos `664`. Usa `ls -ld compartido/` y `ls -l compartido/datos.csv` para verificar ambos conjuntos de permisos.
+
+### Ejercicio 3
+
+Crea un script `hola.sh` que contenga `echo "Hola mundo"` (puedes usar `echo 'echo "Hola mundo"' > hola.sh`). Sin darle permiso de ejecución, intenta correrlo con `./hola.sh`. Documenta el error. Luego hazlo ejecutable con `chmod +x hola.sh` y vuelve a intentar. Documenta la salida.
+
+---
+
+## Soluciones
+
+### Solución 1
+
+```bash
+# 1. Crear el archivo
+touch analisis.sh
+
+# 2. Verificar permisos iniciales (depende de umask, típicamente 644)
+ls -l analisis.sh
+# -rw-r--r-- 1 bioinfo bioinfo 0 ene 15 11:00 analisis.sh
+
+# 3. Cambiar a 755 (rwxr-xr-x) con sintaxis octal
+chmod 755 analisis.sh
+ls -l analisis.sh
+# -rwxr-xr-x 1 bioinfo bioinfo 0 ene 15 11:00 analisis.sh
+
+# 4. Cambiar a rwxr-x--- (equivalente octal 750) con sintaxis simbólica
+chmod o-rx analisis.sh            # quita r y x a 'otros'
+ls -l analisis.sh
+# -rwxr-x--- 1 bioinfo bioinfo 0 ene 15 11:00 analisis.sh
+
+# Equivalente en una sola orden:
+chmod o= analisis.sh              # 'otros' sin ningún permiso
+# o directamente:
+chmod 750 analisis.sh
+```
+
+::: callout-note
+`chmod o-rx` solo quita `r` y `x` dejando intactos los demás. `chmod o=` quita **todo** a otros.
+:::
+
+### Solución 2
+
+```bash
+# 1. Crear el directorio
+mkdir compartido
+
+# 2. Asignar permisos 775 (rwxrwxr-x)
+chmod 775 compartido
+
+# 3. Crear el archivo dentro
+echo "sample,position,depth" > compartido/datos.csv
+
+# 4. Asignar permisos 664 al archivo
+chmod 664 compartido/datos.csv
+
+# 5. Verificar el directorio (-d: muestra info del dir, no de su contenido)
+ls -ld compartido
+# drwxrwxr-x 2 bioinfo bioinfo 4096 ene 15 11:10 compartido
+
+# 6. Verificar el archivo
+ls -l compartido/datos.csv
+# -rw-rw-r-- 1 bioinfo bioinfo 23 ene 15 11:10 compartido/datos.csv
+```
+
+**Interpretación**:
+- Directorio `775`: `bioinfo` y los miembros del grupo `bioinfo` pueden crear/borrar archivos dentro; otros solo pueden listar y entrar.
+- Archivo `664`: el propietario y el grupo pueden leer y modificar; otros solo leer.
+
+### Solución 3
+
+```bash
+# 1. Crear el script
+echo 'echo "Hola mundo"' > hola.sh
+
+# 2. Ver permisos
+ls -l hola.sh
+# -rw-r--r-- 1 bioinfo bioinfo 17 ene 15 11:15 hola.sh
+# (sin 'x' → NO es ejecutable)
+
+# 3. Intentar ejecutarlo SIN permisos
+./hola.sh
+# bash: ./hola.sh: Permission denied
+# (el error dice "Permiso denegado": el sistema no puede ejecutarlo)
+
+# 4. Dar permiso de ejecución
+chmod +x hola.sh
+# equivalente: chmod a+x hola.sh
+
+# 5. Ver permisos después
+ls -l hola.sh
+# -rwxr-xr-x 1 bioinfo bioinfo 17 ene 15 11:15 hola.sh
+
+# 6. Volver a intentar
+./hola.sh
+# Hola mundo
+```
+
+::: callout-tip
+## ¿Por qué falló la primera vez?
+En Linux, un archivo solo puede ejecutarse como programa si tiene el bit `x` activado. La extensión `.sh` **no importa**: lo que define si algo es "ejecutable" es el permiso `x`, no el nombre del archivo.
+:::
+
+::: callout-note
+## Resumen del capítulo
+Hemos visto el modelo de permisos UNIX (r/w/x para u/g/o), la lectura de `ls -l`, las representaciones simbólica y octal, el uso de `chmod`, `chown`, `chgrp`, `umask`, los permisos especiales (setuid/setgid/sticky), las ACL y la importancia de `sudo`. Saber manejar permisos te permite compartir datos con tus compañeros sin poner en riesgo el resto del sistema. En el Capítulo 5 entraremos en el mundo de las variables y la sustitución de comandos, base de la programación en Bash.
+:::

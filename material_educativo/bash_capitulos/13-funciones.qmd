@@ -1,0 +1,550 @@
+---
+title: "Capítulo 13: Funciones, argumentos y ámbito"
+---
+
+# Capítulo 13: Funciones, argumentos y ámbito
+
+Hasta ahora, todos los scripts que hemos escrito eran **lineales**: una secuencia de comandos que se ejecutan de arriba abajo. Cuando un bloque de código se repite (calcular %GC para varias secuencias, validar varios BAMs, escribir logs con timestamp), lo copiamos y pegábamos. Eso **no escala**: si descubres un bug, tienes que corregirlo en 30 sitios.
+
+Las **funciones** rompen ese patrón. Permiten empaquetar un bloque de código con un nombre, darle argumentos, devolver un resultado y reutilizarlo cuantas veces quieras. En este capítulo aprenderás a definir, llamar, documentar y combinar funciones para escribir scripts Bash modulares y mantenibles, con ejemplos bioinformáticos reales (cálculo de %GC, comprobación de BAMs indexados, reintentos con backoff, logging con timestamps).
+
+## 13.1. Definición y llamada a funciones
+
+En Bash existen **dos sintaxis** equivalentes para definir una función:
+
+```bash
+# Forma POSIX (recomendada para máxima portabilidad)
+nombre_funcion() {
+    comandos
+}
+
+# Forma con keyword `function` (Bash/Ksh específica, no POSIX)
+function nombre_funcion {
+    comandos
+}
+```
+
+Ambas son idénticas en comportamiento. La primera se ve más y es la que usaremos en el resto del curso. La función **no se ejecuta** al definirse: solo queda registrada en el shell. Para ejecutarla, la "llamas" por su nombre:
+
+```bash
+saludar() {
+    echo "Hola, mundo bioinformático"
+}
+
+saludar     # invocación
+```
+
+```text
+Hola, mundo bioinformático
+```
+
+::: callout-note
+## Las funciones deben definirse ANTES de usarse
+Bash lee el script de arriba abajo. Si llamas a una función en la línea 10 pero la defines en la línea 30, Bash dirá `command not found`. La convención profesional es poner las funciones al principio del script y la lógica principal al final (idealmente dentro de una función `main`).
+:::
+
+## 13.2. Argumentos: parámetros posicionales
+
+Cuando llamas a una función con argumentos, estos se pasan como **parámetros posicionales** dentro de la función: `$1`, `$2`, ..., `$9`. A partir del décimo hay que usar llaves: `${10}`, `${11}`.
+
+```bash
+alinear() {
+    local ref=$1
+    local r1=$2
+    local r2=$3
+    echo "Alineando $r1 y $r2 contra $ref"
+}
+
+alinear ref.fa muestra_R1.fq muestra_R2.fq
+```
+
+```text
+Alineando muestra_R1.fq y muestra_R2.fq contra ref.fa
+```
+
+Variables especiales dentro de la función:
+
+| Variable | Significado |
+|----------|-------------|
+| `$0` | Nombre del script (no de la función) |
+| `$1`, `$2`, ... | Argumentos posicionales |
+| `$#` | Número de argumentos recibidos |
+| `$@` | Todos los argumentos, como strings separados (preserva comillas) |
+| `$*` | Todos los argumentos, unidos en un solo string con IFS como separador |
+| `$?` | Exit code del último comando ejecutado |
+
+La diferencia entre `$@` y `$*` solo se aprecia entre comillas:
+
+```bash
+demo() {
+    echo "Con \$@:"
+    for a in "$@"; do echo "  [$a]"; done
+    echo "Con \$*:"
+    for a in "$*"; do echo "  [$a]"; done
+}
+demo "primer arg" "segundo arg"
+```
+
+```text
+Con $@:
+  [primer arg]
+  [segundo arg]
+Con $*:
+  [primer arg segundo arg]
+```
+
+Casi siempre quieres `"$@"` (con comillas), porque preserva cada argumento como unidad.
+
+### `shift`: desplazar argumentos
+
+`shift` elimina `$1` y recorre todos los demás una posición a la izquierda (`$2` → `$1`, `$3` → `$2`, ...). Útil cuando los primeros argumentos son "fijos" y el resto es una lista variable:
+
+```bash
+procesar() {
+    local formato=$1
+    shift
+    for f in "$@"; do
+        echo "Procesando $f como $formato"
+    done
+}
+
+procesar bam muestra1.bam muestra2.bam muestra3.bam
+```
+
+```text
+Procesando muestra1.bam como bam
+Procesando muestra2.bam como bam
+Procesando muestra3.bam como bam
+```
+
+## 13.3. Variables locales y ámbito
+
+Por defecto, en Bash **todas las variables son globales**, incluso si se definen dentro de una función. Esto es una de las trampas más frecuentes:
+
+```bash
+peligro() {
+    resultado=42        # ¡es global!
+}
+
+peligro
+echo "resultado = $resultado"   # 42, aunque nunca la declaraste fuera
+```
+
+Para evitarlo, declara con `local`:
+
+```bash
+segura() {
+    local resultado=42      # solo existe aquí dentro
+}
+
+segura
+echo "resultado = $resultado"   # vacío
+```
+
+::: callout-warning
+## `local` también enmascara errores
+Una variable `local` siempre tiene exit code 0, incluso si el comando de asignación falla. Por eso **nunca** hagas:
+```bash
+local var=$(comando_que_puede_fallar)   # $? SIEMPRE es 0
+```
+Hazlo en dos pasos:
+```bash
+local var
+var=$(comando_que_puede_fallar)   # $? refleja el exit code real
+if [[ $? -ne 0 ]]; then echo "fallo"; fi
+```
+:::
+
+### Sombreado (shadowing)
+
+Una variable `local` con el mismo nombre que una global **oculta** la global dentro de la función, pero no la modifica:
+
+```bash
+n=100
+modificar() {
+    local n=5
+    echo "dentro: $n"   # 5
+}
+modificar
+echo "fuera: $n"        # 100 (sin cambios)
+```
+
+## 13.4. Return codes
+
+Cada comando devuelve un **exit code** entre 0 y 255 (0 = éxito, distinto de 0 = error). Las funciones, por defecto, devuelven el exit code del **último comando** ejecutado dentro de ellas. Puedes forzarlo con `return N`:
+
+```bash
+es_par() {
+    local n=$1
+    if (( n % 2 == 0 )); then
+        return 0    # éxito
+    else
+        return 1    # fallo
+    fi
+}
+
+es_par 4 && echo "4 es par"
+es_par 7 || echo "7 no es par"
+```
+
+```text
+4 es par
+7 no es par
+```
+
+`$?` lee el código de retorno:
+
+```bash
+es_par 10
+echo "Exit code: $?"   # 0
+```
+
+::: callout-warning
+## `return` no es como en Python/C
+`return` en Bash **solo** devuelve un entero 0-255, no un valor arbitrario. Para devolver strings o números grandes, **imprime con `echo` y captura con `$(...)`** (lo veremos en la siguiente sección). `return` se usa para señalizar éxito/fallo.
+:::
+
+## 13.5. Capturar la salida de una función (stdout)
+
+Si una función hace `echo` (o imprime cualquier cosa a stdout), puedes capturarlo con sustitución de comando `$(...)`:
+
+```bash
+gc_content() {
+    local seq=$(echo "$1" | tr 'a-z' 'A-Z')
+    local gc=$(echo "$seq" | tr -cd 'GC' | wc -c)
+    local total=${#seq}
+    echo "scale=2; $gc * 100 / $total" | bc
+}
+
+porcentaje=$(gc_content ATGCGCAT)
+echo "%GC = $porcentaje"
+```
+
+```text
+%GC = 50.00
+```
+
+Este es el **patrón más usado** para "devolver valores" desde una función en Bash: imprimir y capturar.
+
+## 13.6. Pasar arrays a funciones
+
+Bash no pasa arrays enteros como argumentos de forma natural. El truco es expandir el array con `"${arr[@]}"` y reconstruirlo dentro:
+
+```bash
+procesar_muestras() {
+    local -a muestras=("$@")        # reconstruir array
+    for m in "${muestras[@]}"; do
+        echo "Procesando $m"
+    done
+}
+
+mis_muestras=("S01" "S02" "S03")
+procesar_muestras "${mis_muestras[@]}"
+```
+
+```text
+Procesando S01
+Procesando S02
+Procesando S03
+```
+
+## 13.7. Funciones recursivas
+
+Una función puede llamarse a sí misma. El ejemplo clásico es el factorial:
+
+```bash
+factorial() {
+    local n=$1
+    if (( n <= 1 )); then
+        echo 1
+    else
+        local prev=$(factorial $((n-1)))
+        echo $((n * prev))
+    fi
+}
+
+factorial 5    # 120
+```
+
+::: callout-warning
+## Cuidado con la recursión en Bash
+Bash no es eficiente para recursión: cada llamada es un subproceso caro. Para valores grandes (>1000), usa iteración. La recursión se ve mucho en scripts de ejemplo y en árboles de directorios, pero rara vez en producción.
+:::
+
+## 13.8. Exportar funciones: `export -f`
+
+Las funciones normalmente solo existen en el shell actual. Para que un subshell (por ejemplo, `xargs`, `find -exec` o un pipeline) las vea, hay que **exportarlas** con `export -f`:
+
+```bash
+procesar() {
+    echo "Procesando $1"
+}
+export -f procesar
+
+ls *.fastq.gz | xargs -I{} -P 4 bash -c 'procesar "$@"' _ {}
+```
+
+Sin `export -f`, el subshell lanzado por `xargs` no conocería `procesar` y daría `command not found`. Esta técnica es clave para paralelización con `xargs -P` (ver capítulo 16).
+
+::: callout-note
+## `export -f` es Bash específico
+No funciona en `sh` ni en `dash`. En WSL con Ubuntu 22.04 el shell por defecto es `bash`, así que no hay problema. Si tu script usa `#!/bin/sh`, `export -f` fallará.
+:::
+
+## 13.9. Documentación de funciones
+
+Bash no tiene un estándar como docstrings de Python, pero la convención es un comentario con `:` o `#` antes/dentro de la función:
+
+```bash
+# Calcula el porcentaje de GC de una secuencia.
+# Argumentos:
+#   $1 - secuencia de ADN (string)
+# Salida (stdout):
+#   Número decimal con 2 decimales (ej: 50.00)
+gc_content() {
+    local seq=$1
+    : "${seq:?Se requiere una secuencia}"
+    local mayus=$(echo "$seq" | tr 'a-z' 'A-Z')
+    local gc=$(echo "$mayus" | tr -cd 'GC' | wc -c)
+    local total=${#mayus}
+    [[ $total -eq 0 ]] && { echo "0"; return 1; }
+    echo "scale=2; $gc * 100 / $total" | bc
+}
+```
+
+El comando `:` es un "no-op" que evalúa sus argumentos (incluyendo `${seq:?...}` que aborta si la variable está vacía). Es un truco idiomático para validar argumentos.
+
+## 13.10. Buenas prácticas
+
+1. **Nombres descriptivos**: `gc_content` mejor que `gc`. Usa `snake_case` (convención en Bash) o `kebab-case`.
+2. **Documenta argumentos y salida** con comentarios antes de la función.
+3. **Usa `local` siempre que sea posible**: previene contaminar el scope global.
+4. **Valida argumentos al inicio**: si falta `$1`, aborta con mensaje claro y exit code != 0.
+5. **Una función, una tarea**: si mide más de ~50 líneas, probablemente merece dividirse.
+6. **Función `main()`**: empaqueta la lógica principal del script en una función llamada `main` y llámala al final con `main "$@"`. Esto permite declarar funciones antes de su uso y hace el script reutilizable como librería.
+
+## 13.11. Ejemplos bioinformáticos
+
+### Función `ensure_dir`: crear directorio si no existe
+
+```bash
+ensure_dir() {
+    local d=$1
+    [[ -d "$d" ]] || mkdir -p "$d"
+}
+
+ensure_dir resultados/fastqc
+ensure_dir resultados/bam
+```
+
+### Función `check_bam_index`: verificar que un BAM está indexado
+
+```bash
+check_bam_index() {
+    local bam=$1
+    if [[ -f "${bam}.bai" ]]; then
+        return 0
+    else
+        samtools index "$bam"
+        return $?
+    fi
+}
+
+for b in *.bam; do
+    check_bam_index "$b" && echo "$b OK" || echo "$b FALLÓ"
+done
+```
+
+### Función `log`: logging con timestamp
+
+```bash
+log() {
+    # $@ = mensaje; se imprime a stderr con timestamp
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" >&2
+}
+
+log "Iniciando alineamiento de muestra_001"
+# [2025-01-15 14:30:00] Iniciando alineamiento de muestra_001
+```
+
+Enviar a `>&2` (stderr) deja libre el `stdout` para datos: puedes redirigir los logs a un archivo sin contaminar resultados.
+
+### Función `retry`: ejecutar con reintentos y backoff
+
+```bash
+retry() {
+    local n=0
+    local max=${MAX_RETRIES:-3}
+    until [[ $n -ge $max ]]; do
+        "$@" && return 0
+        n=$((n+1))
+        echo "Reintento $n/$max tras fallo..." >&2
+        sleep $((n*5))    # backoff: 5, 10, 15 segundos
+    done
+    return 1
+}
+
+MAX_RETRIES=5 retry wget https://example.com/genoma.fa.gz
+```
+
+Esta función es ideal para descargar archivos grandes (genomas de NCBI) que pueden fallar por timeouts de red.
+
+::: callout-tip
+## `retry` se hereda a cualquier comando
+Como `retry` recibe `"$@"` y lo ejecuta, puedes envolver **cualquier** comando: `retry samtools index aln.bam`, `retry curl ...`, `retry bwa mem ...`. Es una de las utilidades más reutilizables que escribirás.
+:::
+
+## 13.12. Ejercicios
+
+### Ejercicio 1
+
+Escribe una función `validar_fasta(ruta)` que verifique: (a) el archivo existe, (b) la primera línea empieza con `>`, (c) el archivo no está vacío. Debe retornar 0 si válido, 1 si no. Pruébala con un archivo FASTA real creado con:
+
+```bash
+printf ">test\nACGTACGT\n" > test.fa
+printf "sin_cabecera\nACGT\n" > mal.fa
+: > vacio.fa
+```
+
+### Ejercicio 2
+
+Escribe una función `contar_reads(ruta_fastq_gz)` que use `zcat | wc -l` y devuelva el número de reads (líneas / 4). Luego escribe un `for` que la llame para todos los `*.fastq.gz` del directorio y muestre el resultado formateado como `archivo: N reads`.
+
+### Ejercicio 3
+
+Escribe una función `ejecutar_paso()` que reciba: `nombre_paso`, `comando`. Debe:
+1. Imprimir "Ejecutando: <nombre_paso>" con timestamp.
+2. Ejecutar el comando.
+3. Si falla, mostrar error y salir con ese código de retorno.
+4. Si tiene éxito, mostrar "OK".
+
+Pruébala con dos pasos: `"Crear directorio"` (`mkdir -p resultados`) y `"Listar archivos"` (`ls no_existe.txt`).
+
+## 13.13. Soluciones
+
+### Solución 1
+
+```bash
+#!/usr/bin/env bash
+# validar_fasta.sh
+
+validar_fasta() {
+    local ruta=$1
+    # (a) existe?
+    if [[ ! -f "$ruta" ]]; then
+        echo "Error: '$ruta' no existe o no es archivo regular" >&2
+        return 1
+    fi
+    # (c) está vacío?
+    if [[ ! -s "$ruta" ]]; then
+        echo "Error: '$ruta' está vacío" >&2
+        return 1
+    fi
+    # (b) la primera línea empieza con '>'?
+    local primera
+    primera=$(head -n 1 "$ruta")
+    if [[ "$primera" != \>* ]]; then
+        echo "Error: la primera línea de '$ruta' no empieza con '>'" >&2
+        return 1
+    fi
+    # Todo OK
+    return 0
+}
+
+# Crear archivos de prueba
+printf ">test\nACGTACGT\n" > test.fa
+printf "sin_cabecera\nACGT\n" > mal.fa
+: > vacio.fa
+
+# Probar
+for f in test.fa mal.fa vacio.fa no_existe.fa; do
+    if validar_fasta "$f"; then
+        echo "$f: VÁLIDO"
+    else
+        echo "$f: INVÁLIDO"
+    fi
+done
+```
+
+Comentarios:
+
+- `[[ ! -f "$ruta" ]]` comprueba que **exista y sea archivo regular** (no directorio ni enlace).
+- `[[ ! -s "$ruta" ]]` comprueba que **tenga tamaño > 0** (vacío → error).
+- `head -n 1` lee solo la primera línea (eficiente para archivos FASTA grandes).
+- `[[ "$primera" != \>* ]]` compara si **no** empieza con `>`. La barra invertida escapa el `>` dentro de `[[` para que no se interprete como redirección.
+- El flujo es **fail-fast**: cada check retorna 1 en cuanto falla, evitando checks innecesarios.
+
+### Solución 2
+
+```bash
+#!/usr/bin/env bash
+# contar_reads.sh
+
+contar_reads() {
+    local fq=$1
+    # zcat descomprime; wc -l cuenta líneas; cada read ocupa 4 líneas
+    local lineas
+    lineas=$(zcat "$fq" | wc -l)
+    echo $(( lineas / 4 ))
+}
+
+# Validar que hay al menos un archivo
+shopt -s nullglob    # si no hay *.fastq.gz, el for no itera (en vez de iterar con "*.fastq.gz" literal)
+
+for f in *.fastq.gz; do
+    n=$(contar_reads "$f")
+    echo "$f: $n reads"
+done
+```
+
+Comentarios:
+
+- `zcat` equivale a `gunzip -c`: descomprime sin tocar el archivo original.
+- `wc -l` cuenta **líneas**, no reads. Como cada registro FASTQ tiene 4 líneas (header, sequence, +, quality), dividimos por 4.
+- `shopt -s nullglob` hace que, si no hay archivos `.fastq.gz`, el patrón se expanda a **nada** en vez de quedar como el string literal `*.fastq.gz`. Esto evita que el bucle intente procesar un archivo inexistente.
+- `$(( lineas / 4 ))` es **división entera**: si el FASTQ está corrupto y no es múltiplo de 4, se trunca. Una versión más robusta podría comprobar primero `if (( lineas % 4 != 0 ))`.
+
+### Solución 3
+
+```bash
+#!/usr/bin/env bash
+# ejecutar_paso.sh
+
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" >&2
+}
+
+ejecutar_paso() {
+    local nombre=$1
+    shift
+    log "Ejecutando: $nombre"
+    "$@"          # ejecuta el comando real
+    local rc=$?
+    if (( rc != 0 )); then
+        log "ERROR en '$nombre' (exit code $rc)"
+        exit "$rc"
+    fi
+    log "OK: $nombre"
+}
+
+# Pruebas
+ejecutar_paso "Crear directorio" mkdir -p resultados
+ejecutar_paso "Listar archivos" ls no_existe.txt
+
+log "Esto no debería imprimirse (el paso anterior falló)"
+```
+
+Comentarios:
+
+- `shift` elimina el primer argumento (el nombre del paso) y deja `$@` apuntando al comando completo a ejecutar. Así `ejecutar_paso "Paso" comando --flag arg` funciona.
+- `"$@"` ejecuta el comando con todos sus argumentos, **preservando comillas y espacios**.
+- `local rc=$?` captura el exit code **inmediatamente** después de `"$@"`. Cualquier otro comando en medio (incluido un `echo`) sobrescribiría `$?`.
+- `exit "$rc"` propaga el código de error original, lo que permite que scripts externos detecten qué tipo de fallo ocurrió.
+- En la prueba, el segundo paso fallará (`ls: cannot access 'no_existe.txt'`), el script abortará y el último `log` **no se imprimirá**.
+
+::: callout-important
+## Las funciones son la base de los pipelines profesionales
+Un pipeline bioinformático de 1000 líneas no es un único mega-script: son 30 funciones de 30 líneas cada una, orquestadas por una función `main`. Esta separación te permite testear cada paso por separado, reutilizar funciones en otros proyectos y depurar errores sin leer todo el código. A partir de aquí, **toda** automatización que escribas debería modularizarse con funciones. En el capítulo 17 construiremos un pipeline completo de variant calling estructurado exactamente así.
+:::
+
+En el siguiente capítulo veremos **arrays** y **manipulación avanzada de cadenas**: dos piezas que, junto con las funciones, te permitirán construir comandos dinámicos y procesar nombres de archivo bioinformáticos (que suelen tener estructura compleja como `muestra_L001_R1_001.fastq.gz`).

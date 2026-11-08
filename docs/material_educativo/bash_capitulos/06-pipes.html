@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Capítulo 6: Pipes y redirecciones – BIODEN</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../logo.png" rel="icon" type="image/png">
+<script src="../../site_libs/cookie-consent/cookie-consent.js"></script>
+<link href="../../site_libs/cookie-consent/cookie-consent.css" rel="stylesheet">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-70f92796293836dceea0045bd755b5b1.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-1242ccc02940432acd87c1b818d9cd49.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-70f92796293836dceea0045bd755b5b1.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+<script type="text/javascript" charset="UTF-8">
+document.addEventListener('DOMContentLoaded', function () {
+cookieconsent.run({
+  "notice_banner_type":"interstitial",
+  "consent_type":"express",
+  "palette":"dark",
+  "language":"en",
+  "page_load_consent_levels":["strictly-necessary"],
+  "notice_banner_reject_button_hide":false,
+  "preferences_center_close_button_hide":false,
+  "website_name":""
+  ,
+"language":"en"
+  });
+});
+</script> 
+  
+<style>html{ scroll-behavior: smooth; }</style>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../logo.png" alt="" class="navbar-logo light-content">
+    <img src="../../logo.png" alt="" class="navbar-logo dark-content">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">BIODEN</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Inicio</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-proyectos" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Proyectos</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-proyectos">    
+        <li>
+    <a class="dropdown-item" href="https://bioden.github.io/XIII_CCB_curso/">
+ <span class="dropdown-text">De la Botánica a la Bioinformática</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../investigacion.html"> 
+<span class="menu-text">Investigación</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../integrantes.html"> 
+<span class="menu-text">Integrantes</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../biosistalks/biosistalks.html"> 
+<span class="menu-text">Biosis Talks</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../material_educativo.html"> 
+<span class="menu-text">Material educativo</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../suplementario.html"> 
+<span class="menu-text">Servicios</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.instagram.com/dbg_unicauca/"> <i class="bi bi-instagram" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.facebook.com/profile.php?id=61583453722433"> <i class="bi bi-facebook" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:bioden@unicauca.edu.co"> <i class="bi bi-envelope" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar"><div class="quarto-margin-header"><div class="margin-header-item">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../../logos/semillero.png" class="img-fluid figure-img"></p>
+<figcaption>Universidad del Cauca</figcaption>
+</figure>
+</div>
+</div></div>
+        
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Capítulo 6: Pipes y redirecciones</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="capítulo-6-pipes-y-redirecciones" class="level1">
+<h1>Capítulo 6: Pipes y redirecciones</h1>
+<p>Hasta ahora hemos ejecutado comandos aislados. El verdadero poder de Bash surge cuando <strong>encadenamos comandos</strong>: la salida de uno se convierte en la entrada del siguiente. Ese es el principio del <em>pipeline</em> de Unix, una filosofía que llevó a la bioinformática a adoptar la línea de comandos como su entorno natural: alinear, ordenar, filtrar, contar… todo en una sola línea sin archivos temporales.</p>
+<section id="descriptores-de-archivo-estándar" class="level2">
+<h2 data-anchor-id="descriptores-de-archivo-estándar">6.1. Descriptores de archivo estándar</h2>
+<p>Cuando un proceso arranca en Linux, el kernel le abre tres canales de comunicación, llamados <strong>descriptores de archivo estándar</strong>:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Descriptor</th>
+<th>Nombre</th>
+<th>Función</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>0</code></td>
+<td><code>stdin</code></td>
+<td>Entrada estándar (lo que el programa lee)</td>
+</tr>
+<tr class="even">
+<td><code>1</code></td>
+<td><code>stdout</code></td>
+<td>Salida estándar (resultados normales)</td>
+</tr>
+<tr class="odd">
+<td><code>2</code></td>
+<td><code>stderr</code></td>
+<td>Salida de error (mensajes de aviso/error)</td>
+</tr>
+</tbody>
+</table>
+<p>Por defecto, los tres apuntan a la terminal. Cuando escribes <code>bwa mem ref.fa R1.fq R2.fq</code>, el resultado del alineamiento sale por <code>stdout</code> (a la pantalla) y los mensajes de progreso salen por <code>stderr</code> (también a la pantalla). Esto explica por qué, al guardar con <code>&gt;</code>, los mensajes de “progress” siguen apareciendo en la terminal aunque redirijas la salida: <code>&gt;</code> solo redirige <code>stdout</code>.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>¿Por qué separar stdout y stderr?
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Porque permite <strong>distinguir datos de mensajes</strong>. Si procesas 100 BAM con un bucle, los mensajes de aviso no contaminan el CSV de resultados. Y los errores quedan en un log aparte, listos para inspeccionar.</p>
+</div>
+</div>
+</section>
+<section id="redirección-de-salida-1-2" class="level2">
+<h2 data-anchor-id="redirección-de-salida-1-2">6.2. Redirección de salida: <code>&gt;</code>, <code>&gt;&gt;</code>, <code>1&gt;</code>, <code>2&gt;</code></h2>
+<section id="sobrescribir-con" class="level3">
+<h3 data-anchor-id="sobrescribir-con">Sobrescribir con <code>&gt;</code></h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"hola"</span> <span class="op">&gt;</span> saludo.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>&gt;</code> abre <code>saludo.txt</code> en modo escritura, <strong>truncándolo</strong> si ya existía, y conecta ahí el <code>stdout</code> de <code>echo</code>. Si el archivo no existe, lo crea.</p>
+</section>
+</section>
+<section id="sobrescribe-sin-previo-aviso" class="level2 callout-danger">
+<h2 data-anchor-id="sobrescribe-sin-previo-aviso"><code>&gt;</code> sobrescribe sin previo aviso</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> genoma.fa <span class="op">&gt;</span> genoma.fa        <span class="co"># ¡PELIGRO! sobrescribe genoma.fa con su propio stdout</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Al truncar primero y luego leer, <code>genoma.fa</code> acaba <strong>vacío</strong>. Bash tiene <code>set -o noclobber</code> para protegerse, pero lo mejor es <strong>revisar siempre el destino</strong> antes de redirigir.</p>
+</section>
+<section id="añadir-al-final-con" class="level3">
+<h3 data-anchor-id="añadir-al-final-con">Añadir al final con <code>&gt;&gt;</code></h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"segunda línea"</span> <span class="op">&gt;&gt;</span> saludo.txt</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"tercera línea"</span> <span class="op">&gt;&gt;</span> saludo.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>&gt;&gt;</code> abre en modo <em>append</em>: no toca el contenido previo.</p>
+</section>
+<section id="redirigir-stdout-o-stderr-específicamente" class="level3">
+<h3 data-anchor-id="redirigir-stdout-o-stderr-específicamente">Redirigir stdout o stderr específicamente</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bwa</span> mem ref.fa R1.fq R2.fq <span class="op">&gt;</span> aln.sam <span class="dv">2</span><span class="op">&gt;</span> aln.err</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<ul>
+<li><code>&gt; aln.sam</code> → redirige <code>stdout</code> (el SAM con los alineamientos) al archivo.</li>
+<li><code>2&gt; aln.err</code> → redirige <code>stderr</code> (mensajes de progreso) a <code>aln.err</code>.</li>
+</ul>
+<p>Esto permite ejecutar un programa <strong>ruidoso</strong> y conservar solo los datos.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span><code>1&gt;</code> es equivalente a <code>&gt;</code>
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>&gt;</code> es una abreviatura de <code>1&gt;</code>. Por claridad, muchos pipelines largos usan <code>1&gt;</code> explícito para distinguirlo de <code>2&gt;</code>.</p>
+</div>
+</div>
+</section>
+<section id="redirigir-stdout-y-stderr-al-mismo-archivo" class="level2">
+<h2 data-anchor-id="redirigir-stdout-y-stderr-al-mismo-archivo">6.3. Redirigir stdout y stderr al mismo archivo</h2>
+<p>Hay varias formas; la <strong>preferida</strong> modernamente es:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">comando</span> <span class="op">&amp;&gt;</span> salida.log</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Equivalente, pero más verboso:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">comando</span> <span class="op">&gt;</span> salida.log <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>2&gt;&amp;1</code> significa “envía el descriptor 2 a donde apunta el descriptor 1”. <strong>El orden importa</strong>: si escribes <code>comando 2&gt;&amp;1 &gt; salida.log</code>, primero rediriges <code>stderr</code> a la pantalla actual de <code>stdout</code> (la terminal) y luego mueves <code>stdout</code> al archivo; los errores <strong>no</strong> van al archivo. Por eso la forma correcta es <code>&gt; archivo 2&gt;&amp;1</code> o, más simple, <code>&amp;&gt; archivo</code>.</p>
+</section>
+<section id="descartar-la-salida-devnull" class="level2">
+<h2 data-anchor-id="descartar-la-salida-devnull">6.4. Descartar la salida: <code>/dev/null</code></h2>
+<p><code>/dev/null</code> es un <strong>agujero negro</strong> del sistema: lo que se escribe allí desaparece; leerlo devuelve EOF inmediato. Útil para silenciar programas ruidosos:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> / <span class="at">-name</span> <span class="st">"missing_tool"</span> <span class="op">&amp;&gt;</span> /dev/null</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span><code>/dev/null</code> no es un archivo real
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Bajo <code>/dev/</code> hay <em>dispositivos</em> gestionados por el kernel. <code>rm /dev/null</code> no lo elimina “de verdad” (lo regenera el kernel o udev), pero en sistemas sin udev puede crear problemas. <strong>Nunca</strong> lo edites con <code>&gt;</code> como si fuera un archivo normal.</p>
+</div>
+</div>
+</section>
+<section id="redirección-de-entrada" class="level2">
+<h2 data-anchor-id="redirección-de-entrada">6.5. Redirección de entrada: <code>&lt;</code></h2>
+<p>Sirve para alimentar el <code>stdin</code> de un comando desde un archivo, sin usar el nombre como argumento:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> <span class="op">&lt;</span> genomas.lst</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sort</span> <span class="op">&lt;</span> muestras.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>La diferencia con <code>wc -l genomas.lst</code> es sutil: en el primer caso <code>wc</code> lee de <code>stdin</code> (no sabe qué archivo es), en el segundo recibe el nombre como argumento y por eso imprime el nombre al final.</p>
+</section>
+<section id="here-documents-y-here-strings" class="level2">
+<h2 data-anchor-id="here-documents-y-here-strings">6.6. Here documents y here strings</h2>
+<section id="here-document-eof-...-eof" class="level3">
+<h3 data-anchor-id="here-document-eof-...-eof">Here document: <code>&lt;&lt;EOF ... EOF</code></h3>
+<p>Permite pasar <strong>varias líneas</strong> a un comando:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&lt;&lt;EOF</span> <span class="op">&gt;</span> experimento.txt</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="st">Muestra: paciente_001</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="st">Cobertura: 30X</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="st">Plataforma: Illumina NovaSeq</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="st">Fecha: </span><span class="va">$(</span><span class="fu">date</span> +%Y-%m-%d<span class="va">)</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>El delimitador (<code>EOF</code>) puede ser cualquier palabra. Con <code>&lt;&lt;'EOF'</code> (entre comillas) <strong>no</strong> se expanden variables: útil para generar scripts literalmente.</p>
+</section>
+<section id="here-string-texto" class="level3">
+<h3 data-anchor-id="here-string-texto">Here string: <code>&lt;&lt;&lt; "texto"</code></h3>
+<p>Envía una única cadena al <code>stdin</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="st">"BRCA"</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">"BRCA1 BRCA2 TP53"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Here strings vs <code>echo |</code>
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>grep BRCA &lt;&lt;&lt; "texto"</code> es más eficiente que <code>echo "texto" | grep BRCA</code>: el primero no crea un subproceso extra para <code>echo</code>. En scripts largos con miles de iteraciones, se nota.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="el-pipe" class="level2">
+<h2 data-anchor-id="el-pipe">6.7. El pipe <code>|</code></h2>
+<p>El pipe conecta el <code>stdout</code> de un comando con el <code>stdin</code> del siguiente:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">comando1</span> <span class="kw">|</span> <span class="ex">comando2</span> <span class="kw">|</span> <span class="ex">comando3</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Cada comando corre en <strong>un subproceso distinto</strong>, en paralelo: apenas <code>comando1</code> produce una línea, <code>comando2</code> la consume. Esto permite procesar archivos enormes sin cargarlos completos en memoria.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>El pipe solo transporta stdout
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Por defecto, <strong>stderr no pasa por el pipe</strong>: los mensajes de error van a la terminal y no llegan al siguiente comando. Si quieres incluirlos, haz primero <code>2&gt;&amp;1</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bwa</span> mem ref.fa R1.fq R2.fq <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="kw">|</span> <span class="fu">grep</span> <span class="st">"progress"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+<section id="filtros-comandos-que-leen-stdin-y-escriben-stdout" class="level3">
+<h3 data-anchor-id="filtros-comandos-que-leen-stdin-y-escriben-stdout">Filtros: comandos que leen stdin y escriben stdout</h3>
+<p>La filosofía Unix dicta que cada herramienta debe <strong>hacer una sola cosa bien</strong>. Los “filtros” clásicos son:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Comando</th>
+<th>Función</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>cat</code></td>
+<td>Concatena y vuelca stdin a stdout</td>
+</tr>
+<tr class="even">
+<td><code>grep</code></td>
+<td>Filtra líneas según patrón</td>
+</tr>
+<tr class="odd">
+<td><code>sort</code></td>
+<td>Ordena líneas</td>
+</tr>
+<tr class="even">
+<td><code>uniq</code></td>
+<td>Elimina/conta duplicados consecutivos</td>
+</tr>
+<tr class="odd">
+<td><code>wc</code></td>
+<td>Cuenta líneas/palabras/caracteres</td>
+</tr>
+<tr class="even">
+<td><code>head</code> / <code>tail</code></td>
+<td>Muestra principio/final</td>
+</tr>
+<tr class="odd">
+<td><code>cut</code></td>
+<td>Extrae columnas</td>
+</tr>
+<tr class="even">
+<td><code>tr</code></td>
+<td>Traduce/borra caracteres</td>
+</tr>
+<tr class="odd">
+<td><code>awk</code> / <code>sed</code></td>
+<td>Procesamiento avanzado</td>
+</tr>
+</tbody>
+</table>
+<p>Un pipeline típico encadena varios:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> sample.fastq.gz <span class="kw">|</span> <span class="fu">head</span> <span class="at">-n</span> 8 <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-c1-40</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Lee 8 primeras líneas del FASTQ comprimido y recorta cada una a 40 caracteres.</p>
+</section>
+</section>
+<section id="tee-bifurcar-stdout" class="level2">
+<h2 data-anchor-id="tee-bifurcar-stdout">6.8. <code>tee</code>: bifurcar stdout</h2>
+<p><code>tee</code> lee de <code>stdin</code> y escribe simultáneamente a <strong>un archivo y a stdout</strong>. Útil para inspeccionar resultados mientras se guardan:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> R1.fastq.gz <span class="kw">|</span> <span class="fu">head</span> <span class="at">-n</span> 4 <span class="kw">|</span> <span class="fu">tee</span> preview.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Variantes:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">comando</span> <span class="kw">|</span> <span class="fu">tee</span> archivo.txt          <span class="co"># stdout al archivo y a pantalla</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="ex">comando</span> <span class="kw">|</span> <span class="fu">tee</span> <span class="at">-a</span> archivo.txt       <span class="co"># modo append</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="ex">comando</span> <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="kw">|</span> <span class="fu">tee</span> archivo.txt     <span class="co"># incluye stderr (además de stdout)</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="ex">comando</span> <span class="kw">|</span> <span class="fu">tee</span> archivo1.txt archivo2.txt   <span class="co"># escribe a varios archivos a la vez</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span><code>tee</code> como “traza” de un pipeline
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Cuando depuras un pipeline largo (<code>A | B | C | D</code>), inserta <code>tee /tmp/debug.txt</code> entre cada etapa para ver qué pasa:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">A</span> <span class="kw">|</span> <span class="fu">tee</span> /tmp/A.txt <span class="kw">|</span> <span class="ex">B</span> <span class="kw">|</span> <span class="fu">tee</span> /tmp/B.txt <span class="kw">|</span> <span class="ex">C</span> <span class="kw">|</span> <span class="fu">tee</span> /tmp/C.txt <span class="kw">|</span> <span class="ex">D</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</section>
+<section id="xargs-convertir-stdin-en-argumentos" class="level2">
+<h2 data-anchor-id="xargs-convertir-stdin-en-argumentos">6.9. <code>xargs</code>: convertir stdin en argumentos</h2>
+<p>Muchos comandos <strong>no leen stdin</strong>: esperan argumentos. <code>xargs</code> es el puente:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="pp">*</span>.fastq.gz <span class="kw">|</span> <span class="fu">xargs</span> gzip              <span class="co"># gzip cada archivo listado</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-name</span> <span class="st">"*.bam"</span> <span class="kw">|</span> <span class="fu">xargs</span> samtools index</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="opciones-útiles" class="level3">
+<h3 data-anchor-id="opciones-útiles">Opciones útiles</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># -n 1 : un argumento por invocación</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="pp">*</span>.txt <span class="kw">|</span> <span class="fu">xargs</span> <span class="at">-n</span> 1 cp <span class="at">-t</span> /destino/</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="co"># -I {} : marca de posición</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> lista.txt <span class="kw">|</span> <span class="fu">xargs</span> <span class="at">-I</span> {} cp {} /destino/</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="co"># -P 4 : ejecuta 4 procesos en paralelo</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="pp">*</span>_R1.fastq.gz <span class="kw">|</span> <span class="fu">xargs</span> <span class="at">-P</span> 4 <span class="at">-I</span> {} fastqc {}</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="co"># -0 : separador NUL (combina con find -print0)</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-name</span> <span class="st">"*.bam"</span> <span class="at">-print0</span> <span class="kw">|</span> <span class="fu">xargs</span> <span class="at">-0</span> samtools index</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Espacios y caracteres raros en nombres
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>ls | xargs</code> <strong>falla</strong> con nombres con espacios, porque <code>xargs</code> separa por espacios. La forma segura es <code>find ... -print0 | xargs -0 ...</code>. Mejor aún: usa <code>-exec ... {} +</code> directamente con <code>find</code>.</p>
+</div>
+</div>
+<p>Ejemplos bioinformáticos:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Comprimir todos los FASTQ sueltos</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-name</span> <span class="st">"*.fastq"</span> <span class="kw">|</span> <span class="fu">xargs</span> gzip</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Copiar archivos listados en un TXT a /data</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> archivos.lst <span class="kw">|</span> <span class="fu">xargs</span> <span class="at">-I</span> {} cp {} /data/</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Ejecutar fastqc en paralelo (4 procesos)</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="pp">*</span>_R1.fastq.gz <span class="pp">*</span>_R2.fastq.gz <span class="kw">|</span> <span class="fu">xargs</span> <span class="at">-n</span> 1 <span class="at">-P</span> 4 fastqc <span class="at">-o</span> qc/</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="subshells-y-agrupación" class="level2">
+<h2 data-anchor-id="subshells-y-agrupación">6.10. Subshells y agrupación</h2>
+<section id="subshell" class="level3">
+<h3 data-anchor-id="subshell">Subshell <code>( )</code></h3>
+<p>Los paréntesis ejecutan lo que contienen en <strong>un proceso hijo</strong>: las variables y el directorio no afectan al shell padre:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">(</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">cd</span> /data</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ls</span> <span class="pp">*</span>.bam <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="kw">)</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Aquí seguimos en el directorio original; el cd del subshell no perdura</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="agrupación" class="level3">
+<h3 data-anchor-id="agrupación">Agrupación <code>{ }</code></h3>
+<p>Las llaves agrupan comandos <strong>en el shell actual</strong> (sin subshell):</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">{</span> <span class="bu">echo</span> <span class="st">"Inicio"</span><span class="kw">;</span> <span class="fu">date</span><span class="kw">;</span> <span class="bu">echo</span> <span class="st">"Fin"</span><span class="kw">;</span> <span class="kw">}</span> <span class="op">&gt;</span> log.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Sintaxis de <code>{ }</code>
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>Necesita <strong>espacio</strong> después de <code>{</code> y antes de <code>}</code>.</li>
+<li>Requiere <strong>punto y coma</strong> (o salto de línea) antes de <code>}</code>.</li>
+<li><code>( )</code> no requiere nada de eso.</li>
+</ul>
+</div>
+</div>
+</section>
+</section>
+<section id="procesos-en-segundo-plano-y-wait" class="level2">
+<h2 data-anchor-id="procesos-en-segundo-plano-y-wait">6.11. Procesos en segundo plano: <code>&amp;</code> y <code>wait</code></h2>
+<p>Un comando terminado en <code>&amp;</code> se ejecuta en segundo plano:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bwa</span> mem ref.fa R1.fq R2.fq <span class="op">&gt;</span> aln.sam <span class="dv">2</span><span class="op">&gt;</span> aln.err <span class="kw">&amp;</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="co"># [1] 12345   ← PID asignado</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Espera a que terminen todos los procesos en background con <code>wait</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bwa</span> mem ... <span class="op">&gt;</span> s1.sam <span class="dv">2</span><span class="op">&gt;</span> s1.log <span class="kw">&amp;</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="ex">bwa</span> mem ... <span class="op">&gt;</span> s2.sam <span class="dv">2</span><span class="op">&gt;</span> s2.log <span class="kw">&amp;</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="bu">wait</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Ambos alineamientos terminados"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span><code>wait</code> para paralelización sencilla
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Sin <code>nextflow</code> ni <code>snakemake</code>, una paralelización básica con control de carga:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> r1 <span class="kw">in</span> <span class="pp">*</span>_R1.fastq.gz<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">r2</span><span class="op">=</span><span class="st">"</span><span class="va">${r1</span><span class="op">/</span><span class="ss">_R1</span><span class="op">/</span>_R2<span class="va">}</span><span class="st">"</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">bwa</span> mem <span class="at">-t</span> 4 ref.fa <span class="st">"</span><span class="va">$r1</span><span class="st">"</span> <span class="st">"</span><span class="va">$r2</span><span class="st">"</span> <span class="op">&gt;</span> <span class="st">"</span><span class="va">${r1</span><span class="op">%</span>_R1.fastq.gz<span class="va">}</span><span class="st">.sam"</span> <span class="dv">2</span><span class="op">&gt;</span> <span class="st">"</span><span class="va">${r1</span><span class="op">%</span>_R1.fastq.gz<span class="va">}</span><span class="st">.err"</span> <span class="kw">&amp;</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Control de carga: cada 4 jobs, esperar</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">((</span> <span class="op">++</span><span class="va">count</span> <span class="op">%</span> <span class="dv">4</span> <span class="op">==</span> <span class="dv">0</span> <span class="kw">))</span> <span class="kw">&amp;&amp;</span> <span class="bu">wait</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="bu">wait</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</section>
+<section id="generadores-yes-seq-printf" class="level2">
+<h2 data-anchor-id="generadores-yes-seq-printf">6.12. Generadores: <code>yes</code>, <code>seq</code>, <code>printf</code></h2>
+<ul>
+<li><p><code>yes</code> repite indefinidamente una cadena (útil para responder “y” automáticamente):</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">yes</span> <span class="kw">|</span> <span class="ex">apt</span> install algo</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p><code>seq</code> genera secuencias numéricas:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">seq</span> 1 10           <span class="co"># 1 2 3 ... 10</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="fu">seq</span> <span class="at">-w</span> 1 12        <span class="co"># 01 02 ... 12 (relleno con ceros)</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="fu">seq</span> <span class="at">-f</span> <span class="st">"chr%02g"</span> 1 22   <span class="co"># chr01 chr02 ... chr22</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p><code>printf</code> permite formatear salida con control total:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> <span class="st">"%s\t%d\n"</span> <span class="st">"muestra"</span> 30</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+</ul>
+<p>Ejemplo bioinformático: generar lista de cromosomas humanos:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">seq</span> <span class="at">-f</span> <span class="st">"chr%g"</span> 1 22 <span class="op">&gt;</span> cromosomas.lst</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"chrX"</span> <span class="op">&gt;&gt;</span> cromosomas.lst</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"chrY"</span> <span class="op">&gt;&gt;</span> cromosomas.lst</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"chrM"</span> <span class="op">&gt;&gt;</span> cromosomas.lst</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="pipes-nominales-mkfifo" class="level2">
+<h2 data-anchor-id="pipes-nominales-mkfifo">6.13. Pipes nominales: <code>mkfifo</code></h2>
+<p>Un <em>named pipe</em> es un archivo especial que actúa como canal entre dos procesos distintos:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkfifo</span> /tmp/mipipe</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="fu">gzip</span> <span class="op">&lt;</span> archivo.fq <span class="op">&gt;</span> /tmp/mipipe <span class="kw">&amp;</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="ex">samtools</span> view <span class="at">-b</span> /tmp/mipipe <span class="op">&gt;</span> out.bam</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Cuando el segundo comando lee, bloquea hasta que el primero produzca datos. Permite <strong>encadenar procesos que se ejecutan por separado</strong> sin usar disco. Es una técnica avanzada que verás en pipelines reales de <em>streaming</em> de BAM.</p>
+</section>
+<section id="ejemplos-bioinformáticos" class="level2">
+<h2 data-anchor-id="ejemplos-bioinformáticos">6.14. Ejemplos bioinformáticos</h2>
+<section id="contar-reads-de-un-fastq-comprimido" class="level3">
+<h3 data-anchor-id="contar-reads-de-un-fastq-comprimido">Contar reads de un FASTQ comprimido</h3>
+<p>Cada read ocupa 4 líneas en FASTQ:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> sample.fastq.gz <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span> <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'{print $1/4}'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>zcat</code> descomprime, <code>wc -l</code> cuenta líneas, <code>awk</code> divide entre 4.</p>
+</section>
+<section id="verificar-fastq-pareados" class="level3">
+<h3 data-anchor-id="verificar-fastq-pareados">Verificar FASTQ pareados</h3>
+<p>Los IDs de R1 y R2 deben coincidir (cambiando <code>/1</code> por <code>/2</code>):</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">diff</span> <span class="op">&lt;(</span><span class="fu">zcat</span> R1.fastq.gz <span class="kw">|</span> <span class="fu">head</span> <span class="at">-n</span> 1<span class="op">)</span> <span class="op">&lt;(</span><span class="fu">zcat</span> R2.fastq.gz <span class="kw">|</span> <span class="fu">head</span> <span class="at">-n</span> 1 <span class="kw">|</span> <span class="fu">sed</span> <span class="st">'s|/2|/1|'</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Si no imprime nada, los archivos están pareados correctamente.</p>
+</section>
+<section id="pipeline-de-alineamiento-en-un-solo-paso" class="level3">
+<h3 data-anchor-id="pipeline-de-alineamiento-en-un-solo-paso">Pipeline de alineamiento “en un solo paso”</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="ex">bwa</span> mem <span class="at">-t</span> 8 ref.fa R1.fq.gz R2.fq.gz <span class="dv">2</span><span class="op">&gt;</span> align.log <span class="kw">|</span> <span class="dt">\</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">samtools</span> sort <span class="at">-@</span> 4 <span class="at">-o</span> sorted.bam</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="ex">samtools</span> index sorted.bam</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>El SAM que produce <code>bwa mem</code> <strong>nunca se escribe a disco</strong>: va directo al <code>stdin</code> de <code>samtools sort</code>, que genera el BAM ordenado. Solo se conserva el BAM final y el log de errores.</p>
+</section>
+<section id="buscar-contigs-con-un-motif-sitio-ecori-gaattc" class="level3">
+<h3 data-anchor-id="buscar-contigs-con-un-motif-sitio-ecori-gaattc">Buscar contigs con un motif (sitio EcoRI: GAATTC)</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-i</span> <span class="st">"gaattc"</span> contigs.fa <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="contar-genes-en-un-gff" class="level3">
+<h3 data-anchor-id="contar-genes-en-un-gff">Contar genes en un GFF</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-c</span> <span class="st">$'</span><span class="dt">\t</span><span class="st">gene</span><span class="dt">\t</span><span class="st">'</span> annotation.gff3</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>El <code>$'\t'</code> inserta un tabulador literal: las columnas del GFF están separadas por tabs, así filtramos solo las líneas donde la columna 3 es exactamente <code>gene</code>.</p>
+</section>
+<section id="multiprocesar-alineamientos-con-xargs" class="level3">
+<h3 data-anchor-id="multiprocesar-alineamientos-con-xargs">Multiprocesar alineamientos con <code>xargs</code></h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="pp">*</span>_R1.fastq.gz <span class="kw">|</span> <span class="fu">xargs</span> <span class="at">-P</span> 4 <span class="at">-I</span> {} bash <span class="at">-c</span> <span class="st">'</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="st">    R1="{}"</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="st">    R2="${R1/_R1/_R2}"</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="st">    OUT="${R1%_R1.fastq.gz}.bam"</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="st">    bwa mem -t 4 ref.fa "$R1" "$R2" 2&gt; "${OUT%.bam}.log" | \</span></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a><span class="st">        samtools sort -@ 2 -o "$OUT"</span></span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a><span class="st">'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>-P 4</code> lanza hasta 4 procesos concurrentes; <code>-I {}</code> define el marcador; dentro del subshell con <code>bash -c</code> manipulamos el nombre del archivo para inferir R2 y el prefijo de salida.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>WSL2: paralelismo y memoria
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>En WSL2 sobre Windows, <code>xargs -P</code> y <code>wait</code> funcionan correctamente, pero ten presente que <strong>la VM de WSL tiene un límite de memoria por defecto</strong> (en <code>.wslconfig</code>). Si ejecutas 4 procesos pesados en paralelo y se caen por OOM, crea <code>C:\Users\TuUsuario\.wslconfig</code> con:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode ini code-with-copy"><code class="sourceCode ini"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[wsl2]</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="dt">memory</span><span class="ot">=</span><span class="st">16GB</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="dt">processors</span><span class="ot">=</span><span class="dv">8</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Reinicia WSL con <code>wsl --shutdown</code>.</p>
+</div>
+</div>
+<hr>
+</section>
+</section>
+<section id="ejercicios" class="level2">
+<h2 data-anchor-id="ejercicios">Ejercicios</h2>
+<section id="ejercicio-1" class="level3">
+<h3 data-anchor-id="ejercicio-1">Ejercicio 1</h3>
+<p>Dado un archivo <code>genes.txt</code> con un gen por línea, escribe una línea de comandos que:</p>
+<ol type="1">
+<li>Cuente cuántos genes contiene.</li>
+<li>Muestre los 5 primeros y los 5 últimos.</li>
+<li>Guarde el conteo en <code>conteo.txt</code> <strong>sin perder la salida por pantalla</strong> (usa <code>tee</code>).</li>
+</ol>
+</section>
+<section id="ejercicio-2" class="level3">
+<h3 data-anchor-id="ejercicio-2">Ejercicio 2</h3>
+<p>Crea un comando que cuente los reads de un FASTQ comprimido (<code>sample.fastq.gz</code>), guarde el resultado en <code>reads_count.txt</code> <strong>descartando cualquier mensaje de error</strong> a <code>/dev/null</code>. Luego verifica el archivo con <code>cat</code>. Recuerda: reads = líneas / 4.</p>
+</section>
+<section id="ejercicio-3" class="level3">
+<h3 data-anchor-id="ejercicio-3">Ejercicio 3</h3>
+<p>Escribe (sin necesidad de ejecutarlo) el comando que procese en paralelo (4 procesos) múltiples archivos FASTQ con <code>fastqc</code>. Cada <code>*_R1.fastq.gz</code> debe recibir <code>fastqc</code>. La salida debe ir a <code>qc_results/</code>. Usa <code>xargs</code>.</p>
+<hr>
+</section>
+</section>
+<section id="soluciones" class="level2">
+<h2 data-anchor-id="soluciones">Soluciones</h2>
+<section id="solución-1" class="level3">
+<h3 data-anchor-id="solución-1">Solución 1</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Contar genes y mostrar por pantalla a la vez</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> <span class="op">&lt;</span> genes.txt <span class="kw">|</span> <span class="fu">tee</span> conteo.txt</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Los 5 primeros y los 5 últimos (sin tocar el archivo)</span></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-n</span> 5 genes.txt</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span> <span class="at">-n</span> 5 genes.txt</span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Versión "todo en uno": listar primeros y últimos junto con el conteo</span></span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a><span class="kw">{</span></span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"=== Conteo total ==="</span></span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">wc</span> <span class="at">-l</span> <span class="op">&lt;</span> genes.txt <span class="kw">|</span> <span class="fu">tee</span> conteo.txt</span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"=== Primeros 5 ==="</span></span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">head</span> <span class="at">-n</span> 5 genes.txt</span>
+<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"=== Últimos 5 ==="</span></span>
+<span id="cb37-15"><a href="#cb37-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">tail</span> <span class="at">-n</span> 5 genes.txt</span>
+<span id="cb37-16"><a href="#cb37-16" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span> <span class="kw">|</span> <span class="fu">tee</span> informe_genes.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Explicación de cada parte:</p>
+<ul>
+<li><code>wc -l &lt; genes.txt</code> lee el archivo desde stdin (por eso no imprime el nombre del archivo, solo el número).</li>
+<li><code>tee conteo.txt</code> escribe el resultado en el archivo <strong>y</strong> lo muestra por pantalla: cumple el requisito de “no perder la salida”.</li>
+<li><code>{ ... }</code> agrupa los <code>echo</code> y los comandos en un solo bloque cuyo stdout se bifurca con <code>tee informe_genes.txt</code>.</li>
+<li><code>head</code> y <code>tail</code> no modifican el archivo, solo leen.</li>
+</ul>
+</section>
+<section id="solución-2" class="level3">
+<h3 data-anchor-id="solución-2">Solución 2</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Contar reads: 1 FASTQ = 4 líneas por read</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="co"># zcat descomprime; wc -l cuenta líneas; awk divide entre 4</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Los errores de zcat/bwa/etc. se descartan a /dev/null</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="fu">zcat</span> sample.fastq.gz <span class="dv">2</span><span class="op">&gt;</span> /dev/null <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span> <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'{printf "%d\n", $1/4}'</span> <span class="op">&gt;</span> reads_count.txt</span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Verificar el contenido del archivo</span></span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> reads_count.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Desglose:</p>
+<ul>
+<li><code>zcat sample.fastq.gz</code> descomprime el FASTQ y lo vuelca a stdout.</li>
+<li><code>2&gt; /dev/null</code> envía cualquier mensaje de error de <code>zcat</code> (por ejemplo, “file not found”) al agujero negro, para que no contamine la salida.</li>
+<li><code>| wc -l</code> cuenta líneas.</li>
+<li><code>| awk '{printf "%d\n", $1/4}'</code> divide entre 4 y devuelve un entero (<code>printf "%d"</code> evita decimales espurios).</li>
+<li><code>&gt; reads_count.txt</code> redirige stdout al archivo.</li>
+<li><code>cat reads_count.txt</code> verifica que el archivo se ha escrito.</li>
+</ul>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>¿Por qué <code>2&gt; /dev/null</code> y no <code>&amp;&gt; /dev/null</code>?
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Si usáramos <code>&amp;&gt; /dev/null</code> o <code>&gt; /dev/null 2&gt;&amp;1</code> en <code>zcat</code>, <strong>también</strong> descartaríamos stdout (los datos del FASTQ) y el pipeline no tendría nada que contar. El truco es descartar <strong>solo</strong> stderr.</p>
+</div>
+</div>
+</section>
+<section id="solución-3" class="level3">
+<h3 data-anchor-id="solución-3">Solución 3</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Crear carpeta de salida (idempotente con -p)</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> qc_results</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Ejecutar fastqc en paralelo: hasta 4 procesos concurrentes</span></span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="pp">*</span>_R1.fastq.gz <span class="kw">|</span> <span class="fu">xargs</span> <span class="at">-n</span> 1 <span class="at">-P</span> 4 <span class="at">-I</span> {} fastqc <span class="at">-o</span> qc_results/ {}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Desglose:</p>
+<ul>
+<li><code>mkdir -p qc_results</code> crea el directorio destino (sin error si ya existe).</li>
+<li><code>ls *_R1.fastq.gz</code> lista solo los archivos R1.</li>
+<li><code>xargs -n 1</code> pasa un archivo por invocación (necesario porque <code>fastqc</code> espera archivos como argumentos, no por stdin).</li>
+<li><code>-P 4</code> mantiene hasta 4 procesos corriendo simultáneamente.</li>
+<li><code>-I {}</code> define <code>{}</code> como marcador para el nombre del archivo.</li>
+<li><code>fastqc -o qc_results/ {}</code> ejecuta FastQC sobre el archivo y escribe el HTML/zip en <code>qc_results/</code>.</li>
+</ul>
+<p>Versión equivalente y más robusta (maneja espacios en nombres):</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb40"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-maxdepth</span> 1 <span class="at">-name</span> <span class="st">"*_R1.fastq.gz"</span> <span class="at">-print0</span> <span class="kw">|</span> <span class="dt">\</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">xargs</span> <span class="at">-0</span> <span class="at">-n</span> 1 <span class="at">-P</span> 4 <span class="at">-I</span> {} fastqc <span class="at">-o</span> qc_results/ {}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>-print0</code> y <code>-0</code> usan el carácter NUL como separador, lo que evita problemas con espacios, comillas o caracteres especiales en los nombres de archivo.</p>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Cuidado con saturar la CPU
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>-P 4</code> lanza 4 procesos de FastQC a la vez. Si FastQC internamente usa más de un thread (con <code>-t</code>), multiplica: 4 procesos × N threads = mucha CPU. Para servidores compartidos, empieza con <code>-P 2</code> y monitoriza con <code>htop</code>.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Resumen del capítulo
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Hemos cubierto los <strong>descriptores estándar</strong> (stdin/stdout/stderr), las <strong>redirecciones</strong> (<code>&gt;</code>, <code>&gt;&gt;</code>, <code>&lt;</code>, <code>2&gt;</code>, <code>&amp;&gt;</code>, <code>/dev/null</code>), los <strong>here documents</strong> y <strong>here strings</strong>, el <strong>pipe</strong> y la filosofía de filtros, <strong><code>tee</code></strong> para bifurcar salida, <strong><code>xargs</code></strong> para construir argumentos desde stdin, los <strong>subshells</strong> y la <strong>agrupación</strong> con <code>( )</code> y <code>{ }</code>, los <strong>procesos en background</strong> con <code>&amp;</code> y <code>wait</code>, los <strong>generadores</strong> (<code>seq</code>, <code>printf</code>, <code>yes</code>) y una mención a <strong><code>mkfifo</code></strong> para pipes nominales. Con esto ya puedes construir pipelines bioinformáticos reales: leer FASTQ comprimido, alinear, ordenar, indexar y contar, todo en una línea. En el Capítulo 7 abordaremos <strong>búsqueda de patrones y archivos</strong> con <code>grep</code>, <code>find</code> y <code>locate</code>.</p>
+</div>
+</div>
+
+
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/bioden\.github\.io\/bioden_website\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Semillero de Biología del Desarrollo y Plasticidad Neural © 2025. All content licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Sitio web desarrollado por Xavier Clemente García Cevallos</p>
+</div>   
+    <div class="nav-footer-center">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/bioden">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="mailto:bioden@unicauca.edu.co">
+      <i class="bi bi-envelope" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    <div class="cookie-consent-footer"><a href="#" id="open_preferences_center">Cookie Preferences</a></div></div>
+    <div class="nav-footer-right">
+<p>Made with <a href="https://www.r-project.org/"><img src="https://www.r-project.org/Rlogo.png" alt="R" width="25px"></a> and <a href="https://quarto.org/"><img src="https://quarto.org/quarto.png" alt="Quarto" width="65px"></a>.</p>
+</div>
+  </div>
+</footer>
+
+
+
+
+<script src="../../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

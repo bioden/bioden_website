@@ -1,0 +1,631 @@
+---
+title: "Capítulo 14: Arrays y manipulación avanzada de cadenas"
+---
+
+# Capítulo 14: Arrays y manipulación avanzada de cadenas
+
+Los nombres de archivo en bioinformática son **pesadillas**: `muestra_001_S1_L001_R1_001.fastq.gz`. De ese nombre necesitas extraer el ID de muestra (`muestra_001`), el lane (`L001`), la dirección (`R1`) y cambiar la extensión para construir el nombre del archivo de salida. Hacerlo "a mano" con `cut`, `awk` o `sed` es lento y propenso a errores. Bash ofrece herramientas nativas mucho más rápidas y elegantes:
+
+- **Arrays indexados y asociativos** para guardar listas y diccionarios.
+- **Manipulación de strings dentro de variables**: prefijos, sufijos, substrings, reemplazos, mayúsculas/minúsculas.
+
+En este capítulo veremos ambos con ejemplos bioinformáticos reales (longitudes de cromosomas, renombrado masivo, construcción dinámica de argumentos para BWA) y ejercicios con solución.
+
+## 14.1. Arrays indexados
+
+Un **array indexado** es una lista ordenada de elementos, accesibles por un índice numérico empezando en 0.
+
+### Declaración
+
+Hay tres formas equivalentes:
+
+```bash
+# Asignación directa con lista
+muestras=("S01" "S02" "S03")
+
+# Asignación elemento a elemento
+genes[0]="BRCA1"
+genes[1]="TP53"
+genes[2]="EGFR"
+
+# Declaración explícita (recomendada para scripts serios)
+declare -a cromosomas=(chr1 chr2 chr3 chrX chrY)
+```
+
+`declare -a` declara explícitamente un array indexado. No es obligatorio, pero mejora la legibilidad y previene conflictos si la variable se había usado antes.
+
+### Acceso
+
+```bash
+muestras=("S01" "S02" "S03")
+echo "${muestras[0]}"   # S01
+echo "${muestras[1]}"   # S02
+echo "${muestras[2]}"   # S03
+```
+
+::: callout-warning
+## Las llaves son obligatorias
+Sin llaves, `$muestras[0]` se interpreta como `$muestras` (el primer elemento, en realidad el elemento 0) seguido del string literal `[0]`. Casi siempre querrás `"${muestras[0]}"`.
+:::
+
+### Todos los elementos
+
+```bash
+muestras=("S01" "S02" "S03")
+
+echo "${muestras[@]}"   # S01 S02 S03 (palabras separadas)
+echo "${muestras[*]}"   # S01 S02 S03 (unido con IFS, normalmente espacio)
+
+# La diferencia real aparece al iterar
+for m in "${muestras[@]}"; do echo "[$m]"; done
+# [S01] [S02] [S03]
+
+IFS=,
+for m in ${muestras[*]}; do echo "[$m]"; done   # SIN comillas
+# [S01] [S02] [S03]
+echo "${muestras[*]}"
+# S01,S02,S03
+IFS=' '
+```
+
+Regla práctica: **siempre `"${arr[@]}"`** (con comillas dobles y `@`). Es lo único que preserva correctamente elementos con espacios.
+
+### Número de elementos
+
+```bash
+echo "${#muestras[@]}"   # 3
+```
+
+### Longitud de un elemento
+
+```bash
+seqs=("ATGCGC" "TTAA")
+echo "${#seqs[0]}"   # 6 (longitud de "ATGCGC")
+```
+
+### Slicing (subarray)
+
+```bash
+muestras=("S01" "S02" "S03" "S04" "S05")
+echo "${muestras[@]:1:3}"   # S02 S03 S04 (3 elementos empezando en índice 1)
+echo "${muestras[@]:2}"     # S03 S04 S05 (desde índice 2 hasta el final)
+```
+
+### Añadir elementos
+
+```bash
+muestras=("S01" "S02")
+muestras+=("S03" "S04")    # añade al final
+echo "${muestras[@]}"       # S01 S02 S03 S04
+```
+
+### Eliminar elementos
+
+```bash
+muestras=("S01" "S02" "S03")
+unset 'muestras[1]'        # elimina el índice 1 (S02)
+echo "${muestras[@]}"       # S01 S03
+echo "${#muestras[@]}"      # 2
+# ¡OJO! los índices no se renumeran: ${muestras[1]} sigue vacío
+```
+
+### Iteración
+
+```bash
+for m in "${muestras[@]}"; do
+    echo "Procesando $m"
+done
+
+# Con índice
+for i in "${!muestras[@]}"; do
+    echo "Índice $i = ${muestras[$i]}"
+done
+```
+
+`${!arr[@]}` devuelve la lista de **índices** (no valores), útil cuando hay huecos por `unset`.
+
+## 14.2. Arrays asociativos (Bash 4+)
+
+Un **array asociativo** es un diccionario clave→valor. Requiere Bash 4 o superior (Ubuntu 22.04 trae Bash 5.1, así que no hay problema; en macOS el Bash por defecto es 3.2 y hay que instalar uno moderno con Homebrew).
+
+### Declaración y uso
+
+```bash
+declare -A gene_counts
+gene_counts[BRCA1]=100
+gene_counts[TP53]=50
+gene_counts[EGFR]=75
+
+echo "${gene_counts[BRCA1]}"   # 100
+echo "${gene_counts[TP53]}"    # 50
+```
+
+### Claves, valores, conteo
+
+```bash
+echo "${!gene_counts[@]}"   # BRCA1 TP53 EGFR  (claves)
+echo "${gene_counts[@]}"    # 100 50 75        (valores)
+echo "${#gene_counts[@]}"   # 3                (número de entradas)
+```
+
+### Iteración
+
+```bash
+for gen in "${!gene_counts[@]}"; do
+    echo "$gen: ${gene_counts[$gen]} counts"
+done
+```
+
+```text
+BRCA1: 100 counts
+TP53: 50 counts
+EGFR: 75 counts
+```
+
+::: callout-note
+## El orden no está garantizado
+Los arrays asociativos en Bash **no** preservan el orden de inserción. Si necesitas orden, ordénalo explícitamente:
+```bash
+for gen in $(echo "${!gene_counts[@]}" | tr ' ' '\n' | sort); do
+    echo "$gen: ${gene_counts[$gen]}"
+done
+```
+:::
+
+### Ejemplo bioinformático: longitudes de cromosomas
+
+```bash
+declare -A chrom_len
+chrom_len[chr1]=248956422
+chrom_len[chr2]=242193529
+chrom_len[chr3]=198295559
+chrom_len[chrX]=156040895
+chrom_len[chrY]=57227415
+
+total=0
+for c in "${!chrom_len[@]}"; do
+    printf "%-6s %d bp\n" "$c" "${chrom_len[$c]}"
+    total=$((total + chrom_len[$c]))
+done
+echo "Total: $total bp"
+```
+
+```text
+chr3   198295559 bp
+chr1   248956422 bp
+chrX   156040895 bp
+chrY   57227415 bp
+chr2   242193529 bp
+Total: 902713820 bp
+```
+
+## 14.3. Manipulación avanzada de cadenas
+
+Bash incluye operadores que se aplican **dentro** de la expansión `${...}` y son extremadamente potentes para procesar nombres de archivo. **No requieren subprocesos**: se evalúan dentro del propio shell, así que son órdenes de magnitud más rápidos que `cut`, `sed` o `awk` cuando se usan en bucles sobre miles de archivos.
+
+### Tabla maestra de operadores
+
+| Sintaxis | Significado | Ejemplo |
+|----------|-------------|---------|
+| `${#var}` | Longitud de `var` | `${#ATGC}` → 4 |
+| `${var:pos}` | Substring desde `pos` hasta el final | `${var:2}` |
+| `${var:pos:long}` | Substring de longitud `long` desde `pos` | `${var:1:3}` |
+| `${var#patrón}` | Elimina el **prefijo más corto** que encaje | `${var%.sam}` |
+| `${var##patrón}` | Elimina el **prefijo más largo** que encaje | `${var##*/}` |
+| `${var%patrón}` | Elimina el **sufijo más corto** que encaje | `${var%.fastq.gz}` |
+| `${var%%patrón}` | Elimina el **sufijo más largo** que encaje | `${var%%.*}` |
+| `${var/patrón/reempl}` | Reemplaza la **primera** ocurrencia | `${var/R1/R2}` |
+| `${var//patrón/reempl}` | Reemplaza **todas** las ocurrencias | `${var//a/A}` |
+| `${var/#patrón/reempl}` | Reemplaza solo si encaja al **inicio** | — |
+| `${var/%patrón/reempl}` | Reemplaza solo si encaja al **final** | — |
+| `${var^^}` | Convierte a **mayúsculas** (Bash 4+) | `"${var^^}"` |
+| `${var,,}` | Convierte a **minúsculas** (Bash 4+) | `"${var,,}"` |
+| `${var^}` | Capitaliza **primera letra** | `"${var^}"` |
+| `${var,}` | Pasa a minúsculas la **primera letra** | — |
+
+### Ejemplos paso a paso
+
+```bash
+archivo="paciente_001_R1.fastq.gz"
+
+# Longitud
+echo "${#archivo}"        # 25
+
+# Substring desde posición 9
+echo "${archivo:9}"       # R1.fastq.gz
+
+# Substring: 3 caracteres desde posición 9
+echo "${archivo:9:2}"     # R1
+
+# Eliminar sufijo (.fastq.gz)
+echo "${archivo%.fastq.gz}"   # paciente_001_R1
+
+# Eliminar sufijo más largo con wildcard (elimina TODO desde el primer punto)
+echo "${archivo%%.*}"     # paciente_001_R1
+
+# Eliminar prefijo más corto hasta primera _
+echo "${archivo#*_}"      # 001_R1.fastq.gz
+
+# Eliminar prefijo más largo hasta última _ (deja solo el final)
+echo "${archivo##*_}"     # R1.fastq.gz
+
+# Reemplazar R1 por R2
+echo "${archivo/R1/R2}"   # paciente_001_R2.fastq.gz
+
+# Reemplazar todas las 'a' por 'X'
+echo "${archivo//a/X}"    # pXciente_001_R1.fXstq.gz
+
+# Mayúsculas
+echo "${archivo^^}"       # PACIENTE_001_R1.FASTQ.GZ
+
+# Minúsculas
+seq="ATGCGATCG"
+echo "${seq,,}"           # atgcgatcg
+```
+
+::: callout-tip
+## `#` mira por la izquierda (prefijo), `%` mira por la derecha (sufijo)
+Truco mnemotécnico: en el teclado, `#` está a la **izquierda** de `%`. Así:
+- `#` → quita por la izquierda (prefijo).
+- `%` → quita por la derecha (sufijo).
+
+La versión **doble** (`##`, `%%`) siempre es "la más larga posible".
+:::
+
+### Caso real: extraer ID de muestra de un nombre Illumina
+
+```bash
+archivo="mysample_S1_L001_R1_001.fastq.gz"
+
+# ID de muestra: todo hasta el primer '_'
+muestra=${archivo%%_*}        # mysample
+
+# Lane: la palabra que empieza por L
+lane=${archivo#*_L}           # 001_R1_001.fastq.gz
+lane=L${lane%%_*}             # L001
+
+# Dirección: R1 o R2
+if [[ "$archivo" =~ _R([12])_ ]]; then
+    direccion="R${BASH_REMATCH[1]}"
+fi
+
+echo "Muestra: $muestra"
+echo "Lane:    $lane"
+echo "Dir:     $direccion"
+```
+
+```text
+Muestra: mysample
+Lane:    L001
+Dir:     R1
+```
+
+Aquí mezclamos manipulación de cadenas con regex (ver capítulo 15). El truco `${archivo%%_*}` quita todo desde el primer `_` hasta el final, dejando solo `mysample`.
+
+### Caso real: renombrar extensión SAM → BAM y ordenar
+
+```bash
+for f in *.sam; do
+    base=${f%.sam}              # quitar sufijo .sam
+    nuevo="${base}.sorted.bam"  # construir nuevo nombre
+    echo "Convirtiendo $f -> $nuevo"
+    samtools view -bS "$f" | samtools sort -o "$nuevo"
+done
+```
+
+Sin `${f%.sam}` necesitarías `sed` o `basename`, ambos lanzan un subproceso. La versión nativa es ~10x más rápida en bucles sobre miles de archivos.
+
+### Caso real: construir comando dinámico con arrays
+
+Cuando el número de argumentos depende de flags, lo limpio es construir un array:
+
+```bash
+declare -a args
+args+=("-t" "8")                # threads
+args+=("-R" "@RG\tID:sample1\tSM:sample1")  # read group
+args+=("ref.fa")                # referencia
+args+=("R1.fq.gz" "R2.fq.gz")  # reads
+
+# Ejecutar con todos los argumentos expandidos
+bwa mem "${args[@]}" > aln.sam
+```
+
+Esta es la forma **recomendada** de construir comandos complejos: mejor que concatenar strings (que se rompe con espacios) o evaluar con `eval` (peligroso).
+
+## 14.4. IFS (Internal Field Separator)
+
+La variable `IFS` (Internal Field Separator) controla cómo Bash **parte** strings en palabras. Por defecto es `space+tab+newline`. Cambiándola, controlas cómo se separan strings en bucles `for` y `read`.
+
+### Split de una cadena en array
+
+```bash
+csv="BRCA1,TP53,EGFR,MYC"
+
+# IFS=, solo durante el read; el array se reconstruye con -a
+IFS=',' read -ra genes <<< "$csv"
+
+for g in "${genes[@]}"; do
+    echo "Gen: $g"
+done
+```
+
+```text
+Gen: BRCA1
+Gen: TP53
+Gen: EGFR
+Gen: MYC
+```
+
+- `read -a` lee una línea y la guarda en un array.
+- `read -ra` igual pero `-r` no interpreta barras invertidas.
+- `<<< "$csv"` es un **here-string**: alimenta el stdin del `read` con el contenido de `$csv`.
+- Asignar `IFS=','` antes del `read` solo afecta a esa invocación.
+
+### Leer un TSV en un array por columnas
+
+```bash
+tsv="muestra_001\tresultados/bam/m1.bam\t40x"
+IFS=$'\t' read -ra campos <<< "$tsv"
+echo "Muestra: ${campos[0]}"   # muestra_001
+echo "BAM:    ${campos[1]}"   # resultados/bam/m1.bam
+echo "Cob:    ${campos[2]}"   # 40x
+```
+
+`$'\t'` es la forma de Bash de escribir un **tab** real (ANSI-C quoting). Sin `$'...'`, `'	'` (con tab literal entre comillas) también funciona pero es invisible y propenso a errores.
+
+::: callout-warning
+## IFS es global: restaura siempre
+Si haces `IFS=','` sin localizar, **todo** el resto del script se comporta raro. Dos opciones:
+```bash
+# Opción A: solo durante un comando (recomendada)
+IFS=',' read -ra arr <<< "$str"
+
+# Opción B: salvar y restaurar
+OLD_IFS=$IFS
+IFS=','
+# ... operaciones ...
+IFS=$OLD_IFS
+```
+:::
+
+## 14.5. `read -a` para leer una línea en un array
+
+Útil cuando una línea contiene varios campos separados por espacios (o por el IFS actual):
+
+```bash
+echo "chr1 100 200 gene1" | while read -ra campos; do
+    echo "Cromosoma: ${campos[0]}"
+    echo "Inicio:    ${campos[1]}"
+    echo "Fin:       ${campos[2]}"
+    echo "Nombre:    ${campos[3]}"
+done
+```
+
+Combinado con `IFS=$'\t'` para TSV:
+
+```bash
+while IFS=$'\t' read -r muestra r1 r2; do
+    echo "Alineando muestra $muestra con $r1 y $r2"
+done < samples.tsv
+```
+
+Esta es la **forma idiomática** de procesar tablas de muestras en pipelines Bash.
+
+## 14.6. Ejemplos bioinformáticos completos
+
+### Iterar sobre muestras y procesar cada una
+
+```bash
+muestras=("paciente1" "paciente2" "paciente3" "paciente4")
+
+for m in "${muestras[@]}"; do
+    r1="datos/${m}_R1.fastq.gz"
+    r2="datos/${m}_R2.fastq.gz"
+    bam="resultados/${m}.bam"
+
+    echo "Procesando $m..."
+    bwa mem -t 8 ref.fa "$r1" "$r2" | \
+        samtools sort -o "$bam"
+    samtools index "$bam"
+done
+```
+
+### Construir args dinámicos según flags
+
+```bash
+declare -a bwa_args
+bwa_args+=("-t" "${THREADS:-4}")
+
+if [[ -n "$READ_GROUP" ]]; then
+    bwa_args+=("-R" "$READ_GROUP")
+fi
+
+if [[ "$MARK_DUP" == "yes" ]]; then
+    bwa_args+=("-M")   # marcador para compatibilidad con Picard
+fi
+
+bwa_args+=("$REF" "$R1" "$R2")
+bwa mem "${bwa_args[@]}" > aln.sam
+```
+
+### Eliminar ruta y extensión de una vez
+
+```bash
+ruta="/data/proyecto/muestras/paciente_001.bam"
+base=${ruta##*/}        # paciente_001.bam  (sin directorio)
+solo_id=${base%.*}      # paciente_001      (sin extensión)
+echo "$solo_id"
+```
+
+`${ruta##*/}` quita el prefijo más largo que termine en `/` (equivalente a `basename`). `${base%.*}` quita la extensión (sufijo más corto que empiece por `.`).
+
+::: callout-note
+## `basename` vs `${var##*/}`
+`basename "$ruta"` lanza un subproceso. `${ruta##*/}` es puramente shell, sin subproceso. En un bucle sobre 10 000 archivos, la diferencia se acumula. Para uno o dos archivos, usa el que te resulte más legible.
+:::
+
+## 14.7. Ejercicios
+
+### Ejercicio 1
+
+Crea un array con los nombres de los archivos BAM de un directorio: `bams=(*.bam)`. Itera imprimiendo el nombre de cada uno y su tamaño en bytes. Calcula el **total en bytes** sumando los tamaños con un acumulador y muestra el resultado al final, junto con el número de archivos (`${#bams[@]}`).
+
+### Ejercicio 2
+
+Crea un array asociativo `gene_counts` con claves `"BRCA1"`, `"TP53"`, `"EGFR"` y valores `100`, `50`, `75`. Itera mostrando cada gen y su count con el formato `gen: N counts`. Luego calcula el **total** sumando todos los valores.
+
+### Ejercicio 3
+
+Dado el nombre de archivo `mysample_L001_R2_001.fastq.gz`, usa **manipulación de cadenas** (operadores `${var%...}`, `${var#...}`, `${var//.../}`) para extraer:
+- (a) ID de muestra: `mysample`
+- (b) Lane: `L001`
+- (c) Dirección: `R2`
+
+Muestra cada uno con `echo`. **No uses** `cut`, `awk`, `sed` ni regex: solo operadores de strings de Bash.
+
+## 14.8. Soluciones
+
+### Solución 1
+
+```bash
+#!/usr/bin/env bash
+# listar_bams.sh
+
+# Si no hay BAMs, el array tendría un único elemento "*.bam" literal.
+# shopt -s nullglob lo deja vacío en ese caso.
+shopt -s nullglob
+
+bams=(*.bam)
+
+if [[ ${#bams[@]} -eq 0 ]]; then
+    echo "No se encontraron archivos .bam en el directorio actual"
+    exit 0
+fi
+
+total=0
+for f in "${bams[@]}"; do
+    # stat --format=%s devuelve solo el tamaño en bytes
+    tam=$(stat --format=%s "$f")
+    printf "%-40s %12d bytes\n" "$f" "$tam"
+    total=$((total + tam))
+done
+
+echo "------------------------------------------------"
+printf "Total: %d archivos, %d bytes (%.2f MB)\n" \
+    "${#bams[@]}" "$total" "$(echo "scale=2; $total/1048576" | bc)"
+```
+
+Comentarios:
+
+- `shopt -s nullglob` evita el caso típico en el que `*.bam` no encaja nada y el array queda con el string literal `"*.bam"`. Sin esta opción, el `for` intentaría procesar un archivo inexistente.
+- `stat --format=%s` imprime solo el tamaño en bytes, fácil de parsear. En macOS el equivalente es `stat -f%z`.
+- `$((total + tam))` es **aritmética entera** de Bash: no lanza subprocesos. Para división con decimales necesitamos `bc`.
+- El formato `%-40s %12d` alinea nombres (40 caracteres a la izquierda) y tamaños (12 caracteres a la derecha) en columnas.
+- `1048576 = 1024*1024` para convertir bytes a MB.
+
+### Solución 2
+
+```bash
+#!/usr/bin/env bash
+# gene_counts.sh
+
+declare -A gene_counts
+gene_counts[BRCA1]=100
+gene_counts[TP53]=50
+gene_counts[EGFR]=75
+
+total=0
+for gen in "${!gene_counts[@]}"; do
+    count=${gene_counts[$gen]}
+    printf "%-8s : %3d counts\n" "$gen" "$count"
+    total=$((total + count))
+done
+
+echo "----------------------"
+printf "Total    : %3d counts\n" "$total"
+```
+
+Salida:
+
+```text
+EGFR     :  75 counts
+BRCA1    : 100 counts
+TP53     :  50 counts
+----------------------
+Total    : 225 counts
+```
+
+Comentarios:
+
+- `declare -A gene_counts` declara explícitamente un array **asociativo** (sin `-A` sería indexado).
+- `${!gene_counts[@]}` devuelve la lista de **claves** (no valores). El `!` es el operador de "claves".
+- `${gene_counts[$gen]}` accede al valor asociado a la clave `$gen`.
+- `total=$((total + count))` acumula con aritmética entera (sin subprocesos).
+- El orden de iteración **no** es el de inserción: Bash no garantiza orden en asociativos. Si necesitas orden, sortea las claves explícitamente:
+  ```bash
+  for gen in $(printf "%s\n" "${!gene_counts[@]}" | sort); do ...
+  ```
+
+### Solución 3
+
+```bash
+#!/usr/bin/env bash
+# parse_fastq_name.sh
+
+archivo="mysample_L001_R2_001.fastq.gz"
+
+# (a) ID de muestra: todo lo que está antes del primer '_'
+# ${var%%_*} elimina el sufijo más largo que empiece por '_', dejando solo la primera palabra
+muestra=${archivo%%_*}
+
+# (b) Lane: queremos "L001". Estrategia:
+#     1. Quitar el prefijo hasta el primer "_" -> "L001_R2_001.fastq.gz"
+#     2. Quitar el sufijo desde el siguiente "_" -> "L001"
+resto=${archivo#*_}        # L001_R2_001.fastq.gz
+lane=${resto%%_*}          # L001
+
+# (c) Dirección R2: la palabra de dos letras+una cifra (R1 o R2).
+#     Estrategia: cortar entre el segundo y tercer '_'.
+#     1. Quitamos prefijo hasta primer _  -> L001_R2_001.fastq.gz
+#     2. Quitamos prefijo hasta siguiente _ -> R2_001.fastq.gz
+#     3. Quitamos sufijo hasta primer _ -> R2
+resto2=${resto#*_}         # R2_001.fastq.gz
+direccion=${resto2%%_*}    # R2
+
+echo "Archivo:    $archivo"
+echo "Muestra:    $muestra"
+echo "Lane:       $lane"
+echo "Dirección:  $direccion"
+```
+
+Salida:
+
+```text
+Archivo:    mysample_L001_R2_001.fastq.gz
+Muestra:    mysample
+Lane:       L001
+Dirección:  R2
+```
+
+Comentarios:
+
+- `${archivo%%_*}` elimina el **sufijo más largo** que empiece por `_`. En `mysample_L001_R2_001.fastq.gz`, el sufijo más largo que empiece por `_` es `_L001_R2_001.fastq.gz`, así que queda `mysample`.
+- `${archivo#*_}` elimina el **prefijo más corto** que termine en `_`. En la misma cadena, el prefijo más corto que termine en `_` es `mysample_`, así que queda `L001_R2_001.fastq.gz`.
+- Encadenando `%%_*` y `#*_` vamos "pelando" la cadena por la izquierda.
+- Fíjate en que no usamos ni `cut`, ni `awk`, ni regex: puro operador de strings, **sin subproceso**. Esto es importantísimo si vas a procesar 100 000 nombres de archivo en un bucle.
+- Versión más robusta con regex (cap. 15):
+  ```bash
+  if [[ "$archivo" =~ ^([A-Za-z0-9]+)_(L[0-9]{3})_(R[12])_001\.fastq\.gz$ ]]; then
+      muestra=${BASH_REMATCH[1]}
+      lane=${BASH_REMATCH[2]}
+      direccion=${BASH_REMATCH[3]}
+  fi
+  ```
+  La versión con regex es más declarativa y valida el formato. La versión con strings es más rápida y no depende de Bash 3+/4+. **Elige según tu necesidad**.
+
+::: callout-important
+## Arrays y strings: el lenguaje secreto de Bash
+Los nombres de archivo en bioinformática llevan décadas siguiendo convenciones (Illumina especialmente). Saber extraer campos con `${var%...}` y `${var#...}` te permite automatizar renombrados masivos, construir pipelines dinámicos y procesar tablas de muestras sin recurrir a Python. Combinados con arrays (para listas de muestras) y arrays asociativos (para diccionarios gen→longitud, gen→count), tienes el 90% del arsenal para escribir pipelines Bash profesionales. En el capítulo 17, el pipeline integrador usará estas técnicas en cada función.
+:::
+
+Con esto ya dominas las dos herramientas clave para procesar strings en Bash. El siguiente capítulo cubre **expresiones regulares**: el siguiente nivel de potencia para validar y extraer información de texto (cabeceras SAM, líneas GFF, secuencias ADN).

@@ -1,0 +1,536 @@
+---
+title: "Capítulo 6: Pipes y redirecciones"
+---
+
+# Capítulo 6: Pipes y redirecciones
+
+Hasta ahora hemos ejecutado comandos aislados. El verdadero poder de Bash surge cuando **encadenamos comandos**: la salida de uno se convierte en la entrada del siguiente. Ese es el principio del *pipeline* de Unix, una filosofía que llevó a la bioinformática a adoptar la línea de comandos como su entorno natural: alinear, ordenar, filtrar, contar... todo en una sola línea sin archivos temporales.
+
+## 6.1. Descriptores de archivo estándar
+
+Cuando un proceso arranca en Linux, el kernel le abre tres canales de comunicación, llamados **descriptores de archivo estándar**:
+
+| Descriptor | Nombre | Función |
+|------------|--------|---------|
+| `0` | `stdin`  | Entrada estándar (lo que el programa lee) |
+| `1` | `stdout` | Salida estándar (resultados normales) |
+| `2` | `stderr` | Salida de error (mensajes de aviso/error) |
+
+Por defecto, los tres apuntan a la terminal. Cuando escribes `bwa mem ref.fa R1.fq R2.fq`, el resultado del alineamiento sale por `stdout` (a la pantalla) y los mensajes de progreso salen por `stderr` (también a la pantalla). Esto explica por qué, al guardar con `>`, los mensajes de "progress" siguen apareciendo en la terminal aunque redirijas la salida: `>` solo redirige `stdout`.
+
+::: callout-note
+## ¿Por qué separar stdout y stderr?
+Porque permite **distinguir datos de mensajes**. Si procesas 100 BAM con un bucle, los mensajes de aviso no contaminan el CSV de resultados. Y los errores quedan en un log aparte, listos para inspeccionar.
+:::
+
+## 6.2. Redirección de salida: `>`, `>>`, `1>`, `2>`
+
+### Sobrescribir con `>`
+
+```bash
+echo "hola" > saludo.txt
+```
+
+`>` abre `saludo.txt` en modo escritura, **truncándolo** si ya existía, y conecta ahí el `stdout` de `echo`. Si el archivo no existe, lo crea.
+
+::: callout-danger
+## `>` sobrescribe sin previo aviso
+```bash
+cat genoma.fa > genoma.fa        # ¡PELIGRO! sobrescribe genoma.fa con su propio stdout
+```
+Al truncar primero y luego leer, `genoma.fa` acaba **vacío**. Bash tiene `set -o noclobber` para protegerse, pero lo mejor es **revisar siempre el destino** antes de redirigir.
+:::
+
+### Añadir al final con `>>`
+
+```bash
+echo "segunda línea" >> saludo.txt
+echo "tercera línea" >> saludo.txt
+```
+
+`>>` abre en modo *append*: no toca el contenido previo.
+
+### Redirigir stdout o stderr específicamente
+
+```bash
+bwa mem ref.fa R1.fq R2.fq > aln.sam 2> aln.err
+```
+
+- `> aln.sam`  → redirige `stdout` (el SAM con los alineamientos) al archivo.
+- `2> aln.err` → redirige `stderr` (mensajes de progreso) a `aln.err`.
+
+Esto permite ejecutar un programa **ruidoso** y conservar solo los datos.
+
+::: callout-tip
+## `1>` es equivalente a `>`
+`>` es una abreviatura de `1>`. Por claridad, muchos pipelines largos usan `1>` explícito para distinguirlo de `2>`.
+:::
+
+## 6.3. Redirigir stdout y stderr al mismo archivo
+
+Hay varias formas; la **preferida** modernamente es:
+
+```bash
+comando &> salida.log
+```
+
+Equivalente, pero más verboso:
+
+```bash
+comando > salida.log 2>&1
+```
+
+`2>&1` significa "envía el descriptor 2 a donde apunta el descriptor 1". **El orden importa**: si escribes `comando 2>&1 > salida.log`, primero rediriges `stderr` a la pantalla actual de `stdout` (la terminal) y luego mueves `stdout` al archivo; los errores **no** van al archivo. Por eso la forma correcta es `> archivo 2>&1` o, más simple, `&> archivo`.
+
+## 6.4. Descartar la salida: `/dev/null`
+
+`/dev/null` es un **agujero negro** del sistema: lo que se escribe allí desaparece; leerlo devuelve EOF inmediato. Útil para silenciar programas ruidosos:
+
+```bash
+find / -name "missing_tool" &> /dev/null
+```
+
+::: callout-warning
+## `/dev/null` no es un archivo real
+Bajo `/dev/` hay *dispositivos* gestionados por el kernel. `rm /dev/null` no lo elimina "de verdad" (lo regenera el kernel o udev), pero en sistemas sin udev puede crear problemas. **Nunca** lo edites con `>` como si fuera un archivo normal.
+:::
+
+## 6.5. Redirección de entrada: `<`
+
+Sirve para alimentar el `stdin` de un comando desde un archivo, sin usar el nombre como argumento:
+
+```bash
+wc -l < genomas.lst
+sort < muestras.txt
+```
+
+La diferencia con `wc -l genomas.lst` es sutil: en el primer caso `wc` lee de `stdin` (no sabe qué archivo es), en el segundo recibe el nombre como argumento y por eso imprime el nombre al final.
+
+## 6.6. Here documents y here strings
+
+### Here document: `<<EOF ... EOF`
+
+Permite pasar **varias líneas** a un comando:
+
+```bash
+cat <<EOF > experimento.txt
+Muestra: paciente_001
+Cobertura: 30X
+Plataforma: Illumina NovaSeq
+Fecha: $(date +%Y-%m-%d)
+EOF
+```
+
+El delimitador (`EOF`) puede ser cualquier palabra. Con `<<'EOF'` (entre comillas) **no** se expanden variables: útil para generar scripts literalmente.
+
+### Here string: `<<< "texto"`
+
+Envía una única cadena al `stdin`:
+
+```bash
+grep "BRCA" <<< "BRCA1 BRCA2 TP53"
+```
+
+::: callout-tip
+## Here strings vs `echo | `
+`grep BRCA <<< "texto"` es más eficiente que `echo "texto" | grep BRCA`: el primero no crea un subproceso extra para `echo`. En scripts largos con miles de iteraciones, se nota.
+:::
+
+## 6.7. El pipe `|`
+
+El pipe conecta el `stdout` de un comando con el `stdin` del siguiente:
+
+```bash
+comando1 | comando2 | comando3
+```
+
+Cada comando corre en **un subproceso distinto**, en paralelo: apenas `comando1` produce una línea, `comando2` la consume. Esto permite procesar archivos enormes sin cargarlos completos en memoria.
+
+::: callout-note
+## El pipe solo transporta stdout
+Por defecto, **stderr no pasa por el pipe**: los mensajes de error van a la terminal y no llegan al siguiente comando. Si quieres incluirlos, haz primero `2>&1`:
+
+```bash
+bwa mem ref.fa R1.fq R2.fq 2>&1 | grep "progress"
+```
+:::
+
+### Filtros: comandos que leen stdin y escriben stdout
+
+La filosofía Unix dicta que cada herramienta debe **hacer una sola cosa bien**. Los "filtros" clásicos son:
+
+| Comando | Función |
+|---------|---------|
+| `cat` | Concatena y vuelca stdin a stdout |
+| `grep` | Filtra líneas según patrón |
+| `sort` | Ordena líneas |
+| `uniq` | Elimina/conta duplicados consecutivos |
+| `wc` | Cuenta líneas/palabras/caracteres |
+| `head` / `tail` | Muestra principio/final |
+| `cut` | Extrae columnas |
+| `tr` | Traduce/borra caracteres |
+| `awk` / `sed` | Procesamiento avanzado |
+
+Un pipeline típico encadena varios:
+
+```bash
+zcat sample.fastq.gz | head -n 8 | cut -c1-40
+```
+
+Lee 8 primeras líneas del FASTQ comprimido y recorta cada una a 40 caracteres.
+
+## 6.8. `tee`: bifurcar stdout
+
+`tee` lee de `stdin` y escribe simultáneamente a **un archivo y a stdout**. Útil para inspeccionar resultados mientras se guardan:
+
+```bash
+zcat R1.fastq.gz | head -n 4 | tee preview.txt
+```
+
+Variantes:
+
+```bash
+comando | tee archivo.txt          # stdout al archivo y a pantalla
+comando | tee -a archivo.txt       # modo append
+comando 2>&1 | tee archivo.txt     # incluye stderr (además de stdout)
+comando | tee archivo1.txt archivo2.txt   # escribe a varios archivos a la vez
+```
+
+::: callout-tip
+## `tee` como "traza" de un pipeline
+Cuando depuras un pipeline largo (`A | B | C | D`), inserta `tee /tmp/debug.txt` entre cada etapa para ver qué pasa:
+
+```bash
+A | tee /tmp/A.txt | B | tee /tmp/B.txt | C | tee /tmp/C.txt | D
+```
+:::
+
+## 6.9. `xargs`: convertir stdin en argumentos
+
+Muchos comandos **no leen stdin**: esperan argumentos. `xargs` es el puente:
+
+```bash
+ls *.fastq.gz | xargs gzip              # gzip cada archivo listado
+find . -name "*.bam" | xargs samtools index
+```
+
+### Opciones útiles
+
+```bash
+# -n 1 : un argumento por invocación
+ls *.txt | xargs -n 1 cp -t /destino/
+
+# -I {} : marca de posición
+cat lista.txt | xargs -I {} cp {} /destino/
+
+# -P 4 : ejecuta 4 procesos en paralelo
+ls *_R1.fastq.gz | xargs -P 4 -I {} fastqc {}
+
+# -0 : separador NUL (combina con find -print0)
+find . -name "*.bam" -print0 | xargs -0 samtools index
+```
+
+::: callout-warning
+## Espacios y caracteres raros en nombres
+`ls | xargs` **falla** con nombres con espacios, porque `xargs` separa por espacios. La forma segura es `find ... -print0 | xargs -0 ...`. Mejor aún: usa `-exec ... {} +` directamente con `find`.
+:::
+
+Ejemplos bioinformáticos:
+
+```bash
+# Comprimir todos los FASTQ sueltos
+find . -name "*.fastq" | xargs gzip
+
+# Copiar archivos listados en un TXT a /data
+cat archivos.lst | xargs -I {} cp {} /data/
+
+# Ejecutar fastqc en paralelo (4 procesos)
+ls *_R1.fastq.gz *_R2.fastq.gz | xargs -n 1 -P 4 fastqc -o qc/
+```
+
+## 6.10. Subshells y agrupación
+
+### Subshell `( )`
+
+Los paréntesis ejecutan lo que contienen en **un proceso hijo**: las variables y el directorio no afectan al shell padre:
+
+```bash
+(
+    cd /data
+    ls *.bam | wc -l
+)
+# Aquí seguimos en el directorio original; el cd del subshell no perdura
+```
+
+### Agrupación `{ }`
+
+Las llaves agrupan comandos **en el shell actual** (sin subshell):
+
+```bash
+{ echo "Inicio"; date; echo "Fin"; } > log.txt
+```
+
+::: callout-note
+## Sintaxis de `{ }`
+- Necesita **espacio** después de `{` y antes de `}`.
+- Requiere **punto y coma** (o salto de línea) antes de `}`.
+- `( )` no requiere nada de eso.
+:::
+
+## 6.11. Procesos en segundo plano: `&` y `wait`
+
+Un comando terminado en `&` se ejecuta en segundo plano:
+
+```bash
+bwa mem ref.fa R1.fq R2.fq > aln.sam 2> aln.err &
+# [1] 12345   ← PID asignado
+```
+
+Espera a que terminen todos los procesos en background con `wait`:
+
+```bash
+bwa mem ... > s1.sam 2> s1.log &
+bwa mem ... > s2.sam 2> s2.log &
+wait
+echo "Ambos alineamientos terminados"
+```
+
+::: callout-tip
+## `wait` para paralelización sencilla
+Sin `nextflow` ni `snakemake`, una paralelización básica con control de carga:
+
+```bash
+for r1 in *_R1.fastq.gz; do
+    r2="${r1/_R1/_R2}"
+    bwa mem -t 4 ref.fa "$r1" "$r2" > "${r1%_R1.fastq.gz}.sam" 2> "${r1%_R1.fastq.gz}.err" &
+    # Control de carga: cada 4 jobs, esperar
+    (( ++count % 4 == 0 )) && wait
+done
+wait
+```
+:::
+
+## 6.12. Generadores: `yes`, `seq`, `printf`
+
+- `yes` repite indefinidamente una cadena (útil para responder "y" automáticamente):
+  ```bash
+  yes | apt install algo
+  ```
+- `seq` genera secuencias numéricas:
+  ```bash
+  seq 1 10           # 1 2 3 ... 10
+  seq -w 1 12        # 01 02 ... 12 (relleno con ceros)
+  seq -f "chr%02g" 1 22   # chr01 chr02 ... chr22
+  ```
+- `printf` permite formatear salida con control total:
+  ```bash
+  printf "%s\t%d\n" "muestra" 30
+  ```
+
+Ejemplo bioinformático: generar lista de cromosomas humanos:
+
+```bash
+seq -f "chr%g" 1 22 > cromosomas.lst
+echo "chrX" >> cromosomas.lst
+echo "chrY" >> cromosomas.lst
+echo "chrM" >> cromosomas.lst
+```
+
+## 6.13. Pipes nominales: `mkfifo`
+
+Un *named pipe* es un archivo especial que actúa como canal entre dos procesos distintos:
+
+```bash
+mkfifo /tmp/mipipe
+gzip < archivo.fq > /tmp/mipipe &
+samtools view -b /tmp/mipipe > out.bam
+```
+
+Cuando el segundo comando lee, bloquea hasta que el primero produzca datos. Permite **encadenar procesos que se ejecutan por separado** sin usar disco. Es una técnica avanzada que verás en pipelines reales de *streaming* de BAM.
+
+## 6.14. Ejemplos bioinformáticos
+
+### Contar reads de un FASTQ comprimido
+
+Cada read ocupa 4 líneas en FASTQ:
+
+```bash
+zcat sample.fastq.gz | wc -l | awk '{print $1/4}'
+```
+
+`zcat` descomprime, `wc -l` cuenta líneas, `awk` divide entre 4.
+
+### Verificar FASTQ pareados
+
+Los IDs de R1 y R2 deben coincidir (cambiando `/1` por `/2`):
+
+```bash
+diff <(zcat R1.fastq.gz | head -n 1) <(zcat R2.fastq.gz | head -n 1 | sed 's|/2|/1|')
+```
+
+Si no imprime nada, los archivos están pareados correctamente.
+
+### Pipeline de alineamiento "en un solo paso"
+
+```bash
+bwa mem -t 8 ref.fa R1.fq.gz R2.fq.gz 2> align.log | \
+    samtools sort -@ 4 -o sorted.bam
+samtools index sorted.bam
+```
+
+El SAM que produce `bwa mem` **nunca se escribe a disco**: va directo al `stdin` de `samtools sort`, que genera el BAM ordenado. Solo se conserva el BAM final y el log de errores.
+
+### Buscar contigs con un motif (sitio EcoRI: GAATTC)
+
+```bash
+grep -i "gaattc" contigs.fa | wc -l
+```
+
+### Contar genes en un GFF
+
+```bash
+grep -c $'\tgene\t' annotation.gff3
+```
+
+El `$'\t'` inserta un tabulador literal: las columnas del GFF están separadas por tabs, así filtramos solo las líneas donde la columna 3 es exactamente `gene`.
+
+### Multiprocesar alineamientos con `xargs`
+
+```bash
+ls *_R1.fastq.gz | xargs -P 4 -I {} bash -c '
+    R1="{}"
+    R2="${R1/_R1/_R2}"
+    OUT="${R1%_R1.fastq.gz}.bam"
+    bwa mem -t 4 ref.fa "$R1" "$R2" 2> "${OUT%.bam}.log" | \
+        samtools sort -@ 2 -o "$OUT"
+'
+```
+
+`-P 4` lanza hasta 4 procesos concurrentes; `-I {}` define el marcador; dentro del subshell con `bash -c` manipulamos el nombre del archivo para inferir R2 y el prefijo de salida.
+
+::: callout-tip
+## WSL2: paralelismo y memoria
+En WSL2 sobre Windows, `xargs -P` y `wait` funcionan correctamente, pero ten presente que **la VM de WSL tiene un límite de memoria por defecto** (en `.wslconfig`). Si ejecutas 4 procesos pesados en paralelo y se caen por OOM, crea `C:\Users\TuUsuario\.wslconfig` con:
+```ini
+[wsl2]
+memory=16GB
+processors=8
+```
+Reinicia WSL con `wsl --shutdown`.
+:::
+
+---
+
+## Ejercicios
+
+### Ejercicio 1
+
+Dado un archivo `genes.txt` con un gen por línea, escribe una línea de comandos que:
+
+1. Cuente cuántos genes contiene.
+2. Muestre los 5 primeros y los 5 últimos.
+3. Guarde el conteo en `conteo.txt` **sin perder la salida por pantalla** (usa `tee`).
+
+### Ejercicio 2
+
+Crea un comando que cuente los reads de un FASTQ comprimido (`sample.fastq.gz`), guarde el resultado en `reads_count.txt` **descartando cualquier mensaje de error** a `/dev/null`. Luego verifica el archivo con `cat`. Recuerda: reads = líneas / 4.
+
+### Ejercicio 3
+
+Escribe (sin necesidad de ejecutarlo) el comando que procese en paralelo (4 procesos) múltiples archivos FASTQ con `fastqc`. Cada `*_R1.fastq.gz` debe recibir `fastqc`. La salida debe ir a `qc_results/`. Usa `xargs`.
+
+---
+
+## Soluciones
+
+### Solución 1
+
+```bash
+# 1. Contar genes y mostrar por pantalla a la vez
+wc -l < genes.txt | tee conteo.txt
+
+# 2. Los 5 primeros y los 5 últimos (sin tocar el archivo)
+head -n 5 genes.txt
+tail -n 5 genes.txt
+
+# 3. Versión "todo en uno": listar primeros y últimos junto con el conteo
+{
+    echo "=== Conteo total ==="
+    wc -l < genes.txt | tee conteo.txt
+    echo "=== Primeros 5 ==="
+    head -n 5 genes.txt
+    echo "=== Últimos 5 ==="
+    tail -n 5 genes.txt
+} | tee informe_genes.txt
+```
+
+Explicación de cada parte:
+
+- `wc -l < genes.txt` lee el archivo desde stdin (por eso no imprime el nombre del archivo, solo el número).
+- `tee conteo.txt` escribe el resultado en el archivo **y** lo muestra por pantalla: cumple el requisito de "no perder la salida".
+- `{ ... }` agrupa los `echo` y los comandos en un solo bloque cuyo stdout se bifurca con `tee informe_genes.txt`.
+- `head` y `tail` no modifican el archivo, solo leen.
+
+### Solución 2
+
+```bash
+# Contar reads: 1 FASTQ = 4 líneas por read
+# zcat descomprime; wc -l cuenta líneas; awk divide entre 4
+# Los errores de zcat/bwa/etc. se descartan a /dev/null
+zcat sample.fastq.gz 2> /dev/null | wc -l | awk '{printf "%d\n", $1/4}' > reads_count.txt
+
+# Verificar el contenido del archivo
+cat reads_count.txt
+```
+
+Desglose:
+
+- `zcat sample.fastq.gz` descomprime el FASTQ y lo vuelca a stdout.
+- `2> /dev/null` envía cualquier mensaje de error de `zcat` (por ejemplo, "file not found") al agujero negro, para que no contamine la salida.
+- `| wc -l` cuenta líneas.
+- `| awk '{printf "%d\n", $1/4}'` divide entre 4 y devuelve un entero (`printf "%d"` evita decimales espurios).
+- `> reads_count.txt` redirige stdout al archivo.
+- `cat reads_count.txt` verifica que el archivo se ha escrito.
+
+::: callout-note
+## ¿Por qué `2> /dev/null` y no `&> /dev/null`?
+Si usáramos `&> /dev/null` o `> /dev/null 2>&1` en `zcat`, **también** descartaríamos stdout (los datos del FASTQ) y el pipeline no tendría nada que contar. El truco es descartar **solo** stderr.
+:::
+
+### Solución 3
+
+```bash
+# Crear carpeta de salida (idempotente con -p)
+mkdir -p qc_results
+
+# Ejecutar fastqc en paralelo: hasta 4 procesos concurrentes
+ls *_R1.fastq.gz | xargs -n 1 -P 4 -I {} fastqc -o qc_results/ {}
+```
+
+Desglose:
+
+- `mkdir -p qc_results` crea el directorio destino (sin error si ya existe).
+- `ls *_R1.fastq.gz` lista solo los archivos R1.
+- `xargs -n 1` pasa un archivo por invocación (necesario porque `fastqc` espera archivos como argumentos, no por stdin).
+- `-P 4` mantiene hasta 4 procesos corriendo simultáneamente.
+- `-I {}` define `{}` como marcador para el nombre del archivo.
+- `fastqc -o qc_results/ {}` ejecuta FastQC sobre el archivo y escribe el HTML/zip en `qc_results/`.
+
+Versión equivalente y más robusta (maneja espacios en nombres):
+
+```bash
+find . -maxdepth 1 -name "*_R1.fastq.gz" -print0 | \
+    xargs -0 -n 1 -P 4 -I {} fastqc -o qc_results/ {}
+```
+
+`-print0` y `-0` usan el carácter NUL como separador, lo que evita problemas con espacios, comillas o caracteres especiales en los nombres de archivo.
+
+::: callout-important
+## Cuidado con saturar la CPU
+`-P 4` lanza 4 procesos de FastQC a la vez. Si FastQC internamente usa más de un thread (con `-t`), multiplica: 4 procesos × N threads = mucha CPU. Para servidores compartidos, empieza con `-P 2` y monitoriza con `htop`.
+:::
+
+::: callout-note
+## Resumen del capítulo
+Hemos cubierto los **descriptores estándar** (stdin/stdout/stderr), las **redirecciones** (`>`, `>>`, `<`, `2>`, `&>`, `/dev/null`), los **here documents** y **here strings**, el **pipe** y la filosofía de filtros, **`tee`** para bifurcar salida, **`xargs`** para construir argumentos desde stdin, los **subshells** y la **agrupación** con `( )` y `{ }`, los **procesos en background** con `&` y `wait`, los **generadores** (`seq`, `printf`, `yes`) y una mención a **`mkfifo`** para pipes nominales. Con esto ya puedes construir pipelines bioinformáticos reales: leer FASTQ comprimido, alinear, ordenar, indexar y contar, todo en una línea. En el Capítulo 7 abordaremos **búsqueda de patrones y archivos** con `grep`, `find` y `locate`.
+:::

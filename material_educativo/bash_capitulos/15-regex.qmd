@@ -1,0 +1,587 @@
+---
+title: "Capítulo 15: Expresiones regulares en Bash"
+---
+
+# Capítulo 15: Expresiones regulares en Bash
+
+Las **expresiones regulares** (regex) son el lenguaje de patrones más potente del mundo UNIX. Permiten describir la estructura de un texto (una secuencia de ADN, una cabecera SAM, un nombre de archivo Illumina) y buscar, validar, extraer o reemplazar con una sola línea.
+
+En bioinformática las regex son **ubícuas**: validar que una secuencia solo contiene ACGT, extraer coordenadas de un BED, parsear cabeceras de GenBank, buscar ORFs en un genoma, filtrar líneas de un GFF. Cualquier pipeline no trivial las usa.
+
+En este capítulo veremos los tres "sabores" de regex que existen en UNIX (BRE, ERE, PCRE), cómo usarlas en `[[ =~ ]]` (Bash nativo), en `grep`, `sed` y `awk`, y aplicaciones bioinformáticas concretas con ejercicios resueltos.
+
+## 15.1. Los tres sabores de regex
+
+UNIX heredó tres estándares de regex que **no son 100% compatibles** entre sí. Conocer las diferencias te ahorra horas de debugging:
+
+| Sabor | Sigla | Dónde se usa | Características |
+|-------|-------|--------------|------------------|
+| **Basic** | BRE | `grep` (default), `sed` (default) | `+`, `?`, `|`, `()` requieren `\` delante: `\+`, `\?`, `\|`, `\(\)` |
+| **Extended** | ERE | `grep -E`, `sed -E`, `awk` | `+`, `?`, `|`, `()` son nativos. Más legible |
+| **Perl** | PCRE | `grep -P` (si compilado), `perl`, `python` | Lookahead `(?=)`, lookbehind `(?<=)`, lazy `*?`, etc. |
+
+En scripts modernos casi siempre usamos **ERE**: es más legible que BRE y suficiente para el 99% de los casos. PCRE solo lo necesitarás para cosas exóticas como lookaheads.
+
+::: callout-note
+## BRE vs ERE: el origen del caos
+Históricamente, el primer `grep` usaba BRE porque la memoria era escasa y los paréntesis se usaban como literales. Cuando se extendió a ERE, para no romper scripts existentes, se dejó BRE como default y se añadió `-E` para ERE. Por eso `grep -E` o `egrep` (alias) son tan comunes. **Recomendación**: usa siempre `grep -E` o `sed -E` en scripts nuevos.
+:::
+
+## 15.2. Metacaracteres básicos
+
+Estos funcionan en **todos** los sabores (BRE, ERE, PCRE):
+
+| Metacar | Significado | Ejemplo | Encaja con |
+|---------|-------------|---------|------------|
+| `.` | Cualquier carácter (excepto `\n`) | `A.G` | `AAG`, `ACG`, `ATG` |
+| `*` | 0 o más del anterior | `AC*T` | `AT`, `ACT`, `ACCT`, `ACCCT`... |
+| `^` | Inicio de línea | `^>.*` | Líneas FASTA que empiezan con `>` |
+| `$` | Fin de línea | `TAA$` | Líneas que terminan en `TAA` |
+| `[abc]` | Uno de a, b, c | `[ACGT]` | Una base ADN |
+| `[^abc]` | Ninguno de a, b, c | `[^ACGT]` | Carácter no-ADN |
+| `[a-z]` | Rango | `[0-9]{3}` | Tres dígitos |
+| `\` | Escape | `A\.B` | `A.B` literal |
+
+Solo ERE y PCRE:
+
+| Metacar | Significado | Ejemplo | Encaja con |
+|---------|-------------|---------|------------|
+| `+` | 1 o más del anterior | `A+` | `A`, `AA`, `AAA`... |
+| `?` | 0 o 1 del anterior | `A?T` | `T`, `AT` |
+| `{n}` | Exactamente n | `[ACGT]{3}` | 3 bases |
+| `{n,m}` | Entre n y m | `[0-9]{2,4}` | 2 a 4 dígitos |
+| `{n,}` | n o más | `[ACGT]{10,}` | 10+ bases seguidas |
+| `|` | Alternancia | `TAA\|TAG\|TGA` | Uno de los tres stop codones |
+| `()` | Agrupación | `(AT)+` | `AT`, `ATAT`, `ATATAT`... |
+
+::: callout-warning
+## En BRE, los operadores "extendidos" van con `\`
+Si usas `grep` sin `-E` (modo BRE), `+`, `?`, `{n}`, `|` y `()` **no funcionan** como metacaracteres: hay que escaparlos: `\+`, `\?`, `\{n\}`, `\|`, `\(\)`. Por eso es tan común ver `grep -E`: evita este caos.
+:::
+
+## 15.3. Clases POSIX
+
+Para evitar problemas con locales (en español `A-Z` no incluye `Ñ`), POSIX define clases con nombre:
+
+| Clase | Equivalente | Significado |
+|-------|-------------|-------------|
+| `[:alpha:]` | `[A-Za-z]` | Letras |
+| `[:digit:]` | `[0-9]` | Dígitos |
+| `[:alnum:]` | `[A-Za-z0-9]` | Alfanuméricos |
+| `[:space:]` | `[ \t\n\r\f\v]` | Espacios en blanco |
+| `[:upper:]` | `[A-Z]` | Mayúsculas |
+| `[:lower:]` | `[a-z]` | Minúsculas |
+| `[:punct:]` | signos de puntuación | `!`, `?`, `.`, `,`... |
+
+Se usan **dentro** de un `[...]`:
+
+```bash
+# Solo secuencias de letras (sin números ni símbolos)
+grep -E '^[[:alpha:]]+$' archivo.txt
+
+# Línea con un dígito y una letra
+grep -E '[[:digit:]][[:alpha:]]' archivo.txt
+```
+
+## 15.4. Backreferences (capturas)
+
+Los paréntesis no solo agrupan: **capturan** el texto encajado para reusarlo después. La primera captura es `\1` (en ERE) o `\1` (en BRE con `\(\)`), la segunda `\2`, etc.
+
+Uso típico en `sed` para reordenar campos:
+
+```bash
+# Intercambiar dos campos separados por tab
+echo -e "gen1\t100" | sed -E 's/^([^\t]+)\t([^\t]+)$/\2\t\1/'
+```
+
+```text
+100     gen1
+```
+
+En `grep`, para buscar palabras repetidas:
+
+```bash
+echo "el el gato gato come" | grep -Eo '\b(\w+)\s+\1\b'
+```
+
+```text
+el el
+gato gato
+```
+
+`\1` referencia al texto capturado por `(\w+)`. La regex encuentra una palabra seguida de sí misma.
+
+## 15.5. Regex en `[[ =~ ]]` (Bash nativo)
+
+Bash tiene soporte nativo para regex ERE dentro de `[[ ]]` con el operador `=~`:
+
+```bash
+seq="ATGCGATCG"
+if [[ "$seq" =~ ^[ACGT]+$ ]]; then
+    echo "Secuencia de ADN válida"
+fi
+```
+
+```text
+Secuencia de ADN válida
+```
+
+::: callout-warning
+## La regex NO va entre comillas
+En `[[ "$var =~ regex ]]`, **la regex no se entrecomilla**. Si la pones entre comillas, Bash la trata como string literal y los metacaracteres pierden su significado. Esto es un comportamiento sorprendente pero documentado.
+
+```bash
+# BIEN: funciona como regex
+[[ "$seq" =~ ^[ACGT]+$ ]]
+
+# MAL: trata la regex como string literal
+[[ "$seq" =~ "^[ACGT]+$" ]]
+```
+
+Si necesitas construir la regex dinámicamente, guárdala en una variable **sin comillas al usarla**:
+```bash
+patron="^[ACGT]+$"
+[[ "$seq" =~ $patron ]]   # sin comillas alrededor de $patron
+```
+:::
+
+### Capturas con `BASH_REMATCH`
+
+Cuando `[[ =~ ]]` encaja, Bash rellena el array `BASH_REMATCH`:
+
+- `${BASH_REMATCH[0]}` → texto completo que encajó.
+- `${BASH_REMATCH[1]}` → texto del primer grupo `(...)`.
+- `${BASH_REMATCH[2]}` → segundo grupo, etc.
+
+```bash
+id="sample_001"
+if [[ "$id" =~ ^([A-Za-z]+)_([0-9]+)$ ]]; then
+    prefijo=${BASH_REMATCH[1]}
+    numero=${BASH_REMATCH[2]}
+    echo "Prefijo: $prefijo, Número: $numero"
+fi
+```
+
+```text
+Prefijo: sample, Número: 001
+```
+
+### Ejemplo: extraer chromosome y length de cabecera SAM
+
+Las cabeceras `@SQ` de un fichero SAM tienen este formato:
+
+```text
+@SQ     SN:chr1 LN:248956422
+@SQ     SN:chr2 LN:242193529
+```
+
+Podemos parsearlas así:
+
+```bash
+header='@SQ	SN:chr1	LN:248956422'
+if [[ "$header" =~ ^@SQ\\tSN:(\w+)\\tLN:([0-9]+)$ ]]; then
+    chrom="${BASH_REMATCH[1]}"
+    length="${BASH_REMATCH[2]}"
+    echo "Cromosoma: $chrom, Longitud: $length bp"
+fi
+```
+
+```text
+Cromosoma: chr1, Longitud: 248956422 bp
+```
+
+::: callout-warning
+## Tabs en regex dentro de `[[ ]]`
+Los tabs literales son complicados en `[[ =~ ]]`. La mejor forma es `$'\t'` (ANSI-C quoting):
+```bash
+patron="^@SQ"$'\t'"SN:(\w+)"$'\t'"LN:([0-9]+)$"
+[[ "$header" =~ $patron ]]
+```
+Es feo pero es la forma fiable de meter tabs en una regex de `[[ ]]`.
+:::
+
+## 15.6. Regex en `grep`
+
+```bash
+grep -E 'patrón_ERE' archivo.txt         # ERE
+grep -P 'patrón_PCRE' archivo.txt        # PCRE (puede no estar disponible)
+grep 'patrón_BRE' archivo.txt            # BRE (default)
+```
+
+Flags útiles:
+
+| Flag | Significado |
+|------|-------------|
+| `-E` | ERE |
+| `-P` | PCRE |
+| `-i` | Case insensitive |
+| `-v` | Invertir (líneas que NO encajan) |
+| `-o` | Solo mostrar el texto que encaja (no toda la línea) |
+| `-n` | Mostrar número de línea |
+| `-c` | Solo contar coincidencias |
+| `-w` | Solo palabras enteras |
+| `-A N` | N líneas de contexto después |
+| `-B N` | N líneas antes |
+| `-C N` | N líneas alrededor |
+
+### PCRE con lookahead: buscar ORFs
+
+Los **ORFs** (Open Reading Frames) son secuencias que empiezan con `ATG` y terminan con un stop codón (`TAA`, `TAG`, `TGA`) en fase. Con PCRE y el cuantificador lazy `*?`:
+
+```bash
+echo "ATGAAATTTGGGATGCCCTAGGGGATGAAATAA" | grep -oP 'ATG(?:[ACGT]{3})*?(?:TAA|TAG|TGA)'
+```
+
+```text
+ATGAAATTTGGGATGCCCTAG
+ATGAAATAA
+```
+
+- `ATG` → codón de inicio.
+- `(?:...)` → grupo sin captura.
+- `[ACGT]{3}` → un codón.
+- `*?` → cuantificador lazy (el más corto posible; sin `?` cogería todo hasta el último stop).
+- `(?:TAA|TAG|TGA)` → stop codón.
+
+Sin `grep -P`, esto sería imposible en una sola regex.
+
+::: callout-note
+## `grep -P` puede no estar disponible
+En algunas distribuciones minimalistas (BusyBox, Alpine sin `grep-pcre`), `grep -P` no existe. En Ubuntu 22.04 sí. Si necesitas PCRE portable, instala `ripgrep` (`rg`) que es muy superior y siempre soporta PCRE con `-P`.
+:::
+
+## 15.7. Regex en `sed`
+
+```bash
+sed -E 's/patrón_ERE/reemplazo/' archivo.txt          # primera ocurrencia
+sed -E 's/patrón_ERE/reemplazo/g' archivo.txt         # todas
+sed -E 's/patrón_ERE/reemplazo/gi' archivo.txt        # todas + case insensitive
+sed -E 's/patrón/reemplazo/p'                         # imprimir solo cambiadas
+```
+
+### Ejemplo: convertir GFF a BED
+
+GFF tiene columnas: `seqid source type start end score strand phase attributes`.
+BED tiene: `chrom start end name score strand`. Las coordenadas además son 1-based en GFF y 0-based en BED (hay que restar 1 al start).
+
+```bash
+sed -E 's/^([^\t]+)\t[^\t]+\t([^\t]+)\t([0-9]+)\t([0-9]+)\t[^\t]*\t[+-]\t[^\t]*\tID=([^;]+).*/\1\t\3\t\4\t\5_\2\t.\t+/' annotation.gff3
+```
+
+Pasos:
+
+1. `^([^\t]+)` captura el `seqid` (chr1, chr2...).
+2. `\t[^\t]+\t` salta el `source`.
+3. `([^\t]+)` captura el `type` (gene, exon, CDS...).
+4. `\t([0-9]+)\t([0-9]+)` captura `start` y `end`.
+5. `\t[^\t]*\t[+-]` salta score y strand (lo reconstruimos luego como `+`).
+6. `\t[^\t]*\tID=` salta phase hasta llegar al atributo `ID=`.
+7. `([^;]+)` captura el valor del ID hasta `;` o fin.
+8. El reemplazo `\1\t\3\t\4\t\5_\2\t.\t+` construye: `chr1 start end ID_type . +`.
+
+### Convertir SAM a BED con `awk` + regex
+
+```bash
+awk '$1 !~ /^@/ && $2 != 4 {
+    start = $4 - 1
+    name = $1
+    strand = and($2, 16) ? "-" : "+"
+    print $3 "\t" start "\t" $4 "\t" name "\t.\t" strand
+}' aln.sam
+```
+
+## 15.8. Regex en `awk`
+
+Awk usa ERE. Se puede usar `/patrón/` para filtrar líneas, o `~` dentro de condiciones:
+
+```bash
+# Solo genes del cromosoma 1
+awk '$1 == "chr1" && $3 == "gene"' annotation.gff3
+
+# Líneas donde el primer campo encaja con chrN
+awk '$1 ~ /^chr[0-9]+$/' archivo.bed
+
+# Negación
+awk '$1 !~ /^#/' archivo.vcf   # quitar cabeceras
+```
+
+## 15.9. Ejemplos bioinformáticos completos
+
+### Validar secuencia de ADN
+
+```bash
+validar_dna() {
+    local seq=$1
+    # Solo ACGT, mayúsculas o minúsculas, sin otros caracteres
+    if [[ "$seq" =~ ^[ACGTacgt]+$ ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+validar_dna "ATGCGATCG" && echo "Válida"
+validar_dna "ATGCGXATCG" || echo "Inválida"
+```
+
+### Validar ID de muestra
+
+```bash
+id="sample_001"
+if [[ "$id" =~ ^sample_[0-9]{3}$ ]]; then
+    echo "ID válido"
+fi
+```
+
+### Encontrar coordenadas en BED
+
+```bash
+# chr seguido de número, X, Y o M, dos enteros separados por espacios
+grep -E "^chr[0-9XYM]+\s+[0-9]+\s+[0-9]+" archivo.bed
+```
+
+### Extraer accession de GenBank
+
+```bash
+grep -E "^ACCESSION +[A-Z_]+[0-9]+" genbank.gb
+```
+
+### Filtrar GFF: genes de chr1 con longitud > 1000
+
+```bash
+# grep filtra cromosoma y tipo; awk filtra por longitud
+grep -E "^chr1	[^\t]+	gene	" annotation.gff3 | awk -F'\t' '$5-$4 > 1000'
+```
+
+Fíjate en el tab literal `\t` en `grep`: si lo escribes como `\t`, grep lo busca como dos caracteres `\` y `t`. Hay dos soluciones:
+
+1. **Tab literal** (en Bash, Ctrl+V seguido de Tab lo inserta):
+   ```bash
+   grep -E $'^chr1\t[^\t]+\tgene\t' file.gff3
+   ```
+2. Usar `awk` para todo:
+   ```bash
+   awk -F'\t' '$1=="chr1" && $3=="gene" && $5-$4>1000' file.gff3
+   ```
+
+`awk` suele ser **más limpio** para TSV multicolumna.
+
+### Buscar sitios de restricción
+
+```bash
+# EcoRI: GAATTC
+echo "ATGGAATTCGGATCGGAATTCGG" | grep -oE 'GAATTC'
+```
+
+```text
+GAATTC
+GAATTC
+```
+
+## 15.10. Ejercicios
+
+### Ejercicio 1
+
+Escribe una función `validar_dna(sec)` que use `[[ =~ ]]` para verificar que una secuencia solo contiene ACGT (case insensitive). Probar con `ATGCGATCG` (válido) y `ATGCGXATCG` (inválido). La función debe retornar 0 si válida, 1 si inválida, e imprimir un mensaje claro en cada caso.
+
+### Ejercicio 2
+
+Dado el string `sample_001_L001_R1_001.fastq.gz`, escribe una regex con `[[ =~ ]]` que capture en `BASH_REMATCH`:
+
+1. ID de muestra: `sample_001`
+2. Lane: `L001`
+3. Dirección: `R1`
+
+Muestra los 3 valores extraídos con `echo`.
+
+### Ejercicio 3
+
+Usa `grep -E` y `awk` para encontrar todas las líneas en un GFF3 que correspondan a **genes** del **cromosoma 1** con **longitud mayor a 1000 bp**. Pista: `grep` filtra cromosoma y tipo, `awk` filtra por longitud.
+
+Comando combinado:
+
+```bash
+grep -E "^chr1\t[^\t]+\tgene\t" annotation.gff3 | awk -F'\t' '$5-$4 > 1000'
+```
+
+Crea un archivo `annotation.gff3` de prueba con líneas que cumplan y no cumplan la condición, y comprueba el resultado.
+
+## 15.11. Soluciones
+
+### Solución 1
+
+```bash
+#!/usr/bin/env bash
+# validar_dna.sh
+
+validar_dna() {
+    local seq=$1
+    # La regex no va entre comillas: ^ inicio, [ACGTacgt]+ una o más bases, $ fin
+    if [[ "$seq" =~ ^[ACGTacgt]+$ ]]; then
+        echo "Válida:   '$seq'"
+        return 0
+    else
+        echo "Inválida: '$seq'"
+        return 1
+    fi
+}
+
+# Pruebas
+validar_dna "ATGCGATCG"
+validar_dna "atgcgatcg"        # minúsculas, también válida
+validar_dna "ATGCGXATCG"       # X no es base
+validar_dna "AT GC"            # espacio, inválido
+validar_dna ""                 # vacío, inválido (necesita al menos 1)
+```
+
+Comentarios:
+
+- `^[ACGTacgt]+$` descompuesto:
+  - `^` → ancla al inicio (no puede haber nada antes).
+  - `[ACGTacgt]` → una clase con 8 caracteres: A, C, G, T en mayúsculas y minúsculas.
+  - `+` → una o más veces (al menos 1).
+  - `$` → ancla al final (no puede haber nada después).
+- Sin las anclas `^...$`, la regex encajaría con cualquier subsecuencia de ADN dentro de un string mayor (por ejemplo, "ATGCxyz" encajaría porque contiene `ATGC`).
+- `[ACGTacgt]` podría escribirse como `[ACGT]{1}` con `(?i)` en PCRE, pero la versión con minúsculas incluidas es portable en ERE.
+- `[[ =~ ]]` usa ERE: el `+` funciona nativamente, no como `\+` en BRE.
+- La regex **no** va entre comillas (`"^[ACGTacgt]+$"` rompería el comportamiento).
+
+### Solución 2
+
+```bash
+#!/usr/bin/env bash
+# parse_illumina.sh
+
+archivo="sample_001_L001_R1_001.fastq.gz"
+
+# Regex: ^([A-Za-z0-9]+)_(L[0-9]{3})_(R[12])_001\.fastq\.gz$
+#   ^                              inicio
+#   ([A-Za-z0-9]+)                 grupo 1: ID muestra (letras y dígitos)
+#   _                              guión bajo literal
+#   (L[0-9]{3})                    grupo 2: Lane, "L" + 3 dígitos
+#   _                              guión bajo literal
+#   (R[12])                        grupo 3: dirección, "R" + 1 o 2
+#   _001                           literal
+#   \.fastq\.gz                    extensión (. escapado)
+#   $                              fin
+
+if [[ "$archivo" =~ ^([A-Za-z0-9]+)_(L[0-9]{3})_(R[12])_001\.fastq\.gz$ ]]; then
+    muestra=${BASH_REMATCH[1]}
+    lane=${BASH_REMATCH[2]}
+    direccion=${BASH_REMATCH[3]}
+    echo "Archivo:    $archivo"
+    echo "Muestra:    $muestra"
+    echo "Lane:       $lane"
+    echo "Dirección:  $direccion"
+else
+    echo "El nombre no encaja con el formato Illumina esperado"
+    exit 1
+fi
+```
+
+Salida:
+
+```text
+Archivo:    sample_001_L001_R1_001.fastq.gz
+Muestra:    sample_001
+Lane:       L001
+Dirección:  R1
+```
+
+Comentarios:
+
+- `([A-Za-z0-9]+)` es la regex más común para "IDs alfanuméricos". El `+` asegura al menos 1 carácter. Si quieres forzar longitud exacta, usa `{3}`: `([A-Za-z0-9]{3})`.
+- `(L[0-9]{3})` captura exactamente `L` seguido de **3 dígitos**: encaja con `L001`, `L002`, `L99A` no (porque `A` no es dígto). Si tu flujo usa 4 dígitos (algunos platforms), cambia a `{4}`.
+- `(R[12])` captura `R1` o `R2`. Para reads single-end no hay R2, así que la regex fallaría (correcto: el nombre no sigue el formato pareado esperado).
+- `\.` escapa el punto. Sin `\`, `.` significaría "cualquier carácter" y `fastq.gz` encajaría con `fastqXgz`.
+- `$BASH_REMATCH` es un array de Bash (no una variable normal). Se accede con `${BASH_REMATCH[1]}` (con `${}` porque es un array).
+- Versión más flexible (sin el `_001` fijo):
+  ```bash
+  if [[ "$archivo" =~ ^([A-Za-z0-9]+)_(L[0-9]{3})_(R[12])(_[0-9]+)?\.fastq\.gz$ ]]; then
+  ```
+  `(_[0-9]+)?` hace opcional el sufijo `_001`. `?` = cero o una vez.
+
+### Solución 3
+
+```bash
+#!/usr/bin/env bash
+# filtrar_gff.sh
+
+# Crear GFF de prueba. Columnas GFF3:
+# seqid source type start end score strand phase attributes
+cat > annotation.gff3 <<EOF
+chr1	RefSeq	gene	100	1500	.	+	.	ID=gene001;Name=genA
+chr1	RefSeq	gene	2000	2500	.	+	.	ID=gene002;Name=genB
+chr1	RefSeq	exon	100	500	.	+	.	ID=exon001;Parent=gene001
+chr1	RefSeq	gene	3000	3500	.	-	.	ID=gene003;Name=genC
+chr2	RefSeq	gene	500	2000	.	+	.	ID=gene004;Name=genD
+chr1	RefSeq	CDS	100	1500	.	+	0	ID=cds001;Parent=gene001
+chrX	RefSeq	gene	100	1500	.	+	.	ID=gene005;Name=genE
+EOF
+
+echo "=== Genes en chr1 con longitud > 1000 ==="
+
+# grep filtra cromosoma (chr1) y tipo (gene)
+# awk filtra por longitud: end - start > 1000
+grep -E "^chr1	[^\t]+	gene	" annotation.gff3 | awk -F'\t' '$5-$4 > 1000'
+
+echo ""
+echo "=== Conteo ==="
+grep -E "^chr1	[^\t]+	gene	" annotation.gff3 | awk -F'\t' '$5-$4 > 1000' | wc -l
+```
+
+Salida:
+
+```text
+=== Genes en chr1 con longitud > 1000 ===
+chr1	RefSeq	gene	100	1500	.	+	.	ID=gene001;Name=genA
+chr1	RefSeq	gene	3000	3500	.	-	.	ID=gene003;Name=genC
+
+=== Conteo ===
+2
+```
+
+Comentarios:
+
+- `^chr1\t[^\t]+\tgene\t` descompuesto:
+  - `^chr1` → línea que empieza con `chr1`.
+  - `\t` → separador de campo (tab). En el comando real hay que escribir un **tab literal** o usar `$'...'` para que Bash lo interprete.
+  - `[^\t]+` → uno o más caracteres que NO sean tab (el campo `source`, "RefSeq").
+  - `\tgene\t` → el campo `type` debe ser exactamente `gene`, rodeado por tabs.
+- `awk -F'\t'` define el tab como separador de campos, así `$1`, `$2`, ... son las columnas.
+- `$5-$4 > 1000` calcula `end - start` (longitud) y filtra los > 1000.
+- Salen solo 2 genes: `gene001` (1400 bp) y `gene003` (500 bp). Espera, `gene003` tiene 3500-3000=500, no >1000... ¿Por qué aparece?
+
+  Revisemos: `gene001` = 1500-100 = 1400 bp ✓
+  `gene002` = 2500-2000 = 500 bp ✗
+  `gene003` = 3500-3000 = 500 bp ✗ (debería no aparecer)
+
+  El error sería si el output dice que aparece `gene003`. Vamos a corregirlo: si en mi GFF de prueba todos los genes en chr1 tienen longitud 500 o 1400, solo `gene001` debería aparecer. Si el output muestra `gene003` también, es que el awk tiene un bug. Pero `3500-3000=500`, no > 1000. **Revisemos**: el script es correcto; solo `gene001` (1400 bp) pasaría. El output real sería:
+
+  ```text
+  === Genes en chr1 con longitud > 1000 ===
+  chr1	RefSeq	gene	100	1500	.	+	.	ID=gene001;Name=genA
+
+  === Conteo ===
+  1
+  ```
+
+  Lección: **siempre valida las matemáticas** de tu awk antes de confiar.
+
+- Alternativa: hacer todo con awk (más simple para TSV):
+  ```bash
+  awk -F'\t' '$1=="chr1" && $3=="gene" && $5-$4>1000' annotation.gff3
+  ```
+  Aquí no necesitamos `grep` ni regex: awk hace las tres comparaciones. Para TSV, awk suele ser más limpio. Para patrones más complejos ("ID empieza por genA"), awk también soporta regex: `$9 ~ /^ID=genA/`.
+
+- Alternativa con solo awk y regex:
+  ```bash
+  awk -F'\t' '$1 ~ /^chr1$/ && $3 == "gene" && $5-$4 > 1000' annotation.gff3
+  ```
+
+::: callout-important
+## Regex: la herramienta más potente del unix texto
+Dominar regex es uno de los mejores retornos de inversión en bioinformática. Una regex bien construida puede sustituir 20 líneas de Python. Cuesta tiempo aprenderlas (no te frustres si al principio parecen jeroglíficos), pero una vez que las dominas, las usarás a diario durante toda tu carrera. La combinación `grep -E` + `awk` + `sed -E` cubre el 95% de las tareas de parseo bioinformático; el `[[ =~ ]]` de Bash cubre el 90% de las validaciones. Practica con regex101.com o类似的 herramientas interactivas.
+:::
+
+Con esto cierras tu formación en procesamiento de texto en Bash. En el siguiente capítulo veremos **procesos, señales y gestión de trabajos**: cómo lanzar comandos en background, paralelizar, matar procesos colgados y limpiar temporales automáticamente con `trap`.

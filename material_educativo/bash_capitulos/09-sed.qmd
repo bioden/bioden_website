@@ -1,0 +1,505 @@
+---
+title: "Capítulo 9: sed — El editor de flujo"
+---
+
+# Capítulo 9: sed — El editor de flujo
+
+`sed` significa **Stream EDitor** (editor de flujo). A diferencia de un editor interactivo como `nano` o `vim`, `sed` aplica transformaciones a un flujo de texto **automáticamente**, línea por línea, sin abrir ninguna ventana. Es la herramienta ideal cuando necesitas modificar miles o millones de líneas de un archivo y abrirlo a mano sería inviable — situación común en bioinformática, donde un GFF o un VCF puede tener cientos de miles de líneas.
+
+`sed` hereda la sintaxis del antiguo editor `ed` y se estandarizó en POSIX. Es ubicuo: viene preinstalado en Ubuntu, macOS y prácticamente cualquier UNIX. En este capítulo aprenderás la sintaxis general, las opciones más comunes, los principales comandos (`s`, `d`, `p`, `i`, `a`, `c`) y los patrones de direccionamiento. Verás también expresiones regulares extendidas, *backreferences* y el temido pero utilísimo espacio de patrón y espacio de *hold*.
+
+::: callout-note
+## ¿`sed` o `awk`?
+`sed` está optimizado para **sustituciones y filtrado por líneas**: "cambia esto por aquello", "borra las líneas que matcheen este patrón", "extrae las líneas entre dos cabeceras". `awk` (Capítulo 10) es mejor cuando necesitas **operar con columnas**, hacer cálculos o mantener variables entre líneas. Para tareas simples de sustitución, `sed` es más corto y rápido.
+:::
+
+## 9.1. Sintaxis general
+
+La forma de invocación más simple:
+
+```bash
+sed [opciones] 'comando' archivo
+```
+
+- `opciones` son banderas como `-n`, `-i`, `-E`.
+- `comando` es una **acción** encerrada entre comillas simples (para evitar que el shell interprete caracteres como `*`, `(`, `\`).
+- `archivo` es el fichero de entrada. Si se omite, `sed` lee de stdin, lo que permite usarlo en pipes.
+
+Por defecto `sed` **imprime cada línea a stdout después de aplicarle el comando**. Por eso muchos comandos requieren `-n` para silenciar la salida automática cuando solo queremos imprimir lo que digamos explícitamente.
+
+## 9.2. Opciones comunes
+
+| Opción | Función |
+|--------|---------|
+| `-n` | Suprime la impresión automática de cada línea. Necesario con `p` |
+| `-i` | Edita el archivo *in-place* (modifica el archivo original) |
+| `-i.suf` | Edita *in-place* y crea un respaldo con sufijo `.suf` |
+| `-E` (o `-r`) | Usa expresiones regulares extendidas (EREs). En GNU `sed` ambas son equivalentes |
+| `-e cmd` | Permite especificar varios comandos |
+| `-f script.sed` | Lee los comandos desde un archivo script |
+| `-s` | Trata varios archivos como separados (útil con `-i`) |
+
+```bash
+sed 's/U/T/g' secuencia.fa                # imprime resultado a stdout
+sed -i 's/U/T/g' secuencia.fa             # modifica el archivo original
+sed -i.bak 's/U/T/g' secuencia.fa         # original + respaldo secuencia.fa.bak
+```
+
+::: callout-warning
+## Cuidado con `-i`
+`sed -i` modifica el archivo **sin pedir confirmación**. Si tu regex está mal, puedes perder datos. Costumbre sana: primero prueba **sin** `-i` (ves el resultado en pantalla) y, cuando funcione, añade `-i.bak` para tener respaldo.
+:::
+
+## 9.3. Comando de sustitución `s`
+
+Es el comando estrella de `sed`:
+
+```
+s/patrón/reemplazo/flags
+```
+
+Reemplaza el **primer** match de `patrón` en cada línea por `reemplazo`. Con el flag `g` se reemplazan **todas** las ocurrencias en la línea.
+
+```bash
+echo "ATCG UUUU" | sed 's/U/T/g'
+# ATCG TTTT
+```
+
+### Flags de la sustitución
+
+| Flag | Significado |
+|------|-------------|
+| `g` | Global: reemplaza todas las ocurrencias en la línea, no solo la primera |
+| `i` o `I` | Insensible a mayúsculas/minúsculas |
+| `N` | Solo reemplaza la N-ésima ocurrencia (`s/a/b/3`) |
+| `p` | Imprime la línea solo si se hizo una sustitución (útil con `-n`) |
+| `w archivo` | Escribe solo las líneas modificadas a `archivo` |
+| `e` | (GNU) Ejecuta el reemplazo como comando shell |
+| `M` o `m` | Modo multilínea |
+
+```bash
+echo "aaa aaa aaa" | sed 's/a/b/'        # bab aaa aaa  (solo la 1ª)
+echo "aaa aaa aaa" | sed 's/a/b/3'       # aab aaa aaa  (solo la 3ª)
+echo "aaa aaa aaa" | sed 's/a/b/g'       # bbb bbb bbb  (todas)
+echo "Hello" | sed 's/L/x/i'             # Hexo (case insensitive)
+```
+
+### Delimitadores alternativos
+
+Si tu patrón o reemplazo contiene `/` (rutas de archivos, URLs), escapar cada slash con `\/` es ilegible. `sed` permite **cualquier carácter** como delimitador: el primero que aparece después de `s` se usa como separador.
+
+```bash
+sed 's/\/home\/usuario\/ref.fa/\/data\/genome.fa/g'   # horrible
+sed 's|/home/usuario/ref.fa|/data/genome.fa|g'         # legible
+sed 's#/home/user#~#g'                                  # también válido
+```
+
+## 9.4. Comandos de eliminación `d`
+
+`d` borra líneas del flujo (no aparecen en la salida):
+
+```bash
+sed '3d' archivo              # borra la 3ª línea
+sed '5,10d' archivo           # borra líneas 5 a 10
+sed '$d' archivo              # borra la última línea
+sed '/^$/d' archivo           # borra líneas en blanco
+sed '/chromosome/d' archivo   # borra líneas que contengan "chromosome"
+sed '/^#/d' archivo           # borra comentarios
+```
+
+## 9.5. Comando de impresión `p`
+
+Imprime la línea actual. **Solo tiene sentido con `-n`**, porque sin `-n` ya se imprime todo y `p` duplica la línea.
+
+```bash
+sed -n '5p' archivo           # solo la 5ª línea
+sed -n '10,20p' archivo       # líneas 10 a 20
+sed -n '/gene/p' archivo      # solo líneas con "gene"
+sed -n '3,~5p' archivo        # desde la 3 hasta la siguiente múltiplo de 5
+```
+
+`sed -n 'NUMp'` es una alternativa a `head -n NUM | tail -n 1` para extraer una línea concreta.
+
+## 9.6. Inserción, anexado y cambio de línea
+
+| Comando | Acción |
+|---------|--------|
+| `i\ texto` | Inserta `texto` **antes** de la línea actual |
+| `a\ texto` | Añade `texto` **después** de la línea actual |
+| `c\ texto` | Cambia la línea completa por `texto` |
+
+```bash
+sed '2i\## Línea insertada antes de la 2' archivo
+sed '2a\## Línea añadida después de la 2' archivo
+sed '1c\## Nueva cabecera' archivo
+```
+
+En GNU `sed` (Ubuntu), el `\` es opcional y se admite la forma:
+
+```bash
+sed '2i ## CABECERA' archivo
+sed '/^>/a ## anotación automática' secuencias.fa
+```
+
+## 9.7. Direccionamiento (seleccionar líneas sobre las que actuar)
+
+Todo comando (`s`, `d`, `p`, etc.) puede ir **precedido** de una dirección que indica a qué líneas aplicar:
+
+```bash
+sed '5s/A/N/' archivo         # solo sustituye en la línea 5
+sed '5,10s/A/N/g' archivo     # solo en líneas 5-10
+sed '/^>/s/ /_/g' archivo     # solo en líneas que empiecen con > (FASTA)
+sed '$d' archivo              # la última ($)
+sed '/start/,/end/p' archivo  # desde línea con start hasta línea con end
+sed '0~2p' archivo            # cada 2 líneas (con -n)
+```
+
+### Direccionamiento por paso (útil para FASTQ)
+
+`sed 'N~Mp'` imprime cada M líneas empezando en la N. En un FASTQ cada *record* ocupa 4 líneas (header, sequence, +, quality). Para extraer solo las secuencias:
+
+```bash
+sed -n '2~4p' sample.fastq     # líneas 2, 6, 10, 14, ...
+```
+
+Y para las cabeceras:
+
+```bash
+sed -n '1~4p' sample.fastq
+```
+
+## 9.8. Expresiones regulares y *backreferences*
+
+Con `-E` activamos las **expresiones regulares extendidas** (EREs), donde los paréntesis son agrupadores (no necesitan escaparse) y `+`, `?`, `{n,m}` funcionan sin backslash.
+
+Las **backreferences** permiten referenciar dentro del reemplazo un grupo capturado en el patrón:
+
+```bash
+echo "gen01 gen02 gen03" | sed -E 's/(gen[0-9]+)/<\1>/g'
+# <gen01> <gen02> <gen03>
+```
+
+- `(gen[0-9]+)` captura el identificador.
+- `\1` en el reemplazo se sustituye por el texto capturado por el primer grupo.
+
+Sin `-E` (modo BRE), los paréntesis se escapan: `\(...\)` y la backreference sigue siendo `\1`. Es preferible usar siempre `-E` para mayor claridad.
+
+Otros ejemplos:
+
+```bash
+# Poner entre comillas los IDs tipo ID=algo;
+sed -E 's/ID=([^;]+);/ID="\1";/g' anotacion.gff3
+
+# Convertir chr1 a Chr_1
+sed -E 's/chr([0-9A-Za-z]+)/Chr_\1/g' archivo.bed
+
+# Intercambiar dos campos separados por tabulador
+sed -E 's/^([^\t]+)\t([^\t]+)/\2\t\1/' datos.tsv
+```
+
+## 9.9. Múltiples comandos con `-e`
+
+Para aplicar varias transformaciones en una sola pasada:
+
+```bash
+sed -e 's/a/A/g' -e 's/b/B/g' -e 's/c/C/g' archivo
+```
+
+También se puede separar con `;`:
+
+```bash
+sed 's/a/A/g; s/b/B/g' archivo
+```
+
+Y agrupar comandos sobre la misma dirección con `{ }`:
+
+```bash
+sed -n '/gene/{p; n; p}' archivo       # imprime línea con gene y la siguiente
+```
+
+## 9.10. Scripts sed (`-f`)
+
+Cuando los comandos son largos o reutilizables, escríbelos en un archivo:
+
+```script.sed
+# Quitar comentarios y líneas en blanco
+/^#/d
+/^$/d
+# Cambiar comas por tabs
+s/,/\t/g
+# Mayúsculas a minúsculas para todas las bases
+s/[A-Z]/\l&/g
+```
+
+```bash
+sed -f script.sed datos.csv > datos.tsv
+```
+
+El `&` en el reemplazo representa todo el match. `\l&` convierte el match a minúscula.
+
+## 9.11. Espacio de patrón y espacio de *hold* (avanzado)
+
+`sed` mantiene dos *buffers*:
+
+- **Espacio de patrón**: la línea actual que se está procesando.
+- **Espacio de *hold***: un almacenamiento auxiliar donde puedes guardar líneas temporalmente.
+
+| Comando | Acción |
+|---------|--------|
+| `h` | Copia patrón → hold (sobreescribe) |
+| `H` | Añade patrón al hold (con `\n`) |
+| `g` | Copia hold → patrón |
+| `G` | Añade hold al patrón (con `\n`) |
+| `x` | Intercambia patrón ↔ hold |
+| `n` | Lee siguiente línea al patrón |
+| `N` | Añade siguiente línea al patrón (con `\n`) |
+| `D` | Borra hasta el primer `\n` del patrón y reinicia el ciclo |
+| `q` | Sale de sed |
+
+Ejemplo clásico: invertir el orden de las líneas de un archivo (`tac` ya lo hace, pero ilustra el concepto):
+
+```bash
+sed '1!G;h;$!d' archivo
+```
+
+No te preocupes si esto parece críptico: en el 95% del trabajo bioinformático diario no necesitarás estos comandos, pero conviene saber que existen.
+
+## 9.12. Ejemplos bioinformáticos
+
+### Convertir cabeceras FASTA largas a IDs cortos
+
+```bash
+sed -E 's/^>([^ ]+).*/>\1/' secuencias.fa
+```
+
+Explicación: `^>` localiza el `>` inicial; `([^ ]+)` captura todo hasta el primer espacio (el ID); `.*` consume el resto (la descripción); el reemplazo `>\1` deja solo `>` seguido del ID.
+
+### Eliminar líneas en blanco
+
+```bash
+sed '/^$/d' archivo
+sed -i '/^$/d' secuencias.fa
+```
+
+### Reemplazar uracilo por timina (transcripción inversa ARN → ADN)
+
+```bash
+sed 's/U/T/g' secuencia_rna.fa > secuencia_dna.fa
+```
+
+### Extraer secuencias entre dos cabeceras
+
+```bash
+sed -n '/>gene1/,/>gene2/p' archivo.fa
+```
+
+Cuidado: incluye la cabecera `>gene2`. Para excluirla hay que combinar comandos:
+
+```bash
+sed -n '/>gene1/,/>gene2/{/>gene2/!p}' archivo.fa
+```
+
+### Renombrar IDs en GFF
+
+```bash
+sed -E 's/ID=([^;]+);/ID=new_\1;/g' anotacion.gff3
+```
+
+### Quitar *carriage return* de archivos creados en Windows
+
+Archivos editados en Windows suelen tener finales de línea `\r\n` (CRLF). En Linux esos `\r` causan problemas en GFF y VCF. Se ven como `^M` con `cat -A`:
+
+```bash
+sed -i 's/\r$//' archivo.gff
+```
+
+::: callout-tip
+## En WSL2
+Si montas un directorio de Windows en WSL (`/mnt/c/...`) y editas archivos desde ahí, casi siempre tendrás `\r` al final de cada línea. Una costumbre útil es crear un alias:
+```bash
+alias dos2unix='sed -i "s/\r$//"'
+```
+y usar `dos2unix archivo.gff` antes de cualquier herramienta bioinformática que se queje de "line 1: unexpected character".
+:::
+
+### Extraer cada 4 líneas de un FASTQ
+
+```bash
+# Solo cabeceras
+sed -n '1~4p' sample.fastq
+# Cabeceras y secuencias
+sed -n '1~4p;2~4p' sample.fastq
+```
+
+### Cambiar separador CSV → TSV
+
+```bash
+sed 's/,/\t/g' archivo.csv > archivo.tsv
+```
+
+::: callout-warning
+## CSV con comas dentro de campos
+Si tu CSV tiene comas dentro de campos entrecomillados (ej. `"Smith, John",42`), `sed 's/,/\t/g'` romperá el campo. Para CSV reales usa `csvkit` o `mlr` (`miller`), no `sed`.
+:::
+
+### Numerar las secuencias de un FASTA
+
+```bash
+sed = secuencias.fa | sed 'N;s/\n/\t/'
+```
+
+`=`, que imprime el número de línea seguido de `\n`, combinado con `N` (añade siguiente línea al patrón) y `s/\n/\t/` (cambia el `\n` por tab) produce cada línea numerada con un tab.
+
+## 9.13. Resumen de comandos y flags
+
+```
+s/pat/repl/flags    sustituir
+/pat/d              borrar
+Nd                  borrar línea N
+N,Md                borrar rango
+$d                  borrar última
+-n Np               imprimir línea N
+-n N,Mp             imprimir rango
+i\ texto            insertar antes
+a\ texto            añadir después
+c\ texto            cambiar línea
+h H g G x n N D     manipulación de buffers (avanzado)
+-e CMD              varios comandos
+-f script           leer de script
+-i[.suf]            in-place con backup opcional
+-n                  silenciar auto-print
+-E o -r             regex extendida
+```
+
+## 9.14. Ejercicios
+
+### Ejercicio 1
+
+Dado un archivo FASTA `seqs.fa` con cabeceras tipo:
+
+```text
+>seq1 description here
+ACGTACGT
+>seq2 another description
+TTTTGGGG
+```
+
+Usa `sed` para dejar las cabeceras como `>seq1` y `>seq2` (sin descripción). Muestra el comando y el resultado esperado.
+
+### Ejercicio 2
+
+En un archivo GFF cuyas líneas tienen atributos del estilo:
+
+```text
+ID=gen001;Name=GENE1;biotype=protein_coding
+ID=gen002;Name=GENE2;biotype=protein_coding
+```
+
+Usa `sed` para reemplazar `protein_coding` por `PC` en **todas** las ocurrencias. Edita *in-place* creando un respaldo `.bak`.
+
+### Ejercicio 3
+
+Dado un archivo VCF cuya estructura es:
+
+```text
+##fileformat=VCFv4.2
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Depth">
+#CHROM  POS  ID  REF  ALT  QUAL  FILTER  INFO
+chr1    100  .   A   T    50    PASS    DP=20
+chr1    200  .   G   C    30    PASS    DP=8
+```
+
+Usa `sed` para: (a) mostrar **solo** las líneas de cabecera `##`; (b) **eliminar** todas las líneas de cabecera (`##` y `#CHROM...`) y dejar solo los datos. Comandos separados.
+
+## 9.15. Soluciones
+
+### Solución 1
+
+```bash
+sed -E 's/^>([^ ]+).*/>\1/' seqs.fa
+```
+
+- `^>` ancla al inicio de línea y exige el `>`.
+- `([^ ]+)` captura el ID: cualquier carácter que **no** sea espacio, una o más veces.
+- `.*` consume el resto (la descripción).
+- `>\1` reemplaza toda la línea por `>` seguido del primer grupo.
+
+Resultado:
+
+```text
+>seq1
+ACGTACGT
+>seq2
+TTTTGGGG
+```
+
+Sin `-E` sería `sed 's/^>\([^ ]+\).*/>\1/' seqs.fa`.
+
+### Solución 2
+
+```bash
+sed -i.bak 's/protein_coding/PC/g' anotacion.gff3
+```
+
+- `s/protein_coding/PC/g`: cambia todas las ocurrencias por `PC` en cada línea.
+- `-i.bak`: edita el archivo original y deja `anotacion.gff3.bak` con la versión anterior.
+
+Si quieres solo reemplazar dentro de `biotype=...` y no en cualquier otra parte donde aparezca esa palabra, acota el patrón:
+
+```bash
+sed -i.bak -E 's/biotype=protein_coding/biotype=PC/g' anotacion.gff3
+```
+
+Resultado (en `anotacion.gff3`):
+
+```text
+ID=gen001;Name=GENE1;biotype=PC
+ID=gen002;Name=GENE2;biotype=PC
+```
+
+### Solución 3
+
+(a) Mostrar solo las líneas `##`:
+
+```bash
+sed -n '/^##/p' variants.vcf
+```
+
+- `-n` silencia la impresión automática.
+- `/^##/` selecciona líneas que empiecen con `##`.
+- `p` imprime las líneas seleccionadas.
+
+Resultado:
+
+```text
+##fileformat=VCFv4.2
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Depth">
+```
+
+(b) Eliminar todas las cabeceras y dejar solo datos:
+
+```bash
+sed '/^#/d' variants.vcf > datos.vcf
+```
+
+- `/^#/d` borra cualquier línea que empiece con `#` (engloba `##` y `#CHROM`).
+
+Resultado:
+
+```text
+chr1    100  .   A   T    50    PASS    DP=20
+chr1    200  .   G   C    30    PASS    DP=8
+```
+
+Si quieres borrar solo las `##` pero conservar la línea `#CHROM...`, usa:
+
+```bash
+sed '/^##/d' variants.vcf
+```
+
+::: callout-important
+## `sed` en el día a día
+De todos los capítulos del curso, este y el de `awk` son los que **más vas a usar**. Aprender bien `s///`, `d`, `p` y el direccionamiento por patrón te ahorrará horas de abrir y cerrar editores para cambiar cosas triviales en archivos enormes.
+:::
+
+Con esto ya dominas `sed` para las tareas más comunes. En el siguiente capítulo veremos `awk`, el complemento perfecto cuando necesitas **operar con columnas y hacer cálculos** sobre archivos de texto tabulares.

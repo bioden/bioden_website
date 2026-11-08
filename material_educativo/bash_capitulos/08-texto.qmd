@@ -1,0 +1,653 @@
+---
+title: "Capítulo 8: Procesamiento de texto: cut, sort, uniq, tr, paste, column"
+---
+
+# Capítulo 8: Procesamiento de texto: cut, sort, uniq, tr, paste, column
+
+La bioinformática es, en gran parte, **transformación de archivos de texto**: CSV de conteos, GFF de anotaciones, VCF de variantes, TSV de coordenadas, FASTA de secuencias. Bash incluye un kit de herramientas pequeñas y rápidas que, combinadas con pipes, permiten procesar millones de líneas en segundos. En este capítulo veremos `cat`, `cut`, `sort`, `uniq`, `tr`, `paste`, `column` y mencionaremos `join`, `comm`, `expand`, `unexpand`, `fold`, `fmt` y `rev`.
+
+## 8.1. `cat`: ver y concatenar
+
+`cat` (concatenate) vuelca el contenido de uno o varios archivos a stdout.
+
+```bash
+cat archivo.txt                     # muestra el contenido
+cat a.txt b.txt c.txt               # concatena tres archivos
+cat a.txt b.txt > combinado.txt     # concatena y guarda
+```
+
+### Opciones útiles
+
+| Opción | Función |
+|--------|---------|
+| `-n` | Numera todas las líneas |
+| `-b` | Numera solo las no vacías |
+| `-s` | Comprime líneas en blanco consecutivas |
+| `-A` | Muestra caracteres especiales (`$` para fin de línea, `^I` para tab) |
+| `-E` | Solo muestra `$` al final de cada línea |
+| `-T` | Solo muestra los tabs como `^I` |
+
+```bash
+cat -n gff_ejemplo.gff3 | head
+cat -A counts.csv          # detecta tabs vs espacios y finales de línea CRLF
+```
+
+::: callout-tip
+## `cat -A` para diagnosticar
+Cuando un CSV "no se parsea bien", el 90% de las veces es porque tiene espacios en vez de tabs, o finales de línea de Windows (`\r\n`). `cat -A` revela ambos: los tabs se ven como `^I` y los `\r` como `^M$` (en lugar de `$` solo).
+:::
+
+::: callout-warning
+## Uso indebido de `cat`
+`cat archivo | grep algo` es redundante: `grep algo archivo` hace lo mismo sin crear un pipe. La regla práctica: si solo hay **un archivo**, no uses `cat`. Es el llamado *useless use of cat* (UUOC), un clásico de las revisiones de código.
+:::
+
+## 8.2. `cut`: extraer columnas o caracteres
+
+`cut` extrae **campos** (columnas delimitadas) o **caracteres** (rangos por posición).
+
+### Por delimitador
+
+```bash
+cut -d',' -f1,3 datos.csv           # campos 1 y 3, separador coma
+cut -f2-5 annot.gff3                # campos 2 a 5, separador tab (default)
+cut -d':' -f1 /etc/passwd           # lista de usuarios del sistema
+```
+
+| Opción | Función |
+|--------|---------|
+| `-d CAR` | Delimitador (un solo carácter) |
+| `-f N` | Campo N (o rango `N-M`, lista `N,M,P`) |
+| `-c N-M` | Caracteres desde N hasta M |
+| `-c N-` | Desde N hasta el final |
+| `-c -M` | Desde el principio hasta M |
+| `--complement` | Devuelve todo MENOS los campos indicados |
+| `--output-delimiter=CAR` | Delimitador de salida (por defecto el mismo que el de entrada) |
+
+```bash
+cut -c1-10 secuencia.fa             # primeros 10 caracteres de cada línea
+cut -d',' -f1 --complement datos.csv   # todos los campos excepto el primero
+cut -d',' -f1,3 --output-delimiter=$'\t' datos.csv   # CSV → TSV para campos 1 y 3
+```
+
+::: callout-note
+## El delimitador por defecto de `cut` es el TAB
+Esto encaja perfectamente con formatos bioinformáticos como GFF/GTF/TSV/BED que usan tabs como separador. Por eso `cut -f1,4,5 annotation.gff3` funciona sin `-d`.
+:::
+
+### Ejemplo: contar cromosomas en un GFF
+
+```bash
+cut -f1 annotation.gff3 | sort -u
+```
+
+`cut -f1` extrae la primera columna (cromosoma), `sort -u` ordena y elimina duplicados: el resultado es la lista de cromosomas únicos.
+
+## 8.3. `sort`: ordenar líneas
+
+`sort` ordena alfabéticamente por defecto. Con opciones controlas el modo.
+
+| Opción | Función |
+|--------|---------|
+| `-n` | Orden numérico (10 va después de 9, no después de 1 como en modo texto) |
+| `-r` | Orden inverso |
+| `-k N` | Por columna N (separador por defecto: tab/espacio) |
+| `-k N,M` | Por columnas N a M |
+| `-t CAR` | Delimitador |
+| `-u` | Único (elimina duplicados tras ordenar) |
+| `-V` | Versión: `chr2` antes que `chr10` |
+| `-h` | Human readable: `1K`, `2M`, `3G` se ordenan correctamente |
+| `-R` | Aleatorio |
+| `-m` | Merge: asume entradas ya ordenadas, las fusiona |
+| `-f` | Ignora mayúsculas al ordenar |
+| `-c` | Comprueba si ya está ordenado (sin ordenar) |
+| `-s` | Stable: mantiene orden relativo de líneas "iguales" |
+
+```bash
+sort genes.txt                      # alfabético
+sort -n tamanos.txt                 # numérico
+sort -nr tamanos.txt                # numérico descendente
+sort -t',' -k3 -n datos.csv         # por 3ª columna numérica, CSV
+sort -k1,1 -k2,2n coords.bed        # por columna 1 alfabética y columna 2 numérica (BED)
+sort -V chr_list.txt                # chr1, chr2, ..., chr22, chrX, chrY (no alfabético)
+```
+
+::: callout-important
+## El problema de "chr10 antes que chr2"
+Sin `-V`, `sort` ordena lexicográficamente: `chr1, chr10, chr11, ..., chr2, chr20, chr21, chr22, chr3, ...`. Esto rompe cualquier pipeline genómico. Usa **siempre `-V`** cuando ordenes cromosomas.
+
+```bash
+sort -V chr_list.txt
+# chr1 chr2 chr3 ... chr10 chr11 ... chr22 chrX chrY chrM
+```
+:::
+
+### Ordenamiento estricto con `LC_ALL=C`
+
+El ordenamiento depende del *locale*: `es_ES.UTF-8` considera que `ñ` va después de `n`, ignora acentos, etc. Para un ordenamiento **estricto por byte** (ASCII):
+
+```bash
+LC_ALL=C sort archivo.txt
+```
+
+`LC_ALL=C` es mucho más rápido y reproducible entre sistemas. Se recomienda para pipelines de procesamiento de datos (no para texto a presentar a humanos).
+
+::: callout-tip
+## `LC_ALL=C` y bioinformática
+Cuando procesas GFF/BED/SAM, los identificadores son ASCII (sin acentos ni ñ). Forzar `LC_ALL=C` da un speedup significativo (hasta 5x) y un ordenamiento reproducible. Ponlo al inicio de tus scripts:
+
+```bash
+export LC_ALL=C
+```
+:::
+
+## 8.4. `uniq`: eliminar duplicados consecutivos
+
+`uniq` **solo elimina duplicados consecutivos**. Por eso casi siempre se combina con `sort`:
+
+```bash
+sort archivo | uniq                  # elimina duplicados
+sort archivo | uniq -c               # cuenta ocurrencias
+sort archivo | uniq -d               # solo duplicados
+sort archivo | uniq -u               # solo únicos (sin duplicados)
+```
+
+| Opción | Función |
+|--------|---------|
+| `-c` | Cuenta ocurrencias |
+| `-d` | Solo líneas duplicadas |
+| `-D` | Todas las copias de duplicados (no solo una) |
+| `-u` | Solo líneas únicas |
+| `-i` | Ignora mayúsculas |
+| `-f N` | Ignora los primeros N campos al comparar |
+| `-s N` | Ignora los primeros N caracteres |
+| `-w N` | Solo compara los primeros N caracteres |
+
+### La combinación clásica
+
+```bash
+sort archivo | uniq -c | sort -rn
+```
+
+Cuenta cuántas veces aparece cada línea, y las ordena por frecuencia descendente. Es uno de los patrones más usados en análisis exploratorio.
+
+::: callout-warning
+## `uniq` SIN `sort` no hace lo que crees
+```bash
+uniq archivo      # NO elimina todos los duplicados, solo los CONSECUTIVOS
+```
+Si tienes:
+```text
+manzana
+pera
+manzana
+```
+`uniq archivo` devuelve las tres líneas (las dos `manzana` no son consecutivas). **Siempre** precede con `sort` si quieres eliminar todos los duplicados.
+:::
+
+### Ejemplo: contar features por tipo en un GFF
+
+```bash
+cut -f3 annotation.gff3 | sort | uniq -c | sort -rn
+```
+
+Salida típica:
+
+```text
+  128453 exon
+   45120 CDS
+   18923 mRNA
+    6021 gene
+     542 tRNA
+     102 rRNA
+```
+
+## 8.5. `tr`: traducir o eliminar caracteres
+
+`tr` (translate) opera **carácter a carácter**. Solo lee stdin, no acepta archivos como argumentos.
+
+```bash
+echo "Hola Mundo" | tr 'a-z' 'A-Z'           # HOLA MUNDO
+echo "Hola Mundo" | tr 'aeiou' 'AEIOU'       # HOlA MUndO
+echo "Hola Mundo" | tr ' ' '_'               # Hola_Mundo
+```
+
+| Opción | Función |
+|--------|---------|
+| `-d` | Elimina los caracteres indicados |
+| `-s` | Comprime repeticiones consecutivas (squeeze) |
+| `-c` | Complemento (todo lo QUE NO sea el set indicado) |
+| `-cd` | Elimina todo lo que no sea del set |
+
+```bash
+# Eliminar retornos de carro de archivos Windows
+tr -d '\r' < datos_windows.csv > datos_unix.csv
+
+# Comprimir espacios repetidos
+echo "hola    mundo"  | tr -s ' '            # hola mundo
+
+# Eliminar todo lo que no sea letra
+echo "BRCA1, TP53: EGFR!" | tr -cd '[:alpha:]'   # BRCAATPEGFR
+
+# Convertir DNA a RNA
+echo "ATGC" | tr 'T' 'U'                     # AUGC
+
+# Convertir minúsculas a mayúsculas (para normalizar secuencias)
+grep -v "^>" secuencia.fa | tr 'a-z' 'A-Z'
+```
+
+::: callout-tip
+## Clases POSIX en `tr`
+`tr` soporta clases predefinidas: `[:alpha:]` (letras), `[:digit:]` (números), `[:alnum:]` (alfanuméricos), `[:space:]` (espacios), `[:punct:]` (puntuación), `[:upper:]`/`[:lower:]`. Equivalentes a `\w`, `\d`, etc. pero portables entre sistemas.
+:::
+
+### Ejemplo: convertir CSV a TSV
+
+```bash
+tr ',' '\t' < datos.csv > datos.tsv
+```
+
+### Ejemplo: contar nucleótidos en una secuencia FASTA
+
+```bash
+grep -v "^>" secuencia.fa | tr -d '\n' | fold -1 | sort | uniq -c
+```
+
+Salida:
+
+```text
+   1234 A
+    987 C
+   1102 G
+   1213 T
+```
+
+Desglose: `grep -v "^>"` quita las cabeceras, `tr -d '\n'` une todo en una sola línea, `fold -1` parte cada carácter en una línea, `sort` los agrupa, `uniq -c` los cuenta.
+
+## 8.6. `paste`: pegar archivos lado a lado
+
+`paste` une archivos **horizontalmente**: fila 1 de A con fila 1 de B, fila 2 con fila 2, etc.
+
+```bash
+paste a.txt b.txt                   # pega con tabulador por defecto
+paste -d',' a.txt b.txt             # pega con coma
+paste -d'\t' a.txt b.txt            # con tab explícito
+paste -s archivo.txt                # transpone: pone todas las líneas en una
+```
+
+Ejemplo: dos archivos con IDs y longitudes por separado, juntarlos:
+
+```bash
+paste ids.txt longitudes.txt > ids_con_long.txt
+```
+
+::: callout-note
+## `paste` vs `join`
+`paste` une por **posición** (fila N con fila N), no requiere orden ni campo común. `join` une por **campo común** (tipo INNER JOIN de SQL) pero requiere que ambos archivos estén **ordenados** por ese campo. Para listas paralelas ya alineadas, `paste`. Para uniones por clave, `join`.
+:::
+
+## 8.7. `column`: formatear en columnas
+
+`column` reorganiza texto separado por un delimitador en una tabla visual alineada.
+
+```bash
+column -t archivo.tsv                       # tabula un TSV
+column -t -s',' archivo.csv                 # tabula un CSV separado por comas
+column -t -s$'\t' archivo.gff3 | head       # tabula un GFF
+```
+
+`-t` crea una tabla, `-s` indica el separador de entrada. La salida tiene los anchos de columna ajustados automáticamente.
+
+### Ejemplo: vista previa de un GFF
+
+```bash
+cut -f1,3,4,5,7 annotation.gff3 | column -t | head
+```
+
+Salida:
+
+```text
+chr1   gene     11874   14409   +
+chr1   exon     11874   12227   +
+chr1   exon     12613   12721   +
+chr1   CDS      12010   12057   +
+chr1   CDS      12179   12227   +
+```
+
+::: callout-tip
+## `column` para inspección rápida
+Cuando te mandan un CSV enorme y no quieres abrirlo en Excel, `head datos.csv | column -t -s','` te da una vista tabular legible en segundos.
+:::
+
+## 8.8. `join`: unir por campo común
+
+`join` requiere que ambos archivos estén **ordenados** por el campo de unión.
+
+```bash
+sort -k1 ids.txt -o ids_sorted.txt
+sort -k1 longitudes.txt -o long_sorted.txt
+join -t$'\t' ids_sorted.txt long_sorted.txt
+```
+
+Por defecto une por la primera columna (campo común). Si los campos están en otra posición, usa `-1 N` y `-2 N`:
+
+```bash
+join -t',' -1 1 -2 2 archivoA.csv archivoB.csv
+```
+
+Es el "INNER JOIN" de SQL. Para LEFT JOIN, `join -a 1`; para mostrar líneas no emparejadas, `-v`.
+
+## 8.9. `comm`: comparar dos archivos ordenados
+
+`comm` muestra tres columnas: líneas solo en A, líneas solo en B, líneas en ambos.
+
+```bash
+comm archivoA.txt archivoB.txt
+```
+
+Para suprimir columnas: `comm -1` (oculta A), `comm -2` (oculta B), `comm -3` (oculta comunes).
+
+```bash
+# Diferencias: qué hay en A que no está en B
+comm -23 <(sort a.txt) <(sort b.txt)
+
+# Intersección: qué hay en ambos
+comm -12 <(sort a.txt) <(sort b.txt)
+```
+
+::: callout-warning
+## `comm` exige archivos ordenados
+Si los archivos no están ordenados, `comm` da resultados incorrectos (no error, solo resultados raros). Por eso se usa con `< <(sort ...)`.
+:::
+
+## 8.10. `expand` y `unexpand`
+
+`expand` convierte tabs en espacios; `unexpand` hace lo contrario.
+
+```bash
+expand -t 4 archivo.txt           # tabs → 4 espacios
+unexpand -t 4 --first-only archivo.txt   # espacios iniciales → tabs
+```
+
+Útil cuando un programa no admite tabs (algunos parsers de R o Python con indentación estricta).
+
+## 8.11. `fold` y `fmt`: envolver texto
+
+`fold` corta líneas a un ancho fijo:
+
+```bash
+fold -w 60 secuencia.fa            # cada línea queda en máximo 60 caracteres
+fold -w 60 -s texto.txt            # corta solo en espacios (no corta palabras)
+```
+
+`fmt` reformatea párrafos manteniendo palabras enteras:
+
+```bash
+fmt -w 70 README.md                # reenvuelve a 70 columnas
+```
+
+::: callout-tip
+## `fold -1` para separar cada carácter
+`fold -1 secuencia.txt` pone cada carácter en una línea distinta. Es un truco clásico para contar nucleótidos con `sort | uniq -c`.
+:::
+
+## 8.12. `rev`: invertir caracteres
+
+`rev` invierte el orden de los caracteres en cada línea:
+
+```bash
+echo "ATGCATGC" | rev              # CGTACGTA
+```
+
+Útil para generar el reverso complementario **a mano** (aunque para eso mejor `seqtk` o `awk`):
+
+```bash
+echo "ATGC" | rev | tr 'ATGC' 'TACG'    # GCAT (revcomp)
+```
+
+## 8.13. Ejemplos bioinformáticos completos
+
+### Top 10 genes más largos en un GFF
+
+```bash
+awk '$3=="gene" {print $5-$4, $1, $4, $5, $9}' annotation.gff3 | \
+    sort -rn | head
+```
+
+`awk` calcula `fin - inicio`, imprime longitud y coordenadas. `sort -rn` ordena numéricamente descendente. `head` toma los 10 primeros.
+
+### Contar genes por cromosoma
+
+```bash
+grep $'\tgene\t' annotation.gff3 | cut -f1 | sort | uniq -c | sort -k2
+```
+
+`grep $'\tgene\t'` filtra solo las líneas cuya 3ª columna es exactamente `gene`. `cut -f1` extrae el cromosoma. `sort` agrupa. `uniq -c` cuenta. `sort -k2` ordena por nombre de cromosoma (mejor con `-V`).
+
+Versión mejorada con orden "natural":
+
+```bash
+grep $'\tgene\t' annotation.gff3 | cut -f1 | sort | uniq -c | sort -k2,2V
+```
+
+### Convertir FASTA multi-línea a una línea por secuencia
+
+```bash
+awk '/^>/{if(seq){print header seq; seq=""} header=$0; next} {seq=seq $0} END{print header seq}' multi.fa
+```
+
+Truco clásico con `awk`: cuando ve una cabecera `>`, imprime la anterior y empieza a acumular la nueva; para líneas de secuencia, las concatena en `seq`.
+
+Alternativa con `tr` y `awk`:
+
+```bash
+awk 'BEGIN{RS=">"} NR>1 {sub(/\n/,"",$0); gsub(/\n/,"",$0); print ">"$0}' multi.fa
+```
+
+### Convertir CSV a TSV
+
+```bash
+tr ',' '\t' < counts.csv > counts.tsv
+```
+
+Ojo: si las comas están dentro de campos entrecomillados (CSV real), esto rompe. Para CSV con comillas, usa `csvkit` o `mlr` (no `tr`).
+
+### Tabular GFF resumen
+
+```bash
+cut -f1,3,4,5,7 annotation.gff3 | column -t | head -n 20
+```
+
+Vista previa en tabla con cromosoma, tipo de feature, coordenadas y hebra.
+
+### Contar nucleótidos totales en una FASTA multi-línea
+
+```bash
+grep -v "^>" secuencia.fa | tr -d '\n' | wc -c
+```
+
+`grep -v "^>"` elimina cabeceras, `tr -d '\n'` quita saltos de línea, `wc -c` cuenta caracteres restantes (cada uno es un nucleótido).
+
+::: callout-note
+## Por qué `-c` y no `-w` o `-l`
+`wc -l` cuenta líneas (no útil aquí porque ya no hay), `wc -w` cuenta palabras (tampoco, no hay espacios), `wc -c` cuenta **caracteres**, que es lo que queremos para una secuencia sin cabeceras ni saltos.
+:::
+
+### Top 5 cromosomas con más genes
+
+```bash
+grep $'\tgene\t' annotation.gff3 | cut -f1 | sort | uniq -c | sort -rn | head -5
+```
+
+### Calcular longitud total de todos los exones
+
+```bash
+awk '$3=="exon" {total += ($5 - $4 + 1)} END {print total}' annotation.gff3
+```
+
+`awk` acumula la longitud (fin - inicio + 1, porque las coordenadas GFF son inclusivas) y al final imprime la suma.
+
+---
+
+## Ejercicios
+
+### Ejercicio 1
+
+Dado un archivo `counts.csv` con cabecera y columnas:
+
+```text
+gen,muestra1,muestra2,muestra3
+BRCA1,120,150,180
+TP53,80,90,110
+EGFR,200,210,220
+```
+
+Extrae solo las columnas 1 (gen) y 3 (muestra2), ordénalas alfabéticamente por gen, y guárdalas en `gen_muestra2.tsv` separado por tabulador. La cabecera debe incluirse.
+
+### Ejercicio 2
+
+Cuenta cuántas veces aparece cada tipo de feature (`gene`, `exon`, `CDS`, `mRNA`, `tRNA`, ...) en un archivo GFF `annotation.gff3`, ordenado de mayor a menor frecuencia. Comando esperado:
+
+```bash
+cut -f3 annotation.gff3 | sort | uniq -c | sort -rn
+```
+
+### Ejercicio 3
+
+Dado un archivo `secuencias.fa` con múltiples secuencias FASTA (cabecera `>id` + secuencia repartida en múltiples líneas), cuenta los nucleótidos **totales** (ignorando cabeceras y saltos de línea). Comando:
+
+```bash
+grep -v "^>" secuencias.fa | tr -d '\n' | wc -c
+```
+
+---
+
+## Soluciones
+
+### Solución 1
+
+```bash
+# Conservar cabecera y columnas 1 y 3, separadas por tab
+head -n 1 counts.csv | cut -d',' -f1,3 | tr ',' '\t' > gen_muestra2.tsv
+
+# Datos: columnas 1 y 3 de las filas restantes, ordenadas por gen (columna 1)
+tail -n +2 counts.csv | cut -d',' -f1,3 | tr ',' '\t' | sort -t$'\t' -k1,1 >> gen_muestra2.tsv
+
+# Verificar
+cat gen_muestra2.tsv
+```
+
+Salida esperada:
+
+```text
+gen	muestra2
+BRCA1	150
+EGFR	210
+TP53	90
+```
+
+Desglose:
+
+- `head -n 1 counts.csv` extrae solo la primera línea (la cabecera).
+- `cut -d',' -f1,3` toma los campos 1 y 3, separados por coma (CSV).
+- `tr ',' '\t'` convierte la coma en tabulador (TSV).
+- `> gen_muestra2.tsv` sobrescribe el archivo con la cabecera.
+- `tail -n +2 counts.csv` toma desde la línea 2 en adelante (todos los datos, sin cabecera).
+- `sort -t$'\t' -k1,1` ordena por la primera columna (gen), usando tab como delimitador. Sin `-t$'\t'`, `sort` separaría por defecto por "blancos" (espacios y tabs), lo que también funcionaría aquí, pero es más explícito y seguro.
+- `>> gen_muestra2.tsv` añade al final del archivo ya creado con la cabecera.
+
+::: callout-tip
+## Alternativa todo-en-uno con `awk`
+```bash
+awk -F',' 'NR==1 {print $1"\t"$3; next} {print $1"\t"$3 | "sort -t\"\\t\" -k1,1"}' counts.csv > gen_muestra2.tsv
+```
+Pero para principiantes, la versión en dos pasos (cabecera + datos) es más legible y depurable.
+:::
+
+### Solución 2
+
+```bash
+cut -f3 annotation.gff3 | sort | uniq -c | sort -rn
+```
+
+Salida esperada:
+
+```text
+  128453 exon
+   45120 CDS
+   18923 mRNA
+    6021 gene
+     542 tRNA
+     102 rRNA
+      38 ncRNA
+```
+
+Desglose paso a paso:
+
+1. **`cut -f3 annotation.gff3`**: extrae la 3ª columna del GFF, que es el tipo de feature (`gene`, `exon`, `CDS`, etc.). Por defecto, `cut` usa el tabulador como delimitador, que es exactamente el separador de un GFF válido.
+2. **`sort`**: ordena alfabéticamente todas las palabras. Esto es **imprescindible** porque `uniq` solo agrupa duplicados **consecutivos**. Sin `sort`, tendrías:
+   ```text
+   gene
+   exon
+   gene        # estos dos "gene" no son consecutivos
+   exon
+   ```
+   y `uniq -c` los contaría como apariciones individuales (1, 1, 1, 1) en vez de agruparlos.
+3. **`uniq -c`**: cuenta cuántas veces aparece cada línea **consecutiva**. Como ahora están ordenadas, todas las del mismo tipo están juntas y se cuentan correctamente. La primera columna del output de `uniq -c` es el **conteo**, y la segunda el valor (el tipo de feature).
+4. **`sort -rn`**: ordena **numéricamente** (`-n`) y en **orden inverso** (`-r`), de mayor a menor. La entrada que recibe `sort -rn` tiene el formato `conteo\tnombre`, así que ordenar por la primera columna numérica es justo lo que queremos: las features más frecuentes aparecen arriba.
+
+::: callout-note
+## Si quieres excluir comentarios o líneas vacías
+Los GFF suelen empezar con líneas de comentario (`#`) o estar vacías. Para filtrar:
+
+```bash
+grep -v '^#' annotation.gff3 | grep -v '^$' | cut -f3 | sort | uniq -c | sort -rn
+```
+:::
+
+### Solución 3
+
+```bash
+grep -v "^>" secuencias.fa | tr -d '\n' | wc -c
+```
+
+Salida esperada (ejemplo para una FASTA con 3 secuencias):
+
+```text
+   1234
+```
+
+Desglose:
+
+1. **`grep -v "^>" secuencias.fa`**: `grep -v` invierte el filtro (líneas que **NO** cumplen el patrón). El patrón `"^>"` significa "línea que empieza con `>`", que es justamente la cabecera FASTA. Así, eliminamos todas las cabeceras (`>seq1`, `>seq2`, ...) y nos quedamos solo con las líneas de secuencia.
+2. **`tr -d '\n'`**: elimina (`-d`) todos los caracteres de salto de línea (`\n`). La salida de `grep` es una línea por cada línea de secuencia original; al quitar los `\n`, todas las líneas se pegan en **una sola cadena continua** sin separadores.
+3. **`wc -c`**: cuenta **caracteres** (bytes) de la entrada. Como ya no hay cabeceras ni saltos de línea, cada carácter restante es un nucleótido (A, T, G, C, N, etc.). El resultado es el número total de nucleótidos en todas las secuencias.
+
+::: callout-tip
+## Variantes útiles
+- Para contar por secuencia individual (no el total), con `awk`:
+  ```bash
+  awk '/^>/{if(name) print name, length(seq); name=$0; seq=""; next} {seq=seq $0} END{print name, length(seq)}' secuencias.fa
+  ```
+- Para contar también por nucleótido (histograma A/T/G/C/N):
+  ```bash
+  grep -v "^>" secuencias.fa | tr -d '\n' | fold -1 | sort | uniq -c
+  ```
+- Para contar solo ACGT y excluir N:
+  ```bash
+  grep -v "^>" secuencias.fa | tr -d '\n' | tr -cd 'ACGTacgt' | wc -c
+  ```
+:::
+
+::: callout-important
+## Cuidado con `wc -c` vs `wc -m`
+- `wc -c` cuenta **bytes**.
+- `wc -m` cuenta **caracteres** (multi-byte aware).
+
+Para secuencias ASCII (A, T, G, C, N), son equivalentes. Pero si tu FASTA contiene caracteres Unicode por error (no debería), `wc -c` daría más que `wc -m`. Para secuencias genómicas, usa `wc -c` (es más rápido).
+:::
+
+::: callout-note
+## Resumen del capítulo
+Hemos cubierto el kit de procesamiento de texto clásico de Unix: `cat` (ver y concatenar, con `-n`, `-A`), `cut` (extraer columnas con `-d`, `-f`, `-c`, `--complement`), `sort` (con `-n`, `-r`, `-k`, `-t`, `-u`, `-V`, `-h`, `LC_ALL=C`), `uniq` (con `-c`, `-d`, `-u`, y la importancia de `sort` previo), `tr` (traducir, borrar y comprimir caracteres, con clases POSIX), `paste` (unir archivos horizontalmente), `column` (formatear tablas), y una mención a `join`, `comm`, `expand`/`unexpand`, `fold`/`fmt` y `rev`. Con estas herramientas ya puedes: extraer genes de un GFF, contar features por cromosoma, transformar CSV ↔ TSV, calcular longitudes de genes, convertir FASTA multi-línea a una línea, y muchas otras tareas de ETL de datos bioinformáticos. En el Capítulo 9 profundizaremos en **`awk` y `sed`**, los "Swiss army knives" del procesamiento de texto en Bash.
+:::

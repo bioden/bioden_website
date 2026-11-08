@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Capítulo 9: sed — El editor de flujo – BIODEN</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../logo.png" rel="icon" type="image/png">
+<script src="../../site_libs/cookie-consent/cookie-consent.js"></script>
+<link href="../../site_libs/cookie-consent/cookie-consent.css" rel="stylesheet">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-70f92796293836dceea0045bd755b5b1.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-1242ccc02940432acd87c1b818d9cd49.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-70f92796293836dceea0045bd755b5b1.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+<script type="text/javascript" charset="UTF-8">
+document.addEventListener('DOMContentLoaded', function () {
+cookieconsent.run({
+  "notice_banner_type":"interstitial",
+  "consent_type":"express",
+  "palette":"dark",
+  "language":"en",
+  "page_load_consent_levels":["strictly-necessary"],
+  "notice_banner_reject_button_hide":false,
+  "preferences_center_close_button_hide":false,
+  "website_name":""
+  ,
+"language":"en"
+  });
+});
+</script> 
+  
+<style>html{ scroll-behavior: smooth; }</style>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../logo.png" alt="" class="navbar-logo light-content">
+    <img src="../../logo.png" alt="" class="navbar-logo dark-content">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">BIODEN</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Inicio</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-proyectos" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Proyectos</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-proyectos">    
+        <li>
+    <a class="dropdown-item" href="https://bioden.github.io/XIII_CCB_curso/">
+ <span class="dropdown-text">De la Botánica a la Bioinformática</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../investigacion.html"> 
+<span class="menu-text">Investigación</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../integrantes.html"> 
+<span class="menu-text">Integrantes</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../biosistalks/biosistalks.html"> 
+<span class="menu-text">Biosis Talks</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../material_educativo.html"> 
+<span class="menu-text">Material educativo</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../suplementario.html"> 
+<span class="menu-text">Servicios</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.instagram.com/dbg_unicauca/"> <i class="bi bi-instagram" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.facebook.com/profile.php?id=61583453722433"> <i class="bi bi-facebook" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:bioden@unicauca.edu.co"> <i class="bi bi-envelope" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar"><div class="quarto-margin-header"><div class="margin-header-item">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../../logos/semillero.png" class="img-fluid figure-img"></p>
+<figcaption>Universidad del Cauca</figcaption>
+</figure>
+</div>
+</div></div>
+        
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Capítulo 9: sed — El editor de flujo</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="capítulo-9-sed-el-editor-de-flujo" class="level1">
+<h1>Capítulo 9: sed — El editor de flujo</h1>
+<p><code>sed</code> significa <strong>Stream EDitor</strong> (editor de flujo). A diferencia de un editor interactivo como <code>nano</code> o <code>vim</code>, <code>sed</code> aplica transformaciones a un flujo de texto <strong>automáticamente</strong>, línea por línea, sin abrir ninguna ventana. Es la herramienta ideal cuando necesitas modificar miles o millones de líneas de un archivo y abrirlo a mano sería inviable — situación común en bioinformática, donde un GFF o un VCF puede tener cientos de miles de líneas.</p>
+<p><code>sed</code> hereda la sintaxis del antiguo editor <code>ed</code> y se estandarizó en POSIX. Es ubicuo: viene preinstalado en Ubuntu, macOS y prácticamente cualquier UNIX. En este capítulo aprenderás la sintaxis general, las opciones más comunes, los principales comandos (<code>s</code>, <code>d</code>, <code>p</code>, <code>i</code>, <code>a</code>, <code>c</code>) y los patrones de direccionamiento. Verás también expresiones regulares extendidas, <em>backreferences</em> y el temido pero utilísimo espacio de patrón y espacio de <em>hold</em>.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>¿<code>sed</code> o <code>awk</code>?
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>sed</code> está optimizado para <strong>sustituciones y filtrado por líneas</strong>: “cambia esto por aquello”, “borra las líneas que matcheen este patrón”, “extrae las líneas entre dos cabeceras”. <code>awk</code> (Capítulo 10) es mejor cuando necesitas <strong>operar con columnas</strong>, hacer cálculos o mantener variables entre líneas. Para tareas simples de sustitución, <code>sed</code> es más corto y rápido.</p>
+</div>
+</div>
+<section id="sintaxis-general" class="level2">
+<h2 data-anchor-id="sintaxis-general">9.1. Sintaxis general</h2>
+<p>La forma de invocación más simple:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="pp">[</span><span class="ss">opciones</span><span class="pp">]</span> <span class="st">'comando'</span> archivo</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<ul>
+<li><code>opciones</code> son banderas como <code>-n</code>, <code>-i</code>, <code>-E</code>.</li>
+<li><code>comando</code> es una <strong>acción</strong> encerrada entre comillas simples (para evitar que el shell interprete caracteres como <code>*</code>, <code>(</code>, <code>\</code>).</li>
+<li><code>archivo</code> es el fichero de entrada. Si se omite, <code>sed</code> lee de stdin, lo que permite usarlo en pipes.</li>
+</ul>
+<p>Por defecto <code>sed</code> <strong>imprime cada línea a stdout después de aplicarle el comando</strong>. Por eso muchos comandos requieren <code>-n</code> para silenciar la salida automática cuando solo queremos imprimir lo que digamos explícitamente.</p>
+</section>
+<section id="opciones-comunes" class="level2">
+<h2 data-anchor-id="opciones-comunes">9.2. Opciones comunes</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 47%">
+<col style="width: 52%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Opción</th>
+<th>Función</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>-n</code></td>
+<td>Suprime la impresión automática de cada línea. Necesario con <code>p</code></td>
+</tr>
+<tr class="even">
+<td><code>-i</code></td>
+<td>Edita el archivo <em>in-place</em> (modifica el archivo original)</td>
+</tr>
+<tr class="odd">
+<td><code>-i.suf</code></td>
+<td>Edita <em>in-place</em> y crea un respaldo con sufijo <code>.suf</code></td>
+</tr>
+<tr class="even">
+<td><code>-E</code> (o <code>-r</code>)</td>
+<td>Usa expresiones regulares extendidas (EREs). En GNU <code>sed</code> ambas son equivalentes</td>
+</tr>
+<tr class="odd">
+<td><code>-e cmd</code></td>
+<td>Permite especificar varios comandos</td>
+</tr>
+<tr class="even">
+<td><code>-f script.sed</code></td>
+<td>Lee los comandos desde un archivo script</td>
+</tr>
+<tr class="odd">
+<td><code>-s</code></td>
+<td>Trata varios archivos como separados (útil con <code>-i</code>)</td>
+</tr>
+</tbody>
+</table>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'s/U/T/g'</span> secuencia.fa                <span class="co"># imprime resultado a stdout</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i</span> <span class="st">'s/U/T/g'</span> secuencia.fa             <span class="co"># modifica el archivo original</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i.bak</span> <span class="st">'s/U/T/g'</span> secuencia.fa         <span class="co"># original + respaldo secuencia.fa.bak</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Cuidado con <code>-i</code>
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>sed -i</code> modifica el archivo <strong>sin pedir confirmación</strong>. Si tu regex está mal, puedes perder datos. Costumbre sana: primero prueba <strong>sin</strong> <code>-i</code> (ves el resultado en pantalla) y, cuando funcione, añade <code>-i.bak</code> para tener respaldo.</p>
+</div>
+</div>
+</section>
+<section id="comando-de-sustitución-s" class="level2">
+<h2 data-anchor-id="comando-de-sustitución-s">9.3. Comando de sustitución <code>s</code></h2>
+<p>Es el comando estrella de <code>sed</code>:</p>
+<pre><code>s/patrón/reemplazo/flags</code></pre>
+<p>Reemplaza el <strong>primer</strong> match de <code>patrón</code> en cada línea por <code>reemplazo</code>. Con el flag <code>g</code> se reemplazan <strong>todas</strong> las ocurrencias en la línea.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"ATCG UUUU"</span> <span class="kw">|</span> <span class="fu">sed</span> <span class="st">'s/U/T/g'</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># ATCG TTTT</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="flags-de-la-sustitución" class="level3">
+<h3 data-anchor-id="flags-de-la-sustitución">Flags de la sustitución</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 31%">
+<col style="width: 68%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Flag</th>
+<th>Significado</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>g</code></td>
+<td>Global: reemplaza todas las ocurrencias en la línea, no solo la primera</td>
+</tr>
+<tr class="even">
+<td><code>i</code> o <code>I</code></td>
+<td>Insensible a mayúsculas/minúsculas</td>
+</tr>
+<tr class="odd">
+<td><code>N</code></td>
+<td>Solo reemplaza la N-ésima ocurrencia (<code>s/a/b/3</code>)</td>
+</tr>
+<tr class="even">
+<td><code>p</code></td>
+<td>Imprime la línea solo si se hizo una sustitución (útil con <code>-n</code>)</td>
+</tr>
+<tr class="odd">
+<td><code>w archivo</code></td>
+<td>Escribe solo las líneas modificadas a <code>archivo</code></td>
+</tr>
+<tr class="even">
+<td><code>e</code></td>
+<td>(GNU) Ejecuta el reemplazo como comando shell</td>
+</tr>
+<tr class="odd">
+<td><code>M</code> o <code>m</code></td>
+<td>Modo multilínea</td>
+</tr>
+</tbody>
+</table>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"aaa aaa aaa"</span> <span class="kw">|</span> <span class="fu">sed</span> <span class="st">'s/a/b/'</span>        <span class="co"># bab aaa aaa  (solo la 1ª)</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"aaa aaa aaa"</span> <span class="kw">|</span> <span class="fu">sed</span> <span class="st">'s/a/b/3'</span>       <span class="co"># aab aaa aaa  (solo la 3ª)</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"aaa aaa aaa"</span> <span class="kw">|</span> <span class="fu">sed</span> <span class="st">'s/a/b/g'</span>       <span class="co"># bbb bbb bbb  (todas)</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Hello"</span> <span class="kw">|</span> <span class="fu">sed</span> <span class="st">'s/L/x/i'</span>             <span class="co"># Hexo (case insensitive)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="delimitadores-alternativos" class="level3">
+<h3 data-anchor-id="delimitadores-alternativos">Delimitadores alternativos</h3>
+<p>Si tu patrón o reemplazo contiene <code>/</code> (rutas de archivos, URLs), escapar cada slash con <code>\/</code> es ilegible. <code>sed</code> permite <strong>cualquier carácter</strong> como delimitador: el primero que aparece después de <code>s</code> se usa como separador.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'s/\/home\/usuario\/ref.fa/\/data\/genome.fa/g'</span>   <span class="co"># horrible</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'s|/home/usuario/ref.fa|/data/genome.fa|g'</span>         <span class="co"># legible</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'s#/home/user#~#g'</span>                                  <span class="co"># también válido</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="comandos-de-eliminación-d" class="level2">
+<h2 data-anchor-id="comandos-de-eliminación-d">9.4. Comandos de eliminación <code>d</code></h2>
+<p><code>d</code> borra líneas del flujo (no aparecen en la salida):</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'3d'</span> archivo              <span class="co"># borra la 3ª línea</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'5,10d'</span> archivo           <span class="co"># borra líneas 5 a 10</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'$d'</span> archivo              <span class="co"># borra la última línea</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'/^$/d'</span> archivo           <span class="co"># borra líneas en blanco</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'/chromosome/d'</span> archivo   <span class="co"># borra líneas que contengan "chromosome"</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'/^#/d'</span> archivo           <span class="co"># borra comentarios</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="comando-de-impresión-p" class="level2">
+<h2 data-anchor-id="comando-de-impresión-p">9.5. Comando de impresión <code>p</code></h2>
+<p>Imprime la línea actual. <strong>Solo tiene sentido con <code>-n</code></strong>, porque sin <code>-n</code> ya se imprime todo y <code>p</code> duplica la línea.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-n</span> <span class="st">'5p'</span> archivo           <span class="co"># solo la 5ª línea</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-n</span> <span class="st">'10,20p'</span> archivo       <span class="co"># líneas 10 a 20</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-n</span> <span class="st">'/gene/p'</span> archivo      <span class="co"># solo líneas con "gene"</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-n</span> <span class="st">'3,~5p'</span> archivo        <span class="co"># desde la 3 hasta la siguiente múltiplo de 5</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>sed -n 'NUMp'</code> es una alternativa a <code>head -n NUM | tail -n 1</code> para extraer una línea concreta.</p>
+</section>
+<section id="inserción-anexado-y-cambio-de-línea" class="level2">
+<h2 data-anchor-id="inserción-anexado-y-cambio-de-línea">9.6. Inserción, anexado y cambio de línea</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Comando</th>
+<th>Acción</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>i\ texto</code></td>
+<td>Inserta <code>texto</code> <strong>antes</strong> de la línea actual</td>
+</tr>
+<tr class="even">
+<td><code>a\ texto</code></td>
+<td>Añade <code>texto</code> <strong>después</strong> de la línea actual</td>
+</tr>
+<tr class="odd">
+<td><code>c\ texto</code></td>
+<td>Cambia la línea completa por <code>texto</code></td>
+</tr>
+</tbody>
+</table>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'2i\## Línea insertada antes de la 2'</span> archivo</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'2a\## Línea añadida después de la 2'</span> archivo</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'1c\## Nueva cabecera'</span> archivo</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>En GNU <code>sed</code> (Ubuntu), el <code>\</code> es opcional y se admite la forma:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'2i ## CABECERA'</span> archivo</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'/^&gt;/a ## anotación automática'</span> secuencias.fa</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="direccionamiento-seleccionar-líneas-sobre-las-que-actuar" class="level2">
+<h2 data-anchor-id="direccionamiento-seleccionar-líneas-sobre-las-que-actuar">9.7. Direccionamiento (seleccionar líneas sobre las que actuar)</h2>
+<p>Todo comando (<code>s</code>, <code>d</code>, <code>p</code>, etc.) puede ir <strong>precedido</strong> de una dirección que indica a qué líneas aplicar:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'5s/A/N/'</span> archivo         <span class="co"># solo sustituye en la línea 5</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'5,10s/A/N/g'</span> archivo     <span class="co"># solo en líneas 5-10</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'/^&gt;/s/ /_/g'</span> archivo     <span class="co"># solo en líneas que empiecen con &gt; (FASTA)</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'$d'</span> archivo              <span class="co"># la última ($)</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'/start/,/end/p'</span> archivo  <span class="co"># desde línea con start hasta línea con end</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'0~2p'</span> archivo            <span class="co"># cada 2 líneas (con -n)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="direccionamiento-por-paso-útil-para-fastq" class="level3">
+<h3 data-anchor-id="direccionamiento-por-paso-útil-para-fastq">Direccionamiento por paso (útil para FASTQ)</h3>
+<p><code>sed 'N~Mp'</code> imprime cada M líneas empezando en la N. En un FASTQ cada <em>record</em> ocupa 4 líneas (header, sequence, +, quality). Para extraer solo las secuencias:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-n</span> <span class="st">'2~4p'</span> sample.fastq     <span class="co"># líneas 2, 6, 10, 14, ...</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Y para las cabeceras:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-n</span> <span class="st">'1~4p'</span> sample.fastq</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="expresiones-regulares-y-backreferences" class="level2">
+<h2 data-anchor-id="expresiones-regulares-y-backreferences">9.8. Expresiones regulares y <em>backreferences</em></h2>
+<p>Con <code>-E</code> activamos las <strong>expresiones regulares extendidas</strong> (EREs), donde los paréntesis son agrupadores (no necesitan escaparse) y <code>+</code>, <code>?</code>, <code>{n,m}</code> funcionan sin backslash.</p>
+<p>Las <strong>backreferences</strong> permiten referenciar dentro del reemplazo un grupo capturado en el patrón:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"gen01 gen02 gen03"</span> <span class="kw">|</span> <span class="fu">sed</span> <span class="at">-E</span> <span class="st">'s/(gen[0-9]+)/&lt;\1&gt;/g'</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="co"># &lt;gen01&gt; &lt;gen02&gt; &lt;gen03&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<ul>
+<li><code>(gen[0-9]+)</code> captura el identificador.</li>
+<li><code>\1</code> en el reemplazo se sustituye por el texto capturado por el primer grupo.</li>
+</ul>
+<p>Sin <code>-E</code> (modo BRE), los paréntesis se escapan: <code>\(...\)</code> y la backreference sigue siendo <code>\1</code>. Es preferible usar siempre <code>-E</code> para mayor claridad.</p>
+<p>Otros ejemplos:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Poner entre comillas los IDs tipo ID=algo;</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-E</span> <span class="st">'s/ID=([^;]+);/ID="\1";/g'</span> anotacion.gff3</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Convertir chr1 a Chr_1</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-E</span> <span class="st">'s/chr([0-9A-Za-z]+)/Chr_\1/g'</span> archivo.bed</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Intercambiar dos campos separados por tabulador</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-E</span> <span class="st">'s/^([^\t]+)\t([^\t]+)/\2\t\1/'</span> datos.tsv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="múltiples-comandos-con--e" class="level2">
+<h2 data-anchor-id="múltiples-comandos-con--e">9.9. Múltiples comandos con <code>-e</code></h2>
+<p>Para aplicar varias transformaciones en una sola pasada:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-e</span> <span class="st">'s/a/A/g'</span> <span class="at">-e</span> <span class="st">'s/b/B/g'</span> <span class="at">-e</span> <span class="st">'s/c/C/g'</span> archivo</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>También se puede separar con <code>;</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'s/a/A/g; s/b/B/g'</span> archivo</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Y agrupar comandos sobre la misma dirección con <code>{ }</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-n</span> <span class="st">'/gene/{p; n; p}'</span> archivo       <span class="co"># imprime línea con gene y la siguiente</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="scripts-sed--f" class="level2">
+<h2 data-anchor-id="scripts-sed--f">9.10. Scripts sed (<code>-f</code>)</h2>
+<p>Cuando los comandos son largos o reutilizables, escríbelos en un archivo:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode script.sed code-with-copy"><code class="sourceCode sed"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Quitar comentarios y líneas en blanco</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="cn">/</span><span class="sc">^</span><span class="st">#</span><span class="cn">/</span><span class="kw">d</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="cn">/</span><span class="sc">^$</span><span class="cn">/</span><span class="kw">d</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Cambiar comas por tabs</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="kw">s</span><span class="cn">/</span><span class="st">,</span><span class="cn">/</span><span class="ch">\t</span><span class="st">/g</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Mayúsculas a minúsculas para todas las bases</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="kw">s</span><span class="cn">/</span><span class="sc">[</span><span class="st">A-Z</span><span class="sc">]</span><span class="cn">/</span><span class="sc">\l&amp;</span><span class="cn">/</span><span class="dt">g</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-f</span> script.sed datos.csv <span class="op">&gt;</span> datos.tsv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>El <code>&amp;</code> en el reemplazo representa todo el match. <code>\l&amp;</code> convierte el match a minúscula.</p>
+</section>
+<section id="espacio-de-patrón-y-espacio-de-hold-avanzado" class="level2">
+<h2 data-anchor-id="espacio-de-patrón-y-espacio-de-hold-avanzado">9.11. Espacio de patrón y espacio de <em>hold</em> (avanzado)</h2>
+<p><code>sed</code> mantiene dos <em>buffers</em>:</p>
+<ul>
+<li><strong>Espacio de patrón</strong>: la línea actual que se está procesando.</li>
+<li><strong>Espacio de <em>hold</em></strong>: un almacenamiento auxiliar donde puedes guardar líneas temporalmente.</li>
+</ul>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Comando</th>
+<th>Acción</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>h</code></td>
+<td>Copia patrón → hold (sobreescribe)</td>
+</tr>
+<tr class="even">
+<td><code>H</code></td>
+<td>Añade patrón al hold (con <code>\n</code>)</td>
+</tr>
+<tr class="odd">
+<td><code>g</code></td>
+<td>Copia hold → patrón</td>
+</tr>
+<tr class="even">
+<td><code>G</code></td>
+<td>Añade hold al patrón (con <code>\n</code>)</td>
+</tr>
+<tr class="odd">
+<td><code>x</code></td>
+<td>Intercambia patrón ↔︎ hold</td>
+</tr>
+<tr class="even">
+<td><code>n</code></td>
+<td>Lee siguiente línea al patrón</td>
+</tr>
+<tr class="odd">
+<td><code>N</code></td>
+<td>Añade siguiente línea al patrón (con <code>\n</code>)</td>
+</tr>
+<tr class="even">
+<td><code>D</code></td>
+<td>Borra hasta el primer <code>\n</code> del patrón y reinicia el ciclo</td>
+</tr>
+<tr class="odd">
+<td><code>q</code></td>
+<td>Sale de sed</td>
+</tr>
+</tbody>
+</table>
+<p>Ejemplo clásico: invertir el orden de las líneas de un archivo (<code>tac</code> ya lo hace, pero ilustra el concepto):</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'1!G;h;$!d'</span> archivo</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>No te preocupes si esto parece críptico: en el 95% del trabajo bioinformático diario no necesitarás estos comandos, pero conviene saber que existen.</p>
+</section>
+<section id="ejemplos-bioinformáticos" class="level2">
+<h2 data-anchor-id="ejemplos-bioinformáticos">9.12. Ejemplos bioinformáticos</h2>
+<section id="convertir-cabeceras-fasta-largas-a-ids-cortos" class="level3">
+<h3 data-anchor-id="convertir-cabeceras-fasta-largas-a-ids-cortos">Convertir cabeceras FASTA largas a IDs cortos</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-E</span> <span class="st">'s/^&gt;([^ ]+).*/&gt;\1/'</span> secuencias.fa</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Explicación: <code>^&gt;</code> localiza el <code>&gt;</code> inicial; <code>([^ ]+)</code> captura todo hasta el primer espacio (el ID); <code>.*</code> consume el resto (la descripción); el reemplazo <code>&gt;\1</code> deja solo <code>&gt;</code> seguido del ID.</p>
+</section>
+<section id="eliminar-líneas-en-blanco" class="level3">
+<h3 data-anchor-id="eliminar-líneas-en-blanco">Eliminar líneas en blanco</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'/^$/d'</span> archivo</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i</span> <span class="st">'/^$/d'</span> secuencias.fa</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="reemplazar-uracilo-por-timina-transcripción-inversa-arn-adn" class="level3">
+<h3 data-anchor-id="reemplazar-uracilo-por-timina-transcripción-inversa-arn-adn">Reemplazar uracilo por timina (transcripción inversa ARN → ADN)</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'s/U/T/g'</span> secuencia_rna.fa <span class="op">&gt;</span> secuencia_dna.fa</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="extraer-secuencias-entre-dos-cabeceras" class="level3">
+<h3 data-anchor-id="extraer-secuencias-entre-dos-cabeceras">Extraer secuencias entre dos cabeceras</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-n</span> <span class="st">'/&gt;gene1/,/&gt;gene2/p'</span> archivo.fa</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Cuidado: incluye la cabecera <code>&gt;gene2</code>. Para excluirla hay que combinar comandos:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-n</span> <span class="st">'/&gt;gene1/,/&gt;gene2/{/&gt;gene2/!p}'</span> archivo.fa</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="renombrar-ids-en-gff" class="level3">
+<h3 data-anchor-id="renombrar-ids-en-gff">Renombrar IDs en GFF</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-E</span> <span class="st">'s/ID=([^;]+);/ID=new_\1;/g'</span> anotacion.gff3</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="quitar-carriage-return-de-archivos-creados-en-windows" class="level3">
+<h3 data-anchor-id="quitar-carriage-return-de-archivos-creados-en-windows">Quitar <em>carriage return</em> de archivos creados en Windows</h3>
+<p>Archivos editados en Windows suelen tener finales de línea <code>\r\n</code> (CRLF). En Linux esos <code>\r</code> causan problemas en GFF y VCF. Se ven como <code>^M</code> con <code>cat -A</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i</span> <span class="st">'s/\r$//'</span> archivo.gff</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>En WSL2
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Si montas un directorio de Windows en WSL (<code>/mnt/c/...</code>) y editas archivos desde ahí, casi siempre tendrás <code>\r</code> al final de cada línea. Una costumbre útil es crear un alias:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="bu">alias</span> dos2unix=<span class="st">'sed -i "s/\r$//"'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>y usar <code>dos2unix archivo.gff</code> antes de cualquier herramienta bioinformática que se queje de “line 1: unexpected character”.</p>
+</div>
+</div>
+</section>
+<section id="extraer-cada-4-líneas-de-un-fastq" class="level3">
+<h3 data-anchor-id="extraer-cada-4-líneas-de-un-fastq">Extraer cada 4 líneas de un FASTQ</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Solo cabeceras</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-n</span> <span class="st">'1~4p'</span> sample.fastq</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Cabeceras y secuencias</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-n</span> <span class="st">'1~4p;2~4p'</span> sample.fastq</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="cambiar-separador-csv-tsv" class="level3">
+<h3 data-anchor-id="cambiar-separador-csv-tsv">Cambiar separador CSV → TSV</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'s/,/\t/g'</span> archivo.csv <span class="op">&gt;</span> archivo.tsv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>CSV con comas dentro de campos
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Si tu CSV tiene comas dentro de campos entrecomillados (ej. <code>"Smith, John",42</code>), <code>sed 's/,/\t/g'</code> romperá el campo. Para CSV reales usa <code>csvkit</code> o <code>mlr</code> (<code>miller</code>), no <code>sed</code>.</p>
+</div>
+</div>
+</section>
+<section id="numerar-las-secuencias-de-un-fasta" class="level3">
+<h3 data-anchor-id="numerar-las-secuencias-de-un-fasta">Numerar las secuencias de un FASTA</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> = secuencias.fa <span class="kw">|</span> <span class="fu">sed</span> <span class="st">'N;s/\n/\t/'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>=</code>, que imprime el número de línea seguido de <code>\n</code>, combinado con <code>N</code> (añade siguiente línea al patrón) y <code>s/\n/\t/</code> (cambia el <code>\n</code> por tab) produce cada línea numerada con un tab.</p>
+</section>
+</section>
+<section id="resumen-de-comandos-y-flags" class="level2">
+<h2 data-anchor-id="resumen-de-comandos-y-flags">9.13. Resumen de comandos y flags</h2>
+<pre><code>s/pat/repl/flags    sustituir
+/pat/d              borrar
+Nd                  borrar línea N
+N,Md                borrar rango
+$d                  borrar última
+-n Np               imprimir línea N
+-n N,Mp             imprimir rango
+i\ texto            insertar antes
+a\ texto            añadir después
+c\ texto            cambiar línea
+h H g G x n N D     manipulación de buffers (avanzado)
+-e CMD              varios comandos
+-f script           leer de script
+-i[.suf]            in-place con backup opcional
+-n                  silenciar auto-print
+-E o -r             regex extendida</code></pre>
+</section>
+<section id="ejercicios" class="level2">
+<h2 data-anchor-id="ejercicios">9.14. Ejercicios</h2>
+<section id="ejercicio-1" class="level3">
+<h3 data-anchor-id="ejercicio-1">Ejercicio 1</h3>
+<p>Dado un archivo FASTA <code>seqs.fa</code> con cabeceras tipo:</p>
+<pre class="text"><code>&gt;seq1 description here
+ACGTACGT
+&gt;seq2 another description
+TTTTGGGG</code></pre>
+<p>Usa <code>sed</code> para dejar las cabeceras como <code>&gt;seq1</code> y <code>&gt;seq2</code> (sin descripción). Muestra el comando y el resultado esperado.</p>
+</section>
+<section id="ejercicio-2" class="level3">
+<h3 data-anchor-id="ejercicio-2">Ejercicio 2</h3>
+<p>En un archivo GFF cuyas líneas tienen atributos del estilo:</p>
+<pre class="text"><code>ID=gen001;Name=GENE1;biotype=protein_coding
+ID=gen002;Name=GENE2;biotype=protein_coding</code></pre>
+<p>Usa <code>sed</code> para reemplazar <code>protein_coding</code> por <code>PC</code> en <strong>todas</strong> las ocurrencias. Edita <em>in-place</em> creando un respaldo <code>.bak</code>.</p>
+</section>
+<section id="ejercicio-3" class="level3">
+<h3 data-anchor-id="ejercicio-3">Ejercicio 3</h3>
+<p>Dado un archivo VCF cuya estructura es:</p>
+<pre class="text"><code>##fileformat=VCFv4.2
+##INFO=&lt;ID=DP,Number=1,Type=Integer,Description="Depth"&gt;
+#CHROM  POS  ID  REF  ALT  QUAL  FILTER  INFO
+chr1    100  .   A   T    50    PASS    DP=20
+chr1    200  .   G   C    30    PASS    DP=8</code></pre>
+<p>Usa <code>sed</code> para: (a) mostrar <strong>solo</strong> las líneas de cabecera <code>##</code>; (b) <strong>eliminar</strong> todas las líneas de cabecera (<code>##</code> y <code>#CHROM...</code>) y dejar solo los datos. Comandos separados.</p>
+</section>
+</section>
+<section id="soluciones" class="level2">
+<h2 data-anchor-id="soluciones">9.15. Soluciones</h2>
+<section id="solución-1" class="level3">
+<h3 data-anchor-id="solución-1">Solución 1</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-E</span> <span class="st">'s/^&gt;([^ ]+).*/&gt;\1/'</span> seqs.fa</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<ul>
+<li><code>^&gt;</code> ancla al inicio de línea y exige el <code>&gt;</code>.</li>
+<li><code>([^ ]+)</code> captura el ID: cualquier carácter que <strong>no</strong> sea espacio, una o más veces.</li>
+<li><code>.*</code> consume el resto (la descripción).</li>
+<li><code>&gt;\1</code> reemplaza toda la línea por <code>&gt;</code> seguido del primer grupo.</li>
+</ul>
+<p>Resultado:</p>
+<pre class="text"><code>&gt;seq1
+ACGTACGT
+&gt;seq2
+TTTTGGGG</code></pre>
+<p>Sin <code>-E</code> sería <code>sed 's/^&gt;\([^ ]+\).*/&gt;\1/' seqs.fa</code>.</p>
+</section>
+<section id="solución-2" class="level3">
+<h3 data-anchor-id="solución-2">Solución 2</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i.bak</span> <span class="st">'s/protein_coding/PC/g'</span> anotacion.gff3</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<ul>
+<li><code>s/protein_coding/PC/g</code>: cambia todas las ocurrencias por <code>PC</code> en cada línea.</li>
+<li><code>-i.bak</code>: edita el archivo original y deja <code>anotacion.gff3.bak</code> con la versión anterior.</li>
+</ul>
+<p>Si quieres solo reemplazar dentro de <code>biotype=...</code> y no en cualquier otra parte donde aparezca esa palabra, acota el patrón:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb40"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i.bak</span> <span class="at">-E</span> <span class="st">'s/biotype=protein_coding/biotype=PC/g'</span> anotacion.gff3</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Resultado (en <code>anotacion.gff3</code>):</p>
+<pre class="text"><code>ID=gen001;Name=GENE1;biotype=PC
+ID=gen002;Name=GENE2;biotype=PC</code></pre>
+</section>
+<section id="solución-3" class="level3">
+<h3 data-anchor-id="solución-3">Solución 3</h3>
+<ol type="a">
+<li>Mostrar solo las líneas <code>##</code>:</li>
+</ol>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb42"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-n</span> <span class="st">'/^##/p'</span> variants.vcf</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<ul>
+<li><code>-n</code> silencia la impresión automática.</li>
+<li><code>/^##/</code> selecciona líneas que empiecen con <code>##</code>.</li>
+<li><code>p</code> imprime las líneas seleccionadas.</li>
+</ul>
+<p>Resultado:</p>
+<pre class="text"><code>##fileformat=VCFv4.2
+##INFO=&lt;ID=DP,Number=1,Type=Integer,Description="Depth"&gt;</code></pre>
+<ol start="2" type="a">
+<li>Eliminar todas las cabeceras y dejar solo datos:</li>
+</ol>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb44"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'/^#/d'</span> variants.vcf <span class="op">&gt;</span> datos.vcf</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<ul>
+<li><code>/^#/d</code> borra cualquier línea que empiece con <code>#</code> (engloba <code>##</code> y <code>#CHROM</code>).</li>
+</ul>
+<p>Resultado:</p>
+<pre class="text"><code>chr1    100  .   A   T    50    PASS    DP=20
+chr1    200  .   G   C    30    PASS    DP=8</code></pre>
+<p>Si quieres borrar solo las <code>##</code> pero conservar la línea <code>#CHROM...</code>, usa:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb46"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'/^##/d'</span> variants.vcf</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span><code>sed</code> en el día a día
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>De todos los capítulos del curso, este y el de <code>awk</code> son los que <strong>más vas a usar</strong>. Aprender bien <code>s///</code>, <code>d</code>, <code>p</code> y el direccionamiento por patrón te ahorrará horas de abrir y cerrar editores para cambiar cosas triviales en archivos enormes.</p>
+</div>
+</div>
+<p>Con esto ya dominas <code>sed</code> para las tareas más comunes. En el siguiente capítulo veremos <code>awk</code>, el complemento perfecto cuando necesitas <strong>operar con columnas y hacer cálculos</strong> sobre archivos de texto tabulares.</p>
+
+
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/bioden\.github\.io\/bioden_website\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Semillero de Biología del Desarrollo y Plasticidad Neural © 2025. All content licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Sitio web desarrollado por Xavier Clemente García Cevallos</p>
+</div>   
+    <div class="nav-footer-center">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/bioden">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="mailto:bioden@unicauca.edu.co">
+      <i class="bi bi-envelope" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    <div class="cookie-consent-footer"><a href="#" id="open_preferences_center">Cookie Preferences</a></div></div>
+    <div class="nav-footer-right">
+<p>Made with <a href="https://www.r-project.org/"><img src="https://www.r-project.org/Rlogo.png" alt="R" width="25px"></a> and <a href="https://quarto.org/"><img src="https://quarto.org/quarto.png" alt="Quarto" width="65px"></a>.</p>
+</div>
+  </div>
+</footer>
+
+
+
+
+<script src="../../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

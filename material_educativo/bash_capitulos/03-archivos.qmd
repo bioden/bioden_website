@@ -1,0 +1,513 @@
+---
+title: "Capítulo 3: Manipulación de archivos y directorios"
+---
+
+# Capítulo 3: Manipulación de archivos y directorios
+
+En el capítulo anterior aprendimos a **movernos** por el sistema de archivos. Ahora vamos a **crear, copiar, mover, borrar, comprimir y enlazar** archivos y directorios. Estas operaciones son el pan de cada día de cualquier bioinformático: organizan un proyecto NGS desde los reads en bruto hasta el VCF final.
+
+## 3.1. `mkdir`: crear directorios
+
+```bash
+mkdir carpeta
+mkdir -p proyecto/sub1/sub2       # crea padres inexistentes
+mkdir -v nuevo_dir                # verbose: confirma lo que hace
+```
+
+La opción `-p` (parents) es **la más útil**: evita errores cuando una ruta intermedia no existe. Sin `-p`:
+
+```bash
+mkdir -p ~/proyectos/tesis/reads/paciente01
+```
+
+Crea en cascada `proyectos/`, `tesis/`, `reads/` y `paciente01/` si fuera necesario.
+
+Con llaves puedes crear varios a la vez:
+
+```bash
+mkdir -p genoma/{datos/{raw,procesados},scripts,resultados/{qc,alineamiento,variantes},docs}
+```
+
+::: callout-tip
+## Plantilla estándar de proyecto bioinformático
+La estructura típica de un proyecto reproducible (estilo [Noble, 2009](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1000424)) incluye:
+- `data/raw/` — datos originales, **sin tocar**
+- `data/processed/` — derivados (filtrados, alineados...)
+- `src/` o `scripts/` — código
+- `results/` — figuras y tablas finales
+- `docs/` — manuscritos y documentación
+:::
+
+## 3.2. `touch`: crear archivos vacíos
+
+`touch` crea un archivo vacío o actualiza el timestamp de uno existente.
+
+```bash
+touch reads_001.fastq
+touch notas.txt metadata.tsv
+```
+
+Es útil para crear marcadores de posición en una estructura de proyecto antes de llenarlos con datos reales.
+
+## 3.3. `cp`: copiar archivos y directorios
+
+```bash
+cp origen destino                              # copia un archivo
+cp -r carpeta_origen carpeta_destino           # copia recursiva (directorio)
+cp -i archivo destino                          # pide confirmación si sobreescribe
+cp -v archivo destino                          # verbose: muestra lo que copia
+cp -u archivo destino                          # update: solo si origen es más reciente
+cp -p archivo destino                          # preserva permisos y timestamps
+```
+
+Ejemplo bioinformático:
+
+```bash
+# Hacer una copia de seguridad de un VCF antes de filtrarlo
+cp -i variants/raw.vcf variants/raw.vcf.bak
+```
+
+::: callout-warning
+## `cp` no avisa por defecto
+Si el destino ya existe, `cp` lo sobreescribe sin preguntar. Usa **`-i`** siempre que no estés seguro, o configura `alias cp='cp -i'` en tu `~/.bashrc`.
+:::
+
+## 3.4. `mv`: mover y renombrar
+
+`mv` (**move**) mueve archivos y también sirve para **renombrar** (mover un archivo dentro del mismo directorio con otro nombre).
+
+```bash
+mv archivo.txt nuevo_nombre.txt
+mv reads_001.fastq /data/seqruns/2024-01-15/
+mv -i archivo.txt destino/                     # pide confirmación al sobreescribir
+mv -v *.fastq data/raw/                        # mueve y muestra qué hace
+```
+
+## 3.5. `rm`: borrar archivos y directorios
+
+```bash
+rm archivo.txt
+rm -i archivo.txt          # interactivo: pregunta
+rm -r carpeta/             # recursivo (directorio y todo su contenido)
+rm -f archivo.txt          # fuerza: no falla si no existe
+rm -rf carpeta/            # combina recursivo + forzar (¡cuidado!)
+```
+
+::: callout-danger
+## `rm -rf /` es letal
+Nunca ejecutes `rm -rf /` ni nada que comience por `/`. Borra **todo el sistema**. Tampoco `rm -rf ~/*` sin saber qué hay dentro.
+Algunas protecciones:
+- Configura `alias rm='rm -i'` mientras aprendes.
+- Usa la **papelera** `trash-cli` (instalable con `sudo apt install trash-cli`): envía a la papelera en lugar de borrar.
+- Antes de cualquier `rm -rf`, ejecuta `ls` primero para ver qué vas a borrar.
+:::
+
+## 3.6. `tree`: visualizar estructura
+
+```bash
+tree proyecto/
+tree -L 2 proyecto/        # limita a 2 niveles de profundidad
+tree -d proyecto/          # solo directorios
+tree -a proyecto/          # incluye archivos ocultos
+```
+
+Salida:
+
+```text
+$ tree -L 2 genoma/
+genoma/
+├── data
+│   ├── processed
+│   └── raw
+├── docs
+├── results
+│   ├── alineamiento
+│   ├── qc
+│   └── variantes
+└── scripts
+
+7 directories, 0 files
+```
+
+Es perfecto para incluir en informes o para entender de un vistazo la estructura de un proyecto que te pasan entre compañeros.
+
+## 3.7. `file`: identificar tipo de archivo
+
+Linux no usa extensiones para saber qué es un archivo: usa su contenido. `file` lo inspecciona y lo identifica.
+
+```bash
+file sample_R1.fastq.gz
+# sample_R1.fastq.gz: gzip compressed data, extra field
+
+file hg38.fa
+# hg38.fa: ASCII text
+
+file variantes.vcf
+# variantes.vcf: ASCII text
+```
+
+Muy útil cuando un archivo viene sin extensión o con una equivocada.
+
+## 3.8. `stat`: metadatos detallados
+
+```bash
+stat sample_R1.fastq.gz
+```
+
+```text
+  File: sample_R1.fastq.gz
+  Size: 12582912        Blocks: 24624      IO Block: 4096   regular file
+Device: 805h/2053d      Inode: 1573123     Links: 1
+Access: (0640/-rw-r-----)  Uid: ( 1000/bioinfo)   Gid: ( 1000/bioinfo)
+Access: 2024-01-15 09:29:11.000000000 +0100
+Modify: 2024-01-15 09:29:11.000000000 +0100
+Change: 2024-01-15 09:29:11.000000000 +0100
+ Birth: 2024-01-15 09:29:11.000000000 +0100
+```
+
+Incluye tamaño, inode, permisos, timestamps de acceso/modificación/cambio y nacimiento.
+
+## 3.9. `du` y `df`: tamaño y espacio en disco
+
+### `du` (disk usage)
+
+```bash
+du -sh data/                     # tamaño total de una carpeta, legible
+du -h --max-depth=1 data/        # tamaño de cada subcarpeta de nivel 1
+du -sh * | sort -h               # ordena por tamaño
+```
+
+```text
+$ du -h --max-depth=1 data/
+4.0K    data/processed
+12G     data/raw
+12G     data/
+```
+
+### `df` (disk free)
+
+```bash
+df -h                            # espacio libre en cada partición
+df -h /data                      # solo la partición que monta /data
+```
+
+```text
+$ df -h
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda2        95G   42G   49G  47% /
+tmpfs            16G   12K   16G   1% /dev/shm
+/dev/sdb1       2.0T  1.2T  700G  64% /data
+```
+
+::: callout-tip
+## Planifica tu disco
+En NGS, un run de NovaSeq ocupa ~6 TB. Antes de bajar datos de SRA, comprueba con `df -h` que tienes sitio. Y tras el análisis, comprime con `gzip` lo que ya no uses.
+:::
+
+## 3.10. `ln`: enlaces simbólicos y físicos
+
+Un **enlace simbólico** (*symlink*) es un acceso directo a otro archivo. En bioinformática es **esencial** cuando los datos compartidos están en `/data/shared/` y no quieres duplicarlos en cada proyecto.
+
+```bash
+ln -s /data/ref/hg38.fa ~/proyectos/tesis/ref/hg38.fa
+```
+
+- `ln -s origen destino` crea el enlace `destino` que apunta a `origen`.
+- Si borras el enlace, el original sigue existiendo.
+- Si borras o mueves el original, el enlace queda "roto" (*dangling*).
+
+### Diferencia con enlaces físicos (*hard links*)
+
+```bash
+ln origen destino           # sin -s: enlace físico
+```
+
+Un enlace **físico** apunta al mismo *inode* (mismo dato en disco); no se "rompe" si borras el original. Pero solo funciona dentro del mismo sistema de archivos y no puede apuntar a directorios.
+
+::: callout-note
+## ¿Por qué *symlinks* en bioinformática?
+Imagina que el genoma de referencia `hg38.fa` (3 GB) está en `/data/ref/hg38.fa` y lo usan 10 proyectos. Sin enlaces: 30 GB de duplicados. Con symlinks: solo 3 GB y todos lo "ven".
+:::
+
+Verifica el enlace:
+
+```bash
+ls -la hg38.fa                  # muestra → al original
+readlink hg38.fa                # imprime la ruta original
+readlink -f hg38.fa             # ruta absoluta normalizada
+```
+
+## 3.11. `cat`, `head` y `tail`: ver contenido
+
+```bash
+cat reads.fastq | head         # primera líneas
+head -n 20 archivo.fastq       # primeras 20 líneas
+tail -n 50 syslog              # últimas 50 líneas
+tail -f /var/log/syslog        # sigue en vivo (Ctrl+C para salir)
+```
+
+`cat` (concatenate) imprime todo el archivo; para archivos grandes (`hg38.fa`, 3 GB) mejor `head` o `tail`.
+
+## 3.12. `wc`: contar líneas, palabras y bytes
+
+```bash
+wc archivo.txt
+#  100  350  2400 archivo.txt   (líneas, palabras, bytes)
+
+wc -l reads.fastq              # solo líneas (esencial para FASTQ: 4 líneas por read)
+wc -l *.fastq                  # cuenta líneas de cada FASTQ
+```
+
+En FASTQ, el número de reads es `líneas / 4`:
+
+```bash
+echo $(( $(wc -l < reads.fastq) / 4 ))
+```
+
+## 3.13. `md5sum` y `sha256sum`: integridad de archivos biológicos
+
+Tras descargar genomas, GTFs o SRA, conviene **verificar que no se corrompió** comparando un hash criptográfico con el que publica el proveedor.
+
+```bash
+md5sum hg38.fa
+# 8e8d5e2c1f...  hg38.fa
+
+sha256sum reads_001.fastq.gz
+# a3f5...c8e2  reads_001.fastq.gz
+```
+
+Archivo `checksums.md5` típico:
+
+```text
+8e8d5e2c1f9a8c5d1b2e3f4a5b6c7d8e  hg38.fa
+1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d  hg38.fa.gz
+```
+
+Verificación masiva:
+
+```bash
+md5sum -c checksums.md5
+# hg38.fa: OK
+# hg38.fa.gz: OK
+```
+
+::: callout-important
+## Integridad en NGS
+Antes de cualquier alineamiento, ejecuta `md5sum -c` sobre tus FASTQ. Un solo byte corrupto puede arruinar un análisis de variantes y costarte semanas de debugging.
+:::
+
+## 3.14. Compresión: `gzip`, `gunzip` y `tar`
+
+### `gzip` y `gunzip`
+
+```bash
+gzip reads.fastq           # comprime; borra el original
+gzip -k reads.fastq        # comprime; mantiene el original (-k = keep)
+gunzip reads.fastq.gz      # descomprime
+gzip -t reads.fastq.gz     # test: verifica integridad sin descomprimir
+gzip -l reads.fastq.gz     # lista ratio de compresión
+```
+
+En FASTQ el ratio suele ser ~4× (texto muy redundante).
+
+### `tar`: archivar varios archivos
+
+`tar` (**tape archive**) empaqueta varios archivos/directorios en uno solo. La compresión es opcional.
+
+| Opción | Significado |
+|--------|-------------|
+| `-c` | **c**reate: crear |
+| `-x` | e**x**tract: extraer |
+| `-t` | lis**t**: listar contenido sin extraer |
+| `-z` | comprimir con gzip |
+| `-j` | comprimir con bzip2 |
+| `-v` | verbose |
+| `-f` | **f**ile: especifica el nombre del archivo |
+
+Ejemplos típicos:
+
+```bash
+# Crear
+tar -czvf proyecto.tar.gz proyecto/         # tar gzip verbose
+tar -cjvf proyecto.tar.bz2 proyecto/        # con bzip2 (más comprimido, más lento)
+
+# Extraer
+tar -xzvf proyecto.tar.gz
+tar -xzvf proyecto.tar.gz -C /tmp/          # extrae en /tmp/
+
+# Listar contenido sin extraer
+tar -tzvf proyecto.tar.gz
+```
+
+::: callout-tip
+## Truco mnemotécnico
+- **C**rear: `-czvf` ("crear, zipear, verbose, file")
+- E**x**traer: `-xzvf`
+- Lis**t**ar: `-tzvf`
+:::
+
+## 3.15. Ejemplos bioinformáticos
+
+### Crear estructura de proyecto
+
+```bash
+mkdir -p ~/proyectos/genoma/{datos/{raw,procesados},scripts,resultados/{alineamiento,variantes,qc},docs}
+tree ~/proyectos/genoma
+```
+
+### Comprimir reads FASTQ
+
+```bash
+cd ~/proyectos/genoma/datos/raw
+gzip -k *.fastq         # comprime manteniendo originales
+ls -lh                  # ahora verás *.fastq.gz junto a los *.fastq
+```
+
+### Verificar integridad de archivos descargados de SRA
+
+```bash
+cd ~/proyectos/genoma/datos/raw
+md5sum -c checksums.md5
+# SRR123456_1.fastq.gz: OK
+# SRR123456_2.fastq.gz: OK
+```
+
+### Crear enlace simbólico a datos compartidos
+
+```bash
+ln -s /data/ref/hg38/hg38.fa ~/proyectos/genoma/datos/ref_hg38.fa
+ls -la ~/proyectos/genoma/datos/ref_hg38.fa
+# lrwxrwxrwx 1 bioinfo bioinfo 23 ene 15 09:45 ref_hg38.fa → /data/ref/hg38/hg38.fa
+```
+
+---
+
+## Ejercicios
+
+### Ejercicio 1
+
+Crea la siguiente estructura en un solo comando usando `mkdir -p` y expansión de llaves:
+
+```text
+proyecto_genoma/
+├── datos/
+│   ├── raw/
+│   └── procesados/
+├── scripts/
+├── resultados/
+│   ├── alineamiento/
+│   ├── variantes/
+│   └── qc/
+└── docs/
+```
+
+### Ejercicio 2
+
+Crea 3 archivos FASTQ vacíos de prueba en `datos/raw/` (`sample1_R1.fastq`, `sample1_R2.fastq`, `sample2_R1.fastq`). Empaquétalos en un archivo `reads_batch.tar.gz`. Muestra el tamaño con `du -sh` y verifica con `tar -tzvf` que contiene los 3 archivos.
+
+### Ejercicio 3
+
+Crea (simulando con `touch`) los archivos `sample_R1.fastq.gz` y `sample_R2.fastq.gz` en `datos/raw/`. Crea un enlace simbólico en `datos/procesados/` llamado `R1.linked.fastq.gz` que apunte al original. Verifica con `ls -la` que el enlace funciona y con `readlink -f` que devuelve la ruta absoluta correcta.
+
+---
+
+## Soluciones
+
+### Solución 1
+
+```bash
+# Un solo comando con mkdir -p y llaves
+mkdir -p proyecto_genoma/{datos/{raw,procesados},scripts,resultados/{alineamiento,variantes,qc},docs}
+
+# Verificar la estructura
+tree proyecto_genoma
+```
+
+Salida esperada:
+
+```text
+proyecto_genoma/
+├── datos
+│   ├── procesados
+│   └── raw
+├── docs
+├── resultados
+│   ├── alineamiento
+│   ├── qc
+│   └── variantes
+└── scripts
+
+8 directories, 0 files
+```
+
+### Solución 2
+
+```bash
+# 1. Crear los 3 archivos FASTQ vacíos
+cd proyecto_genoma/datos/raw/
+touch sample1_R1.fastq sample1_R2.fastq sample2_R1.fastq
+
+# 2. Empaquetar y comprimir con tar
+tar -czvf reads_batch.tar.gz *.fastq
+# a sample1_R1.fastq
+# a sample1_R2.fastq
+# a sample2_R1.fastq
+
+# 3. Ver el tamaño
+du -sh reads_batch.tar.gz
+# 4,0K    reads_batch.tar.gz       (vacíos → solo cabecera)
+
+# 4. Listar contenido del tar sin extraer
+tar -tzvf reads_batch.tar.gz
+# -rw-r--r-- 0/0               0 ene 15 10:01 sample1_R1.fastq
+# -rw-r--r-- 0/0               0 ene 15 10:01 sample1_R2.fastq
+# -rw-r--r-- 0/0               0 ene 15 10:01 sample2_R1.fastq
+```
+
+::: callout-note
+Los archivos están vacíos, así que `du` reporta solo el tamaño de las cabeceras del tar (~4 KB). Con reads reales del orden de GB, el `tar.gz` ocuparía mucho menos que la suma de los FASTQ originales gracias a la compresión.
+:::
+
+### Solución 3
+
+```bash
+# 1. Crear los archivos simulados (con un poco de contenido para distinguir)
+cd proyecto_genoma/datos/raw/
+echo "@SEQ1 información de read" > sample_R1.fastq.gz
+echo "@SEQ2 información de read" > sample_R2.fastq.gz
+
+# 2. Crear el enlace simbólico en datos/procesados/
+cd ../procesados/
+ln -s ../raw/sample_R1.fastq.gz R1.linked.fastq.gz
+
+# 3. Verificar con ls -la
+ls -la
+# total 8,0K
+# drwxr-xr-x 2 bioinfo bioinfo 4,0K ene 15 10:05 .
+# drwxr-xr-x 4 bioinfo bioinfo 4,0K ene 15 10:04 ..
+# lrwxrwxrwx 1 bioinfo bioinfo   25 ene 15 10:05 R1.linked.fastq.gz -> ../raw/sample_R1.fastq.gz
+
+# El primer carácter 'l' indica 'link' simbólico.
+
+# 4. Verificar con readlink -f (ruta absoluta normalizada)
+readlink -f R1.linked.fastq.gz
+# /home/bioinfo/proyecto_genoma/datos/raw/sample_R1.fastq.gz
+
+# 5. Comprobar que el enlace funciona (cat del contenido)
+cat R1.linked.fastq.gz
+# @SEQ1 información de read
+```
+
+::: callout-tip
+## Comprobación de enlaces rotos
+Para detectar symlinks rotos en un árbol completo:
+```bash
+find proyecto_genoma/ -xtype l
+```
+Lista cualquier enlace cuyo destino no exista.
+:::
+
+::: callout-note
+## Resumen del capítulo
+Hemos aprendido `mkdir`, `touch`, `cp`, `mv`, `rm` (¡con cuidado!), `tree`, `file`, `stat`, `du`, `df`, `ln` (simbólicos vs físicos), `cat`, `head`, `tail`, `wc`, `md5sum`/`sha256sum` y `gzip`/`gunzip`/`tar`. Estas herramientas cubren el 80 % de las operaciones de gestión de archivos que harás en bioinformática. En el Capítulo 4 veremos permisos y usuarios, clave para compartir datos en un laboratorio.
+:::

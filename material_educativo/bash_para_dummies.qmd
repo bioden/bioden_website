@@ -1,0 +1,119 @@
+---
+title: "Bash para dummies: un recorrido por el mundo de la consola"
+subtitle: "Un curso completo de Bash orientado a bioinformática, desde los fundamentos hasta pipelines profesionales, con foco en Ubuntu y WSL en Windows."
+image: multimedia/bash.png
+format:
+  html:
+    toc: true
+    css: card.css
+margin-header: |
+  ![Xavier Clemente García Cevallos](multimedia/bash.png)
+---
+
+## Bienvenida
+
+Bienvenido a **Bash para dummies: un recorrido por el mundo de la consola**. A lo largo de 17 capítulos aprenderás desde los comandos más básicos de Ubuntu hasta construir pipelines bioinformáticos profesionales, cubriendo además cómo trabajar con Bash en Windows mediante WSL (Windows Subsystem for Linux).
+
+Este material está pensado para estudiantes e investigadores de biología, bioinformática, biotecnología y áreas afines que necesitan automatizar tareas, procesar archivos biológicos masivos (FASTA, FASTQ, BAM, VCF) y ejecutar herramientas de línea de comandos esenciales en genómica y bioinformática.
+
+## ¿Por qué Bash en bioinformática?
+
+Casi todas las herramientas bioinformáticas modernas (BWA, samtools, bcftools, STAR, Salmon, fastp) se ejecutan desde la terminal. Aprender Bash no es opcional para quien quiera analizar datos de secuenciación masiva. Las razones son tres:
+
+1.  **Eficiencia**: procesar millones de reads en un cluster HPC requiere Bash.
+2.  **Reproducibilidad**: un script Bash documenta exactamente los pasos de tu análisis.
+3.  **Ecosistema**: el 90% de las herramientas NGS son de línea de comandos.
+
+## Estructura del curso
+
+El curso está dividido en tres bloques temáticos progresivos:
+
+### Bloque I — Básico (Capítulos 1 al 6)
+
+Aprenderás a moverte por la terminal de Ubuntu, manipular archivos, gestionar permisos, declarar variables y entender el flujo de datos con pipes y redirecciones. Al finalizar serás capaz de operar tu sistema desde la línea de comandos sin depender de interfaces gráficas.
+
+### Bloque II — Intermedio (Capítulos 7 al 12)
+
+Dominarás las herramientas clásicas de procesamiento de texto de UNIX (`grep`, `find`, `cut`, `sort`, `uniq`, `sed`, `awk`) y las estructuras de control de Bash (`if`, `case`, `for`, `while`, `until`, `select`). Estas herramientas son la base de cualquier pipeline bioinformático.
+
+### Bloque III — Avanzado (Capítulos 13 al 17)
+
+Con funciones, arrays, expresiones regulares y gestión de procesos escribirás scripts robustos y reutilizables. El capítulo final integra todo en un pipeline real: control de calidad de reads → alineamiento → llamada de variantes.
+
+## Sistemas operativos soportados
+
+El curso está enfocado en **Ubuntu** (recomendado 22.04 LTS o superior), pero todos los comandos funcionan en cualquier distribución GNU/Linux moderna. Adicionalmente, **Windows 10/11 con WSL2** se cubre como alternativa para usuarios que no tienen acceso a una máquina Linux nativa.
+
+::: callout-tip
+Si trabajas en Windows, **WSL2 con Ubuntu** es la mejor opción. Instalación: abre PowerShell como administrador y ejecuta `wsl --install`. Reinicia y tendrás Ubuntu corriendo nativamente dentro de Windows.
+:::
+
+## Requisitos
+
+- Computadora con Ubuntu 22.04+ (o Windows 10/11 con WSL2 instalado).
+- Acceso a la terminal (Ctrl+Alt+T en Ubuntu).
+- Conexión a internet para instalar paquetes con `apt`.
+- Al menos 20 GB de espacio libre recomendado para las herramientas bioinformáticas del capítulo final.
+
+## Convenciones del curso
+
+A lo largo de los capítulos encontrarás los siguientes bloques:
+
+::: callout-note
+**Nota:** Información complementaria o aclaratoria.
+:::
+
+::: callout-tip
+**Tip:** Atajos, buenas prácticas o recomendaciones útiles.
+:::
+
+::: callout-warning
+**Advertencia:** Errores comunes o precauciones importantes, especialmente relevante en bioinformática donde un comando mal ejecutado puede sobrescribir datos.
+:::
+
+::: callout-important
+**Importante:** Conceptos clave que debes recordar.
+:::
+
+## Cómo aprovechar el curso
+
+1.  **Lee y ejecuta**: cada comando puede copiarse y pegarse en tu terminal.
+2.  **Modifica los ejemplos**: cambia parámetros y observa qué sucede.
+3.  **Resuelve los ejercicios**: antes de mirar la solución, inténtalo tú mismo.
+4.  **Aplica a tus datos**: cuando termines un capítulo, intenta replicar lo aprendido con archivos biológicos reales.
+
+## Contenido del curso
+
+A continuación encontrarás el índice de capítulos. Cada uno contiene teoría, ejemplos en código con contexto bioinformático, ejercicios propuestos y sus soluciones detalladas.
+
+### Bloque I — Básico
+
+1.  [Capítulo 1: Introducción a Bash y la terminal](bash_capitulos/01-introduccion.qmd) — Qué es Bash, instalación de Ubuntu, configuración de WSL en Windows.
+2.  [Capítulo 2: Navegación por el sistema de archivos](bash_capitulos/02-navegacion.qmd) — `pwd`, `ls`, `cd`, rutas absolutas y relativas.
+3.  [Capítulo 3: Manipulación de archivos y directorios](bash_capitulos/03-archivos.qmd) — `mkdir`, `touch`, `cp`, `mv`, `rm`, `tree`.
+4.  [Capítulo 4: Permisos, usuarios y grupos](bash_capitulos/04-permisos.qmd) — `chmod`, `chown`, `chgrp`, permisos simbólicos y octales.
+5.  [Capítulo 5: Variables y sustitución en Bash](bash_capitulos/05-variables.qmd) — Variables locales, de entorno, expansión, comillas.
+6.  [Capítulo 6: Pipes y redirecciones](bash_capitulos/06-pipes.qmd) — `>`, `>>`, `<`, `|`, `/dev/null`, descriptores de archivo.
+
+### Bloque II — Intermedio
+
+7.  [Capítulo 7: Búsqueda con grep, find y locate](bash_capitulos/07-grep-find.qmd) — Patrones, expresiones regulares básicas, búsqueda por contenido y nombre.
+8.  [Capítulo 8: Procesamiento de texto: cut, sort, uniq, tr, paste](bash_capitulos/08-texto.qmd) — Extracción de columnas, ordenamiento, conteo de únicos.
+9.  [Capítulo 9: sed: el editor de flujo](bash_capitulos/09-sed.qmd) — Sustitución, eliminación, inserción, scripts sed.
+10. [Capítulo 10: awk: lenguaje de procesamiento de texto](bash_capitulos/10-awk.qmd) — Patrones, acciones, variables, BEGIN/END, FS/OFS.
+11. [Capítulo 11: Estructuras de control: if, case, test](bash_capitulos/11-control.qmd) — Condicionales, operadores de comparación, `[[ ]]`.
+12. [Capítulo 12: Bucles: for, while, until, select](bash_capitulos/12-bucles.qmd) — Iteraciones sobre listas, archivos, rangos numéricos.
+
+### Bloque III — Avanzado
+
+13. [Capítulo 13: Funciones, argumentos y ámbito](bash_capitulos/13-funciones.qmd) — Definición, parámetros posicionales, variables locales, return codes.
+14. [Capítulo 14: Arrays y manipulación avanzada de cadenas](bash_capitulos/14-arrays.qmd) — Arrays indexados, asociativos, slicing de cadenas, `${var//old/new}`.
+15. [Capítulo 15: Expresiones regulares en Bash](bash_capitulos/15-regex.qmd) — POSIX BRE/ERE, `=~`, grupos, captures.
+16. [Capítulo 16: Procesos, señales y gestión de trabajos](bash_capitulos/16-procesos.qmd) — `&`, `nohup`, `kill`, `jobs`, `bg`, `fg`, `trap`, `top`, `htop`.
+17. [Capítulo 17: Pipeline bioinformático integrador](bash_capitulos/17-pipeline.qmd) — FastQC → fastp → BWA → samtools → bcftools, automatizado con un script Bash robusto.
+
+## Cierre
+
+Bash es la columna vertebral de la bioinformática moderna. Dominarlo te abrirá las puertas a trabajos en HPC, análisis NGS, metagenómica y todas las áreas donde los datos biológicos llegan en formatos de texto masivos que necesitan procesamiento eficiente.
+
+¡Manos a la consola!

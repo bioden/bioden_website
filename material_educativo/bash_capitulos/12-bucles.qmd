@@ -1,0 +1,543 @@
+---
+title: "Capítulo 12: Bucles: for, while, until, select"
+---
+
+# Capítulo 12: Bucles: for, while, until, select
+
+Los bucles son **la diferencia** entre usar Bash como una calculadora de comandos y usarlo como lenguaje de automatización. Sin bucles, una tarea como "alinea 30 muestras con BWA" requiere escribir 30 veces el mismo comando cambiando el nombre. Con un bucle `for`, son **4 líneas** que se ejecutan sobre cualquier número de archivos.
+
+Bash ofrece cuatro bucles:
+
+- **`for`** — itera sobre una lista de elementos.
+- **`while`** — ejecuta mientras una condición sea verdadera.
+- **`until`** — ejecuta hasta que una condición sea verdadera (lo contrario de `while`).
+- **`select`** — genera menús interactivos.
+
+A estos se añaden los controladores `break` y `continue` para modificar el flujo dentro del bucle, y la forma C-like de `for (( ))` para iteraciones numéricas con contador. En este capítulo los veremos todos con ejemplos bioinformáticos realistas y ejercicios con solución.
+
+## 12.1. Bucle `for`
+
+### Sintaxis clásica
+
+```bash
+for var in lista; do
+    comandos
+done
+```
+
+`lista` es una secuencia de palabras separadas por espacios. En cada iteración `var` toma el valor del siguiente elemento.
+
+```bash
+for fruta in manzana pera uva; do
+    echo "Me gusta la $fruta"
+done
+```
+
+```text
+Me gusta la manzana
+Me gusta la pera
+Me gusta la uva
+```
+
+### Iterar sobre una lista explícita
+
+```bash
+for gen in BRCA1 TP53 EGFR MYC; do
+    grep "$gen" anotacion.gff3
+done
+```
+
+### Iterar sobre el resultado de un comando
+
+```bash
+for f in $(ls *.fastq.gz); do
+    fastqc "$f"
+done
+```
+
+::: callout-warning
+## `for` con `$(ls)` no es seguro si hay espacios
+`ls` separa por espacios, así que un archivo llamado `muestra A R1.fastq.gz` se rompería en tres "elementos" del bucle. **Mejor**:
+```bash
+for f in *.fastq.gz; do
+    fastqc "$f"
+done
+```
+El shell expande `*.fastq.gz` a la lista de archivos sin partir nombres con espacios. Si necesitas recursión o filtros complejos, usa `find ... -print0 | while IFS= read -r -d '' f; do ...; done`.
+:::
+
+### Iterar sobre un rango numérico
+
+Bash soporta **expansiones de rango** con `{inicio..fin}` o `{inicio..fin..paso}`:
+
+```bash
+for i in {1..10}; do echo $i; done          # 1 2 3 ... 10
+for i in {0..100..5}; do echo $i; done      # 0 5 10 ... 100
+for i in {10..1}; do echo $i; done          # cuenta atrás
+```
+
+Con `seq`:
+
+```bash
+for i in $(seq 1 10); do echo $i; done
+for i in $(seq -w 1 3 30); do echo $i; done   # 01 04 07 10 13 16 19 22 25 28
+```
+
+### Forma C-like
+
+Para iteraciones con contador más complejas:
+
+```bash
+for ((i=0; i<10; i++)); do
+    echo "Iteración $i"
+done
+
+# Bucles anidados
+for ((i=1; i<=3; i++)); do
+    for ((j=1; j<=3; j++)); do
+        echo "i=$i j=$j"
+    done
+done
+```
+
+### Iterar sobre archivos de forma segura
+
+```bash
+for f in *.fastq; do
+    echo "Procesando $f"
+done
+
+# Con find para recursión
+find . -name "*.bam" -print0 | while IFS= read -r -d '' bam; do
+    samtools index "$bam"
+done
+```
+
+El `-print0` + `read -d ''` es la combinación **infalible** para nombres con espacios, saltos de línea o caracteres raros.
+
+## 12.2. Bucle `while`
+
+### Sintaxis
+
+```bash
+while condición; do
+    comandos
+done
+```
+
+Ejecuta `comandos` mientras `condición` devuelva 0 (éxito). La condición puede ser `[ ]`, `[[ ]]`, `(( ))` o cualquier comando.
+
+```bash
+n=0
+while [[ $n -lt 5 ]]; do
+    echo "n=$n"
+    n=$((n + 1))
+done
+```
+
+### Leer un archivo línea por línea
+
+```bash
+while read -r linea; do
+    echo "Línea: $linea"
+done < archivo.txt
+```
+
+::: callout-important
+## Siempre `IFS= read -r`
+La forma **correcta** de leer líneas en Bash es:
+```bash
+while IFS= read -r linea; do ...; done < archivo
+```
+- `IFS=` (vacío) preserva los espacios al inicio y al final de cada línea.
+- `-r` desactiva la interpretación de `\` como escape (sin `-r`, `\t` se vuelve `t`).
+Sin estas dos banderas, líneas con espacios o barras invertidas se corrompen silenciosamente.
+:::
+
+### Leer múltiples campos
+
+Si cada línea tiene varios campos delimitados, lee varias variables:
+
+```bash
+while IFS=$'\t' read -r gen s1 s2 s3; do
+    echo "Gen $gen: total=$((s1+s2+s3))"
+done < counts.tsv
+```
+
+El `IFS=$'\t'` solo dura durante el `read`, así que el resto del script no se ve afectado.
+
+### Bucle infinito
+
+```bash
+while true; do
+    echo "Esperando..."
+    sleep 5
+done
+```
+
+Se rompe con `break` o matando el proceso (`Ctrl-C`).
+
+### `while` con la salida de un comando
+
+```bash
+some_command | while read -r linea; do
+    # procesar
+done
+```
+
+::: callout-warning
+## El subshell del pipe
+En Bash clásico, la parte derecha de un pipe se ejecuta en un **subshell**. Las variables que modifiques dentro del `while` **no se conservan** fuera. Si necesitas conservarlas, usa sustitución de proceso:
+```bash
+while read -r linea; do
+    contador=$((contador+1))
+done < <(some_command)
+echo "Procesé $contador líneas"   # aquí sí conserva el valor
+```
+Esto también se soluciona con `shopt -s lastpipe` en Bash 4+.
+:::
+
+## 12.3. Bucle `until`
+
+Es como `while` pero ejecuta **hasta que** la condición sea verdadera (es decir, mientras sea falsa):
+
+```bash
+until pgrep -f "bwa mem" > /dev/null; do
+    sleep 5
+done
+echo "BWA ha empezado"
+```
+
+Equivale a `while ! pgrep -f "bwa mem" > /dev/null; do ...`, pero algunos lo encuentran más legible.
+
+## 12.4. `select`: menús interactivos
+
+```bash
+PS3="Elige una opción: "
+select opcion in "Alinear" "Llamar variantes" "Filtrar" "Salir"; do
+    case $opcion in
+        "Alinear")
+            echo "Ejecutando alineamiento..."
+            bwa mem ref.fa R1.fq R2.fq > aln.sam
+            ;;
+        "Llamar variantes")
+            echo "Llamando variantes..."
+            bcftools mpileup -f ref.fa aln.bam | bcftools call -v > variants.vcf
+            ;;
+        "Filtrar")
+            echo "Filtrando variantes..."
+            bcftools view -i 'QUAL>30' variants.vcf > filtered.vcf
+            ;;
+        "Salir")
+            echo "Adiós"
+            break
+            ;;
+        *)
+            echo "Opción no válida"
+            ;;
+    esac
+done
+```
+
+`select` muestra la lista numerada y pide al usuario un número. La variable `PS3` define el *prompt*.
+
+## 12.5. `break` y `continue`
+
+| Comando | Acción |
+|---------|--------|
+| `break` | Sale del bucle inmediatamente |
+| `continue` | Salta a la siguiente iteración |
+| `break N` | Sale de N niveles de bucles anidados |
+| `continue N` | Salta a la siguiente iteración del N-ésimo nivel |
+
+```bash
+for i in {1..10}; do
+    if (( i % 2 == 0 )); then continue; fi     # saltar pares
+    if (( i > 7 )); then break; fi              # parar si pasamos de 7
+    echo $i
+done
+```
+
+Salida: `1 3 5 7`.
+
+## 12.6. `seq` y otros generadores
+
+`seq START INC STOP`:
+
+```bash
+seq 1 10              # 1 2 3 ... 10
+seq 1 2 10            # 1 3 5 7 9
+seq -w 1 10           # 01 02 03 ... 10 (padding con ceros)
+seq -f "%.2f" 0 0.5 2 # 0.00 0.50 1.00 1.50 2.00
+```
+
+Para repetir un string N veces:
+
+```bash
+yes "ACGT" | head -n 5
+```
+
+## 12.7. Parámetros posicionales con `shift`
+
+`shift` desplaza los parámetros posicionales: `$2` pasa a `$1`, `$3` a `$2`, etc. Útil para procesar argumentos en bucle:
+
+```bash
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -r) ref="$2"; shift 2 ;;
+        -o) outdir="$2"; shift 2 ;;
+        -h) echo "Ayuda"; exit 0 ;;
+        *)  echo "Argumento desconocido: $1" >&2; exit 1 ;;
+    esac
+done
+```
+
+Es la base de un parser de argumentos minimalista sin `getopts`.
+
+## 12.8. Ejemplos bioinformáticos
+
+### Alinear múltiples muestras
+
+```bash
+mkdir -p alineados
+for r1 in *_R1.fastq.gz; do
+    r2=${r1/_R1/_R2}                              # sustituye _R1 por _R2
+    muestra=$(basename "$r1" _R1.fastq.gz)        # quita ruta y sufijo
+    echo "Alineando $muestra..."
+    bwa mem -t 8 ref.fa "$r1" "$r2" \
+        | samtools sort -o "alineados/${muestra}.bam"
+done
+```
+
+Comentarios:
+
+- `${var/patrón/reemplazo}` sustituye una vez el patrón por el reemplazo.
+- `basename` quita el directorio y, opcionalmente, un sufijo.
+- Se podría indexar a continuación en el mismo bucle.
+
+### Indexar todos los BAM
+
+```bash
+for bam in resultados/*.bam; do
+    samtools index "$bam"
+done
+```
+
+### Esperar a que terminen todos los jobs
+
+```bash
+while pgrep -f "bwa mem" > /dev/null; do
+    echo "Esperando BWA... ($(date +%H:%M:%S))"
+    sleep 60
+done
+echo "Todos los alineamientos han terminado"
+```
+
+### Procesar una tabla de muestras
+
+```bash
+while IFS=',' read -r muestra grupo condicion; do
+    echo "Procesando $muestra ($grupo, $condicion)"
+    # Aquí va el comando real (fastqc, trimming, alineamiento, etc.)
+done < muestras.csv
+```
+
+### Countdown para checkpoint
+
+```bash
+for i in {10..1}; do
+    echo "Reintentando en $i..."
+    sleep 1
+done
+```
+
+### Aplicar Variant Calling en cromosomas por separado
+
+```bash
+for chr in $(seq 1 22) X Y; do
+    echo "Cromosoma $chr"
+    bcftools mpileup -r "chr$chr" -f ref.fa aln.bam \
+        | bcftools call -v -o "vcf/chr${chr}.vcf"
+done
+```
+
+::: callout-tip
+## Paralelización con `xargs -P` o GNU parallel
+Cuando un bucle `for` se vuelve lento porque cada iteración es intensiva, paralelízalo:
+```bash
+ls *_R1.fastq.gz | xargs -I{} -P 4 sh -c 'r2=${1/_R1/_R2}; m=$(basename "$1" _R1.fastq.gz); bwa mem ref.fa "$1" "$r2" | samtools sort -o "aln/${m}.bam"' _ {}
+```
+`-P 4` lanza hasta 4 procesos en paralelo. `GNU parallel` ofrece más control y es el estándar de facto en pipelines.
+:::
+
+### Renombrar archivos en masa
+
+```bash
+for f in *.fq.gz; do
+    mv "$f" "${f%.fq.gz}.fastq.gz"
+done
+```
+
+`${f%sufijo}` elimina el sufijo desde el final. Para prefijos se usa `${f#prefijo}`.
+
+::: callout-note
+## En WSL2: el `$'\t'` y los finales de línea
+Si lees un CSV de Windows (`\r\n`) con `while IFS=, read -r ...`, el último campo se quedará con un `\r` al final y causará errores raros ("no se encuentra el archivo muestra1\r"). Solución: pasa primero el archivo por `sed -i 's/\r$//' muestras.csv` o usa `tr -d '\r'` en el pipe.
+:::
+
+## 12.9. Ejercicios
+
+### Ejercicio 1
+
+Escribe un script que itere sobre todos los archivos `*.fastq.gz` del directorio actual y ejecute `fastqc` en cada uno. Maneja **espacios en nombres** y muestra progreso con `echo "Procesando: $archivo"`.
+
+### Ejercicio 2
+
+Escribe un script que lea `muestras.tsv` (columnas: `muestra`, `R1`, `R2`) y para cada muestra ejecute:
+
+```bash
+bwa mem ref.fa R1 R2 > muestra.sam
+```
+
+Asegúrate de usar `IFS=$'\t'` y `read -r`.
+
+### Ejercicio 3
+
+Escribe `esperar_job.sh` que reciba como argumento un patrón de nombre de proceso. El script debe hacer polling cada 30 segundos hasta que no queden procesos cuyo nombre coincida con el patrón. En cada iteración imprime un mensaje. Ejemplo de uso:
+
+```bash
+./esperar_job.sh "bwa mem"
+```
+
+## 12.10. Soluciones
+
+### Solución 1
+
+```bash
+#!/usr/bin/env bash
+# fastqc_all.sh
+
+# Iteramos directamente sobre el glob; el shell no parte nombres con espacios
+for archivo in *.fastq.gz; do
+    # Si no hay coincidencias, el glob se queda literal "*.fastq.gz"
+    # Lo detectamos y salimos limpiamente
+    if [[ ! -e "$archivo" ]]; then
+        echo "No se encontraron archivos *.fastq.gz en $(pwd)" >&2
+        exit 0
+    fi
+
+    echo "Procesando: $archivo"
+    fastqc "$archivo"
+done
+```
+
+Comentarios:
+
+- `for archivo in *.fastq.gz`: Bash expande el glob a la lista de archivos. Los nombres con espacios se conservan íntegros porque cada archivo es un solo elemento del bucle.
+- `"$archivo"`: siempre entre comillas al usarlo, para que ni el shell ni `fastqc` lo partan.
+- El chequeo `[[ ! -e "$archivo" ]]` cubre el caso de directorio vacío: si no hay `*.fastq.gz`, Bash deja el literal como valor de `$archivo`, lo cual no es un archivo real.
+- `exit 0` (no 1): no encontrar archivos no es un error, simplemente nada que hacer.
+
+### Solución 2
+
+```bash
+#!/usr/bin/env bash
+# alinear_muestras.sh
+
+ref="data/ref.fa"
+tabla="muestras.tsv"
+
+# Comprobaciones básicas
+if [[ ! -f "$ref" ]]; then
+    echo "Error: falta el genoma de referencia $ref" >&2
+    exit 1
+fi
+if [[ ! -f "$tabla" ]]; then
+    echo "Error: falta la tabla $tabla" >&2
+    exit 1
+fi
+
+# IFS=$'\t' hace que read separe por tabulador (no por espacio)
+while IFS=$'\t' read -r muestra r1 r2; do
+    # Saltar cabecera (si la primera columna es literal "muestra")
+    if [[ "$muestra" == "muestra" ]]; then
+        continue
+    fi
+
+    echo "Alineando muestra: $muestra"
+    echo "  R1: $r1"
+    echo "  R2: $r2"
+
+    # Lanzamos BWA y redirigimos la salida al SAM de la muestra
+    bwa mem "$ref" "$r1" "$r2" > "${muestra}.sam"
+
+    # Comprobamos que el comando terminó bien
+    if [[ $? -ne 0 ]]; then
+        echo "  Error alinear $muestra" >&2
+        # Decidir: continuar con la siguiente o abortar
+        # Aquí optamos por continuar
+        continue
+    fi
+    echo "  OK"
+done < "$tabla"
+
+echo "Procesamiento completado."
+```
+
+Comentarios:
+
+- `IFS=$'\t'` se asigna **solo** durante el `read`. No afecta al resto del script.
+- `-r` evita que las barras invertidas de los paths sean interpretadas.
+- El chequeo `[[ "$muestra" == "muestra" ]]` salta la cabecera del TSV (asumiendo que la primera columna se llama literalmente "muestra"). Otra opción: `tail -n +2 muestras.tsv | while ...`.
+- `$?` guarda el exit code de `bwa mem`. Si no fue 0, hubo un error y lo avisamos.
+- El bucle **continúa** con la siguiente muestra en caso de error (decisiones de diseño: si prefieres abortar, sustituye `continue` por `exit 1`).
+
+### Solución 3
+
+```bash
+#!/usr/bin/env bash
+# esperar_job.sh
+
+patron="$1"
+
+# Validamos argumento
+if [[ -z "$patron" ]]; then
+    echo "Uso: $0 <patrón de proceso>" >&2
+    echo "Ejemplo: $0 \"bwa mem\"" >&2
+    exit 1
+fi
+
+# Bucle de polling: mientras haya procesos que coincidan, espera
+while pgrep -f "$patron" > /dev/null; do
+    n=$(pgrep -fc "$patron")   # cuenta de procesos (-c)
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Quedan $n proceso(s) que coinciden con '$patron'"
+    sleep 30
+done
+
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] No quedan procesos '$patron'. Terminado."
+```
+
+Comentarios:
+
+- `pgrep -f "$patron"` busca procesos cuya **línea de comando completa** encaje con el patrón (no solo el nombre del binario). Devuelve 0 si encuentra al menos uno, 1 si ninguno.
+- `> /dev/null` silencia la salida (los PIDs), porque solo nos interesa el exit code para el `while`.
+- `pgrep -fc "$patron"` devuelve el **número** de procesos (`-c` = count).
+- `sleep 30` introduce el retardo entre checks.
+- `date '+...'` añade una marca temporal para saber cuánto llevamos esperando.
+- Cuando `pgrep` no encuentre nada, el `while` termina y se imprime el mensaje final.
+
+Ejemplo de salida:
+
+```text
+[2025-01-15 14:22:30] Quedan 3 proceso(s) que coinciden con 'bwa mem'
+[2025-01-15 14:23:00] Quedan 3 proceso(s) que coinciden con 'bwa mem'
+[2025-01-15 14:23:30] Quedan 1 proceso(s) que coinciden con 'bwa mem'
+[2025-01-15 14:24:00] No quedan procesos 'bwa mem'. Terminado.
+```
+
+::: callout-important
+## Los bucles son el núcleo de la automatización
+En bioinformática prácticamente todos los pipelines se reducen a: (1) iterar sobre muestras, (2) por cada muestra ejecutar una cadena de comandos, (3) reportar el éxito o fallo. Los bucles `for` (sobre archivos) y `while read` (sobre tablas de muestras) cubren el 90% de las necesidades. Aprende a usarlos con `IFS=` y `-r` desde el principio: son los detalles que separan un script robusto de uno que falla con el primer archivo cuyo nombre tiene un espacio.
+:::
+
+Con los bucles y las estructuras de control del capítulo anterior ya tienes lo esencial para escribir **scripts Bash completos**. En los siguientes capítulos del curso veremos cómo empaquetar todo esto en scripts reutilizables con funciones, cómo manejar argumentos y señales, y cómo integrar tus scripts con herramientas bioinformáticas como `samtools`, `bcftools` y `nextflow`.

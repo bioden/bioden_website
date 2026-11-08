@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Capítulo 14: Arrays y manipulación avanzada de cadenas – BIODEN</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../logo.png" rel="icon" type="image/png">
+<script src="../../site_libs/cookie-consent/cookie-consent.js"></script>
+<link href="../../site_libs/cookie-consent/cookie-consent.css" rel="stylesheet">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-70f92796293836dceea0045bd755b5b1.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-1242ccc02940432acd87c1b818d9cd49.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-70f92796293836dceea0045bd755b5b1.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+<script type="text/javascript" charset="UTF-8">
+document.addEventListener('DOMContentLoaded', function () {
+cookieconsent.run({
+  "notice_banner_type":"interstitial",
+  "consent_type":"express",
+  "palette":"dark",
+  "language":"en",
+  "page_load_consent_levels":["strictly-necessary"],
+  "notice_banner_reject_button_hide":false,
+  "preferences_center_close_button_hide":false,
+  "website_name":""
+  ,
+"language":"en"
+  });
+});
+</script> 
+  
+<style>html{ scroll-behavior: smooth; }</style>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../logo.png" alt="" class="navbar-logo light-content">
+    <img src="../../logo.png" alt="" class="navbar-logo dark-content">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">BIODEN</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Inicio</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-proyectos" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Proyectos</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-proyectos">    
+        <li>
+    <a class="dropdown-item" href="https://bioden.github.io/XIII_CCB_curso/">
+ <span class="dropdown-text">De la Botánica a la Bioinformática</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../investigacion.html"> 
+<span class="menu-text">Investigación</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../integrantes.html"> 
+<span class="menu-text">Integrantes</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../biosistalks/biosistalks.html"> 
+<span class="menu-text">Biosis Talks</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../material_educativo.html"> 
+<span class="menu-text">Material educativo</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../suplementario.html"> 
+<span class="menu-text">Servicios</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.instagram.com/dbg_unicauca/"> <i class="bi bi-instagram" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.facebook.com/profile.php?id=61583453722433"> <i class="bi bi-facebook" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:bioden@unicauca.edu.co"> <i class="bi bi-envelope" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar"><div class="quarto-margin-header"><div class="margin-header-item">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../../logos/semillero.png" class="img-fluid figure-img"></p>
+<figcaption>Universidad del Cauca</figcaption>
+</figure>
+</div>
+</div></div>
+        
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Capítulo 14: Arrays y manipulación avanzada de cadenas</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="capítulo-14-arrays-y-manipulación-avanzada-de-cadenas" class="level1">
+<h1>Capítulo 14: Arrays y manipulación avanzada de cadenas</h1>
+<p>Los nombres de archivo en bioinformática son <strong>pesadillas</strong>: <code>muestra_001_S1_L001_R1_001.fastq.gz</code>. De ese nombre necesitas extraer el ID de muestra (<code>muestra_001</code>), el lane (<code>L001</code>), la dirección (<code>R1</code>) y cambiar la extensión para construir el nombre del archivo de salida. Hacerlo “a mano” con <code>cut</code>, <code>awk</code> o <code>sed</code> es lento y propenso a errores. Bash ofrece herramientas nativas mucho más rápidas y elegantes:</p>
+<ul>
+<li><strong>Arrays indexados y asociativos</strong> para guardar listas y diccionarios.</li>
+<li><strong>Manipulación de strings dentro de variables</strong>: prefijos, sufijos, substrings, reemplazos, mayúsculas/minúsculas.</li>
+</ul>
+<p>En este capítulo veremos ambos con ejemplos bioinformáticos reales (longitudes de cromosomas, renombrado masivo, construcción dinámica de argumentos para BWA) y ejercicios con solución.</p>
+<section id="arrays-indexados" class="level2">
+<h2 data-anchor-id="arrays-indexados">14.1. Arrays indexados</h2>
+<p>Un <strong>array indexado</strong> es una lista ordenada de elementos, accesibles por un índice numérico empezando en 0.</p>
+<section id="declaración" class="level3">
+<h3 data-anchor-id="declaración">Declaración</h3>
+<p>Hay tres formas equivalentes:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Asignación directa con lista</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="va">muestras</span><span class="op">=</span><span class="va">(</span><span class="st">"S01"</span> <span class="st">"S02"</span> <span class="st">"S03"</span><span class="va">)</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Asignación elemento a elemento</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="va">genes</span><span class="op">[</span><span class="dv">0</span><span class="op">]=</span><span class="st">"BRCA1"</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="va">genes</span><span class="op">[</span><span class="dv">1</span><span class="op">]=</span><span class="st">"TP53"</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="va">genes</span><span class="op">[</span><span class="dv">2</span><span class="op">]=</span><span class="st">"EGFR"</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Declaración explícita (recomendada para scripts serios)</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="bu">declare</span> <span class="at">-a</span> <span class="va">cromosomas</span><span class="op">=</span><span class="va">(</span>chr1 chr2 chr3 chrX chrY<span class="va">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>declare -a</code> declara explícitamente un array indexado. No es obligatorio, pero mejora la legibilidad y previene conflictos si la variable se había usado antes.</p>
+</section>
+<section id="acceso" class="level3">
+<h3 data-anchor-id="acceso">Acceso</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="va">muestras</span><span class="op">=</span><span class="va">(</span><span class="st">"S01"</span> <span class="st">"S02"</span> <span class="st">"S03"</span><span class="va">)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">${muestras</span><span class="op">[</span><span class="dv">0</span><span class="op">]</span><span class="va">}</span><span class="st">"</span>   <span class="co"># S01</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">${muestras</span><span class="op">[</span><span class="dv">1</span><span class="op">]</span><span class="va">}</span><span class="st">"</span>   <span class="co"># S02</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">${muestras</span><span class="op">[</span><span class="dv">2</span><span class="op">]</span><span class="va">}</span><span class="st">"</span>   <span class="co"># S03</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Las llaves son obligatorias
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Sin llaves, <code>$muestras[0]</code> se interpreta como <code>$muestras</code> (el primer elemento, en realidad el elemento 0) seguido del string literal <code>[0]</code>. Casi siempre querrás <code>"${muestras[0]}"</code>.</p>
+</div>
+</div>
+</section>
+<section id="todos-los-elementos" class="level3">
+<h3 data-anchor-id="todos-los-elementos">Todos los elementos</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="va">muestras</span><span class="op">=</span><span class="va">(</span><span class="st">"S01"</span> <span class="st">"S02"</span> <span class="st">"S03"</span><span class="va">)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">${muestras</span><span class="op">[@]</span><span class="va">}</span><span class="st">"</span>   <span class="co"># S01 S02 S03 (palabras separadas)</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">${muestras</span><span class="op">[*]</span><span class="va">}</span><span class="st">"</span>   <span class="co"># S01 S02 S03 (unido con IFS, normalmente espacio)</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co"># La diferencia real aparece al iterar</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> m <span class="kw">in</span> <span class="st">"</span><span class="va">${muestras</span><span class="op">[@]</span><span class="va">}</span><span class="st">"</span><span class="kw">;</span> <span class="cf">do</span> <span class="bu">echo</span> <span class="st">"[</span><span class="va">$m</span><span class="st">]"</span><span class="kw">;</span> <span class="cf">done</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co"># [S01] [S02] [S03]</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="va">IFS</span><span class="op">=</span>,</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> m <span class="kw">in</span> <span class="va">${muestras</span><span class="op">[*]</span><span class="va">}</span><span class="kw">;</span> <span class="cf">do</span> <span class="bu">echo</span> <span class="st">"[</span><span class="va">$m</span><span class="st">]"</span><span class="kw">;</span> <span class="cf">done</span>   <span class="co"># SIN comillas</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="co"># [S01] [S02] [S03]</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">${muestras</span><span class="op">[*]</span><span class="va">}</span><span class="st">"</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="co"># S01,S02,S03</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="va">IFS</span><span class="op">=</span><span class="st">' '</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Regla práctica: <strong>siempre <code>"${arr[@]}"</code></strong> (con comillas dobles y <code>@</code>). Es lo único que preserva correctamente elementos con espacios.</p>
+</section>
+<section id="número-de-elementos" class="level3">
+<h3 data-anchor-id="número-de-elementos">Número de elementos</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">${</span><span class="op">#</span><span class="va">muestras</span><span class="op">[@]</span><span class="va">}</span><span class="st">"</span>   <span class="co"># 3</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="longitud-de-un-elemento" class="level3">
+<h3 data-anchor-id="longitud-de-un-elemento">Longitud de un elemento</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="va">seqs</span><span class="op">=</span><span class="va">(</span><span class="st">"ATGCGC"</span> <span class="st">"TTAA"</span><span class="va">)</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">${</span><span class="op">#</span><span class="va">seqs</span><span class="op">[</span><span class="dv">0</span><span class="op">]</span><span class="va">}</span><span class="st">"</span>   <span class="co"># 6 (longitud de "ATGCGC")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="slicing-subarray" class="level3">
+<h3 data-anchor-id="slicing-subarray">Slicing (subarray)</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="va">muestras</span><span class="op">=</span><span class="va">(</span><span class="st">"S01"</span> <span class="st">"S02"</span> <span class="st">"S03"</span> <span class="st">"S04"</span> <span class="st">"S05"</span><span class="va">)</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">${muestras</span><span class="op">[@]:</span><span class="dv">1</span><span class="op">:</span><span class="dv">3</span><span class="va">}</span><span class="st">"</span>   <span class="co"># S02 S03 S04 (3 elementos empezando en índice 1)</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">${muestras</span><span class="op">[@]:</span><span class="dv">2</span><span class="va">}</span><span class="st">"</span>     <span class="co"># S03 S04 S05 (desde índice 2 hasta el final)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="añadir-elementos" class="level3">
+<h3 data-anchor-id="añadir-elementos">Añadir elementos</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="va">muestras</span><span class="op">=</span><span class="va">(</span><span class="st">"S01"</span> <span class="st">"S02"</span><span class="va">)</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="va">muestras</span><span class="op">+=</span><span class="va">(</span><span class="st">"S03"</span> <span class="st">"S04"</span><span class="va">)</span>    <span class="co"># añade al final</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">${muestras</span><span class="op">[@]</span><span class="va">}</span><span class="st">"</span>       <span class="co"># S01 S02 S03 S04</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="eliminar-elementos" class="level3">
+<h3 data-anchor-id="eliminar-elementos">Eliminar elementos</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="va">muestras</span><span class="op">=</span><span class="va">(</span><span class="st">"S01"</span> <span class="st">"S02"</span> <span class="st">"S03"</span><span class="va">)</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="bu">unset</span> <span class="st">'muestras[1]'</span>        <span class="co"># elimina el índice 1 (S02)</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">${muestras</span><span class="op">[@]</span><span class="va">}</span><span class="st">"</span>       <span class="co"># S01 S03</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">${</span><span class="op">#</span><span class="va">muestras</span><span class="op">[@]</span><span class="va">}</span><span class="st">"</span>      <span class="co"># 2</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co"># ¡OJO! los índices no se renumeran: ${muestras[1]} sigue vacío</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="iteración" class="level3">
+<h3 data-anchor-id="iteración">Iteración</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> m <span class="kw">in</span> <span class="st">"</span><span class="va">${muestras</span><span class="op">[@]</span><span class="va">}</span><span class="st">"</span><span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"Procesando </span><span class="va">$m</span><span class="st">"</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Con índice</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="st">"</span><span class="va">${</span><span class="op">!</span><span class="va">muestras</span><span class="op">[@]</span><span class="va">}</span><span class="st">"</span><span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"Índice </span><span class="va">$i</span><span class="st"> = </span><span class="va">${muestras</span><span class="op">[</span><span class="va">$i</span><span class="op">]</span><span class="va">}</span><span class="st">"</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>${!arr[@]}</code> devuelve la lista de <strong>índices</strong> (no valores), útil cuando hay huecos por <code>unset</code>.</p>
+</section>
+</section>
+<section id="arrays-asociativos-bash-4" class="level2">
+<h2 data-anchor-id="arrays-asociativos-bash-4">14.2. Arrays asociativos (Bash 4+)</h2>
+<p>Un <strong>array asociativo</strong> es un diccionario clave→valor. Requiere Bash 4 o superior (Ubuntu 22.04 trae Bash 5.1, así que no hay problema; en macOS el Bash por defecto es 3.2 y hay que instalar uno moderno con Homebrew).</p>
+<section id="declaración-y-uso" class="level3">
+<h3 data-anchor-id="declaración-y-uso">Declaración y uso</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="bu">declare</span> <span class="at">-A</span> <span class="va">gene_counts</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="va">gene_counts</span><span class="op">[</span>BRCA1<span class="op">]=</span>100</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="va">gene_counts</span><span class="op">[</span>TP53<span class="op">]=</span>50</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="va">gene_counts</span><span class="op">[</span>EGFR<span class="op">]=</span>75</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">${gene_counts</span><span class="op">[</span>BRCA1<span class="op">]</span><span class="va">}</span><span class="st">"</span>   <span class="co"># 100</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">${gene_counts</span><span class="op">[</span>TP53<span class="op">]</span><span class="va">}</span><span class="st">"</span>    <span class="co"># 50</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="claves-valores-conteo" class="level3">
+<h3 data-anchor-id="claves-valores-conteo">Claves, valores, conteo</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">${</span><span class="op">!</span><span class="va">gene_counts</span><span class="op">[@]</span><span class="va">}</span><span class="st">"</span>   <span class="co"># BRCA1 TP53 EGFR  (claves)</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">${gene_counts</span><span class="op">[@]</span><span class="va">}</span><span class="st">"</span>    <span class="co"># 100 50 75        (valores)</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">${</span><span class="op">#</span><span class="va">gene_counts</span><span class="op">[@]</span><span class="va">}</span><span class="st">"</span>   <span class="co"># 3                (número de entradas)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="iteración-1" class="level3">
+<h3 data-anchor-id="iteración-1">Iteración</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> gen <span class="kw">in</span> <span class="st">"</span><span class="va">${</span><span class="op">!</span><span class="va">gene_counts</span><span class="op">[@]</span><span class="va">}</span><span class="st">"</span><span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"</span><span class="va">$gen</span><span class="st">: </span><span class="va">${gene_counts</span><span class="op">[</span><span class="va">$gen</span><span class="op">]</span><span class="va">}</span><span class="st"> counts"</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="text"><code>BRCA1: 100 counts
+TP53: 50 counts
+EGFR: 75 counts</code></pre>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>El orden no está garantizado
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Los arrays asociativos en Bash <strong>no</strong> preservan el orden de inserción. Si necesitas orden, ordénalo explícitamente:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> gen <span class="kw">in</span> <span class="va">$(</span><span class="bu">echo</span> <span class="st">"</span><span class="va">${</span><span class="op">!</span><span class="va">gene_counts</span><span class="op">[@]</span><span class="va">}</span><span class="st">"</span> <span class="kw">|</span> <span class="fu">tr</span> <span class="st">' '</span> <span class="st">'\n'</span> <span class="kw">|</span> <span class="fu">sort</span><span class="va">)</span><span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"</span><span class="va">$gen</span><span class="st">: </span><span class="va">${gene_counts</span><span class="op">[</span><span class="va">$gen</span><span class="op">]</span><span class="va">}</span><span class="st">"</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</section>
+<section id="ejemplo-bioinformático-longitudes-de-cromosomas" class="level3">
+<h3 data-anchor-id="ejemplo-bioinformático-longitudes-de-cromosomas">Ejemplo bioinformático: longitudes de cromosomas</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="bu">declare</span> <span class="at">-A</span> <span class="va">chrom_len</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="va">chrom_len</span><span class="op">[</span>chr1<span class="op">]=</span>248956422</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="va">chrom_len</span><span class="op">[</span>chr2<span class="op">]=</span>242193529</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="va">chrom_len</span><span class="op">[</span>chr3<span class="op">]=</span>198295559</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="va">chrom_len</span><span class="op">[</span>chrX<span class="op">]=</span>156040895</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="va">chrom_len</span><span class="op">[</span>chrY<span class="op">]=</span>57227415</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="va">total</span><span class="op">=</span>0</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> c <span class="kw">in</span> <span class="st">"</span><span class="va">${</span><span class="op">!</span><span class="va">chrom_len</span><span class="op">[@]</span><span class="va">}</span><span class="st">"</span><span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">printf</span> <span class="st">"%-6s %d bp\n"</span> <span class="st">"</span><span class="va">$c</span><span class="st">"</span> <span class="st">"</span><span class="va">${chrom_len</span><span class="op">[</span><span class="va">$c</span><span class="op">]</span><span class="va">}</span><span class="st">"</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>    <span class="va">total</span><span class="op">=</span><span class="va">$((total</span> <span class="op">+</span> <span class="va">chrom_len</span><span class="op">[</span><span class="va">$c</span><span class="op">]</span><span class="va">))</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Total: </span><span class="va">$total</span><span class="st"> bp"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="text"><code>chr3   198295559 bp
+chr1   248956422 bp
+chrX   156040895 bp
+chrY   57227415 bp
+chr2   242193529 bp
+Total: 902713820 bp</code></pre>
+</section>
+</section>
+<section id="manipulación-avanzada-de-cadenas" class="level2">
+<h2 data-anchor-id="manipulación-avanzada-de-cadenas">14.3. Manipulación avanzada de cadenas</h2>
+<p>Bash incluye operadores que se aplican <strong>dentro</strong> de la expansión <code>${...}</code> y son extremadamente potentes para procesar nombres de archivo. <strong>No requieren subprocesos</strong>: se evalúan dentro del propio shell, así que son órdenes de magnitud más rápidos que <code>cut</code>, <code>sed</code> o <code>awk</code> cuando se usan en bucles sobre miles de archivos.</p>
+<section id="tabla-maestra-de-operadores" class="level3">
+<h3 data-anchor-id="tabla-maestra-de-operadores">Tabla maestra de operadores</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 31%">
+<col style="width: 40%">
+<col style="width: 28%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Sintaxis</th>
+<th>Significado</th>
+<th>Ejemplo</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>${#var}</code></td>
+<td>Longitud de <code>var</code></td>
+<td><code>${#ATGC}</code> → 4</td>
+</tr>
+<tr class="even">
+<td><code>${var:pos}</code></td>
+<td>Substring desde <code>pos</code> hasta el final</td>
+<td><code>${var:2}</code></td>
+</tr>
+<tr class="odd">
+<td><code>${var:pos:long}</code></td>
+<td>Substring de longitud <code>long</code> desde <code>pos</code></td>
+<td><code>${var:1:3}</code></td>
+</tr>
+<tr class="even">
+<td><code>${var#patrón}</code></td>
+<td>Elimina el <strong>prefijo más corto</strong> que encaje</td>
+<td><code>${var%.sam}</code></td>
+</tr>
+<tr class="odd">
+<td><code>${var##patrón}</code></td>
+<td>Elimina el <strong>prefijo más largo</strong> que encaje</td>
+<td><code>${var##*/}</code></td>
+</tr>
+<tr class="even">
+<td><code>${var%patrón}</code></td>
+<td>Elimina el <strong>sufijo más corto</strong> que encaje</td>
+<td><code>${var%.fastq.gz}</code></td>
+</tr>
+<tr class="odd">
+<td><code>${var%%patrón}</code></td>
+<td>Elimina el <strong>sufijo más largo</strong> que encaje</td>
+<td><code>${var%%.*}</code></td>
+</tr>
+<tr class="even">
+<td><code>${var/patrón/reempl}</code></td>
+<td>Reemplaza la <strong>primera</strong> ocurrencia</td>
+<td><code>${var/R1/R2}</code></td>
+</tr>
+<tr class="odd">
+<td><code>${var//patrón/reempl}</code></td>
+<td>Reemplaza <strong>todas</strong> las ocurrencias</td>
+<td><code>${var//a/A}</code></td>
+</tr>
+<tr class="even">
+<td><code>${var/#patrón/reempl}</code></td>
+<td>Reemplaza solo si encaja al <strong>inicio</strong></td>
+<td>—</td>
+</tr>
+<tr class="odd">
+<td><code>${var/%patrón/reempl}</code></td>
+<td>Reemplaza solo si encaja al <strong>final</strong></td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td><code>${var^^}</code></td>
+<td>Convierte a <strong>mayúsculas</strong> (Bash 4+)</td>
+<td><code>"${var^^}"</code></td>
+</tr>
+<tr class="odd">
+<td><code>${var,,}</code></td>
+<td>Convierte a <strong>minúsculas</strong> (Bash 4+)</td>
+<td><code>"${var,,}"</code></td>
+</tr>
+<tr class="even">
+<td><code>${var^}</code></td>
+<td>Capitaliza <strong>primera letra</strong></td>
+<td><code>"${var^}"</code></td>
+</tr>
+<tr class="odd">
+<td><code>${var,}</code></td>
+<td>Pasa a minúsculas la <strong>primera letra</strong></td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="ejemplos-paso-a-paso" class="level3">
+<h3 data-anchor-id="ejemplos-paso-a-paso">Ejemplos paso a paso</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="va">archivo</span><span class="op">=</span><span class="st">"paciente_001_R1.fastq.gz"</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Longitud</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">${</span><span class="op">#</span><span class="va">archivo}</span><span class="st">"</span>        <span class="co"># 25</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Substring desde posición 9</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">${archivo</span><span class="op">:</span><span class="dv">9</span><span class="va">}</span><span class="st">"</span>       <span class="co"># R1.fastq.gz</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Substring: 3 caracteres desde posición 9</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">${archivo</span><span class="op">:</span><span class="dv">9</span><span class="op">:</span><span class="dv">2</span><span class="va">}</span><span class="st">"</span>     <span class="co"># R1</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Eliminar sufijo (.fastq.gz)</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">${archivo</span><span class="op">%</span>.fastq.gz<span class="va">}</span><span class="st">"</span>   <span class="co"># paciente_001_R1</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Eliminar sufijo más largo con wildcard (elimina </span><span class="al">TODO</span><span class="co"> desde el primer punto)</span></span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">${archivo</span><span class="op">%%</span>.<span class="pp">*</span><span class="va">}</span><span class="st">"</span>     <span class="co"># paciente_001_R1</span></span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Eliminar prefijo más corto hasta primera _</span></span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">${archivo</span><span class="op">#</span><span class="pp">*</span>_<span class="va">}</span><span class="st">"</span>      <span class="co"># 001_R1.fastq.gz</span></span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Eliminar prefijo más largo hasta última _ (deja solo el final)</span></span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">${archivo</span><span class="op">##</span><span class="pp">*</span>_<span class="va">}</span><span class="st">"</span>     <span class="co"># R1.fastq.gz</span></span>
+<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Reemplazar R1 por R2</span></span>
+<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">${archivo</span><span class="op">/</span><span class="ss">R1</span><span class="op">/</span>R2<span class="va">}</span><span class="st">"</span>   <span class="co"># paciente_001_R2.fastq.gz</span></span>
+<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a><span class="co"># Reemplazar todas las 'a' por 'X'</span></span>
+<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">${archivo</span><span class="op">//</span><span class="ss">a</span><span class="op">/</span>X<span class="va">}</span><span class="st">"</span>    <span class="co"># pXciente_001_R1.fXstq.gz</span></span>
+<span id="cb17-29"><a href="#cb17-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-30"><a href="#cb17-30" aria-hidden="true" tabindex="-1"></a><span class="co"># Mayúsculas</span></span>
+<span id="cb17-31"><a href="#cb17-31" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">${archivo</span><span class="op">^^</span><span class="va">}</span><span class="st">"</span>       <span class="co"># PACIENTE_001_R1.FASTQ.GZ</span></span>
+<span id="cb17-32"><a href="#cb17-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-33"><a href="#cb17-33" aria-hidden="true" tabindex="-1"></a><span class="co"># Minúsculas</span></span>
+<span id="cb17-34"><a href="#cb17-34" aria-hidden="true" tabindex="-1"></a><span class="va">seq</span><span class="op">=</span><span class="st">"ATGCGATCG"</span></span>
+<span id="cb17-35"><a href="#cb17-35" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">${seq</span><span class="op">,,</span><span class="va">}</span><span class="st">"</span>           <span class="co"># atgcgatcg</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span><code>#</code> mira por la izquierda (prefijo), <code>%</code> mira por la derecha (sufijo)
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Truco mnemotécnico: en el teclado, <code>#</code> está a la <strong>izquierda</strong> de <code>%</code>. Así: - <code>#</code> → quita por la izquierda (prefijo). - <code>%</code> → quita por la derecha (sufijo).</p>
+<p>La versión <strong>doble</strong> (<code>##</code>, <code>%%</code>) siempre es “la más larga posible”.</p>
+</div>
+</div>
+</section>
+<section id="caso-real-extraer-id-de-muestra-de-un-nombre-illumina" class="level3">
+<h3 data-anchor-id="caso-real-extraer-id-de-muestra-de-un-nombre-illumina">Caso real: extraer ID de muestra de un nombre Illumina</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="va">archivo</span><span class="op">=</span><span class="st">"mysample_S1_L001_R1_001.fastq.gz"</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="co"># ID de muestra: todo hasta el primer '_'</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="va">muestra</span><span class="op">=</span><span class="va">${archivo</span><span class="op">%%</span>_<span class="pp">*</span><span class="va">}</span>        <span class="co"># mysample</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Lane: la palabra que empieza por L</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="va">lane</span><span class="op">=</span><span class="va">${archivo</span><span class="op">#</span><span class="pp">*</span>_L<span class="va">}</span>           <span class="co"># 001_R1_001.fastq.gz</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="va">lane</span><span class="op">=</span>L<span class="va">${lane</span><span class="op">%%</span>_<span class="pp">*</span><span class="va">}</span>             <span class="co"># L001</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Dirección: R1 o R2</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">[[</span> <span class="st">"</span><span class="va">$archivo</span><span class="st">"</span> <span class="ot">=~</span> <span class="ss">_R</span><span class="op">([</span><span class="ss">12</span><span class="op">])</span><span class="ss">_</span> <span class="kw">]];</span> <span class="cf">then</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>    <span class="va">direccion</span><span class="op">=</span><span class="st">"R</span><span class="va">${BASH_REMATCH</span><span class="op">[</span><span class="dv">1</span><span class="op">]</span><span class="va">}</span><span class="st">"</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Muestra: </span><span class="va">$muestra</span><span class="st">"</span></span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Lane:    </span><span class="va">$lane</span><span class="st">"</span></span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Dir:     </span><span class="va">$direccion</span><span class="st">"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="text"><code>Muestra: mysample
+Lane:    L001
+Dir:     R1</code></pre>
+<p>Aquí mezclamos manipulación de cadenas con regex (ver capítulo 15). El truco <code>${archivo%%_*}</code> quita todo desde el primer <code>_</code> hasta el final, dejando solo <code>mysample</code>.</p>
+</section>
+<section id="caso-real-renombrar-extensión-sam-bam-y-ordenar" class="level3">
+<h3 data-anchor-id="caso-real-renombrar-extensión-sam-bam-y-ordenar">Caso real: renombrar extensión SAM → BAM y ordenar</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> f <span class="kw">in</span> <span class="pp">*</span>.sam<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">base</span><span class="op">=</span><span class="va">${f</span><span class="op">%</span>.sam<span class="va">}</span>              <span class="co"># quitar sufijo .sam</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    <span class="va">nuevo</span><span class="op">=</span><span class="st">"</span><span class="va">${base}</span><span class="st">.sorted.bam"</span>  <span class="co"># construir nuevo nombre</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"Convirtiendo </span><span class="va">$f</span><span class="st"> -&gt; </span><span class="va">$nuevo</span><span class="st">"</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    <span class="ex">samtools</span> view <span class="at">-bS</span> <span class="st">"</span><span class="va">$f</span><span class="st">"</span> <span class="kw">|</span> <span class="ex">samtools</span> sort <span class="at">-o</span> <span class="st">"</span><span class="va">$nuevo</span><span class="st">"</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Sin <code>${f%.sam}</code> necesitarías <code>sed</code> o <code>basename</code>, ambos lanzan un subproceso. La versión nativa es ~10x más rápida en bucles sobre miles de archivos.</p>
+</section>
+<section id="caso-real-construir-comando-dinámico-con-arrays" class="level3">
+<h3 data-anchor-id="caso-real-construir-comando-dinámico-con-arrays">Caso real: construir comando dinámico con arrays</h3>
+<p>Cuando el número de argumentos depende de flags, lo limpio es construir un array:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="bu">declare</span> <span class="at">-a</span> <span class="va">args</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="va">args</span><span class="op">+=</span><span class="va">(</span><span class="st">"-t"</span> <span class="st">"8"</span><span class="va">)</span>                <span class="co"># threads</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="va">args</span><span class="op">+=</span><span class="va">(</span><span class="st">"-R"</span> <span class="st">"@RG\tID:sample1\tSM:sample1"</span><span class="va">)</span>  <span class="co"># read group</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="va">args</span><span class="op">+=</span><span class="va">(</span><span class="st">"ref.fa"</span><span class="va">)</span>                <span class="co"># referencia</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="va">args</span><span class="op">+=</span><span class="va">(</span><span class="st">"R1.fq.gz"</span> <span class="st">"R2.fq.gz"</span><span class="va">)</span>  <span class="co"># reads</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Ejecutar con todos los argumentos expandidos</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="ex">bwa</span> mem <span class="st">"</span><span class="va">${args</span><span class="op">[@]</span><span class="va">}</span><span class="st">"</span> <span class="op">&gt;</span> aln.sam</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Esta es la forma <strong>recomendada</strong> de construir comandos complejos: mejor que concatenar strings (que se rompe con espacios) o evaluar con <code>eval</code> (peligroso).</p>
+</section>
+</section>
+<section id="ifs-internal-field-separator" class="level2">
+<h2 data-anchor-id="ifs-internal-field-separator">14.4. IFS (Internal Field Separator)</h2>
+<p>La variable <code>IFS</code> (Internal Field Separator) controla cómo Bash <strong>parte</strong> strings en palabras. Por defecto es <code>space+tab+newline</code>. Cambiándola, controlas cómo se separan strings en bucles <code>for</code> y <code>read</code>.</p>
+<section id="split-de-una-cadena-en-array" class="level3">
+<h3 data-anchor-id="split-de-una-cadena-en-array">Split de una cadena en array</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="va">csv</span><span class="op">=</span><span class="st">"BRCA1,TP53,EGFR,MYC"</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="co"># IFS=, solo durante el read; el array se reconstruye con -a</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="va">IFS</span><span class="op">=</span><span class="st">','</span> <span class="bu">read</span> <span class="at">-ra</span> <span class="va">genes</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">"</span><span class="va">$csv</span><span class="st">"</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> g <span class="kw">in</span> <span class="st">"</span><span class="va">${genes</span><span class="op">[@]</span><span class="va">}</span><span class="st">"</span><span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"Gen: </span><span class="va">$g</span><span class="st">"</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="text"><code>Gen: BRCA1
+Gen: TP53
+Gen: EGFR
+Gen: MYC</code></pre>
+<ul>
+<li><code>read -a</code> lee una línea y la guarda en un array.</li>
+<li><code>read -ra</code> igual pero <code>-r</code> no interpreta barras invertidas.</li>
+<li><code>&lt;&lt;&lt; "$csv"</code> es un <strong>here-string</strong>: alimenta el stdin del <code>read</code> con el contenido de <code>$csv</code>.</li>
+<li>Asignar <code>IFS=','</code> antes del <code>read</code> solo afecta a esa invocación.</li>
+</ul>
+</section>
+<section id="leer-un-tsv-en-un-array-por-columnas" class="level3">
+<h3 data-anchor-id="leer-un-tsv-en-un-array-por-columnas">Leer un TSV en un array por columnas</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="va">tsv</span><span class="op">=</span><span class="st">"muestra_001\tresultados/bam/m1.bam\t40x"</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="va">IFS</span><span class="op">=</span><span class="st">$'</span><span class="dt">\t</span><span class="st">'</span> <span class="bu">read</span> <span class="at">-ra</span> <span class="va">campos</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">"</span><span class="va">$tsv</span><span class="st">"</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Muestra: </span><span class="va">${campos</span><span class="op">[</span><span class="dv">0</span><span class="op">]</span><span class="va">}</span><span class="st">"</span>   <span class="co"># muestra_001</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"BAM:    </span><span class="va">${campos</span><span class="op">[</span><span class="dv">1</span><span class="op">]</span><span class="va">}</span><span class="st">"</span>   <span class="co"># resultados/bam/m1.bam</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Cob:    </span><span class="va">${campos</span><span class="op">[</span><span class="dv">2</span><span class="op">]</span><span class="va">}</span><span class="st">"</span>   <span class="co"># 40x</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>$'\t'</code> es la forma de Bash de escribir un <strong>tab</strong> real (ANSI-C quoting). Sin <code>$'...'</code>, <code>'  '</code> (con tab literal entre comillas) también funciona pero es invisible y propenso a errores.</p>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>IFS es global: restaura siempre
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Si haces <code>IFS=','</code> sin localizar, <strong>todo</strong> el resto del script se comporta raro. Dos opciones:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Opción A: solo durante un comando (recomendada)</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="va">IFS</span><span class="op">=</span><span class="st">','</span> <span class="bu">read</span> <span class="at">-ra</span> <span class="va">arr</span> <span class="op">&lt;&lt;&lt;</span> <span class="st">"</span><span class="va">$str</span><span class="st">"</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Opción B: salvar y restaurar</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="va">OLD_IFS</span><span class="op">=</span><span class="va">$IFS</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="va">IFS</span><span class="op">=</span><span class="st">','</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="co"># ... operaciones ...</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a><span class="va">IFS</span><span class="op">=</span><span class="va">$OLD_IFS</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</section>
+</section>
+<section id="read--a-para-leer-una-línea-en-un-array" class="level2">
+<h2 data-anchor-id="read--a-para-leer-una-línea-en-un-array">14.5. <code>read -a</code> para leer una línea en un array</h2>
+<p>Útil cuando una línea contiene varios campos separados por espacios (o por el IFS actual):</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"chr1 100 200 gene1"</span> <span class="kw">|</span> <span class="cf">while</span> <span class="bu">read</span> <span class="at">-ra</span> <span class="va">campos</span><span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"Cromosoma: </span><span class="va">${campos</span><span class="op">[</span><span class="dv">0</span><span class="op">]</span><span class="va">}</span><span class="st">"</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"Inicio:    </span><span class="va">${campos</span><span class="op">[</span><span class="dv">1</span><span class="op">]</span><span class="va">}</span><span class="st">"</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"Fin:       </span><span class="va">${campos</span><span class="op">[</span><span class="dv">2</span><span class="op">]</span><span class="va">}</span><span class="st">"</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"Nombre:    </span><span class="va">${campos</span><span class="op">[</span><span class="dv">3</span><span class="op">]</span><span class="va">}</span><span class="st">"</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Combinado con <code>IFS=$'\t'</code> para TSV:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> <span class="va">IFS</span><span class="op">=</span><span class="st">$'</span><span class="dt">\t</span><span class="st">'</span> <span class="bu">read</span> <span class="at">-r</span> <span class="va">muestra</span> <span class="va">r1</span> <span class="va">r2</span><span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"Alineando muestra </span><span class="va">$muestra</span><span class="st"> con </span><span class="va">$r1</span><span class="st"> y </span><span class="va">$r2</span><span class="st">"</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span> <span class="op">&lt;</span> samples.tsv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Esta es la <strong>forma idiomática</strong> de procesar tablas de muestras en pipelines Bash.</p>
+</section>
+<section id="ejemplos-bioinformáticos-completos" class="level2">
+<h2 data-anchor-id="ejemplos-bioinformáticos-completos">14.6. Ejemplos bioinformáticos completos</h2>
+<section id="iterar-sobre-muestras-y-procesar-cada-una" class="level3">
+<h3 data-anchor-id="iterar-sobre-muestras-y-procesar-cada-una">Iterar sobre muestras y procesar cada una</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="va">muestras</span><span class="op">=</span><span class="va">(</span><span class="st">"paciente1"</span> <span class="st">"paciente2"</span> <span class="st">"paciente3"</span> <span class="st">"paciente4"</span><span class="va">)</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> m <span class="kw">in</span> <span class="st">"</span><span class="va">${muestras</span><span class="op">[@]</span><span class="va">}</span><span class="st">"</span><span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>    <span class="va">r1</span><span class="op">=</span><span class="st">"datos/</span><span class="va">${m}</span><span class="st">_R1.fastq.gz"</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>    <span class="va">r2</span><span class="op">=</span><span class="st">"datos/</span><span class="va">${m}</span><span class="st">_R2.fastq.gz"</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>    <span class="va">bam</span><span class="op">=</span><span class="st">"resultados/</span><span class="va">${m}</span><span class="st">.bam"</span></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"Procesando </span><span class="va">$m</span><span class="st">..."</span></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>    <span class="ex">bwa</span> mem <span class="at">-t</span> 8 ref.fa <span class="st">"</span><span class="va">$r1</span><span class="st">"</span> <span class="st">"</span><span class="va">$r2</span><span class="st">"</span> <span class="kw">|</span> <span class="dt">\</span></span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>        <span class="ex">samtools</span> sort <span class="at">-o</span> <span class="st">"</span><span class="va">$bam</span><span class="st">"</span></span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>    <span class="ex">samtools</span> index <span class="st">"</span><span class="va">$bam</span><span class="st">"</span></span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="construir-args-dinámicos-según-flags" class="level3">
+<h3 data-anchor-id="construir-args-dinámicos-según-flags">Construir args dinámicos según flags</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="bu">declare</span> <span class="at">-a</span> <span class="va">bwa_args</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="va">bwa_args</span><span class="op">+=</span><span class="va">(</span><span class="st">"-t"</span> <span class="st">"</span><span class="va">${THREADS</span><span class="op">:-</span>4<span class="va">}</span><span class="st">"</span><span class="va">)</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">[[</span> <span class="ot">-n</span> <span class="st">"</span><span class="va">$READ_GROUP</span><span class="st">"</span> <span class="kw">]];</span> <span class="cf">then</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>    <span class="va">bwa_args</span><span class="op">+=</span><span class="va">(</span><span class="st">"-R"</span> <span class="st">"</span><span class="va">$READ_GROUP</span><span class="st">"</span><span class="va">)</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">[[</span> <span class="st">"</span><span class="va">$MARK_DUP</span><span class="st">"</span> <span class="ot">==</span> <span class="st">"yes"</span> <span class="kw">]];</span> <span class="cf">then</span></span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>    <span class="va">bwa_args</span><span class="op">+=</span><span class="va">(</span><span class="st">"-M"</span><span class="va">)</span>   <span class="co"># marcador para compatibilidad con Picard</span></span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a><span class="va">bwa_args</span><span class="op">+=</span><span class="va">(</span><span class="st">"</span><span class="va">$REF</span><span class="st">"</span> <span class="st">"</span><span class="va">$R1</span><span class="st">"</span> <span class="st">"</span><span class="va">$R2</span><span class="st">"</span><span class="va">)</span></span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a><span class="ex">bwa</span> mem <span class="st">"</span><span class="va">${bwa_args</span><span class="op">[@]</span><span class="va">}</span><span class="st">"</span> <span class="op">&gt;</span> aln.sam</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="eliminar-ruta-y-extensión-de-una-vez" class="level3">
+<h3 data-anchor-id="eliminar-ruta-y-extensión-de-una-vez">Eliminar ruta y extensión de una vez</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="va">ruta</span><span class="op">=</span><span class="st">"/data/proyecto/muestras/paciente_001.bam"</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="va">base</span><span class="op">=</span><span class="va">${ruta</span><span class="op">##</span><span class="pp">*</span>/<span class="va">}</span>        <span class="co"># paciente_001.bam  (sin directorio)</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="va">solo_id</span><span class="op">=</span><span class="va">${base</span><span class="op">%</span>.<span class="pp">*</span><span class="va">}</span>      <span class="co"># paciente_001      (sin extensión)</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"</span><span class="va">$solo_id</span><span class="st">"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>${ruta##*/}</code> quita el prefijo más largo que termine en <code>/</code> (equivalente a <code>basename</code>). <code>${base%.*}</code> quita la extensión (sufijo más corto que empiece por <code>.</code>).</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span><code>basename</code> vs <code>${var##*/}</code>
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>basename "$ruta"</code> lanza un subproceso. <code>${ruta##*/}</code> es puramente shell, sin subproceso. En un bucle sobre 10 000 archivos, la diferencia se acumula. Para uno o dos archivos, usa el que te resulte más legible.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="ejercicios" class="level2">
+<h2 data-anchor-id="ejercicios">14.7. Ejercicios</h2>
+<section id="ejercicio-1" class="level3">
+<h3 data-anchor-id="ejercicio-1">Ejercicio 1</h3>
+<p>Crea un array con los nombres de los archivos BAM de un directorio: <code>bams=(*.bam)</code>. Itera imprimiendo el nombre de cada uno y su tamaño en bytes. Calcula el <strong>total en bytes</strong> sumando los tamaños con un acumulador y muestra el resultado al final, junto con el número de archivos (<code>${#bams[@]}</code>).</p>
+</section>
+<section id="ejercicio-2" class="level3">
+<h3 data-anchor-id="ejercicio-2">Ejercicio 2</h3>
+<p>Crea un array asociativo <code>gene_counts</code> con claves <code>"BRCA1"</code>, <code>"TP53"</code>, <code>"EGFR"</code> y valores <code>100</code>, <code>50</code>, <code>75</code>. Itera mostrando cada gen y su count con el formato <code>gen: N counts</code>. Luego calcula el <strong>total</strong> sumando todos los valores.</p>
+</section>
+<section id="ejercicio-3" class="level3">
+<h3 data-anchor-id="ejercicio-3">Ejercicio 3</h3>
+<p>Dado el nombre de archivo <code>mysample_L001_R2_001.fastq.gz</code>, usa <strong>manipulación de cadenas</strong> (operadores <code>${var%...}</code>, <code>${var#...}</code>, <code>${var//.../}</code>) para extraer: - (a) ID de muestra: <code>mysample</code> - (b) Lane: <code>L001</code> - (c) Dirección: <code>R2</code></p>
+<p>Muestra cada uno con <code>echo</code>. <strong>No uses</strong> <code>cut</code>, <code>awk</code>, <code>sed</code> ni regex: solo operadores de strings de Bash.</p>
+</section>
+</section>
+<section id="soluciones" class="level2">
+<h2 data-anchor-id="soluciones">14.8. Soluciones</h2>
+<section id="solución-1" class="level3">
+<h3 data-anchor-id="solución-1">Solución 1</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/usr/bin/env bash</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="co"># listar_bams.sh</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Si no hay BAMs, el array tendría un único elemento "*.bam" literal.</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="co"># shopt -s nullglob lo deja vacío en ese caso.</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a><span class="bu">shopt</span> <span class="at">-s</span> nullglob</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a><span class="va">bams</span><span class="op">=</span><span class="va">(</span><span class="pp">*</span>.bam<span class="va">)</span></span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">[[</span> <span class="va">${</span><span class="op">#</span><span class="va">bams</span><span class="op">[@]</span><span class="va">}</span> <span class="ot">-eq</span> 0 <span class="kw">]];</span> <span class="cf">then</span></span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"No se encontraron archivos .bam en el directorio actual"</span></span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">exit</span> 0</span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a><span class="va">total</span><span class="op">=</span>0</span>
+<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> f <span class="kw">in</span> <span class="st">"</span><span class="va">${bams</span><span class="op">[@]</span><span class="va">}</span><span class="st">"</span><span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a>    <span class="co"># stat --format=%s devuelve solo el tamaño en bytes</span></span>
+<span id="cb31-18"><a href="#cb31-18" aria-hidden="true" tabindex="-1"></a>    <span class="va">tam</span><span class="op">=</span><span class="va">$(</span><span class="fu">stat</span> <span class="at">--format</span><span class="op">=</span>%s <span class="st">"</span><span class="va">$f</span><span class="st">"</span><span class="va">)</span></span>
+<span id="cb31-19"><a href="#cb31-19" aria-hidden="true" tabindex="-1"></a>    <span class="bu">printf</span> <span class="st">"%-40s %12d bytes\n"</span> <span class="st">"</span><span class="va">$f</span><span class="st">"</span> <span class="st">"</span><span class="va">$tam</span><span class="st">"</span></span>
+<span id="cb31-20"><a href="#cb31-20" aria-hidden="true" tabindex="-1"></a>    <span class="va">total</span><span class="op">=</span><span class="va">$((total</span> <span class="op">+</span> <span class="va">tam))</span></span>
+<span id="cb31-21"><a href="#cb31-21" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb31-22"><a href="#cb31-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-23"><a href="#cb31-23" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"------------------------------------------------"</span></span>
+<span id="cb31-24"><a href="#cb31-24" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> <span class="st">"Total: %d archivos, %d bytes (%.2f MB)\n"</span> <span class="dt">\</span></span>
+<span id="cb31-25"><a href="#cb31-25" aria-hidden="true" tabindex="-1"></a>    <span class="st">"</span><span class="va">${</span><span class="op">#</span><span class="va">bams</span><span class="op">[@]</span><span class="va">}</span><span class="st">"</span> <span class="st">"</span><span class="va">$total</span><span class="st">"</span> <span class="st">"</span><span class="va">$(</span><span class="bu">echo</span> <span class="st">"scale=2; </span><span class="va">$total</span><span class="st">/1048576"</span> <span class="kw">|</span> <span class="fu">bc</span><span class="va">)</span><span class="st">"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Comentarios:</p>
+<ul>
+<li><code>shopt -s nullglob</code> evita el caso típico en el que <code>*.bam</code> no encaja nada y el array queda con el string literal <code>"*.bam"</code>. Sin esta opción, el <code>for</code> intentaría procesar un archivo inexistente.</li>
+<li><code>stat --format=%s</code> imprime solo el tamaño en bytes, fácil de parsear. En macOS el equivalente es <code>stat -f%z</code>.</li>
+<li><code>$((total + tam))</code> es <strong>aritmética entera</strong> de Bash: no lanza subprocesos. Para división con decimales necesitamos <code>bc</code>.</li>
+<li>El formato <code>%-40s %12d</code> alinea nombres (40 caracteres a la izquierda) y tamaños (12 caracteres a la derecha) en columnas.</li>
+<li><code>1048576 = 1024*1024</code> para convertir bytes a MB.</li>
+</ul>
+</section>
+<section id="solución-2" class="level3">
+<h3 data-anchor-id="solución-2">Solución 2</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/usr/bin/env bash</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="co"># gene_counts.sh</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a><span class="bu">declare</span> <span class="at">-A</span> <span class="va">gene_counts</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a><span class="va">gene_counts</span><span class="op">[</span>BRCA1<span class="op">]=</span>100</span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a><span class="va">gene_counts</span><span class="op">[</span>TP53<span class="op">]=</span>50</span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a><span class="va">gene_counts</span><span class="op">[</span>EGFR<span class="op">]=</span>75</span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a><span class="va">total</span><span class="op">=</span>0</span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> gen <span class="kw">in</span> <span class="st">"</span><span class="va">${</span><span class="op">!</span><span class="va">gene_counts</span><span class="op">[@]</span><span class="va">}</span><span class="st">"</span><span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>    <span class="va">count</span><span class="op">=</span><span class="va">${gene_counts</span><span class="op">[</span><span class="va">$gen</span><span class="op">]</span><span class="va">}</span></span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">printf</span> <span class="st">"%-8s : %3d counts\n"</span> <span class="st">"</span><span class="va">$gen</span><span class="st">"</span> <span class="st">"</span><span class="va">$count</span><span class="st">"</span></span>
+<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a>    <span class="va">total</span><span class="op">=</span><span class="va">$((total</span> <span class="op">+</span> <span class="va">count))</span></span>
+<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-16"><a href="#cb32-16" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"----------------------"</span></span>
+<span id="cb32-17"><a href="#cb32-17" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> <span class="st">"Total    : %3d counts\n"</span> <span class="st">"</span><span class="va">$total</span><span class="st">"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Salida:</p>
+<pre class="text"><code>EGFR     :  75 counts
+BRCA1    : 100 counts
+TP53     :  50 counts
+----------------------
+Total    : 225 counts</code></pre>
+<p>Comentarios:</p>
+<ul>
+<li><p><code>declare -A gene_counts</code> declara explícitamente un array <strong>asociativo</strong> (sin <code>-A</code> sería indexado).</p></li>
+<li><p><code>${!gene_counts[@]}</code> devuelve la lista de <strong>claves</strong> (no valores). El <code>!</code> es el operador de “claves”.</p></li>
+<li><p><code>${gene_counts[$gen]}</code> accede al valor asociado a la clave <code>$gen</code>.</p></li>
+<li><p><code>total=$((total + count))</code> acumula con aritmética entera (sin subprocesos).</p></li>
+<li><p>El orden de iteración <strong>no</strong> es el de inserción: Bash no garantiza orden en asociativos. Si necesitas orden, sortea las claves explícitamente:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> gen <span class="kw">in</span> <span class="va">$(</span><span class="bu">printf</span> <span class="st">"%s\n"</span> <span class="st">"</span><span class="va">${</span><span class="op">!</span><span class="va">gene_counts</span><span class="op">[@]</span><span class="va">}</span><span class="st">"</span> <span class="kw">|</span> <span class="fu">sort</span><span class="va">)</span><span class="kw">;</span> <span class="cf">do</span> <span class="ex">...</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+</ul>
+</section>
+<section id="solución-3" class="level3">
+<h3 data-anchor-id="solución-3">Solución 3</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/usr/bin/env bash</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="co"># parse_fastq_name.sh</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="va">archivo</span><span class="op">=</span><span class="st">"mysample_L001_R2_001.fastq.gz"</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a><span class="co"># (a) ID de muestra: todo lo que está antes del primer '_'</span></span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a><span class="co"># ${var%%_*} elimina el sufijo más largo que empiece por '_', dejando solo la primera palabra</span></span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a><span class="va">muestra</span><span class="op">=</span><span class="va">${archivo</span><span class="op">%%</span>_<span class="pp">*</span><span class="va">}</span></span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a><span class="co"># (b) Lane: queremos "L001". Estrategia:</span></span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a><span class="co">#     1. Quitar el prefijo hasta el primer "_" -&gt; "L001_R2_001.fastq.gz"</span></span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a><span class="co">#     2. Quitar el sufijo desde el siguiente "_" -&gt; "L001"</span></span>
+<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a><span class="va">resto</span><span class="op">=</span><span class="va">${archivo</span><span class="op">#</span><span class="pp">*</span>_<span class="va">}</span>        <span class="co"># L001_R2_001.fastq.gz</span></span>
+<span id="cb35-14"><a href="#cb35-14" aria-hidden="true" tabindex="-1"></a><span class="va">lane</span><span class="op">=</span><span class="va">${resto</span><span class="op">%%</span>_<span class="pp">*</span><span class="va">}</span>          <span class="co"># L001</span></span>
+<span id="cb35-15"><a href="#cb35-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-16"><a href="#cb35-16" aria-hidden="true" tabindex="-1"></a><span class="co"># (c) Dirección R2: la palabra de dos letras+una cifra (R1 o R2).</span></span>
+<span id="cb35-17"><a href="#cb35-17" aria-hidden="true" tabindex="-1"></a><span class="co">#     Estrategia: cortar entre el segundo y tercer '_'.</span></span>
+<span id="cb35-18"><a href="#cb35-18" aria-hidden="true" tabindex="-1"></a><span class="co">#     1. Quitamos prefijo hasta primer _  -&gt; L001_R2_001.fastq.gz</span></span>
+<span id="cb35-19"><a href="#cb35-19" aria-hidden="true" tabindex="-1"></a><span class="co">#     2. Quitamos prefijo hasta siguiente _ -&gt; R2_001.fastq.gz</span></span>
+<span id="cb35-20"><a href="#cb35-20" aria-hidden="true" tabindex="-1"></a><span class="co">#     3. Quitamos sufijo hasta primer _ -&gt; R2</span></span>
+<span id="cb35-21"><a href="#cb35-21" aria-hidden="true" tabindex="-1"></a><span class="va">resto2</span><span class="op">=</span><span class="va">${resto</span><span class="op">#</span><span class="pp">*</span>_<span class="va">}</span>         <span class="co"># R2_001.fastq.gz</span></span>
+<span id="cb35-22"><a href="#cb35-22" aria-hidden="true" tabindex="-1"></a><span class="va">direccion</span><span class="op">=</span><span class="va">${resto2</span><span class="op">%%</span>_<span class="pp">*</span><span class="va">}</span>    <span class="co"># R2</span></span>
+<span id="cb35-23"><a href="#cb35-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-24"><a href="#cb35-24" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Archivo:    </span><span class="va">$archivo</span><span class="st">"</span></span>
+<span id="cb35-25"><a href="#cb35-25" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Muestra:    </span><span class="va">$muestra</span><span class="st">"</span></span>
+<span id="cb35-26"><a href="#cb35-26" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Lane:       </span><span class="va">$lane</span><span class="st">"</span></span>
+<span id="cb35-27"><a href="#cb35-27" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Dirección:  </span><span class="va">$direccion</span><span class="st">"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Salida:</p>
+<pre class="text"><code>Archivo:    mysample_L001_R2_001.fastq.gz
+Muestra:    mysample
+Lane:       L001
+Dirección:  R2</code></pre>
+<p>Comentarios:</p>
+<ul>
+<li><p><code>${archivo%%_*}</code> elimina el <strong>sufijo más largo</strong> que empiece por <code>_</code>. En <code>mysample_L001_R2_001.fastq.gz</code>, el sufijo más largo que empiece por <code>_</code> es <code>_L001_R2_001.fastq.gz</code>, así que queda <code>mysample</code>.</p></li>
+<li><p><code>${archivo#*_}</code> elimina el <strong>prefijo más corto</strong> que termine en <code>_</code>. En la misma cadena, el prefijo más corto que termine en <code>_</code> es <code>mysample_</code>, así que queda <code>L001_R2_001.fastq.gz</code>.</p></li>
+<li><p>Encadenando <code>%%_*</code> y <code>#*_</code> vamos “pelando” la cadena por la izquierda.</p></li>
+<li><p>Fíjate en que no usamos ni <code>cut</code>, ni <code>awk</code>, ni regex: puro operador de strings, <strong>sin subproceso</strong>. Esto es importantísimo si vas a procesar 100 000 nombres de archivo en un bucle.</p></li>
+<li><p>Versión más robusta con regex (cap. 15):</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">[[</span> <span class="st">"</span><span class="va">$archivo</span><span class="st">"</span> <span class="ot">=~</span> <span class="pp">^</span><span class="op">([</span><span class="ss">A</span><span class="op">-</span><span class="ss">Za</span><span class="op">-</span><span class="ss">z0</span><span class="op">-</span><span class="ss">9</span><span class="op">]</span><span class="pp">+</span><span class="op">)</span><span class="ss">_</span><span class="op">(</span><span class="ss">L</span><span class="op">[</span><span class="ss">0</span><span class="op">-</span><span class="ss">9</span><span class="op">]</span><span class="va">{</span><span class="dv">3</span><span class="va">}</span><span class="op">)</span><span class="ss">_</span><span class="op">(</span><span class="ss">R</span><span class="op">[</span><span class="ss">12</span><span class="op">])</span><span class="ss">_001</span><span class="dt">\.</span><span class="ss">fastq</span><span class="dt">\.</span><span class="ss">gz</span><span class="op">$</span> <span class="kw">]];</span> <span class="cf">then</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>    <span class="va">muestra</span><span class="op">=</span><span class="va">${BASH_REMATCH</span><span class="op">[</span><span class="dv">1</span><span class="op">]</span><span class="va">}</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>    <span class="va">lane</span><span class="op">=</span><span class="va">${BASH_REMATCH</span><span class="op">[</span><span class="dv">2</span><span class="op">]</span><span class="va">}</span></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>    <span class="va">direccion</span><span class="op">=</span><span class="va">${BASH_REMATCH</span><span class="op">[</span><span class="dv">3</span><span class="op">]</span><span class="va">}</span></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>La versión con regex es más declarativa y valida el formato. La versión con strings es más rápida y no depende de Bash 3+/4+. <strong>Elige según tu necesidad</strong>.</p></li>
+</ul>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Arrays y strings: el lenguaje secreto de Bash
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Los nombres de archivo en bioinformática llevan décadas siguiendo convenciones (Illumina especialmente). Saber extraer campos con <code>${var%...}</code> y <code>${var#...}</code> te permite automatizar renombrados masivos, construir pipelines dinámicos y procesar tablas de muestras sin recurrir a Python. Combinados con arrays (para listas de muestras) y arrays asociativos (para diccionarios gen→longitud, gen→count), tienes el 90% del arsenal para escribir pipelines Bash profesionales. En el capítulo 17, el pipeline integrador usará estas técnicas en cada función.</p>
+</div>
+</div>
+<p>Con esto ya dominas las dos herramientas clave para procesar strings en Bash. El siguiente capítulo cubre <strong>expresiones regulares</strong>: el siguiente nivel de potencia para validar y extraer información de texto (cabeceras SAM, líneas GFF, secuencias ADN).</p>
+
+
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/bioden\.github\.io\/bioden_website\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Semillero de Biología del Desarrollo y Plasticidad Neural © 2025. All content licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Sitio web desarrollado por Xavier Clemente García Cevallos</p>
+</div>   
+    <div class="nav-footer-center">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/bioden">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="mailto:bioden@unicauca.edu.co">
+      <i class="bi bi-envelope" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    <div class="cookie-consent-footer"><a href="#" id="open_preferences_center">Cookie Preferences</a></div></div>
+    <div class="nav-footer-right">
+<p>Made with <a href="https://www.r-project.org/"><img src="https://www.r-project.org/Rlogo.png" alt="R" width="25px"></a> and <a href="https://quarto.org/"><img src="https://quarto.org/quarto.png" alt="Quarto" width="65px"></a>.</p>
+</div>
+  </div>
+</footer>
+
+
+
+
+<script src="../../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

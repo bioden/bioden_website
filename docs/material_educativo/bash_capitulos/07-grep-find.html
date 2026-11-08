@@ -1,0 +1,1676 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Capítulo 7: Búsqueda con grep, find y locate – BIODEN</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../logo.png" rel="icon" type="image/png">
+<script src="../../site_libs/cookie-consent/cookie-consent.js"></script>
+<link href="../../site_libs/cookie-consent/cookie-consent.css" rel="stylesheet">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-70f92796293836dceea0045bd755b5b1.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-1242ccc02940432acd87c1b818d9cd49.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-70f92796293836dceea0045bd755b5b1.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+<script type="text/javascript" charset="UTF-8">
+document.addEventListener('DOMContentLoaded', function () {
+cookieconsent.run({
+  "notice_banner_type":"interstitial",
+  "consent_type":"express",
+  "palette":"dark",
+  "language":"en",
+  "page_load_consent_levels":["strictly-necessary"],
+  "notice_banner_reject_button_hide":false,
+  "preferences_center_close_button_hide":false,
+  "website_name":""
+  ,
+"language":"en"
+  });
+});
+</script> 
+  
+<style>html{ scroll-behavior: smooth; }</style>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../logo.png" alt="" class="navbar-logo light-content">
+    <img src="../../logo.png" alt="" class="navbar-logo dark-content">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">BIODEN</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Inicio</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-proyectos" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Proyectos</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-proyectos">    
+        <li>
+    <a class="dropdown-item" href="https://bioden.github.io/XIII_CCB_curso/">
+ <span class="dropdown-text">De la Botánica a la Bioinformática</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../investigacion.html"> 
+<span class="menu-text">Investigación</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../integrantes.html"> 
+<span class="menu-text">Integrantes</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../biosistalks/biosistalks.html"> 
+<span class="menu-text">Biosis Talks</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../material_educativo.html"> 
+<span class="menu-text">Material educativo</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../suplementario.html"> 
+<span class="menu-text">Servicios</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.instagram.com/dbg_unicauca/"> <i class="bi bi-instagram" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.facebook.com/profile.php?id=61583453722433"> <i class="bi bi-facebook" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:bioden@unicauca.edu.co"> <i class="bi bi-envelope" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar"><div class="quarto-margin-header"><div class="margin-header-item">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../../logos/semillero.png" class="img-fluid figure-img"></p>
+<figcaption>Universidad del Cauca</figcaption>
+</figure>
+</div>
+</div></div>
+        
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Capítulo 7: Búsqueda con grep, find y locate</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="capítulo-7-búsqueda-con-grep-find-y-locate" class="level1">
+<h1>Capítulo 7: Búsqueda con grep, find y locate</h1>
+<p>La bioinformática produce <strong>montañas de archivos</strong>: millones de secuencias en un FASTA, cientos de BAM en un directorio de análisis, GFF con miles de features, logs de alineamiento. Encontrar <strong>una secuencia concreta</strong>, <strong>un archivo concreto</strong> o <strong>un patrón concreto</strong> es una de las tareas más repetidas. En este capítulo veremos las tres herramientas principales: <code>grep</code> (buscar dentro de archivos), <code>find</code> (buscar archivos) y <code>locate</code> (buscar archivos en una base de datos preindexada).</p>
+<section id="grep-buscar-patrones-en-texto" class="level2">
+<h2 data-anchor-id="grep-buscar-patrones-en-texto">7.1. <code>grep</code>: buscar patrones en texto</h2>
+<p><code>grep</code> (Global Regular Expression Print) imprime las líneas que cumplen un patrón. Sintaxis básica:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="pp">[</span><span class="ss">opciones</span><span class="pp">]</span> PATRÓN <span class="pp">[</span><span class="ss">ARCHIVO...</span><span class="pp">]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Si no se indica archivo, lee de <code>stdin</code> (perfecto para pipes).</p>
+<section id="opciones-básicas" class="level3">
+<h3 data-anchor-id="opciones-básicas">Opciones básicas</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 30%">
+<col style="width: 34%">
+<col style="width: 34%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Opción</th>
+<th>Función</th>
+<th>Ejemplo</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>-i</code></td>
+<td>Ignora mayúsculas/minúsculas</td>
+<td><code>grep -i gaattc genome.fa</code></td>
+</tr>
+<tr class="even">
+<td><code>-v</code></td>
+<td>Inverso: líneas que NO cumplen</td>
+<td><code>grep -v "^&gt;" seqs.fa</code></td>
+</tr>
+<tr class="odd">
+<td><code>-c</code></td>
+<td>Solo cuenta coincidencias</td>
+<td><code>grep -c gene annot.gff3</code></td>
+</tr>
+<tr class="even">
+<td><code>-n</code></td>
+<td>Muestra número de línea</td>
+<td><code>grep -n BRCA1 genes.txt</code></td>
+</tr>
+<tr class="odd">
+<td><code>-l</code></td>
+<td>Solo nombre de archivos con match</td>
+<td><code>grep -l "TATATA" *.fa</code></td>
+</tr>
+<tr class="even">
+<td><code>-L</code></td>
+<td>Solo archivos SIN match</td>
+<td><code>grep -L "TATATA" *.fa</code></td>
+</tr>
+<tr class="odd">
+<td><code>-r</code> / <code>-R</code></td>
+<td>Recursivo en directorios</td>
+<td><code>grep -r "BRCA1" /data</code></td>
+</tr>
+<tr class="even">
+<td><code>--include</code></td>
+<td>Filtra tipo de archivo en recursivo</td>
+<td><code>grep -r --include=*.fa motif /data</code></td>
+</tr>
+<tr class="odd">
+<td><code>--exclude</code></td>
+<td>Excluye archivos</td>
+<td><code>grep -r --exclude=*.log motif .</code></td>
+</tr>
+<tr class="even">
+<td><code>-w</code></td>
+<td>Palabra completa</td>
+<td><code>grep -w "TP53" genes.txt</code></td>
+</tr>
+<tr class="odd">
+<td><code>-x</code></td>
+<td>Línea completa</td>
+<td><code>grep -x "chr1" cromosomas.lst</code></td>
+</tr>
+<tr class="even">
+<td><code>-o</code></td>
+<td>Solo el match, no la línea</td>
+<td><code>grep -o "GAATTC" genome.fa</code></td>
+</tr>
+<tr class="odd">
+<td><code>-A N</code></td>
+<td>N líneas de contexto <strong>después</strong></td>
+<td><code>grep -A 2 BRCA1 annot.gff3</code></td>
+</tr>
+<tr class="even">
+<td><code>-B N</code></td>
+<td>N líneas de contexto <strong>antes</strong></td>
+<td><code>grep -B 2 BRCA1 annot.gff3</code></td>
+</tr>
+<tr class="odd">
+<td><code>-C N</code></td>
+<td>N líneas de contexto <strong>antes y después</strong></td>
+<td><code>grep -C 3 BRCA1 annot.gff3</code></td>
+</tr>
+<tr class="even">
+<td><code>-e PATRÓN</code></td>
+<td>Múltiples patrones</td>
+<td><code>grep -e BRCA1 -e TP53 genes.txt</code></td>
+</tr>
+<tr class="odd">
+<td><code>-f archivo</code></td>
+<td>Patrones desde un archivo</td>
+<td><code>grep -f patrones.txt genome.fa</code></td>
+</tr>
+<tr class="even">
+<td><code>-E</code></td>
+<td>Regex extendida (egrep)</td>
+<td><code>grep -E "AATT|GGCC" seqs.fa</code></td>
+</tr>
+<tr class="odd">
+<td><code>-F</code></td>
+<td>Búsqueda literal (fgrep)</td>
+<td><code>grep -F "met**al" datos.txt</code></td>
+</tr>
+<tr class="even">
+<td><code>-P</code></td>
+<td>PCRE (Perl Compatible Regex)</td>
+<td><code>grep -P "(?&lt;=BRCA)1"</code></td>
+</tr>
+<tr class="odd">
+<td><code>--color=auto</code></td>
+<td>Resalta el match</td>
+<td><code>grep --color=auto BRCA1 genes.txt</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="ejemplo-buscar-motif-ecori" class="level3">
+<h3 data-anchor-id="ejemplo-buscar-motif-ecori">Ejemplo: buscar motif EcoRI</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-i</span> <span class="at">-o</span> <span class="st">"GAATTC"</span> genome.fa <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>-i</code> ignora mayúsculas (la secuencia podría estar en minúscula), <code>-o</code> imprime solo el match (uno por línea) para que <code>wc -l</code> cuente cada aparición, no cada línea.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Diferencia entre <code>-c</code> y <code>-o | wc -l</code>
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>grep -c</code> cuenta <strong>líneas</strong> con coincidencias. Si en una sola línea hay 3 apariciones del motif, <code>-c</code> cuenta 1, mientras que <code>grep -o | wc -l</code> cuenta 3. Para contar <strong>ocurrencias</strong> usa siempre <code>-o | wc -l</code>.</p>
+</div>
+</div>
+</section>
+<section id="búsqueda-de-genes-en-un-gff" class="level3">
+<h3 data-anchor-id="búsqueda-de-genes-en-un-gff">Búsqueda de genes en un GFF</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-w</span> <span class="st">"BRCA1"</span> annotation.gff3</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>-w</code> evita falsos positivos como <code>BRCA11</code> o <code>BRCA1-like</code>.</p>
+</section>
+<section id="múltiples-patrones" class="level3">
+<h3 data-anchor-id="múltiples-patrones">Múltiples patrones</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-e</span> BRCA1 <span class="at">-e</span> BRCA2 <span class="at">-e</span> TP53 annotation.gff3</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Equivalente con regex extendida:</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-E</span> <span class="st">"BRCA1|BRCA2|TP53"</span> annotation.gff3</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="patrones-desde-un-archivo" class="level3">
+<h3 data-anchor-id="patrones-desde-un-archivo">Patrones desde un archivo</h3>
+<p>Útil cuando tienes 100 IDs en <code>targets.txt</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-F</span> <span class="at">-f</span> targets.txt genes.names <span class="op">&gt;</span> encontrados.txt</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>-F</code> trata los patrones como literales (no regex), más rápido y seguro si los nombres contienen caracteres especiales.</p>
+</section>
+</section>
+<section id="egrep-fgrep-y-grep--e-grep--f" class="level2">
+<h2 data-anchor-id="egrep-fgrep-y-grep--e-grep--f">7.2. <code>egrep</code>, <code>fgrep</code> y <code>grep -E</code> / <code>grep -F</code></h2>
+<p><code>egrep</code> y <code>fgrep</code> son alias históricos:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">egrep</span> <span class="st">"BRCA1|BRCA2"</span> genes.txt</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co"># equivalente a</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-E</span> <span class="st">"BRCA1|BRCA2"</span> genes.txt</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">fgrep</span> <span class="st">"literal_string"</span> archivo</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co"># equivalente a</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-F</span> <span class="st">"literal_string"</span> archivo</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span><code>egrep</code>/<code>fgrep</code> están “deprecated”
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>POSIX marca <code>egrep</code> y <code>fgrep</code> como obsoletos. Sigue funcionando, pero en scripts nuevos prefiere <code>grep -E</code> y <code>grep -F</code>. Es más portable y claro.</p>
+</div>
+</div>
+</section>
+<section id="expresiones-regulares-básicas-en-grep" class="level2">
+<h2 data-anchor-id="expresiones-regulares-básicas-en-grep">7.3. Expresiones regulares básicas en <code>grep</code></h2>
+<p>Aunque <code>grep</code> no es un parser de regex completo sin <code>-E</code>, permite muchos metacaracteres:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Símbolo</th>
+<th>Significado</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>.</code></td>
+<td>Cualquier carácter</td>
+</tr>
+<tr class="even">
+<td><code>*</code></td>
+<td>Cero o más del anterior</td>
+</tr>
+<tr class="odd">
+<td><code>^</code></td>
+<td>Inicio de línea</td>
+</tr>
+<tr class="even">
+<td><code>$</code></td>
+<td>Final de línea</td>
+</tr>
+<tr class="odd">
+<td><code>[abc]</code></td>
+<td>Cualquiera de a, b, c</td>
+</tr>
+<tr class="even">
+<td><code>[^abc]</code></td>
+<td>Ninguno de a, b, c</td>
+</tr>
+<tr class="odd">
+<td><code>[a-z]</code></td>
+<td>Rango</td>
+</tr>
+<tr class="even">
+<td><code>\{n,m\}</code></td>
+<td>Entre n y m repeticiones (con <code>-E</code> sería <code>{n,m}</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>Con <code>-E</code> se añaden <code>+</code>, <code>?</code>, <code>|</code>, <code>()</code>, <code>{}</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Buscar ORF que empiece con ATG y termine con TAG/TAA/TGA</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-E</span> <span class="st">"ATG(...)+(TAG|TAA|TGA)"</span> cds.fa</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Caracteres especiales en regex
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>.</code>, <code>*</code>, <code>+</code>, <code>?</code>, <code>^</code>, <code>$</code>, <code>(</code>, <code>)</code>, <code>[</code>, <code>]</code>, <code>{</code>, <code>}</code>, <code>|</code>, <code>\</code> son especiales. Para buscarlos literalmente, escápalos con <code>\</code> o usa <code>-F</code>.</p>
+</div>
+</div>
+</section>
+<section id="find-buscar-archivos-por-criterios" class="level2">
+<h2 data-anchor-id="find-buscar-archivos-por-criterios">7.4. <code>find</code>: buscar archivos por criterios</h2>
+<p><code>find</code> recorre un árbol de directorios y aplica <strong>filtros</strong>. Sintaxis:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> RUTA <span class="pp">[</span><span class="ss">criterios</span><span class="pp">]</span> <span class="pp">[</span><span class="ss">acciones</span><span class="pp">]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="por-nombre" class="level3">
+<h3 data-anchor-id="por-nombre">Por nombre</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-name</span> <span class="st">"*.fastq"</span>                  <span class="co"># nombre exacto</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> /data <span class="at">-iname</span> <span class="st">"*.FASTQ"</span>             <span class="co"># case insensitive</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-name</span> <span class="st">"*.bam"</span> <span class="at">-o</span> <span class="at">-name</span> <span class="st">"*.bai"</span>   <span class="co"># OR</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="por-tipo" class="level3">
+<h3 data-anchor-id="por-tipo">Por tipo</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Letra</th>
+<th>Tipo</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>f</code></td>
+<td>archivo regular</td>
+</tr>
+<tr class="even">
+<td><code>d</code></td>
+<td>directorio</td>
+</tr>
+<tr class="odd">
+<td><code>l</code></td>
+<td>enlace simbólico</td>
+</tr>
+<tr class="even">
+<td><code>b</code></td>
+<td>dispositivo de bloques</td>
+</tr>
+<tr class="odd">
+<td><code>c</code></td>
+<td>dispositivo de caracteres</td>
+</tr>
+<tr class="even">
+<td><code>p</code></td>
+<td>pipe nominal</td>
+</tr>
+<tr class="odd">
+<td><code>s</code></td>
+<td>socket</td>
+</tr>
+</tbody>
+</table>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-type</span> d <span class="at">-name</span> <span class="st">"resultados"</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> /data <span class="at">-type</span> l                      <span class="co"># enlaces simbólicos rotos o no</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="por-tamaño" class="level3">
+<h3 data-anchor-id="por-tamaño">Por tamaño</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> /data <span class="at">-name</span> <span class="st">"*.bam"</span> <span class="at">-size</span> +1G      <span class="co"># BAMs &gt; 1 GB</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-name</span> <span class="st">"*.fastq"</span> <span class="at">-size</span> <span class="at">-1k</span>        <span class="co"># FASTQ &lt; 1 kB (probablemente vacíos)</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-size</span> +500M <span class="at">-size</span> <span class="at">-2G</span>            <span class="co"># entre 500 MB y 2 GB</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Unidades: <code>c</code> (bytes), <code>k</code> (KiB), <code>M</code> (MiB), <code>G</code> (GiB, por defecto múltiplos de 1024).</p>
+</section>
+<section id="por-tiempo" class="level3">
+<h3 data-anchor-id="por-tiempo">Por tiempo</h3>
+<p><code>find</code> usa tres marcas temporales:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Marca</th>
+<th>Significado</th>
+<th>Opción</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>atime</code> / <code>amin</code></td>
+<td>Último <strong>acceso</strong> (lectura)</td>
+<td><code>-atime -7</code></td>
+</tr>
+<tr class="even">
+<td><code>mtime</code> / <code>mmin</code></td>
+<td>Última <strong>modificación</strong> (escritura)</td>
+<td><code>-mtime -7</code></td>
+</tr>
+<tr class="odd">
+<td><code>ctime</code> / <code>cmin</code></td>
+<td>Último <strong>cambio</strong> (permisos, dueño)</td>
+<td><code>-ctime -7</code></td>
+</tr>
+</tbody>
+</table>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-mtime</span> <span class="at">-1</span>                        <span class="co"># modificados en las últimas 24h</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> /data <span class="at">-mtime</span> +30                   <span class="co"># sin modificar hace más de 30 días</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-mmin</span> <span class="at">-10</span>                        <span class="co"># modificados en los últimos 10 minutos</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>El signo importa
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li><code>-mtime -7</code> → hace <strong>menos</strong> de 7 días (recientes).</li>
+<li><code>-mtime +7</code> → hace <strong>más</strong> de 7 días (antiguos).</li>
+<li><code>-mtime 7</code> → exactamente hace 7 días (raro de usar).</li>
+</ul>
+</div>
+</div>
+</section>
+<section id="por-permisos" class="level3">
+<h3 data-anchor-id="por-permisos">Por permisos</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-perm</span> 755                        <span class="co"># permisos exactos 755</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-perm</span> /u+x                       <span class="co"># cualquier archivo ejecutable por el usuario</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-perm</span> <span class="at">-u+x</span>                       <span class="co"># el usuario SÍ tiene ejecutable (más restrictivo)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="por-usuario-o-grupo" class="level3">
+<h3 data-anchor-id="por-usuario-o-grupo">Por usuario o grupo</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> /data <span class="at">-user</span> ana                    <span class="co"># propiedad de ana</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> /data <span class="at">-group</span> bioinfo               <span class="co"># grupo bioinfo</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> /data <span class="at">-nouser</span>                      <span class="co"># sin usuario válido (IDs huérfanos)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="combinaciones-lógicas" class="level3">
+<h3 data-anchor-id="combinaciones-lógicas">Combinaciones lógicas</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># AND implícito (criterios consecutivos)</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-name</span> <span class="st">"*.bam"</span> <span class="at">-size</span> +1G</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co"># OR explícito</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="dt">\(</span> <span class="at">-name</span> <span class="st">"*.bam"</span> <span class="at">-o</span> <span class="at">-name</span> <span class="st">"*.bai"</span> <span class="dt">\)</span> <span class="at">-size</span> +1G</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co"># NOT</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-name</span> <span class="st">"*.tmp"</span> <span class="at">-not</span> <span class="at">-name</span> <span class="st">"*.tmp.bak"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Paréntesis en <code>find</code>
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Los paréntesis tienen significado para <code>find</code>, pero el shell también los interpreta. Por eso hay que <strong>escaparlos</strong>: <code>\( ... \)</code>. Alternativamente, entrecomillar todo: <code>"(" ... ")"</code>.</p>
+</div>
+</div>
+</section>
+<section id="acciones" class="level3">
+<h3 data-anchor-id="acciones">Acciones</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 38%">
+<col style="width: 61%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Acción</th>
+<th>Descripción</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>-print</code></td>
+<td>Imprime la ruta (default)</td>
+</tr>
+<tr class="even">
+<td><code>-ls</code></td>
+<td>Lista con detalles tipo <code>ls -dils</code></td>
+</tr>
+<tr class="odd">
+<td><code>-delete</code></td>
+<td>Elimina los archivos encontrados</td>
+</tr>
+<tr class="even">
+<td><code>-exec comando {} \;</code></td>
+<td>Ejecuta <code>comando</code> por cada archivo</td>
+</tr>
+<tr class="odd">
+<td><code>-exec comando {} +</code></td>
+<td>Ejecuta <code>comando</code> con <strong>todos</strong> los archivos de una vez</td>
+</tr>
+<tr class="even">
+<td><code>-execdir comando {} \;</code></td>
+<td>Igual que <code>-exec</code> pero desde el directorio del archivo</td>
+</tr>
+<tr class="odd">
+<td><code>-ok comando {} \;</code></td>
+<td>Como <code>-exec</code>, pero pide confirmación</td>
+</tr>
+</tbody>
+</table>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Indexar todos los BAM encontrados</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-name</span> <span class="st">"*.bam"</span> <span class="at">-exec</span> samtools index {} +</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Eliminar logs antiguos</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-name</span> <span class="st">"*.log"</span> <span class="at">-mtime</span> +30 <span class="at">-delete</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Para cada archivo, copiarlo a backup</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> /data <span class="at">-name</span> <span class="st">"*.bam"</span> <span class="at">-exec</span> cp {} /backup/ <span class="dt">\;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span><code>-exec ... {} \;</code> vs <code>-exec ... {} +</code>
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li><code>\;</code> ejecuta el comando una vez por archivo: 1000 archivos → 1000 invocaciones. Lento.</li>
+<li><code>+</code> agrupa todos los archivos en una sola invocación: 1 comando con 1000 argumentos. Rápido.</li>
+</ul>
+<p>Pero <code>+</code> solo funciona si el comando acepta varios archivos como argumentos (como <code>cp</code>, <code>gzip</code>, <code>samtools index</code>). Si el comando requiere un solo archivo a la vez (porque produce salida con nombre derivado del archivo), usa <code>\;</code>.</p>
+<p>Para construir nombres de salida dinámicos con <code>\;</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-name</span> <span class="st">"*.sam"</span> <span class="at">-exec</span> bash <span class="at">-c</span> <span class="st">'</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="st">    samtools view -b "$1" &gt; "${1%.sam}.bam"</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> _ {} <span class="dt">\;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</section>
+<section id="exec-sh--c-...-_" class="level3">
+<h3 data-anchor-id="exec-sh--c-...-_"><code>-exec sh -c '...' _ {} \;</code></h3>
+<p>Cuando necesitas manipular el nombre (extraer prefijo, cambiar extensión, construir rutas de salida), <code>find</code> solo pasa el nombre “tal cual” al comando. La solución es invocar un subshell:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-name</span> <span class="st">"*.sam"</span> <span class="at">-exec</span> sh <span class="at">-c</span> <span class="st">'</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="st">    for f; do</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="st">        bam="${f%.sam}.bam"</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="st">        samtools view -b "$f" &gt; "$bam"</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="st">    done</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="st">'</span> _ {} +</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>sh -c 'script' _ {} +</code> pasa los archivos como <code>$1</code>, <code>$2</code>, … al script. El <code>_</code> ocupa <code>$0</code> (nombre del shell). El bucle <code>for f</code> recorre todos. Mucho más eficiente que un <code>\;</code> por archivo.</p>
+</section>
+</section>
+<section id="locate-búsqueda-en-base-de-datos-indexada" class="level2">
+<h2 data-anchor-id="locate-búsqueda-en-base-de-datos-indexada">7.5. <code>locate</code>: búsqueda en base de datos indexada</h2>
+<p><code>locate</code> consulta una base de datos preconstruida (generalmente <code>/var/lib/mlocate/mlocate.db</code>) que se actualiza diariamente con <code>updatedb</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">locate</span> refseq.fa</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">locate</span> <span class="st">"*.bam"</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="fu">locate</span> <span class="at">-i</span> brca</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Es ** órdenes de magnitud más rápido** que <code>find</code> porque no recorre el disco: solo busca en el índice.</p>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span><code>locate</code> puede estar desactualizado
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Si creaste un archivo hace 5 minutos, <code>locate</code> no lo encuentra hasta que se ejecute <code>updatedb</code>. Para forzar la actualización:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> updatedb</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>En WSL, <code>mlocate</code> puede no estar instalado por defecto:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install mlocate</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> updatedb</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+<section id="cuándo-usar-locate-vs-find" class="level3">
+<h3 data-anchor-id="cuándo-usar-locate-vs-find">Cuándo usar <code>locate</code> vs <code>find</code></h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Situación</th>
+<th>Usa</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Buscar un archivo que existía ayer</td>
+<td><code>locate</code></td>
+</tr>
+<tr class="even">
+<td>Buscar archivos modificados hoy</td>
+<td><code>find -mtime -1</code></td>
+</tr>
+<tr class="odd">
+<td>Buscar por tamaño, permisos, dueño</td>
+<td><code>find</code></td>
+</tr>
+<tr class="even">
+<td>Buscar en todo el sistema rápidamente</td>
+<td><code>locate</code></td>
+</tr>
+<tr class="odd">
+<td>Aplicar una acción a cada archivo</td>
+<td><code>find -exec</code></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="which-whereis-y-type" class="level2">
+<h2 data-anchor-id="which-whereis-y-type">7.6. <code>which</code>, <code>whereis</code> y <code>type</code></h2>
+<section id="which-ruta-del-ejecutable" class="level3">
+<h3 data-anchor-id="which-ruta-del-ejecutable"><code>which</code>: ruta del ejecutable</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">which</span> bwa</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="co"># /usr/local/bin/bwa</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Solo busca en <code>$PATH</code>. Útil para resolver <strong>qué versión</strong> se ejecuta cuando hay varias instaladas.</p>
+</section>
+<section id="whereis-binario-fuente-y-manpage" class="level3">
+<h3 data-anchor-id="whereis-binario-fuente-y-manpage"><code>whereis</code>: binario, fuente y manpage</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">whereis</span> samtools</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="co"># samtools: /usr/bin/samtools /usr/share/man/man1/samtools.1.gz</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="type-cómo-interpreta-bash-el-comando" class="level3">
+<h3 data-anchor-id="type-cómo-interpreta-bash-el-comando"><code>type</code>: cómo interpreta Bash el comando</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="bu">type</span> ls</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="co"># ls is aliased to `ls --color=auto'</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="bu">type</span> grep</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="co"># grep is /usr/bin/grep</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="bu">type</span> cd</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a><span class="co"># cd is a shell builtin</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span><code>type</code> resuelve alias, funciones y builtins
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>type</code> te dice <strong>qué se ejecutará realmente</strong> al escribir un comando: alias, función de shell, builtin o binario en <code>$PATH</code>. Si tienes un alias <code>ll='ls -lAhF'</code>, <code>type ll</code> te lo muestra.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="ejemplos-bioinformáticos" class="level2">
+<h2 data-anchor-id="ejemplos-bioinformáticos">7.7. Ejemplos bioinformáticos</h2>
+<section id="buscar-motif-ecori-gaattc-en-un-fasta" class="level3">
+<h3 data-anchor-id="buscar-motif-ecori-gaattc-en-un-fasta">Buscar motif EcoRI (GAATTC) en un FASTA</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-i</span> <span class="at">-o</span> <span class="st">"GAATTC"</span> genome.fa <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>-o</code> imprime una ocurrencia por línea, <code>wc -l</code> las cuenta. Sin <code>-o</code>, una sola línea con 10 GAATTC contaría como 1.</p>
+</section>
+<section id="encontrar-bams-mayores-a-1-gb" class="level3">
+<h3 data-anchor-id="encontrar-bams-mayores-a-1-gb">Encontrar BAMs mayores a 1 GB</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> /data <span class="at">-name</span> <span class="st">"*.bam"</span> <span class="at">-size</span> +1G</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Para listar con tamaño:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> /data <span class="at">-name</span> <span class="st">"*.bam"</span> <span class="at">-size</span> +1G <span class="at">-exec</span> ls <span class="at">-lh</span> {} +</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="buscar-un-gen-concreto-en-gff" class="level3">
+<h3 data-anchor-id="buscar-un-gen-concreto-en-gff">Buscar un gen concreto en GFF</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-w</span> <span class="st">"BRCA1"</span> annotation.gff3</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>-w</code> evita falsos positivos. Para ver contexto (3 líneas antes y después):</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-C</span> 3 <span class="at">-w</span> <span class="st">"BRCA1"</span> annotation.gff3</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="encontrar-archivos-modificados-hoy" class="level3">
+<h3 data-anchor-id="encontrar-archivos-modificados-hoy">Encontrar archivos modificados hoy</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-mtime</span> <span class="at">-1</span> <span class="at">-type</span> f</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="eliminar-temporales-antiguos" class="level3">
+<h3 data-anchor-id="eliminar-temporales-antiguos">Eliminar temporales antiguos</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-name</span> <span class="st">"*.tmp"</span> <span class="at">-mtime</span> +30 <span class="at">-delete</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="delete-es-irreversible" class="level2 callout-danger">
+<h2 data-anchor-id="delete-es-irreversible"><code>-delete</code> es irreversible</h2>
+<p><code>-delete</code> no pide confirmación y no va a la papelera. <strong>Antes de aplicar <code>-delete</code>, ejecuta el mismo <code>find</code> sin la acción</strong> y revisa la lista:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-name</span> <span class="st">"*.tmp"</span> <span class="at">-mtime</span> +30      <span class="co"># revisa qué archivos aparecerían</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-name</span> <span class="st">"*.tmp"</span> <span class="at">-mtime</span> +30 <span class="at">-delete</span>    <span class="co"># solo si estás seguro</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Nunca uses <code>-delete</code> sobre <code>/</code>, <code>/etc</code>, <code>/usr</code> o cualquier ruta del sistema sin verificar primero.</p>
+</section>
+<section id="ejecutar-fastqc-en-todos-los-.fastq.gz" class="level3">
+<h3 data-anchor-id="ejecutar-fastqc-en-todos-los-.fastq.gz">Ejecutar fastqc en todos los <code>.fastq.gz</code></h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-name</span> <span class="st">"*.fastq.gz"</span> <span class="at">-exec</span> fastqc {} +</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>+</code> en lugar de <code>\;</code> para que <code>fastqc</code> reciba varios archivos a la vez: invocaciones menos y mejor uso de CPU.</p>
+</section>
+<section id="buscar-reads-de-una-muestra-en-muchos-fastq" class="level3">
+<h3 data-anchor-id="buscar-reads-de-una-muestra-en-muchos-fastq">Buscar reads de una muestra en muchos FASTQ</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-l</span> <span class="st">"SRR123456"</span> <span class="pp">*</span>.fastq</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>-l</code> lista solo los archivos que contienen el patrón (no las líneas, que podrían ser millones).</p>
+</section>
+<section id="combinaciones-prácticas" class="level2">
+<h2 data-anchor-id="combinaciones-prácticas">7.8. Combinaciones prácticas</h2>
+<section id="pipeline-encontrar-bams-sin-índice" class="level3">
+<h3 data-anchor-id="pipeline-encontrar-bams-sin-índice">Pipeline: encontrar BAMs sin índice</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-name</span> <span class="st">"*.bam"</span> <span class="kw">|</span> <span class="cf">while</span> <span class="bu">read</span> <span class="va">bam</span><span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">[[</span> <span class="ot">-f</span> <span class="st">"</span><span class="va">${bam}</span><span class="st">.bai"</span> <span class="kw">||</span> <span class="ot">-f</span> <span class="st">"</span><span class="va">${bam</span><span class="op">%</span>.bam<span class="va">}</span><span class="st">.bai"</span> <span class="kw">]]</span> <span class="kw">||</span> <span class="bu">echo</span> <span class="st">"</span><span class="va">$bam</span><span class="st">"</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="buscar-un-oligo-en-muchos-fasta-recursivamente" class="level3">
+<h3 data-anchor-id="buscar-un-oligo-en-muchos-fasta-recursivamente">Buscar un oligo en muchos FASTA recursivamente</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-r</span> <span class="at">-l</span> <span class="at">--include</span><span class="op">=</span><span class="pp">*</span>.fa <span class="st">"ACGTACGTACGT"</span> /data/assembly/</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="listar-archivos-sam-sin-su-bam-correspondiente" class="level3">
+<h3 data-anchor-id="listar-archivos-sam-sin-su-bam-correspondiente">Listar archivos SAM sin su BAM correspondiente</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> . <span class="at">-name</span> <span class="st">"*.sam"</span> <span class="kw">|</span> <span class="cf">while</span> <span class="bu">read</span> <span class="va">s</span><span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">[[</span> <span class="ot">-f</span> <span class="st">"</span><span class="va">${s</span><span class="op">%</span>.sam<span class="va">}</span><span class="st">.bam"</span> <span class="kw">]]</span> <span class="kw">||</span> <span class="bu">echo</span> <span class="st">"</span><span class="va">$s</span><span class="st">"</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>WSL2: permisos y accesos
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>En WSL, <code>/mnt/c/</code>, <code>/mnt/d/</code>… son las unidades de Windows. <code>find /mnt/c -name "*.fastq"</code> funciona pero es <strong>muy lento</strong> (sistema 9P para acceder a NTFS). Si necesitas buscar mucho en datos de Windows, cópialos a <code>~</code> dentro del sistema de archivos de Linux (<code>ext4</code> virtual de WSL) y busca ahí: será 10x más rápido.</p>
+</div>
+</div>
+<hr>
+</section>
+</section>
+<section id="ejercicios" class="level2">
+<h2 data-anchor-id="ejercicios">Ejercicios</h2>
+<section id="ejercicio-1" class="level3">
+<h3 data-anchor-id="ejercicio-1">Ejercicio 1</h3>
+<p>Busca el motif “TATAAA” (TATA box) en un archivo <code>promoters.fa</code>. Debes:</p>
+<ol type="1">
+<li>Mostrar las líneas que contienen el motif con <strong>número de línea</strong> y <strong>2 líneas de contexto</strong>.</li>
+<li>Contar cuántas veces aparece el motif, sin importar la orientación del genoma (usa <code>-i</code>).</li>
+<li>Listar en qué posiciones (número de línea) aparece, sin el contexto.</li>
+</ol>
+</section>
+<section id="ejercicio-2" class="level3">
+<h3 data-anchor-id="ejercicio-2">Ejercicio 2</h3>
+<p>Encuentra todos los archivos <code>.bam</code> y <code>.bai</code> en <code>/data</code> modificados en los últimos 7 días, lista cada uno con su tamaño. El comando esperado usa <code>find ... -mtime -7 -exec ls -lh {} \;</code>.</p>
+</section>
+<section id="ejercicio-3" class="level3">
+<h3 data-anchor-id="ejercicio-3">Ejercicio 3</h3>
+<p>Usa <code>find</code> con <code>-exec</code> para <strong>eliminar</strong> archivos <code>.log</code> en <code>/tmp</code> modificados hace más de 30 días. Muestra el comando correcto. <strong>ADVERTENCIA</strong>: nunca uses <code>-delete</code> con rutas del sistema sin verificar primero la lista.</p>
+<hr>
+</section>
+</section>
+<section id="soluciones" class="level2">
+<h2 data-anchor-id="soluciones">Soluciones</h2>
+<section id="solución-1" class="level3">
+<h3 data-anchor-id="solución-1">Solución 1</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># (a) Mostrar líneas con número y 2 líneas de contexto</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-n</span> <span class="at">-C</span> 2 <span class="at">-i</span> <span class="st">"TATAAA"</span> promoters.fa</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="co"># (b) Contar ocurrencias (no líneas) del motif, ignorando mayúsculas/minúsculas</span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-i</span> <span class="at">-o</span> <span class="st">"TATAAA"</span> promoters.fa <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a><span class="co"># (c) Listar números de línea donde aparece (sin contexto)</span></span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-n</span> <span class="at">-i</span> <span class="st">"TATAAA"</span> promoters.fa <span class="kw">|</span> <span class="fu">cut</span> <span class="at">-d:</span> <span class="at">-f1</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Explicación:</p>
+<ul>
+<li><code>-i</code> ignora mayúsculas/minúsculas: el motif puede aparecer como <code>tataaa</code>, <code>TataaA</code>, etc., y todos los genomas deberían contar.</li>
+<li><code>-n</code> añade el número de línea delante de cada coincidencia.</li>
+<li><code>-C 2</code> muestra 2 líneas antes y 2 después, lo que permite ver qué gen/promotor está alrededor del motif.</li>
+<li><code>-o</code> imprime solo el match (uno por línea) en lugar de la línea completa. Esto permite que <code>wc -l</code> cuente <strong>ocurrencias</strong>, no líneas: si una línea tiene 2 TATA boxes, contará como 2.</li>
+<li><code>cut -d: -f1</code> en la parte (c) extrae la primera columna del formato de salida de <code>grep -n</code>, que es <code>número:línea</code>. Separa por <code>:</code> y se queda con el número.</li>
+</ul>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Versión más robusta del conteo
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Para contar también apariciones en la hebra negativa, donde el motif aparecería como <code>TTTATA</code> (reverso complementario), tendrías que buscar ambos:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="kw">{</span> <span class="fu">grep</span> <span class="at">-i</span> <span class="at">-o</span> <span class="st">"TATAAA"</span> promoters.fa<span class="kw">;</span> <span class="fu">grep</span> <span class="at">-i</span> <span class="at">-o</span> <span class="st">"TTTATA"</span> promoters.fa<span class="kw">;</span> <span class="kw">}</span> <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Esto es una simplificación; para análisis serio de motifs usa herramientas dedicadas (MEME, FIMO).</p>
+</div>
+</div>
+</section>
+<section id="solución-2" class="level3">
+<h3 data-anchor-id="solución-2">Solución 2</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb40"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Buscar .bam y .bai modificados en los últimos 7 días y listar con tamaño</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> /data <span class="dt">\(</span> <span class="at">-name</span> <span class="st">"*.bam"</span> <span class="at">-o</span> <span class="at">-name</span> <span class="st">"*.bai"</span> <span class="dt">\)</span> <span class="at">-type</span> f <span class="at">-mtime</span> <span class="at">-7</span> <span class="at">-exec</span> ls <span class="at">-lh</span> {} <span class="dt">\;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Desglose:</p>
+<ul>
+<li><code>find /data</code> inicia la búsqueda en <code>/data</code> (recursivo por defecto).</li>
+<li><code>\( -name "*.bam" -o -name "*.bai" \)</code> agrupa un OR: archivos que terminen en <code>.bam</code> <strong>o</strong> <code>.bai</code>. Los paréntesis están escapados con <code>\</code> para que <code>find</code> los interprete, no el shell.</li>
+<li><code>-type f</code> restringe a archivos regulares (no directorios ni enlaces).</li>
+<li><code>-mtime -7</code> filtra por modificados hace <strong>menos</strong> de 7 días (24h × 7 = 168 h).</li>
+<li><code>-exec ls -lh {} \;</code> ejecuta <code>ls -lh</code> para cada archivo encontrado, mostrando tamaño legible (-h → “1.2G” en lugar de “1288490188”).</li>
+</ul>
+<p>Salida típica:</p>
+<pre class="text"><code>-rw-r--r-- 1 bioinfo bioinfo 2.1G ene 15 11:30 /data/sample1/aligned.bam
+-rw-r--r-- 1 bioinfo bioinfo 4.5M ene 14 18:22 /data/sample1/aligned.bam.bai
+-rw-r--r-- 1 bioinfo bioinfo 3.8G ene 13 09:15 /data/sample2/aligned.bam</code></pre>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Alternativa más eficiente con <code>+</code>
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb42"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> /data <span class="dt">\(</span> <span class="at">-name</span> <span class="st">"*.bam"</span> <span class="at">-o</span> <span class="at">-name</span> <span class="st">"*.bai"</span> <span class="dt">\)</span> <span class="at">-type</span> f <span class="at">-mtime</span> <span class="at">-7</span> <span class="at">-exec</span> ls <span class="at">-lh</span> {} +</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Con <code>+</code>, <code>ls</code> recibe todos los archivos en una sola invocación: mucho más rápido cuando hay cientos. La salida es similar, aunque los archivos aparecen agrupados por directorio.</p>
+</div>
+</div>
+</section>
+<section id="solución-3" class="level3">
+<h3 data-anchor-id="solución-3">Solución 3</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb43"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="co"># PASO 1 (verificación OBLIGATORIA): listar qué archivos se eliminarían</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> /tmp <span class="at">-name</span> <span class="st">"*.log"</span> <span class="at">-type</span> f <span class="at">-mtime</span> +30 <span class="at">-print</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a><span class="co"># PASO 2 (solo si el listado del paso 1 es correcto): eliminar</span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> /tmp <span class="at">-name</span> <span class="st">"*.log"</span> <span class="at">-type</span> f <span class="at">-mtime</span> +30 <span class="at">-delete</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Alternativa equivalente con <code>-exec rm</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb44"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> /tmp <span class="at">-name</span> <span class="st">"*.log"</span> <span class="at">-type</span> f <span class="at">-mtime</span> +30 <span class="at">-exec</span> rm <span class="at">-v</span> {} +</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Desglose:</p>
+<ul>
+<li><code>/tmp</code> es la ruta donde buscar (relativamente segura, pero revisa igualmente: algunos programas guardan datos ahí).</li>
+<li><code>-name "*.log"</code> filtra por extensión.</li>
+<li><code>-type f</code> evita eliminar directorios que se llamen “algo.log”.</li>
+<li><code>-mtime +30</code> selecciona archivos modificados hace <strong>más</strong> de 30 días.</li>
+<li><code>-delete</code> elimina cada archivo encontrado (sin papelera, sin confirmación).</li>
+<li><code>-exec rm -v {} +</code> hace lo mismo pero con <code>rm -v</code> (verbose): imprime cada archivo borrado. Útil para logs de mantenimiento.</li>
+<li><code>-print</code> en el paso 1 es la acción por defecto, pero lo explicito para que quede claro que es solo un listado.</li>
+</ul>
+</section>
+</section>
+<section id="reglas-de-oro-para--delete" class="level2 callout-danger">
+<h2 data-anchor-id="reglas-de-oro-para--delete">Reglas de oro para <code>-delete</code></h2>
+<ol type="1">
+<li><strong>Nunca</strong> uses <code>-delete</code> sobre <code>/</code>, <code>/etc</code>, <code>/usr</code>, <code>/var</code>, <code>/sys</code>, <code>/proc</code>.</li>
+<li><strong>Siempre</strong> ejecuta primero el <code>find</code> sin <code>-delete</code> y revisa el listado.</li>
+<li><strong>Encierra entre comillas</strong> los patrones: <code>-name "*.log"</code>, no <code>-name *.log</code> (el shell expandiría <code>*</code> antes).</li>
+<li><strong>Verifica el directorio</strong>: en WSL, <code>/tmp</code> es real y se borra al reiniciar WSL. En Linux de servidor, <code>/tmp</code> puede contener datos importantes de otros usuarios.</li>
+</ol>
+</section>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Versión interactiva con <code>-ok</code>
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Si quieres que <code>find</code> pida confirmación <strong>antes de borrar cada archivo</strong>, usa <code>-ok</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb45"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">find</span> /tmp <span class="at">-name</span> <span class="st">"*.log"</span> <span class="at">-mtime</span> +30 <span class="at">-ok</span> rm {} <span class="dt">\;</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="co"># &lt;rm ... /tmp/app.log&gt; ?  → responde y o n</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Más seguro en producción, aunque tedioso si hay muchos archivos.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Resumen del capítulo
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Hemos visto <code>grep</code> con todas sus opciones clave (<code>-i</code>, <code>-v</code>, <code>-c</code>, <code>-n</code>, <code>-l</code>, <code>-r</code>, <code>-w</code>, <code>-x</code>, <code>-o</code>, <code>-A/-B/-C</code>, <code>-e</code>, <code>-f</code>, <code>-E</code>, <code>-F</code>, <code>--color</code>), la equivalencia con <code>egrep</code>/<code>fgrep</code>, las bases de <strong>expresiones regulares</strong>, <code>find</code> con criterios de nombre, tipo, tamaño, tiempo, permisos, dueño y combinaciones lógicas, las acciones <code>-print</code>, <code>-ls</code>, <code>-delete</code>, <code>-exec {} \;</code> y <code>-exec {} +</code> (incluyendo el patrón avanzado <code>sh -c '...' _ {} +</code>), <code>locate</code> para búsquedas indexadas, y <code>which</code>/<code>whereis</code>/<code>type</code> para resolver ejecutables. Con esto ya puedes localizar archivos en cualquier rincón del sistema y encontrar cualquier patrón en cualquier texto. En el Capítulo 8 entraremos en el <strong>procesamiento de texto</strong> con <code>cut</code>, <code>sort</code>, <code>uniq</code>, <code>tr</code>, <code>paste</code> y <code>column</code>.</p>
+</div>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/bioden\.github\.io\/bioden_website\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Semillero de Biología del Desarrollo y Plasticidad Neural © 2025. All content licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Sitio web desarrollado por Xavier Clemente García Cevallos</p>
+</div>   
+    <div class="nav-footer-center">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/bioden">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="mailto:bioden@unicauca.edu.co">
+      <i class="bi bi-envelope" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    <div class="cookie-consent-footer"><a href="#" id="open_preferences_center">Cookie Preferences</a></div></div>
+    <div class="nav-footer-right">
+<p>Made with <a href="https://www.r-project.org/"><img src="https://www.r-project.org/Rlogo.png" alt="R" width="25px"></a> and <a href="https://quarto.org/"><img src="https://quarto.org/quarto.png" alt="Quarto" width="65px"></a>.</p>
+</div>
+  </div>
+</footer>
+
+
+
+
+<script src="../../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

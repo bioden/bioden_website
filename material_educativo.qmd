@@ -10,6 +10,7 @@ listing:
     - material_educativo/curso_r.qmd
     - material_educativo/python_bio.qmd
     - material_educativo/rust.qmd
+    - material_educativo/bash_para_dummies.qmd
   type: grid
   grid-columns: 3
   fields: [image, title, subtitle]

@@ -1,0 +1,930 @@
+---
+title: "Capítulo 17: Pipeline bioinformático integrador (capítulo final)"
+---
+
+# Capítulo 17: Pipeline bioinformático integrador (capítulo final)
+
+A lo largo de 16 capítulos has construido, pieza a pieza, el arsenal completo de Bash: navegación, archivos, permisos, variables, pipes, grep/find, sed, awk, control de flujo, bucles, funciones, arrays, regex y gestión de procesos. **Ahora toca juntar todo**.
+
+En este capítulo final construiremos un **pipeline completo de variant calling para genómica bacteriana**: a partir de reads Illumina pareados, obtener un VCF filtrado listo para anotar. Es un pipeline real, profesional, que un estudiante de tesis podría usar tal cual (con ajustes de parámetros). Cada función del script aplica técnicas que has aprendido en capítulos previos, y al final tendrás una plantilla reutilizable para tus propios proyectos.
+
+::: callout-important
+## Este capítulo es un cierre del curso
+Antes de empezar, repasa mentalmente lo que ya dominas: `set -euo pipefail`, shebang portable, funciones con `local`, validación de argumentos, arrays y `${arr[@]}`, manipulación de strings `${var%...}`, regex con `[[ =~ ]]`, `trap` para limpieza, `wait` para paralelizar, logging con timestamp. **Todo** eso se usa aquí. Si alguna parte te resulta oscura, vuelve al capítulo correspondiente antes de seguir.
+:::
+
+## 17.1. Por qué los pipelines son esenciales en bioinformática moderna
+
+Un análisis bioinformático típico no es un comando: es **una cadena de 10 pasos** donde cada uno consume la salida del anterior y produce la entrada del siguiente. Hacerlo a mano tiene problemas serios:
+
+- **Reproducibilidad**: si hoy ejecutas los pasos a mano, dentro de un año no recordarás qué flags usaste.
+- **Trazabilidad**: si una muestra da resultados raros, ¿en qué paso falló?
+- **Automatización**: procesar 50 muestras a mano es imposible.
+- **Limpieza**: sin `trap`, los archivos temporales se acumulan.
+- **Robustez**: si `bwa mem` falla a mitad, sin `set -e` el pipeline seguiría como si nada.
+
+Un **pipeline** es un script que codifica todos los pasos con sus parámetros, validationes y manejo de errores. Es el equivalente bioinformático de una receta de cocina escrita: cualquiera puede reproducir el análisis y obtener resultados idénticos.
+
+Herramientas como **Nextflow** y **Snakemake** llevan esta idea a nivel industrial (pipelines reproducibles, distribuidos en clusters, con contenedores). Pero escribir tu propio pipeline Bash es la mejor forma de **entender** qué pasa dentro. Cuando des el salto a Nextflow, sabrás exactamente qué modularizar.
+
+## 17.2. El pipeline que vamos a construir
+
+**Objetivo**: variant calling de genómica bacteriana a partir de reads Illumina pareados.
+
+**Pasos**:
+
+1. **Control de calidad** (FastQC) sobre reads R1 y R2.
+2. **Trimming y filtrado** de reads (fastp).
+3. **Indexar genoma de referencia** con BWA (si no está indexado).
+4. **Alinear reads** al genoma (`bwa mem`).
+5. **Convertir SAM a BAM y ordenar** (samtools).
+6. **Indexar BAM** (`samtools index`).
+7. **Marcar duplicados** (`samtools markadp`).
+8. **Llamar variantes** (`bcftools mpileup + call`).
+9. **Filtrar variantes** por calidad (`bcftools filter`).
+10. **Generar reporte resumen** (estadísticas del VCF).
+
+**Herramientas** (todas instalables con bioconda):
+
+```bash
+mamba install -c bioconda -c conda-forge \
+    fastqc=0.12.1 fastp=0.23.4 bwa=0.7.17 \
+    samtools=1.18 bcftools=1.18 -y
+```
+
+## 17.3. Buenas prácticas que aplicaremos
+
+Recordatorio de todo lo aprendido:
+
+- `set -euo pipefail` para abortar en errores.
+- Shebang `#!/usr/bin/env bash` para portabilidad.
+- Validación de argumentos al inicio.
+- Funciones para modularizar (una función = una tarea).
+- Variables `local` en cada función.
+- Logging con timestamps a stderr.
+- `trap` para limpieza de temporales.
+- Exit codes significativos (0=ok, >0=códigos distintos de error).
+- Arrays para construir argumentos dinámicos.
+- Manipulación de strings para construir nombres de archivo.
+- Documentación con comentarios.
+
+## 17.4. Estructura del script
+
+```
+#!/usr/bin/env bash
+# 1. Cabecera y configuración
+# 2. Constantes y variables globales
+# 3. Funciones de utilidad (log, die, check_dependency, ensure_dir)
+# 4. Funciones para cada paso del pipeline
+# 5. Función main() que orquesta todo
+# 6. Validación de argumentos
+# 7. Llamada a main "$@"
+```
+
+## 17.5. El script completo
+
+A continuación el pipeline **completo y comentado**. Cópialo en `pipeline_variant_calling.sh`, dale permisos de ejecución (`chmod +x`), y ya tienes un pipeline profesional.
+
+```bash
+#!/usr/bin/env bash
+# pipeline_variant_calling.sh
+# ============================================================
+# Pipeline de variant calling para genómica bacteriana
+# Reads Illumina pareados -> VCF filtrado
+#
+# Uso:
+#   ./pipeline_variant_calling.sh <sample_name> <R1.fq.gz> <R2.fq.gz>
+#
+# Requiere: fastqc, fastp, bwa, samtools, bcftools
+# ============================================================
+
+# --- 1. Configuración global --------------------------------
+set -euo pipefail
+
+# Constantes: TODO configurable debería vivir aquí arriba
+THREADS="${THREADS:-4}"
+REF="${REF:-ref.fa}"                  # genoma de referencia
+MIN_QUAL="${MIN_QUAL:-30}"            # calidad mínima para variantes
+OUTDIR="${OUTDIR:-resultados}"        # directorio raíz de resultados
+MIN_COV="${MIN_COV:-10}"              # cobertura mínima para llamar
+
+# Cargar configuración externa si existe (ver ejercicio 1)
+CONFIG_FILE="${CONFIG_FILE:-config.conf}"
+[[ -f "$CONFIG_FILE" ]] && source "$CONFIG_FILE"
+
+# --- 2. Funciones de utilidad -------------------------------
+
+# Logging con timestamp a stderr (libera stdout para datos)
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" >&2
+}
+
+# Error fatal: loguea y sale con código
+die() {
+    log "ERROR: $*"
+    exit "${2:-1}"
+}
+
+# Verifica que un comando está disponible
+check_dependency() {
+    local cmd=$1
+    command -v "$cmd" >/dev/null 2>&1 \
+        || die "Dependencia no instalada: '$cmd'. Instala con: mamba install -c bioconda $cmd"
+}
+
+# Crea directorio si no existe
+ensure_dir() {
+    local d=$1
+    [[ -d "$d" ]] || mkdir -p "$d"
+}
+
+# --- 3. Limpieza con trap -----------------------------------
+# Mantenemos una lista de temporales; el trap los borra al salir
+TEMPFILES=()
+cleanup() {
+    if [[ ${#TEMPFILES[@]} -gt 0 ]]; then
+        log "Limpiando ${#TEMPFILES[@]} archivo(s) temporal(es)..."
+        rm -f "${TEMPFILES[@]}"
+    fi
+}
+trap cleanup EXIT INT TERM
+
+# Registra un archivo como temporal (se borrará al salir)
+register_temp() {
+    TEMPFILES+=("$1")
+}
+
+# --- 4. Funciones por paso del pipeline ---------------------
+
+# 4.1. Control de calidad con FastQC
+run_fastqc() {
+    local sample=$1 r1=$2 r2=$3 outdir=$4
+    log "FastQC para muestra $sample"
+    ensure_dir "$outdir"
+    fastqc -q -t "$THREADS" -o "$outdir" "$r1" "$r2" \
+        || die "FastQC falló para $sample"
+    log "FastQC OK -> $outdir"
+}
+
+# 4.2. Trimming con fastp
+run_fastp() {
+    local sample=$1 r1=$2 r2=$3 outdir=$4
+    local trimmed_r1="$outdir/${sample}_trimmed_R1.fq.gz"
+    local trimmed_r2="$outdir/${sample}_trimmed_R2.fq.gz"
+    local html="$outdir/${sample}_fastp.html"
+    local json="$outdir/${sample}_fastp.json"
+
+    log "Trimming con fastp para muestra $sample"
+    fastp -i "$r1" -I "$r2" \
+          -o "$trimmed_r1" -O "$trimmed_r2" \
+          --html "$html" --json "$json" \
+          --detect_adapter_for_pe \
+          --cut_front --cut_tail \
+          --qualified_quality_phred 20 \
+          --length_required 50 \
+          --thread "$THREADS" \
+        || die "fastp falló para $sample"
+
+    # Devolver rutas de salida via stdout (capturable con $())
+    echo "$trimmed_r1"
+    echo "$trimmed_r2"
+}
+
+# 4.3. Indexar referencia (solo si no está indexada)
+index_reference() {
+    local ref=$1
+    if [[ ! -f "${ref}.bwt" ]]; then
+        log "Indexando referencia $ref (primera vez)"
+        bwa index "$ref" || die "bwa index falló"
+    else
+        log "Referencia ya indexada: ${ref}.bwt existe"
+    fi
+    if [[ ! -f "${ref}.fai" ]]; then
+        log "Creando índice fai para samtools"
+        samtools faidx "$ref" || die "samtools faidx falló"
+    fi
+}
+
+# 4.4. Alinear reads con bwa mem
+run_alignment() {
+    local sample=$1 r1=$2 r2=$3 ref=$4 sam_out=$5
+    log "Alineando muestra $sample con bwa mem"
+
+    # Construir read group
+    local rg="@RG\\tID:${sample}\\tSM:${sample}\\tPL:ILLUMINA"
+
+    # Construir argumentos dinámicamente con un array
+    declare -a bwa_args
+    bwa_args+=("-t" "$THREADS")
+    bwa_args+=("-R" "$rg")
+    bwa_args+=("-M")             # marcador para Picard compatibility
+    bwa_args+=("$ref" "$r1" "$r2")
+
+    # Lanzar bwa y guardar SAM
+    bwa mem "${bwa_args[@]}" > "$sam_out" 2> "${sam_out}.bwa.log" \
+        || die "bwa mem falló para $sample"
+    log "Alineamiento OK -> $sam_out"
+}
+
+# 4.5. Convertir SAM a BAM y ordenar
+sort_and_index_bam() {
+    local sample=$1 sam_in=$2 bam_out=$3
+    log "Convirtiendo y ordenando BAM para $sample"
+
+    # samtools view (SAM->BAM) | samtools sort
+    samtools view -@ "$THREADS" -bS "$sam_in" \
+        | samtools sort -@ "$THREADS" -o "$bam_out" - \
+        || die "samtools sort falló para $sample"
+
+    # Indexar el BAM ordenado
+    samtools index -b "$bam_out" || die "samtools index falló"
+    log "BAM ordenado e indexado -> $bam_out"
+}
+
+# 4.6. Marcar duplicados (samtools markadp, sin Picard)
+mark_duplicates() {
+    local sample=$1 bam_in=$2 bam_out=$3
+    log "Marcando duplicados para $sample"
+    # -M: incluye métricas en stderr; usamos samtools markadp (>= 1.18)
+    samtools markadp -@ "$THREADS" "$bam_in" > "$bam_out" \
+        || die "samtools markadp falló para $sample"
+    samtools index -b "$bam_out"
+    log "Duplicados marcados -> $bam_out"
+}
+
+# 4.7. Llamar variantes con bcftools mpileup + call
+call_variants() {
+    local sample=$1 bam=$2 ref=$3 vcf_out=$4
+    log "Llamando variantes para $sample"
+
+    # Pileup → llamada: bcftools mpileup | bcftools call
+    bcftools mpileup -f "$ref" -q "$MIN_QUAL" -Q "$MIN_QUAL" "$bam" \
+        | bcftools call -mv -Oz -o "$vcf_out" \
+        || die "bcftools call falló para $sample"
+
+    # Indexar VCF comprimido
+    bcftools index -t "$vcf_out" || die "bcftools index falló"
+    log "Variantes llamadas -> $vcf_out"
+}
+
+# 4.8. Filtrar variantes por calidad
+filter_variants() {
+    local sample=$1 vcf_in=$2 vcf_out=$3
+    log "Filtrando variantes para $sample"
+
+    # Filtro: QUAL >= MIN_QUAL AND DP >= MIN_COV
+    bcftools filter -i "QUAL>=$MIN_QUAL && DP>=$MIN_COV" \
+        -Oz -o "$vcf_out" "$vcf_in" \
+        || die "bcftools filter falló para $sample"
+
+    bcftools index -t "$vcf_out"
+    log "Variantes filtradas -> $vcf_out"
+}
+
+# 4.9. Generar reporte resumen
+generate_report() {
+    local sample=$1 vcf=$2 outdir=$3
+    local report="$outdir/${sample}_report.txt"
+
+    log "Generando reporte para $sample"
+
+    {
+        echo "=== Reporte de Variant Calling ==="
+        echo "Muestra: $sample"
+        echo "Fecha:   $(date '+%Y-%m-%d %H:%M:%S')"
+        echo ""
+        echo "Archivo VCF: $vcf"
+        echo ""
+        echo "Estadísticas del VCF:"
+        bcftools stats "$vcf" | grep -E "^SN|^ST"
+        echo ""
+        echo "Primeras 10 variantes:"
+        bcftools view "$vcf" | grep -v "^#" | head -n 10
+        echo ""
+        echo "Total de variantes:"
+        bcftools view "$vcf" | grep -v "^#" | wc -l
+    } > "$report"
+
+    log "Reporte generado -> $report"
+}
+
+# --- 5. Función principal -----------------------------------
+main() {
+    local sample r1 r2 sample_dir
+
+    # --- Validación de argumentos ---
+    if [[ $# -lt 3 ]]; then
+        cat >&2 <<EOF
+Uso: $0 <sample_name> <R1.fq.gz> <R2.fq.gz>
+
+Variables de entorno configurables:
+  THREADS   (default 4)    Número de threads
+  REF       (default ref.fa) Genoma de referencia
+  MIN_QUAL  (default 30)   Calidad mínima para variantes
+  MIN_COV   (default 10)   Cobertura mínima para llamar
+  OUTDIR    (default resultados) Directorio de salida
+  CONFIG_FILE (opcional)   Archivo a sourcear con variables
+
+Ejemplo:
+  $0 muestra_001 reads_R1.fastq.gz reads_R2.fastq.gz
+EOF
+        exit 1
+    fi
+
+    sample=$1
+    r1=$2
+    r2=$3
+    sample_dir="$OUTDIR/$sample"
+
+    # --- Validaciones iniciales ---
+    log "Validando entorno y entradas"
+
+    # Comprobar herramientas
+    for tool in fastqc fastp bwa samtools bcftools; do
+        check_dependency "$tool"
+    done
+
+    # Comprobar entradas
+    [[ -f "$r1" ]] || die "No existe R1: $r1"
+    [[ -f "$r2" ]] || die "No existe R2: $r2"
+    [[ -f "$REF" ]] || die "No existe referencia: $REF"
+
+    # Comprobar espacio en disco (al menos 10 GB)
+    local avail_kb
+    avail_kb=$(df -k "$(dirname "$OUTDIR")" | awk 'NR==2 {print $4}')
+    if (( avail_kb < 10485760 )); then
+        die "Espacio insuficiente: $((avail_kb/1024)) MB disponibles, necesarios 10 GB" 2
+    fi
+
+    # Crear estructura de directorios
+    ensure_dir "$sample_dir"
+    ensure_dir "$sample_dir/fastqc"
+    ensure_dir "$sample_dir/trimmed"
+    ensure_dir "$sample_dir/bam"
+    ensure_dir "$sample_dir/vcf"
+
+    # --- Pipeline ---
+
+    # Paso 1: FastQC
+    run_fastqc "$sample" "$r1" "$r2" "$sample_dir/fastqc"
+
+    # Paso 2: fastp (trimming)
+    local trimmed
+    trimmed=$(run_fastp "$sample" "$r1" "$r2" "$sample_dir/trimmed")
+    local trimmed_r1 trimmed_r2
+    trimmed_r1=$(echo "$trimmed" | sed -n 1p)
+    trimmed_r2=$(echo "$trimmed" | sed -n 2p)
+
+    # Paso 3: Indexar referencia (idempotente)
+    index_reference "$REF"
+
+    # Paso 4: Alinear
+    local sam="$sample_dir/bam/${sample}.sam"
+    run_alignment "$sample" "$trimmed_r1" "$trimmed_r2" "$REF" "$sam"
+    register_temp "$sam"   # el SAM se borra al final
+
+    # Paso 5: SAM → BAM ordenado + index
+    local bam_sorted="$sample_dir/bam/${sample}.sorted.bam"
+    sort_and_index_bam "$sample" "$sam" "$bam_sorted"
+
+    # Paso 6: Marcar duplicados
+    local bam_dedup="$sample_dir/bam/${sample}.dedup.bam"
+    mark_duplicates "$sample" "$bam_sorted" "$bam_dedup"
+    register_temp "$bam_sorted"   # el sorted sin dedup se borra
+
+    # Paso 7: Llamar variantes
+    local vcf_raw="$sample_dir/vcf/${sample}.raw.vcf.gz"
+    call_variants "$sample" "$bam_dedup" "$REF" "$vcf_raw"
+
+    # Paso 8: Filtrar variantes
+    local vcf_final="$sample_dir/vcf/${sample}.final.vcf.gz"
+    filter_variants "$sample" "$vcf_raw" "$vcf_final"
+
+    # Paso 9: Reporte
+    generate_report "$sample" "$vcf_final" "$sample_dir"
+
+    # --- Resumen final ---
+    log "=== Pipeline completado para muestra $sample ==="
+    log "Resultados en: $sample_dir"
+    log "VCF final: $vcf_final"
+    log "Reporte:   $sample_dir/${sample}_report.txt"
+}
+
+# --- 6. Llamada a main --------------------------------------
+# Solo se ejecuta si el script se llama directamente (no con source)
+main "$@"
+```
+
+::: callout-note
+## Cómo leer este script
+No intentes entenderlo todo de golpe. Empieza por `main` (al final del script) y ve "llamando" cada función en orden. Cada función es independiente y tiene un propósito claro. Si alguna parte te resulta oscura, vuelve al capítulo correspondiente:
+
+- `set -euo pipefail` → capítulo 11 (control de flujo).
+- `local`, `log`, `die` → capítulo 13 (funciones).
+- `declare -a bwa_args`, `${bwa_args[@]}` → capítulo 14 (arrays).
+- `[[ -f ... ]]`, `${var%.sam}` → capítulos 11 y 14.
+- `trap cleanup EXIT` → capítulo 16 (procesos).
+- `bcftools filter -i "QUAL>=..."` → capítulo 15 (regex no, pero filtrado de campos).
+:::
+
+## 17.6. Cómo ejecutarlo
+
+```bash
+# Dar permisos de ejecución
+chmod +x pipeline_variant_calling.sh
+
+# Ejecución básica
+./pipeline_variant_calling.sh muestra_001 reads_R1.fastq.gz reads_R2.fastq.gz
+
+# Con más threads y referencia custom
+THREADS=8 REF=/data/ref/microbial.fa ./pipeline_variant_calling.sh \
+    muestra_001 reads_R1.fastq.gz reads_R2.fastq.gz
+
+# Lanzarlo en background con nohup (capítulo 16)
+nohup ./pipeline_variant_calling.sh muestra_001 R1.fq.gz R2.fq.gz \
+    > pipeline.log 2>&1 &
+echo "PID: $!"
+```
+
+## 17.7. Verificación de resultados
+
+```bash
+# Ver estructura de salida (instala tree si no lo tienes)
+tree resultados/muestra_001/
+```
+
+```text
+resultados/muestra_001/
+├── bam
+│   ├── muestra_001.dedup.bam
+│   ├── muestra_001.dedup.bam.bai
+│   ├── muestra_001.sorted.bam
+│   ├── muestra_001.sorted.bam.bai
+│   └── muestra_001.sam
+├── fastqc
+│   ├── reads_R1_fastqc.html
+│   ├── reads_R1_fastqc.zip
+│   ├── reads_R2_fastqc.html
+│   └── reads_R2_fastqc.zip
+├── muestra_001_report.txt
+├── trimmed
+│   ├── muestra_001_fastp.html
+│   ├── muestra_001_fastp.json
+│   ├── muestra_001_trimmed_R1.fq.gz
+│   └── muestra_001_trimmed_R2.fq.gz
+└── vcf
+    ├── muestra_001.final.vcf.gz
+    ├── muestra_001.final.vcf.gz.tbi
+    ├── muestra_001.raw.vcf.gz
+    └── muestra_001.raw.vcf.gz.tbi
+```
+
+```bash
+# Cabecera y primeras variantes del VCF final
+zcat resultados/muestra_001/vcf/muestra_001.final.vcf.gz | head -n 30
+
+# Contar variantes finales
+bcftools view resultados/muestra_001/vcf/muestra_001.final.vcf.gz \
+    | grep -v "^#" | wc -l
+```
+
+```text
+342
+```
+
+```bash
+# Ver el reporte
+cat resultados/muestra_001/muestra_001_report.txt
+```
+
+## 17.8. Mejoras posibles
+
+Este pipeline es **un punto de partida**, no un producto final. Algunas mejoras:
+
+- **Paralelización**: usar `xargs -P 4` o **GNU parallel** para procesar varias muestras a la vez.
+- **Cluster HPC**: convertir cada paso en un job de **SLURM** con `sbatch` (cada paso espera a que termine el anterior con dependencias).
+- **Nextflow / Snakemake**: cuando tengas 30 muestras y 5 herramientas distintas, estos orquestadores son superiores a Bash.
+- **Contenerización**: Docker o Singularity para garantizar reproducibilidad (las versiones exactas de samtools, bcftools, etc.).
+- **Tracking de versiones**: `conda`/`mamba` con environments congelados.
+- **MultiQC**: agregación de reportes FastQC/fastp en un único HTML.
+- **Anotación funcional**: `snpEff` o `bcftools csq` para anotar variantes con genes.
+
+::: callout-tip
+## El siguiente paso natural: Snakemake
+Bash es perfecto para entender la lógica de los pipelines. Cuando tus proyectos crezcan, **Snakemake** es la opción más popular en bioinformática: define reglas con entradas/salidas, y el sistema resuelve el DAG automáticamente. Migrar de tu pipeline Bash a Snakemake es directo: cada función de Bash se convierte en una `rule` de Snakemake.
+:::
+
+## 17.9. Anexo: script de instalación del entorno
+
+Para garantizar reproducibilidad, here un script que crea un environment conda con todas las versiones fijadas:
+
+```bash
+#!/usr/bin/env bash
+# setup_environment.sh
+# Crea un environment conda con todas las dependencias del pipeline
+
+set -euo pipefail
+
+ENV_NAME="${1:-variant_calling}"
+
+# mamba es más rápido que conda; instálalo si no lo tienes:
+# conda install -n base -c conda-forge mamba -y
+
+log() { echo "[$(date '+%H:%M:%S')] $*"; }
+
+log "Creando environment '$ENV_NAME'..."
+mamba create -n "$ENV_NAME" -c bioconda -c conda-forge \
+    fastqc=0.12.1 \
+    fastp=0.23.4 \
+    bwa=0.7.17 \
+    samtools=1.18 \
+    bcftools=1.18 \
+    -y
+
+log "Activando environment..."
+# En un script, hay que usar conda activate en el shell padre;
+# esto solo funciona si lo sourceas: source setup_environment.sh
+# Para uso interactivo, ejecuta manualmente: conda activate variant_calling
+
+log "Verificando instalaciones..."
+for tool in fastqc fastp bwa samtools bcftools; do
+    if command -v "$tool" >/dev/null 2>&1; then
+        log "  $tool: OK"
+    else
+        log "  $tool: FALTA (¿activaste el environment?)"
+    fi
+done
+
+log "Para activar manualmente: conda activate $ENV_NAME"
+```
+
+Uso:
+
+```bash
+chmod +x setup_environment.sh
+./setup_environment.sh variant_calling
+conda activate variant_calling
+```
+
+## 17.10. Ejercicios
+
+### Ejercicio 1
+
+Modifica el pipeline para que acepte un **archivo de configuración** `config.conf` con variables como:
+
+```text
+THREADS=8
+REF=/data/ref/microbial.fa
+MIN_QUAL=30
+MIN_COV=15
+OUTDIR=/data/resultados
+```
+
+Cárgalo con `source config.conf` al inicio del script (antes de definir las constantes), de forma que los valores del config **solo se apliquen si la variable de entorno no estaba ya definida**. Documenta el orden de prioridad: (1) variable de entorno explícita, (2) config.conf, (3) valor por defecto del script.
+
+### Ejercicio 2
+
+Agrega al pipeline una función `validate_inputs()` que se ejecute **antes de empezar el pipeline real** y verifique:
+
+- (a) Las herramientas están instaladas (`command -v fastqc`, etc.).
+- (b) El archivo de referencia existe y está indexado (`$REF`, `$REF.fai`, `$REF.bwt`).
+- (c) Los reads R1 y R2 existen y no están vacíos.
+- (d) Hay espacio suficiente en disco (estima el tamaño necesario como 5× el tamaño total de los reads y compara con `df`).
+
+La función debe salir con **códigos distintos** para cada tipo de error: 10 (herramientas), 20 (referencia), 30 (reads), 40 (espacio). Llama a esta función en `main` antes de cualquier paso del pipeline.
+
+### Ejercicio 3
+
+Convierte el pipeline para procesar **múltiples muestras en paralelo**. Toma como entrada un archivo `samples.tsv` con columnas `sample_name`, `R1_path`, `R2_path` (separadas por tab):
+
+```text
+sample_name	R1_path	R2_path
+muestra_001	data/m1_R1.fq.gz	data/m1_R2.fq.gz
+muestra_002	data/m2_R1.fq.gz	data/m2_R2.fq.gz
+muestra_003	data/m3_R1.fq.gz	data/m3_R2.fq.gz
+muestra_004	data/m4_R1.fq.gz	data/m4_R2.fq.gz
+muestra_005	data/m5_R1.fq.gz	data/m5_R2.fq.gz
+```
+
+Para cada muestra, lanza el pipeline en background con `&` **limitando a 4 procesos simultáneos** (usando un contador o `xargs -P 4`). Esperar con `wait`. Mostrar progreso: "Lanzando muestra X", "Muestra X completada", "Quedan N muestras".
+
+## 17.11. Soluciones
+
+### Solución 1
+
+```bash
+#!/usr/bin/env bash
+# pipeline_con_config.sh
+
+set -euo pipefail
+
+# --- Orden de prioridad de configuración --------------------
+# 1. Variable de entorno explícita (THREADS=8 ./script.sh ...)
+# 2. config.conf (sourceado si existe)
+# 3. Defaults en el script
+# La técnica: asignar default si la variable NO está ya definida
+
+# Valores por defecto (solo si no están definidas)
+: "${THREADS:=4}"
+: "${REF:=ref.fa}"
+: "${MIN_QUAL:=30}"
+: "${MIN_COV:=10}"
+: "${OUTDIR:=resultados}"
+
+# Cargar config.conf si existe
+# (sobreescribe los defaults de arriba, PERO NO las variables de entorno
+#  si el config usa también la forma : "${VAR:=default}")
+CONFIG_FILE="${CONFIG_FILE:-config.conf}"
+if [[ -f "$CONFIG_FILE" ]]; then
+    echo "Cargando $CONFIG_FILE" >&2
+    source "$CONFIG_FILE"
+fi
+
+# Para garantizar que config.conf respete vars de entorno ya definidas,
+# el config.conf debería usar la misma sintaxis:
+#   : "${THREADS:=8}"
+#   : "${REF:=/data/ref.fa}"
+# ...en lugar de
+#   THREADS=8
+#   REF=/data/ref.fa
+# (esto último sobreescribiría las vars de entorno)
+
+echo "Configuración activa:"
+echo "  THREADS=$THREADS"
+echo "  REF=$REF"
+echo "  MIN_QUAL=$MIN_QUAL"
+echo "  MIN_COV=$MIN_COV"
+echo "  OUTDIR=$OUTDIR"
+```
+
+Y un `config.conf` de ejemplo (con la sintaxis correcta):
+
+```bash
+# config.conf
+: "${THREADS:=8}"
+: "${REF:=/data/ref/microbial.fa}"
+: "${MIN_QUAL:=30}"
+: "${MIN_COV:=15}"
+: "${OUTDIR:=/data/resultados}"
+```
+
+Comentarios:
+
+- `: "${VAR:=default}"` es el patrón idiomático de Bash para "asignar default si no definida". El `:` es un no-op que evalúa sus argumentos; la expansión `${VAR:=default}` asigna `default` a `VAR` si está vacía o no existe, y la expansión resultante se descarta por `:`.
+- `source "$CONFIG_FILE"` ejecuta el archivo como si fuera parte del script. Cuidado: esto es **arbitrario código**. Solo carga configs en los que confíes.
+- Para que el config **no** sobreescriba una variable de entorno ya definida, debe usar también la forma `: "${VAR:=default}"`. Si usara `VAR=valor` directo, machacaría lo que viniera del entorno.
+- Orden efectivo: defaults del script → `source config.conf` → vars de entorno (que al haberse cargado antes del `source`, ya estaban definidas, así que el `:=` del config no las pisa).
+
+### Solución 2
+
+```bash
+#!/usr/bin/env bash
+# validate_inputs.sh
+
+set -euo pipefail
+
+# Códigos de error por categoría
+ERR_TOOLS=10
+ERR_REF=20
+ERR_READS=30
+ERR_SPACE=40
+
+validate_inputs() {
+    local r1=$1 r2=$2
+
+    log "Validando entorno y entradas..."
+
+    # (a) Herramientas
+    local missing=()
+    for tool in fastqc fastp bwa samtools bcftools; do
+        if ! command -v "$tool" >/dev/null 2>&1; then
+            missing+=("$tool")
+        fi
+    done
+    if [[ ${#missing[@]} -gt 0 ]]; then
+        log "Faltan herramientas: ${missing[*]}"
+        log "Instala con: mamba install -c bioconda ${missing[*]}"
+        return "$ERR_TOOLS"
+    fi
+    log "  Herramientas: OK"
+
+    # (b) Referencia
+    if [[ ! -f "$REF" ]]; then
+        log "Referencia no existe: $REF"
+        return "$ERR_REF"
+    fi
+    if [[ ! -f "${REF}.fai" ]]; then
+        log "Falta índice fai para $REF. Creando con samtools faidx..."
+        samtools faidx "$REF" || return "$ERR_REF"
+    fi
+    if [[ ! -f "${REF}.bwt" ]]; then
+        log "Falta índice BWA para $REF. Creando con bwa index..."
+        bwa index "$REF" || return "$ERR_REF"
+    fi
+    log "  Referencia: OK"
+
+    # (c) Reads
+    if [[ ! -f "$r1" || ! -s "$r1" ]]; then
+        log "R1 no existe o está vacío: $r1"
+        return "$ERR_READS"
+    fi
+    if [[ ! -f "$r2" || ! -s "$r2" ]]; then
+        log "R2 no existe o está vacío: $r2"
+        return "$ERR_READS"
+    fi
+    log "  Reads: OK"
+
+    # (d) Espacio en disco: estimar 5x tamaño total de reads
+    local size_r1 size_r2 total_reads
+    size_r1=$(stat --format=%s "$r1")
+    size_r2=$(stat --format=%s "$r2")
+    total_reads=$((size_r1 + size_r2))
+    local needed=$((total_reads * 5))
+    local avail
+    avail=$(df -k "$(dirname "$OUTDIR")" | awk 'NR==2 {print $4}')
+    avail=$((avail * 1024))   # convertir a bytes (df -k está en KB)
+
+    if (( avail < needed )); then
+        log "Espacio insuficiente:"
+        log "  Disponible: $((avail / 1024 / 1024)) MB"
+        log "  Necesario:  $((needed / 1024 / 1024)) MB (5x tamaño reads)"
+        return "$ERR_SPACE"
+    fi
+    log "  Espacio en disco: OK ($((avail / 1024 / 1024)) MB disponibles)"
+
+    return 0
+}
+
+# Ejemplo de uso desde main
+main() {
+    local r1=$1 r2=$2
+    validate_inputs "$r1" "$r2"
+    local rc=$?
+    if (( rc != 0 )); then
+        log "Validación fallida con código $rc"
+        exit "$rc"
+    fi
+    log "Validación OK. Iniciando pipeline..."
+    # ... resto del pipeline ...
+}
+
+main "$@"
+```
+
+Comentarios:
+
+- Los códigos de error **agrupados por categoría** (10, 20, 30, 40) permiten que el caller sepa qué tipo de problema hubo sin parsear logs. Si el pipeline falla con 20, sabes que fue la referencia sin necesidad de leer el log.
+- `command -v "$tool" >/dev/null 2>&1` es la forma POSIX de "¿existe este comando?". Más fiable que `which` (que puede no estar instalado).
+- `samtools faidx` y `bwa index` **se ejecutan** si faltan los índices, en lugar de fallar. Esto hace el pipeline más robusto (idempotente).
+- `stat --format=%s` devuelve el tamaño en bytes. En macOS usa `stat -f%z`.
+- `df -k` da espacio en **kilobytes**, así que multiplicamos por 1024 para pasar a bytes y comparar con `needed` (que también está en bytes).
+- La estimación de 5× el tamaño de reads es **heurística**: en la práctica, los BAMs intermedios y los VCFs pueden ocupar más. Para genomas bacterianos pequeños (~5 MB), 5× es suficiente; para genomas humanos, puede no serlo.
+
+### Solución 3
+
+```bash
+#!/usr/bin/env bash
+# pipeline_multi.sh
+# Procesa múltiples muestras en paralelo desde un TSV
+
+set -euo pipefail
+
+SAMPLES_TSV="${1:-samples.tsv}"
+MAX_PARALLEL="${MAX_PARALLEL:-4}"
+PIPELINE_SCRIPT="${PIPELINE_SCRIPT:-./pipeline_variant_calling.sh}"
+
+log() { echo "[$(date '+%H:%M:%S')] $*" >&2; }
+
+if [[ ! -f "$SAMPLES_TSV" ]]; then
+    echo "Uso: $0 <samples.tsv>" >&2
+    echo "El TSV debe tener columnas: sample_name, R1_path, R2_path (con cabecera)" >&2
+    exit 1
+fi
+
+if [[ ! -x "$PIPELINE_SCRIPT" ]]; then
+    log "No se encuentra pipeline: $PIPELINE_SCRIPT"
+    exit 1
+fi
+
+# Contar muestras totales (excluyendo cabecera)
+total=$(tail -n +2 "$SAMPLES_TSV" | wc -l)
+log "Total de muestras a procesar: $total"
+log "Paralelismo máximo: $MAX_PARALLEL"
+
+# Array asociativo para追踪 PID → nombre de muestra
+declare -A pid_to_sample
+running=0
+completed=0
+failed=0
+
+# Procesar el TSV línea por línea con while read (capítulo 12)
+# (no usamos for porque los paths pueden tener espacios)
+while IFS=$'\t' read -r sample r1 r2; do
+    # Saltar cabecera
+    [[ "$sample" == "sample_name" ]] && continue
+    # Saltar líneas vacías
+    [[ -z "$sample" ]] && continue
+
+    log "Lanzando muestra: $sample"
+    # Lanzar el pipeline en background
+    "$PIPELINE_SCRIPT" "$sample" "$r1" "$r2" > "logs/${sample}.log" 2>&1 &
+    pid=$!
+    pid_to_sample[$pid]="$sample"
+    running=$((running + 1))
+
+    # Si llegamos al máximo, esperar a que termine cualquiera
+    if (( running >= MAX_PARALLEL )); then
+        # wait -n espera a cualquier job; capta su PID con $!
+        wait -n
+        # Recoger el exit code (no podemos saber cuál terminó con wait -n puro,
+        # así que iteramos por los PIDs activos y vemos cuáles ya no existen)
+        for pid in "${!pid_to_sample[@]}"; do
+            if ! kill -0 "$pid" 2>/dev/null; then
+                # El proceso ya terminó
+                s=${pid_to_sample[$pid]}
+                if wait "$pid"; then
+                    log "Muestra $s completada OK"
+                    completed=$((completed + 1))
+                else
+                    rc=$?
+                    log "Muestra $s FALLÓ (exit $rc)"
+                    failed=$((failed + 1))
+                fi
+                unset 'pid_to_sample[$pid]'
+                running=$((running - 1))
+            fi
+        done
+    fi
+
+    log "En ejecución: $running | Completadas: $completed | Fallidas: $failed | Restantes: $((total - completed - failed - running))"
+
+done < "$SAMPLES_TSV"
+
+# Esperar a las que queden
+log "Esperando a las $running muestras restantes..."
+wait
+
+for pid in "${!pid_to_sample[@]}"; do
+    s=${pid_to_sample[$pid]}
+    if wait "$pid" 2>/dev/null; then
+        log "Muestra $s completada OK"
+        completed=$((completed + 1))
+    else
+        log "Muestra $s FALLÓ"
+        failed=$((failed + 1))
+    fi
+done
+
+log "=== Resumen final ==="
+log "Total:    $total"
+log "Completadas OK: $completed"
+log "Fallidas:       $failed"
+
+if (( failed > 0 )); then
+    exit 1
+fi
+```
+
+Comentarios:
+
+- `while IFS=$'\t' read -r sample r1 r2` lee el TSV **línea por línea**, separando por tab (`IFS=$'\t'`) y sin interpretar barras (`-r`). Es el patrón idiomático de Bash para procesar TSVs (capítulo 12).
+- `"$PIPELINE_SCRIPT" "$sample" "$r1" "$r2" > "logs/${sample}.log" 2>&1 &` lanza el pipeline en background, redirigiendo stdout y stderr a un log por muestra.
+- `pid=$!` captura el PID del job recién lanzado (`$!` es siempre el último PID en background).
+- `declare -A pid_to_sample` mapea PID → nombre de muestra, para saber qué muestra terminó cuando un PID muere.
+- `wait -n` (Bash 4.3+) espera a que **cualquier** job termine. No devuelve el PID, así que iteramos `kill -0 "$pid"` para ver cuáles siguen vivos.
+- `kill -0 "$pid"` **no mata**: solo comprueba si el proceso existe. Devuelve 0 si existe, 1 si ya terminó. Es el patrón estándar para "ping" un PID.
+- `wait "$pid"` (sin `-n`) espera a un PID específico y devuelve su exit code. Lo usamos para capturar el éxito/fallo de cada muestra.
+- Alternativa más simple con `xargs -P`:
+  ```bash
+  tail -n +2 samples.tsv | xargs -P 4 -I{} bash -c '
+      IFS=$"\t" read -r sample r1 r2 <<< "{}"
+      ./pipeline_variant_calling.sh "$sample" "$r1" "$r2" > "logs/${sample}.log" 2>&1
+  '
+  ```
+  Más corto pero menos control sobre el reporte de progreso.
+
+::: callout-important
+## Cierre del curso: lo que ya eres capaz de hacer
+Acabas de escribir un **pipeline de variant calling completo y profesional**. Lo que has aprendido en estos 17 capítulos cubre el 80% de lo que un bioinformático junior hace a diario: procesar archivos, transformar datos, automatizar análisis, gestionar procesos. El otro 20% (Nextflow, Python para scripting avanzado, R para visualización, estadística) se construye **sobre** esta base.
+
+Tres consejos finales para tu carrera:
+
+1. **Lee scripts de otros**. Mira cómo están escritos los pipelines de Nextflow/Snakemake en GitHub: aprenderás convenciones, nombres de variables, patrones.
+2. **Versiona todo**. Usa `git` desde el primer día. Un pipeline sin `git` no es reproducible.
+3. **Automatiza lo repetitivo**. Si haces algo 3 veces, escríbelo como función. Si lo haces 5 veces, conviértelo en script. Si lo haces 50 veces, conviértelo en pipeline parametrizable.
+
+**Bash es el cimiento de la bioinformática**. Aunque termines escribiendo código en Python o R, vas a orquestar todo desde Bash. Lo que has aprendido aquí te va a acompañar durante toda tu carrera.
+
+¡Enhorabuena por completar el curso! 🎉
+:::
+
+## Resumen final del capítulo
+
+- **Pipeline de variant calling bacteriano completo**: 9 pasos desde reads Illumina hasta VCF filtrado.
+- **Técnicas aplicadas**: `set -euo pipefail`, shebang portable, funciones modulares, `local`, arrays para argumentos dinámicos, `${var%...}`, `trap` para limpieza, logging con timestamp, validación de inputs, exit codes por categoría.
+- **Herramientas usadas**: FastQC, fastp, BWA, samtools (view, sort, index, markadp, faidx), bcftools (mpileup, call, filter, stats, index).
+- **Estructura profesional**: constantes al inicio, funciones de utilidad, funciones por paso, `main()` orquestador, validación de argumentos, llamada a `main "$@"`.
+- **Mejoras mencionadas**: paralelización con GNU parallel, HPC con SLURM, orquestadores como Nextflow/Snakemake, contenerización con Docker/Singularity, anotación con snpEff.
+- **Ejercicios resueltos**: (1) cargar config externo con `source` y orden de prioridad, (2) `validate_inputs()` con códigos de error por categoría, (3) procesar múltiples muestras en paralelo con límite de 4 procesos.
+
+Este pipeline es la culminación de 17 capítulos. Lo has construido tú, entendiendo cada pieza. Ahora tienes una base sólida para automatizar análisis bioinformáticos reales.

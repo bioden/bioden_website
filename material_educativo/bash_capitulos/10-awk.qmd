@@ -1,0 +1,520 @@
+---
+title: "Capítulo 10: awk — Lenguaje de procesamiento de texto"
+---
+
+# Capítulo 10: awk — Lenguaje de procesamiento de texto
+
+Si `sed` es un bisturí para sustituciones y filtrado por líneas, `awk` es un **lenguaje de programación completo** orientado a procesar texto estructurado en columnas. Fue diseñado por Aho, Weinberger y Kernighan (de ahí sus iniciales) en los años 70 y, a diferencia de `sed`, permite **operar con campos como números**, mantener **variables entre líneas**, usar **arrays asociativos**, definir **funciones propias** y ejecutar código antes (`BEGIN`) y después (`END`) de procesar el archivo.
+
+En bioinformática `awk` es ubicuo: aparecen recetas de una línea para filtrar GFF por longitud, contar genes por cromosoma, calcular coverage medio de un BAM, sumar columnas de counts o reformatear tablas. En este capítulo cubriremos la sintaxis, las variables internas, los patrones, las funciones y los ejemplos más útiles para el día a día.
+
+::: callout-note
+## `awk` en Ubuntu y WSL2
+Ubuntu (y por tanto WSL2) incluye **GNU awk** (`gawk`), la implementación más potente y extendida del lenguaje. Permite funciones definidas por usuario, arrays multidimensionales, expresiones regulares dinámicas y mucho más. En macOS, el `awk` por defecto es de BSD (más limitado); quien hace bioinformática en Mac suele instalarse `gawk` con Homebrew. En WSL2 no hace falta nada: ya tienes `gawk`.
+:::
+
+## 10.1. Sintaxis general
+
+```bash
+awk 'programa' archivo
+awk -F',' 'programa' archivo          # separador de campo coma
+awk -v var=val 'programa' archivo     # pasar variable externa
+awk -f programa.awk archivo           # leer programa de archivo
+```
+
+El `programa` es una secuencia de **pares patrón-acción**:
+
+```
+patrón  { acción }
+patrón  { acción }
+...
+```
+
+`awk` lee el archivo **línea por línea** (cada línea es un *record*). Para cada una, comprueba los patrones en orden: si un patrón encaja, ejecuta su acción.
+
+## 10.2. Estructura BEGIN / patrones / END
+
+```bash
+awk 'BEGIN { acciones_iniciales }
+     patrón1 { acciones1 }
+     patrón2 { acciones2 }
+     END   { acciones_finales }' archivo
+```
+
+- **`BEGIN`** se ejecuta **una sola vez**, antes de leer la primera línea. Sirve para inicializar variables, definir el separador de campo, imprimir cabeceras.
+- Los **patrones** se evalúan para cada línea.
+- **`END`** se ejecuta **una sola vez**, después de procesar la última línea. Sirve para imprimir totales, medias o resúmenes.
+
+Ejemplo mínimo:
+
+```bash
+awk 'BEGIN{print "Contando..."} {n++} END{print n" líneas"}' archivo.txt
+```
+
+```text
+Contando...
+42 líneas
+```
+
+## 10.3. Variables internas
+
+| Variable | Significado |
+|----------|-------------|
+| `$0` | Línea completa |
+| `$1`, `$2`, ..., `$NF` | Campos 1, 2, ..., último |
+| `NF` | Número de campos de la línea actual |
+| `NR` | Número de línea (registro) actual, contando desde el inicio |
+| `FNR` | Número de línea **dentro del archivo actual** (útil con varios archivos) |
+| `FILENAME` | Nombre del archivo actual |
+| `FS` | Separador de campo de entrada (por defecto espacio o tabulador) |
+| `OFS` | Separador de campo de salida (por defecto espacio) |
+| `RS` | Separador de registro (por defecto `\n`) |
+| `ORS` | Separador de registro de salida |
+| `SUBSEP` | Separador de índices en arrays multidimensionales |
+
+```bash
+echo -e "a b c\nd e f" | awk '{print NR, NF, $2}'
+# 1 3 b
+# 2 3 e
+```
+
+## 10.4. Modificar el separador de campo
+
+Hay tres formas equivalentes:
+
+```bash
+awk -F',' '{print $1}' datos.csv
+awk 'BEGIN{FS=","} {print $1}' datos.csv
+awk -v FS=',' '{print $1}' datos.csv
+```
+
+Para **varios** caracteres como separador (regex):
+
+```bash
+awk -F'[,;]' '{print $1, $2}' datos.txt       # coma o punto y coma
+awk -F'\t' '{print $1}' counts.tsv            # tabulador explícito
+```
+
+Y el separador de **salida**:
+
+```bash
+awk 'BEGIN{FS=","; OFS="\t"} {print $1, $2, $3}' datos.csv   # CSV → TSV
+```
+
+Cuando `OFS` no es el espacio por defecto, **cualquier `print` con varios argumentos** los une con ese separador. Es la forma más limpia de reformatear tablas.
+
+## 10.5. Patrones
+
+### Regex
+
+```bash
+awk '/^>/{print}' secuencias.fa        # cabeceras FASTA
+awk '/gene/{print}' anotacion.gff3     # líneas con "gene"
+```
+
+### Expresiones relacionales
+
+```bash
+awk 'NR > 10' archivo                  # líneas después de la 10
+awk 'NF == 0' archivo                  # líneas en blanco
+awk '$3 == "gene"' anotacion.gff3      # features de tipo gene
+awk '$5 - $4 > 1000' anotacion.gff3    # features con longitud > 1000
+awk '$1 == "chr1" && $3 == "gene"' anotacion.gff3
+```
+
+### Rangos
+
+```bash
+awk '/start/,/end/' archivo            # desde línea con start hasta línea con end
+```
+
+### BEGIN y END
+
+Ya los vimos. Son patrones especiales que **no se evalúan por línea**.
+
+### Patrones combinados con acciones
+
+```bash
+awk '$3 == "gene" {print $1, $4, $5, $5-$4}' anotacion.gff3
+```
+
+Si se omite la **acción**, el defecto es `{print}` (imprimir la línea). Si se omite el **patrón**, la acción se ejecuta para todas las líneas.
+
+## 10.6. Variables definidas por usuario
+
+No se declaran: se crean al asignarlas. Por defecto son `0` (en contexto numérico) o `""` (en contexto de cadena).
+
+```bash
+awk '{suma += $2} END {print suma}' counts.txt
+awk '{if ($2 > max) max=$2} END {print max}' counts.txt
+```
+
+Para pasar variables externas usa `-v`:
+
+```bash
+awk -v umbral=100 '$2 > umbral {print $1}' counts.txt
+awk -v "sample=SampleA" 'BEGIN{print "Muestra:", sample} {print}' datos.txt
+```
+
+::: callout-warning
+## Variables de shell dentro de awk
+**No** uses `awk '{print $VAR}'` con `$VAR` de shell: awk interpretaría `$V`, `$A`, `$R` como campos. Para meter una variable de shell dentro de awk usa `-v`:
+```bash
+umbral=50
+awk -v u="$umbral" '$2 > u {print}' counts.txt
+```
+:::
+
+## 10.7. Operadores
+
+- **Aritméticos**: `+  -  *  /  %  ^`
+- **Asignación**: `=  +=  -=  *=  /=  %=  ^=  ++  --`
+- **Comparación**: `<  >  <=  >=  ==  !=`
+- **Lógicos**: `&&` (AND), `||` (OR), `!` (NOT)
+- **Regex**: `~` (encaja), `!~` (no encaja)
+- **Concatenación**: simplemente escribir strings juntos (`print $1 $2` los pega sin separador; `print $1, $2` usa `OFS`)
+
+```bash
+awk '$1 ~ /^chr/ {print}' anotacion.gff3            # cromosomas cuyo nombre empieza por chr
+awk '$7 !~ /PASS/ {print}' variants.vcf             # variantes que NO pasaron filtro
+```
+
+## 10.8. Funciones
+
+### Funciones de cadena
+
+| Función | Descripción |
+|---------|-------------|
+| `length(s)` | Longitud de `s` (de `$0` si se omite) |
+| `substr(s, ini, lon)` | Subcadena de `s` desde `ini` |
+| `index(s, sub)` | Posición de `sub` en `s` (0 si no está) |
+| `split(s, arr, sep)` | Parte `s` en `arr`, devuelve nº de trozos |
+| `sub(re, repl, s)` | Sustituye 1ª ocurrencia en `s` |
+| `gsub(re, repl, s)` | Sustituye todas las ocurrencias |
+| `match(s, re)` | Posición donde encaja `re` en `s`; deja `RSTART` y `RLENGTH` |
+| `toupper(s)` / `tolower(s)` | Mayúsculas / minúsculas |
+| `sprintf(fmt, ...)` | Devuelve un string formateado (sin imprimirlo) |
+| `gensub(re, repl, how, s)` | (gawk) Sustitución con backreferences `\1` |
+
+```bash
+awk '{print toupper($1)}' archivo
+awk '{gsub(/,/, "\t"); print}' datos.csv
+awk '{print substr($1, 1, 5)}' archivo
+```
+
+### Funciones numéricas
+
+`int()`, `sqrt()`, `exp()`, `log()`, `sin()`, `cos()`, `rand()`, `srand()`.
+
+```bash
+awk 'BEGIN{srand(); for(i=0;i<10;i++) print int(rand()*100)}'   # 10 aleatorios 0-99
+```
+
+## 10.9. Control de flujo
+
+`awk` soporta las mismas estructuras que un lenguaje normal:
+
+```awk
+# if/else
+if ($3 == "gene") { genes++ } else if ($3 == "exon") { exones++ } else { otros++ }
+
+# for clásico
+for (i=1; i<=NF; i++) print i, $i
+
+# for sobre arrays
+for (k in arr) print k, arr[k]
+
+# while
+i = 1
+while (i <= NF) { suma += $i; i++ }
+
+# do-while
+do { n++ } while (n < 5)
+
+# next: saltar a la siguiente línea (no ejecuta más patrones)
+/^>/ { next }
+
+# exit: terminar el procesamiento
+NR == 1000 { exit }
+```
+
+## 10.10. Arrays asociativos
+
+Las variables de `awk` pueden ser arrays indexados por **cualquier string**:
+
+```bash
+awk '{count[$1]++} END {for (k in count) print k, count[k]}' anotacion.gff3
+```
+
+Esto cuenta cuántas features hay por cromosoma (campo 1). El `for (k in arr)` itera sobre las claves sin orden garantizado; si quieres ordenar, pípalo a `sort`:
+
+```bash
+awk '{count[$1]++} END {for (k in count) print k, count[k]}' anotacion.gff3 | sort
+```
+
+### Arrays multidimensionales (simulados)
+
+`awk` no tiene arrays verdaderamente multidimensionales, pero simula con `SUBSEP`:
+
+```bash
+awk '{mat[$1, $3]++} END {for (k in mat) {split(k, a, SUBSEP); print a[1], a[2], mat[k]}}' anotacion.gff3
+```
+
+Cuenta features combinando cromosoma y tipo.
+
+## 10.11. Funciones definidas por usuario
+
+En `gawk` puedes declarar tus propias funciones:
+
+```bash
+awk 'function kb(bp) { return bp/1000 }
+     $3=="gene" { print $1, kb($5-$4) " kb" }' anotacion.gff3
+```
+
+Y con `-f` puedes escribir programas largos en `.awk`:
+
+```awk
+# stats.awk
+function mean(sum, n) { return (n>0) ? sum/n : 0 }
+
+BEGIN { FS="\t" }
+$3=="gene" {
+    len = $5 - $4
+    sum += len
+    n++
+    if (len > max) { max = len; max_id = $1 }
+}
+END {
+    printf "Genes: %d\n", n
+    printf "Longitud media: %.1f bp\n", mean(sum, n)
+    printf "Más largo: %s (%d bp)\n", max_id, max
+}
+```
+
+```bash
+awk -f stats.awk anotacion.gff3
+```
+
+## 10.12. Ejemplos bioinformáticos
+
+### Filtrar genes por longitud en GFF
+
+```bash
+awk '$3=="gene" && ($5-$4) > 1000 {print $1, $4, $5, $5-$4}' anotacion.gff3
+```
+
+Imprime cromosoma, inicio, fin y longitud para genes con más de 1000 pb.
+
+### Contar features por cromosoma
+
+```bash
+awk '{count[$1]++} END {for (k in count) print k, count[k]}' anotacion.gff3
+```
+
+### Longitud total de secuencias en FASTA
+
+```bash
+awk '/^>/{if(name)print name, len; name=$1; len=0; next}
+     {len += length($0)}
+     END{print name, len}' secuencias.fa
+```
+
+Para cada cabecera guarda el nombre y empieza a acumular longitud en las líneas siguientes; cuando aparece otra cabecera, vuelca el anterior. El `END` vuelca el último.
+
+### Coverage promedio de un BAM
+
+```bash
+samtools depth alineado.bam | awk '{sum+=$3; n++} END {print "Coverage medio:", sum/n}'
+```
+
+`samtools depth` produce tres columnas: cromosoma, posición y profundidad. `awk` acumula la profundidad y la divide entre el número de posiciones.
+
+### Filtrar VCF por calidad
+
+```bash
+awk '$6 > 30 {print}' variants.vcf > filtered.vcf
+```
+
+Aquí filtra la columna `QUAL`. Si quieres ignorar las líneas de cabecera:
+
+```bash
+awk '!/^#/ && $6 > 30' variants.vcf > filtered.vcf
+```
+
+### Reformatear tabla de counts (sumar columnas)
+
+```bash
+awk 'BEGIN{OFS="\t"} {print $1, $2+$3, $4+$5}' counts.txt
+```
+
+Genera tres columnas: gen, suma de las dos primeras muestras, suma de las dos siguientes.
+
+### Top 10 genes más expresados
+
+```bash
+awk '{print $1, $2+$3+$4}' counts.txt | sort -k2,2nr | head
+```
+
+Calcula expresión total por gen y la ordena de mayor a menor.
+
+### Extraer valores de un campo INFO de VCF
+
+El campo 8 del VCF es `INFO=clave=valor;clave=valor;...`. Para extraer `DP`:
+
+```bash
+awk -F'\t' '!/^#/ {
+    split($8, parts, ";");
+    for (i in parts) {
+        if (parts[i] ~ /^DP=/) {
+            dp = substr(parts[i], 4);
+            print $1, $2, dp;
+        }
+    }
+}' variants.vcf
+```
+
+::: callout-tip
+## Una sola línea de awk vale por un script
+Muchas tareas que harías con un script Python de 30 líneas se resuelven con una línea de `awk`. Vale la pena memorizar el patrón `{count[$k]++} END {for (k in count) print k, count[k]}` — es la herramienta universal para **tabular frecuencias**.
+:::
+
+## 10.13. Ejercicios
+
+### Ejercicio 1
+
+Dado `counts.tsv` con columnas separadas por tabulador: `gen  sample1  sample2  sample3`.
+
+```text
+gen    sample1    sample2    sample3
+BRCA1  120        85         200
+TP53   40         12         8
+EGFR   350        400        300
+MDM2   20         25         30
+```
+
+Usa `awk` para: (a) imprimir solo los genes cuya **suma** de los 3 samples sea mayor que 100; (b) generar la misma tabla con una columna adicional `total` con la suma de los 3 samples. Muestra los comandos completos.
+
+### Ejercicio 2
+
+Dado un archivo `annotation.gff3`, calcula con **tres comandos `awk` diferentes**:
+
+(a) número total de genes (`$3 == "gene"`),
+(b) número de genes por cromosoma,
+(c) longitud promedio de los genes (`$5 - $4`).
+
+### Ejercicio 3
+
+Dado un archivo VCF con comentarios `##` al inicio, una línea `#CHROM ...` (cabecera de columnas) y luego datos, escribe un comando `awk` que filtre variantes con: (a) calidad `$6 > 30`, y (b) una columna adicional (imaginemos la 10, llamada `DP`) mayor que 10. La salida debe ser un VCF **sin** las líneas `##`, pero conservando la línea `#CHROM ...` como cabecera.
+
+## 10.14. Soluciones
+
+### Solución 1
+
+(a) Genes con suma > 100 (ignorando cabecera):
+
+```bash
+awk -F'\t' 'NR>1 && ($2+$3+$4) > 100 {print $1}' counts.tsv
+```
+
+- `-F'\t'`: separador tabulador.
+- `NR>1`: saltar la cabecera.
+- `($2+$3+$4) > 100`: condición sobre la suma.
+- `print $1`: solo el nombre del gen.
+
+Salida:
+
+```text
+BRCA1
+EGFR
+```
+
+(b) Tabla con columna `total`:
+
+```bash
+awk -F'\t' 'BEGIN{OFS="\t"}
+            NR==1 {print $1, $2, $3, $4, "total"}
+            NR>1  {print $1, $2, $3, $4, $2+$3+$4}' counts.tsv
+```
+
+Salida:
+
+```text
+gen    sample1    sample2    sample3    total
+BRCA1  120        85         200        405
+TP53   40         12         8          60
+EGFR   350        400        300        1050
+MDM2   20         25         30         75
+```
+
+### Solución 2
+
+(a) Número total de genes:
+
+```bash
+awk '$3=="gene"{n++} END{print n}' annotation.gff3
+```
+
+- Cuenta con `n++` cada línea que tenga "gene" en la columna 3.
+- En `END` imprime el contador.
+
+(b) Genes por cromosoma:
+
+```bash
+awk '$3=="gene"{count[$1]++} END{for (k in count) print k, count[k]}' annotation.gff3
+```
+
+- `count[$1]++`: array indexado por el nombre del cromosoma.
+- Iteración con `for (k in count)`.
+
+Para salida ordenada:
+
+```bash
+awk '$3=="gene"{count[$1]++} END{for (k in count) print k, count[k]}' annotation.gff3 | sort
+```
+
+(c) Longitud promedio de genes:
+
+```bash
+awk '$3=="gene"{sum += ($5-$4); n++} END{if(n>0) printf "%.1f\n", sum/n; else print "no hay genes"}' annotation.gff3
+```
+
+- Suma las longitudes (`$5-$4`) y cuenta genes.
+- En `END` divide, usando `printf` para formatear a un decimal.
+- El `if(n>0)` protege contra la división por cero.
+
+### Solución 3
+
+```bash
+awk -F'\t' '!/^##/ && ($0 ~ /^#CHROM/ || $6 > 30 && $10 > 10)' variants.vcf > filtered.vcf
+```
+
+- `!/^##/`: excluye las líneas `##` (cabeceras de metadatos).
+- `$0 ~ /^#CHROM/`: deja pasar la línea que empieza con `#CHROM` (cabecera de columnas).
+- `||`: OR — se queda con la cabecera de columnas **o** con las filas que cumplen los filtros.
+- `$6 > 30 && $10 > 10`: calidad > 30 **y** profundidad (col. 10) > 10.
+
+Si además quieres conservar el orden y la cabecera de columnas al inicio, otra versión más legible:
+
+```bash
+awk -F'\t' '
+    /^#CHROM/ {print; next}          # imprime cabecera y saltar
+    /^##/     {next}                 # ignora metadatos
+    $6 > 30 && $10 > 10 {print}      # filtra datos
+' variants.vcf > filtered.vcf
+```
+
+Salida esperada:
+
+```text
+#CHROM  POS  ID  REF  ALT  QUAL  FILTER  INFO  FORMAT  DP
+chr1    100  .   A   T    50    PASS    ...   ...     20
+```
+
+(nótese que solo se conservan las filas que cumplen ambos filtros, y se mantiene la cabecera de columnas).
+
+::: callout-important
+## `awk` y `sed` como dúo dinámico
+En pipelines reales es habitual encadenarlos: `samtools depth bam | awk '{sum+=$3} END{print sum/NR}'` o `grep -v "^#" variants.vcf | awk -F'\t' '$6>30' | sed 's/DP=/DP:/g'`. Cuando domines ambos, procesar y reformatear cualquier archivo de texto dejará de ser un obstáculo y se convertirá en rutina.
+:::
+
+Con `awk` ya tienes un mini-lenguaje de programación en la terminal. En los dos próximos capítulos cerraremos el bloque de fundamentales con las **estructuras de control** (`if`, `case`, `test`) y los **bucles** (`for`, `while`, `until`, `select`) para escribir scripts completos.

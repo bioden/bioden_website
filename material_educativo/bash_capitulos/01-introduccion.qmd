@@ -1,0 +1,417 @@
+---
+title: "Capítulo 1: Introducción a Bash y la terminal"
+---
+
+# Capítulo 1: Introducción a Bash y la terminal
+
+## 1.1. ¿Qué es Bash?
+
+**Bash** viene del acrónimo **Bourne Again Shell**, un juego de palabras que combina "Born Again" (renacido) con el apellido de **Stephen Bourne**, creador del original *Bourne Shell* (`sh`) en 1977 para la versión 7 de Unix. Bash fue escrito por **Brian Fox** en 1989 para el proyecto GNU, con el objetivo de reemplazar a `sh` con un intérprete libre, más potente y compatible.
+
+Bash no es solo un intérprete de comandos: es a la vez **un lenguaje de scripting** (programación) y **una interfaz interactiva** con el sistema operativo. Cuando abres una terminal y escribes `ls`, quien recibe esa orden, la interpreta, ejecuta el programa y te devuelve la salida es Bash.
+
+En bioinformática, Bash es el *lenguaje franca* del HPC (High Performance Computing): los clústeres, los pipelines de NGS (Next Generation Sequencing), los gestores de colas (SLURM, SGE) y herramientas como `bwa`, `samtools`, `bcftools`, `fastqc` o `Nextflow` se invocan desde Bash. Aprenderlo bien no es opcional: es la base sobre la que se apoya todo análisis genómico serio.
+
+## 1.2. Shell, terminal y emulador de terminal: diferencias
+
+Estos tres términos se confunden a menudo, pero son cosas distintas:
+
+| Concepto | Qué es | Ejemplo |
+|----------|--------|---------|
+| **Terminal** | Originalmente un dispositivo físico (teclado + pantalla) conectado a un mainframe. Hoy es un concepto abstracto: el "punto de entrada" de texto. | TTY (teletype) |
+| **Emulador de terminal** | El programa gráfico que dibuja la ventana donde escribes. Simula el hardware del terminal antiguo. | GNOME Terminal, Konsole, Windows Terminal, iTerm2 |
+| **Shell** | El intérprete que recibe tu texto, lo parsea y lo ejecuta. Es quien "habla" con el kernel. | bash, zsh, fish, sh |
+
+::: callout-note
+## Analogía útil
+El **emulador de terminal** es la ventanilla, el **shell** es el empleado que atiende detrás, y el **kernel de Linux** es el banco. Tú (el usuario) entregas una orden por la ventanilla, el empleado la traduce y la manda al banco, y este devuelve el resultado.
+:::
+
+## 1.3. ¿Por qué Bash es relevante en bioinformática?
+
+Casi toda la bioinformática ocurre en servidores Linux. Los motivos son:
+
+1. **NGS produce datos masivos**: un run de Illumina NovaSeq genera hasta 6 TB de datos FASTQ. Manejar eso desde una interfaz gráfica es inviable; con Bash, en cambio, procesas millones de reads en una sola línea (`zcat R1.fastq.gz | head -n 400000 > sub.fq`).
+2. **HPC y clústeres**: los superordenadores nacionales (como MareNostrum, CESGA, INMEGEN) corren Linux y se controlan por SSH. No hay ratón, solo teclado.
+3. **Pipelines reproducibles**: herramientas como Snakemake, Nextflow, CWL y WDL se basan en Bash para orquestar pasos (alineamiento → marcaje de duplicados → llamado de variantes).
+4. **Reproductibilidad y logs**: un script `.sh` queda versionable en Git, mientras que hacer clic en una interfaz gráfica no deja trazas.
+5. **Software científico nativo para Unix**: `bedtools`, `samtools`, `bwa`, `minimap2`, `bcftools`, `fastp`, `spades`, `prokka`... todos se invocan desde Bash.
+
+## 1.4. Distintas shells
+
+Aunque Bash es la más extendida, existen otras:
+
+- **`sh`** (Bourne Shell): el original, minimalista. Base POSIX.
+- **`bash`**: mejora de `sh`. Default en la mayoría de Linux y en macOS hasta Catalina.
+- **`zsh`**: default en macOS desde 2019. Autocompletado potente, plugins como Oh-My-Zsh.
+- **`fish`** (Friendly Interactive Shell): resaltado de sintaxis en tiempo real, autocompletado basado en historial. No es compatible con POSIX.
+- **`tcsh`, `ksh`**: aún presentes en algunos servidores académicos antiguos.
+
+::: callout-tip
+Para un curso introductorio de bioinformática, **bash es la opción correcta**: es lo que encontrarás en cualquier servidor y en cualquier tutorial de NGS.
+:::
+
+## 1.5. Instalación y acceso en Ubuntu
+
+Si trabajas en **Ubuntu nativo** (instalado en tu portátil o en un servidor), abrir la terminal es tan simple como:
+
+```text
+Ctrl + Alt + T
+```
+
+Aparecerá una ventana con el prompt. Si prefieres lanzarla desde el menú de aplicaciones, busca "Terminal" o "GNOME Terminal".
+
+## 1.6. Instalación de WSL2 en Windows 10/11
+
+Si usas **Windows**, la solución moderna y recomendada por Microsoft es **WSL2** (Windows Subsystem for Linux 2), que ejecuta un kernel real de Linux dentro de una máquina virtual ligera.
+
+### Paso 1: Instalar WSL2
+
+Abre **PowerShell como administrador** (botón derecho sobre el menú Inicio → "Windows Terminal (Admin)" o "PowerShell (Admin)") y ejecuta:
+
+```powershell
+wsl --install
+```
+
+Esto habilita las características necesarias (`Virtual Machine Platform` y `Windows Subsystem for Linux`), descarga el kernel de Linux e instala **Ubuntu** por defecto. Requiere reiniciar el equipo.
+
+### Paso 2: Elegir distribución
+
+Puedes ver distribuciones disponibles:
+
+```powershell
+wsl --list --online
+```
+
+Recomendación para este curso:
+
+```powershell
+wsl --install -d Ubuntu-22.04
+```
+
+También puedes descargarla desde la **Microsoft Store** buscando "Ubuntu 22.04 LTS".
+
+### Paso 3: Configurar usuario UNIX
+
+Al primer arranque, WSL te pedirá:
+
+```text
+Enter new UNIX username: bioinfo
+New password:
+Retype new password:
+```
+
+Esta contraseña es **independiente** de la de Windows. Recuérdala: la necesitarás para `sudo`.
+
+::: callout-important
+## Nota clave sobre WSL2
+- No necesitas dual-boot ni máquina virtual pesada.
+- El rendimiento de I/O en `/home` es casi nativo; el de `/mnt/c` (archivos de Windows) es más lento, así que conviene **trabajar dentro de `~`** en WSL y no dentro de `C:\`.
+- Puedes abrir VSCode en Windows y trabajar con archivos Linux mediante la extensión "WSL".
+:::
+
+### Paso 4: Acceso cruzado de archivos
+
+| Dirección | Ruta |
+|-----------|------|
+| Desde WSL → disco C: de Windows | `/mnt/c/Users/TuUsuario/` |
+| Desde WSL → disco D: de Windows | `/mnt/d/` |
+| Desde Windows → archivos de WSL | `\\wsl$\Ubuntu-22.04\home\bioinfo\` |
+
+En el Explorador de Windows, escribe esa ruta en la barra de direcciones.
+
+## 1.7. Comandos útiles de Ubuntu para empezar
+
+Ubuntu usa **APT** (Advanced Package Tool) como gestor de paquetes. Antes de instalar nada, conviene actualizar la lista de paquetes disponibles:
+
+```bash
+sudo apt update        # descarga la lista de versiones disponibles
+sudo apt upgrade       # instala las versiones más recientes de lo ya instalado
+```
+
+`sudo` (Super User DO) ejecuta el comando con privilegios de administrador (`root`). Te pedirá tu contraseña UNIX (la que configuraste al instalar).
+
+Instalación de paquetes útiles para este curso:
+
+```bash
+sudo apt install tree htop curl wget vim git nano
+```
+
+Qué hace cada uno:
+
+- **`tree`**: muestra directorios en forma de árbol.
+- **`htop`**: monitor interactivo de procesos y memoria.
+- **`curl`** / **`wget`**: descargar archivos desde internet (esenciales para bajar genomas, GTFs, archivos SRA...).
+- **`vim`** / **`nano`**: editores de texto en terminal.
+- **`git`**: control de versiones, imprescindible para proyectos bioinformáticos reproducibles.
+
+::: callout-warning
+Nunca ejecutes `sudo apt install` con paquetes desconocidos sin verificar el origen. En bioinformática es habitual añadir repositorios (PPA) o instalar conda/bioconda, que veremos más adelante.
+:::
+
+## 1.8. Estructura básica de un comando
+
+Todo comando Bash sigue una sintaxis predecible:
+
+```text
+comando [opciones] [argumentos]
+```
+
+Ejemplo:
+
+```bash
+ls -lah /data/seqruns
+```
+
+- `ls` → **comando** (lista el contenido).
+- `-lah` → **opciones** (formato largo, mostrar ocultos, tamaños legibles para humanos).
+- `/data/seqruns` → **argumento** (el directorio sobre el que se actúa).
+
+Las opciones pueden agruparse (`-lah` = `-l -a -h`) o escribirse por separado. Las opciones largas se escriben con dos guiones: `ls --all --human-readable`.
+
+## 1.9. Anatomía del prompt
+
+Cuando abres la terminal, verás algo así:
+
+```text
+bioinfo@pc-genomica:/data/seqruns$
+```
+
+Significado de cada parte:
+
+| Parte | Significado |
+|-------|-------------|
+| `bioinfo` | usuario actual |
+| `@` | separador |
+| `pc-genomica` | hostname (nombre de la máquina) |
+| `:` | separador |
+| `/data/seqruns` | directorio actual |
+| `$` | prompt estándar (para root sería `#`) |
+
+Si el prompt acaba en `#`, eres **root**: ten mucho cuidado.
+
+## 1.10. El manual: `man`, `--help` y `tldr`
+
+Para aprender a usar cualquier comando dispones de tres recursos:
+
+```bash
+man ls            # manual completo (q para salir)
+ls --help         # resumen breve de opciones
+```
+
+`tldr` (Too Long, Didn't Read) es una herramienta comunitaria con ejemplos prácticos para cada comando. Instalación:
+
+```bash
+sudo apt install tldr
+tldr tar          # muestra ejemplos concretos de tar
+```
+
+::: callout-tip
+Aprende a leer `man`. Aunque es denso, es la **fuente de verdad**. Busca dentro del manual con `/palabra` y Enter.
+:::
+
+## 1.11. Primeros comandos
+
+```bash
+echo "Hola, bioinformática"      # imprime texto
+whoami                            # muestra tu usuario
+date                              # fecha y hora actuales
+clear                             # limpia la pantalla (Ctrl+L también)
+history                           # historial de comandos escritos
+```
+
+Salida esperada:
+
+```text
+$ echo "Hola, bioinformática"
+Hola, bioinformática
+$ whoami
+bioinfo
+$ date
+lun 15 ene 2024 09:32:11 CET
+```
+
+## 1.12. Atajos de teclado esenciales
+
+Estos atajos ahorran muchísimo tiempo. Memorízalos:
+
+| Atajo | Acción |
+|-------|--------|
+| `Ctrl + C` | Interrumpe el comando en ejecución |
+| `Ctrl + L` | Limpia la pantalla (equivale a `clear`) |
+| `Ctrl + R` | Búsqueda inversa en el historial |
+| `Tab` | Autocompleta (dos veces muestra opciones) |
+| `↑` / `↓` | Navega por el historial |
+| `Ctrl + W` | Borra la palabra anterior al cursor |
+| `Ctrl + U` | Borra del cursor al inicio de la línea |
+| `Ctrl + A` | Salta al inicio de la línea |
+| `Ctrl + E` | Salta al final de la línea |
+
+::: callout-tip
+## Truco profesional
+`Ctrl + R` seguido de `fastp` recupera el último comando que contenía esa palabra. Pulsa `Ctrl + R` repetidamente para retroceder por todas las coincidencias.
+:::
+
+## 1.13. Configuración inicial: `~/.bashrc`
+
+El archivo `~/.bashrc` se ejecuta cada vez que abres una terminal interactiva. Allí defines alias, variables y funciones. Ábrelo con nano:
+
+```bash
+nano ~/.bashrc
+```
+
+Añade al final:
+
+```bash
+# Mis alias de bioinformática
+alias ll='ls -lah'
+alias la='ls -A'
+alias ..='cd ..'
+alias ...='cd ../..'
+alias gc='git commit -m'
+alias qcd='cd /data/seqruns/2024'
+
+# Mensaje de bienvenida
+echo "Bienvenido, $(whoami). Hoy es $(date +%A, %d de %B de %Y)."
+```
+
+Recarga con:
+
+```bash
+source ~/.bashrc
+```
+
+o equivalentemente `. ~/.bashrc`.
+
+## 1.14. Editores disponibles: `nano` y `vim`
+
+- **`nano`**: editor sencillo, ideal para principiantes. Guarda con `Ctrl+O` (luego Enter), sale con `Ctrl+X`.
+- **`vim`**: editor modal muy potente, curva de aprendizaje mayor. Pulsa `i` para insertar, `Esc` para volver al modo comando, `:w` para guardar y `:q` para salir.
+
+Para empezar quédate con `nano`. Cuando escribas scripts complejos podrás migrar a `vim` o a VSCode con la extensión WSL.
+
+---
+
+## Ejercicios
+
+### Ejercicio 1
+
+Instala Ubuntu (nativamente o vía WSL2) y verifica la versión con `lsb_release -a`. Si usas WSL2, documenta también la versión de WSL con `wsl --version` desde PowerShell.
+
+### Ejercicio 2
+
+Instala los paquetes `tree`, `htop`, `curl`, `wget` y `git`. Verifica la instalación con `which` y con la opción `--version` de cada uno.
+
+### Ejercicio 3
+
+Personaliza tu `~/.bashrc` añadiendo un alias `alias ll='ls -lah'` y un mensaje de bienvenida con `echo`. Recarga el archivo con `source ~/.bashrc` y comprueba que todo funciona.
+
+---
+
+## Soluciones
+
+### Solución 1
+
+```bash
+# Ver versión de Ubuntu
+lsb_release -a
+```
+
+Salida esperada:
+
+```text
+No LSB modules are available.
+Distributor ID: Ubuntu
+Description:    Ubuntu 22.04.3 LTS
+Release:        22.04
+Codename:       jammy
+```
+
+Desde PowerShell (Windows) puedes verificar WSL:
+
+```powershell
+wsl --version
+```
+
+Salida esperada:
+
+```text
+WSL version: 2.0.9.0
+Kernel version: 5.15.123.1-1
+WSLg version: 1.0.59.0
+```
+
+### Solución 2
+
+```bash
+# Actualizar repositorios
+sudo apt update
+
+# Instalar los paquetes requeridos
+sudo apt install -y tree htop curl wget git
+# La opción -y evita que pida confirmación
+
+# Verificar cada uno
+which tree            # /usr/bin/tree
+which htop            # /usr/bin/htop
+which curl            # /usr/bin/curl
+which wget            # /usr/bin/wget
+which git             # /usr/bin/git
+
+# Comprobar versiones
+tree --version        # tree v2.0.2
+htop --version        # htop 3.2.1
+curl --version        # curl 7.81.0 ...
+wget --version        # GNU Wget 1.21.2
+git --version         # git version 2.34.1
+```
+
+`which` devuelve la ruta absoluta del ejecutable. Si un programa no está instalado, `which` no devuelve nada.
+
+### Solución 3
+
+```bash
+# Abrir el archivo .bashrc
+nano ~/.bashrc
+```
+
+Añade al final del archivo:
+
+```bash
+# === Configuración personalizada ===
+alias ll='ls -lah'                       # listado largo con tamaños legibles
+
+# Mensaje de bienvenida
+echo "==========================================="
+echo " Bienvenido, $(whoami) "
+echo " Hoy es $(date '+%A %d-%m-%Y %H:%M') "
+echo "==========================================="
+```
+
+Guarda con `Ctrl+O`, Enter, y sal con `Ctrl+X`. Recarga:
+
+```bash
+source ~/.bashrc
+```
+
+Salida esperada al recargar:
+
+```text
+===========================================
+ Bienvenido, bioinfo
+ Hoy es lunes 15-01-2024 09:45
+===========================================
+```
+
+Y prueba el alias:
+
+```bash
+ll
+```
+
+Debería mostrarse el contenido del directorio actual con formato largo (`-lah`).
+
+::: callout-note
+## Resumen del capítulo
+En este capítulo hemos visto qué es Bash, por qué es esencial en bioinformática, cómo instalarlo en Ubuntu nativo o vía WSL2 en Windows, cómo manejar paquetes con `apt`, la estructura de un comando, atajos de teclado y la configuración básica de `~/.bashrc`. Estás listo para empezar a navegar el sistema de archivos en el Capítulo 2.
+:::

@@ -1,0 +1,595 @@
+---
+title: "Capítulo 7: Búsqueda con grep, find y locate"
+---
+
+# Capítulo 7: Búsqueda con grep, find y locate
+
+La bioinformática produce **montañas de archivos**: millones de secuencias en un FASTA, cientos de BAM en un directorio de análisis, GFF con miles de features, logs de alineamiento. Encontrar **una secuencia concreta**, **un archivo concreto** o **un patrón concreto** es una de las tareas más repetidas. En este capítulo veremos las tres herramientas principales: `grep` (buscar dentro de archivos), `find` (buscar archivos) y `locate` (buscar archivos en una base de datos preindexada).
+
+## 7.1. `grep`: buscar patrones en texto
+
+`grep` (Global Regular Expression Print) imprime las líneas que cumplen un patrón. Sintaxis básica:
+
+```bash
+grep [opciones] PATRÓN [ARCHIVO...]
+```
+
+Si no se indica archivo, lee de `stdin` (perfecto para pipes).
+
+### Opciones básicas
+
+| Opción | Función | Ejemplo |
+|--------|---------|---------|
+| `-i` | Ignora mayúsculas/minúsculas | `grep -i gaattc genome.fa` |
+| `-v` | Inverso: líneas que NO cumplen | `grep -v "^>" seqs.fa` |
+| `-c` | Solo cuenta coincidencias | `grep -c gene annot.gff3` |
+| `-n` | Muestra número de línea | `grep -n BRCA1 genes.txt` |
+| `-l` | Solo nombre de archivos con match | `grep -l "TATATA" *.fa` |
+| `-L` | Solo archivos SIN match | `grep -L "TATATA" *.fa` |
+| `-r` / `-R` | Recursivo en directorios | `grep -r "BRCA1" /data` |
+| `--include` | Filtra tipo de archivo en recursivo | `grep -r --include=*.fa motif /data` |
+| `--exclude` | Excluye archivos | `grep -r --exclude=*.log motif .` |
+| `-w` | Palabra completa | `grep -w "TP53" genes.txt` |
+| `-x` | Línea completa | `grep -x "chr1" cromosomas.lst` |
+| `-o` | Solo el match, no la línea | `grep -o "GAATTC" genome.fa` |
+| `-A N` | N líneas de contexto **después** | `grep -A 2 BRCA1 annot.gff3` |
+| `-B N` | N líneas de contexto **antes** | `grep -B 2 BRCA1 annot.gff3` |
+| `-C N` | N líneas de contexto **antes y después** | `grep -C 3 BRCA1 annot.gff3` |
+| `-e PATRÓN` | Múltiples patrones | `grep -e BRCA1 -e TP53 genes.txt` |
+| `-f archivo` | Patrones desde un archivo | `grep -f patrones.txt genome.fa` |
+| `-E` | Regex extendida (egrep) | `grep -E "AATT|GGCC" seqs.fa` |
+| `-F` | Búsqueda literal (fgrep) | `grep -F "met**al" datos.txt` |
+| `-P` | PCRE (Perl Compatible Regex) | `grep -P "(?<=BRCA)1"` |
+| `--color=auto` | Resalta el match | `grep --color=auto BRCA1 genes.txt` |
+
+### Ejemplo: buscar motif EcoRI
+
+```bash
+grep -i -o "GAATTC" genome.fa | wc -l
+```
+
+`-i` ignora mayúsculas (la secuencia podría estar en minúscula), `-o` imprime solo el match (uno por línea) para que `wc -l` cuente cada aparición, no cada línea.
+
+::: callout-note
+## Diferencia entre `-c` y `-o | wc -l`
+`grep -c` cuenta **líneas** con coincidencias. Si en una sola línea hay 3 apariciones del motif, `-c` cuenta 1, mientras que `grep -o | wc -l` cuenta 3. Para contar **ocurrencias** usa siempre `-o | wc -l`.
+:::
+
+### Búsqueda de genes en un GFF
+
+```bash
+grep -w "BRCA1" annotation.gff3
+```
+
+`-w` evita falsos positivos como `BRCA11` o `BRCA1-like`.
+
+### Múltiples patrones
+
+```bash
+grep -e BRCA1 -e BRCA2 -e TP53 annotation.gff3
+# Equivalente con regex extendida:
+grep -E "BRCA1|BRCA2|TP53" annotation.gff3
+```
+
+### Patrones desde un archivo
+
+Útil cuando tienes 100 IDs en `targets.txt`:
+
+```bash
+grep -F -f targets.txt genes.names > encontrados.txt
+```
+
+`-F` trata los patrones como literales (no regex), más rápido y seguro si los nombres contienen caracteres especiales.
+
+## 7.2. `egrep`, `fgrep` y `grep -E` / `grep -F`
+
+`egrep` y `fgrep` son alias históricos:
+
+```bash
+egrep "BRCA1|BRCA2" genes.txt
+# equivalente a
+grep -E "BRCA1|BRCA2" genes.txt
+
+fgrep "literal_string" archivo
+# equivalente a
+grep -F "literal_string" archivo
+```
+
+::: callout-warning
+## `egrep`/`fgrep` están "deprecated"
+POSIX marca `egrep` y `fgrep` como obsoletos. Sigue funcionando, pero en scripts nuevos prefiere `grep -E` y `grep -F`. Es más portable y claro.
+:::
+
+## 7.3. Expresiones regulares básicas en `grep`
+
+Aunque `grep` no es un parser de regex completo sin `-E`, permite muchos metacaracteres:
+
+| Símbolo | Significado |
+|---------|-------------|
+| `.` | Cualquier carácter |
+| `*` | Cero o más del anterior |
+| `^` | Inicio de línea |
+| `$` | Final de línea |
+| `[abc]` | Cualquiera de a, b, c |
+| `[^abc]` | Ninguno de a, b, c |
+| `[a-z]` | Rango |
+| `\{n,m\}` | Entre n y m repeticiones (con `-E` sería `{n,m}`) |
+
+Con `-E` se añaden `+`, `?`, `|`, `()`, `{}`:
+
+```bash
+# Buscar ORF que empiece con ATG y termine con TAG/TAA/TGA
+grep -E "ATG(...)+(TAG|TAA|TGA)" cds.fa
+```
+
+::: callout-tip
+## Caracteres especiales en regex
+`.`, `*`, `+`, `?`, `^`, `$`, `(`, `)`, `[`, `]`, `{`, `}`, `|`, `\` son especiales. Para buscarlos literalmente, escápalos con `\` o usa `-F`.
+:::
+
+## 7.4. `find`: buscar archivos por criterios
+
+`find` recorre un árbol de directorios y aplica **filtros**. Sintaxis:
+
+```bash
+find RUTA [criterios] [acciones]
+```
+
+### Por nombre
+
+```bash
+find . -name "*.fastq"                  # nombre exacto
+find /data -iname "*.FASTQ"             # case insensitive
+find . -name "*.bam" -o -name "*.bai"   # OR
+```
+
+### Por tipo
+
+| Letra | Tipo |
+|-------|------|
+| `f` | archivo regular |
+| `d` | directorio |
+| `l` | enlace simbólico |
+| `b` | dispositivo de bloques |
+| `c` | dispositivo de caracteres |
+| `p` | pipe nominal |
+| `s` | socket |
+
+```bash
+find . -type d -name "resultados"
+find /data -type l                      # enlaces simbólicos rotos o no
+```
+
+### Por tamaño
+
+```bash
+find /data -name "*.bam" -size +1G      # BAMs > 1 GB
+find . -name "*.fastq" -size -1k        # FASTQ < 1 kB (probablemente vacíos)
+find . -size +500M -size -2G            # entre 500 MB y 2 GB
+```
+
+Unidades: `c` (bytes), `k` (KiB), `M` (MiB), `G` (GiB, por defecto múltiplos de 1024).
+
+### Por tiempo
+
+`find` usa tres marcas temporales:
+
+| Marca | Significado | Opción |
+|-------|-------------|--------|
+| `atime` / `amin` | Último **acceso** (lectura) | `-atime -7` |
+| `mtime` / `mmin` | Última **modificación** (escritura) | `-mtime -7` |
+| `ctime` / `cmin` | Último **cambio** (permisos, dueño) | `-ctime -7` |
+
+```bash
+find . -mtime -1                        # modificados en las últimas 24h
+find /data -mtime +30                   # sin modificar hace más de 30 días
+find . -mmin -10                        # modificados en los últimos 10 minutos
+```
+
+::: callout-warning
+## El signo importa
+- `-mtime -7` → hace **menos** de 7 días (recientes).
+- `-mtime +7` → hace **más** de 7 días (antiguos).
+- `-mtime 7` → exactamente hace 7 días (raro de usar).
+:::
+
+### Por permisos
+
+```bash
+find . -perm 755                        # permisos exactos 755
+find . -perm /u+x                       # cualquier archivo ejecutable por el usuario
+find . -perm -u+x                       # el usuario SÍ tiene ejecutable (más restrictivo)
+```
+
+### Por usuario o grupo
+
+```bash
+find /data -user ana                    # propiedad de ana
+find /data -group bioinfo               # grupo bioinfo
+find /data -nouser                      # sin usuario válido (IDs huérfanos)
+```
+
+### Combinaciones lógicas
+
+```bash
+# AND implícito (criterios consecutivos)
+find . -name "*.bam" -size +1G
+
+# OR explícito
+find . \( -name "*.bam" -o -name "*.bai" \) -size +1G
+
+# NOT
+find . -name "*.tmp" -not -name "*.tmp.bak"
+```
+
+::: callout-note
+## Paréntesis en `find`
+Los paréntesis tienen significado para `find`, pero el shell también los interpreta. Por eso hay que **escaparlos**: `\( ... \)`. Alternativamente, entrecomillar todo: `"(" ... ")"`.
+:::
+
+### Acciones
+
+| Acción | Descripción |
+|--------|-------------|
+| `-print` | Imprime la ruta (default) |
+| `-ls` | Lista con detalles tipo `ls -dils` |
+| `-delete` | Elimina los archivos encontrados |
+| `-exec comando {} \;` | Ejecuta `comando` por cada archivo |
+| `-exec comando {} +` | Ejecuta `comando` con **todos** los archivos de una vez |
+| `-execdir comando {} \;` | Igual que `-exec` pero desde el directorio del archivo |
+| `-ok comando {} \;` | Como `-exec`, pero pide confirmación |
+
+```bash
+# Indexar todos los BAM encontrados
+find . -name "*.bam" -exec samtools index {} +
+
+# Eliminar logs antiguos
+find . -name "*.log" -mtime +30 -delete
+
+# Para cada archivo, copiarlo a backup
+find /data -name "*.bam" -exec cp {} /backup/ \;
+```
+
+::: callout-important
+## `-exec ... {} \;` vs `-exec ... {} +`
+- `\;` ejecuta el comando una vez por archivo: 1000 archivos → 1000 invocaciones. Lento.
+- `+` agrupa todos los archivos en una sola invocación: 1 comando con 1000 argumentos. Rápido.
+
+Pero `+` solo funciona si el comando acepta varios archivos como argumentos (como `cp`, `gzip`, `samtools index`). Si el comando requiere un solo archivo a la vez (porque produce salida con nombre derivado del archivo), usa `\;`.
+
+Para construir nombres de salida dinámicos con `\;`:
+```bash
+find . -name "*.sam" -exec bash -c '
+    samtools view -b "$1" > "${1%.sam}.bam"
+' _ {} \;
+```
+:::
+
+### `-exec sh -c '...' _ {} \;`
+
+Cuando necesitas manipular el nombre (extraer prefijo, cambiar extensión, construir rutas de salida), `find` solo pasa el nombre "tal cual" al comando. La solución es invocar un subshell:
+
+```bash
+find . -name "*.sam" -exec sh -c '
+    for f; do
+        bam="${f%.sam}.bam"
+        samtools view -b "$f" > "$bam"
+    done
+' _ {} +
+```
+
+`sh -c 'script' _ {} +` pasa los archivos como `$1`, `$2`, ... al script. El `_` ocupa `$0` (nombre del shell). El bucle `for f` recorre todos. Mucho más eficiente que un `\;` por archivo.
+
+## 7.5. `locate`: búsqueda en base de datos indexada
+
+`locate` consulta una base de datos preconstruida (generalmente `/var/lib/mlocate/mlocate.db`) que se actualiza diariamente con `updatedb`:
+
+```bash
+locate refseq.fa
+locate "*.bam"
+locate -i brca
+```
+
+Es ** órdenes de magnitud más rápido** que `find` porque no recorre el disco: solo busca en el índice.
+
+::: callout-warning
+## `locate` puede estar desactualizado
+Si creaste un archivo hace 5 minutos, `locate` no lo encuentra hasta que se ejecute `updatedb`. Para forzar la actualización:
+
+```bash
+sudo updatedb
+```
+
+En WSL, `mlocate` puede no estar instalado por defecto:
+
+```bash
+sudo apt install mlocate
+sudo updatedb
+```
+:::
+
+### Cuándo usar `locate` vs `find`
+
+| Situación | Usa |
+|-----------|-----|
+| Buscar un archivo que existía ayer | `locate` |
+| Buscar archivos modificados hoy | `find -mtime -1` |
+| Buscar por tamaño, permisos, dueño | `find` |
+| Buscar en todo el sistema rápidamente | `locate` |
+| Aplicar una acción a cada archivo | `find -exec` |
+
+## 7.6. `which`, `whereis` y `type`
+
+### `which`: ruta del ejecutable
+
+```bash
+which bwa
+# /usr/local/bin/bwa
+```
+
+Solo busca en `$PATH`. Útil para resolver **qué versión** se ejecuta cuando hay varias instaladas.
+
+### `whereis`: binario, fuente y manpage
+
+```bash
+whereis samtools
+# samtools: /usr/bin/samtools /usr/share/man/man1/samtools.1.gz
+```
+
+### `type`: cómo interpreta Bash el comando
+
+```bash
+type ls
+# ls is aliased to `ls --color=auto'
+
+type grep
+# grep is /usr/bin/grep
+
+type cd
+# cd is a shell builtin
+```
+
+::: callout-tip
+## `type` resuelve alias, funciones y builtins
+`type` te dice **qué se ejecutará realmente** al escribir un comando: alias, función de shell, builtin o binario en `$PATH`. Si tienes un alias `ll='ls -lAhF'`, `type ll` te lo muestra.
+:::
+
+## 7.7. Ejemplos bioinformáticos
+
+### Buscar motif EcoRI (GAATTC) en un FASTA
+
+```bash
+grep -i -o "GAATTC" genome.fa | wc -l
+```
+
+`-o` imprime una ocurrencia por línea, `wc -l` las cuenta. Sin `-o`, una sola línea con 10 GAATTC contaría como 1.
+
+### Encontrar BAMs mayores a 1 GB
+
+```bash
+find /data -name "*.bam" -size +1G
+```
+
+Para listar con tamaño:
+
+```bash
+find /data -name "*.bam" -size +1G -exec ls -lh {} +
+```
+
+### Buscar un gen concreto en GFF
+
+```bash
+grep -w "BRCA1" annotation.gff3
+```
+
+`-w` evita falsos positivos. Para ver contexto (3 líneas antes y después):
+
+```bash
+grep -C 3 -w "BRCA1" annotation.gff3
+```
+
+### Encontrar archivos modificados hoy
+
+```bash
+find . -mtime -1 -type f
+```
+
+### Eliminar temporales antiguos
+
+```bash
+find . -name "*.tmp" -mtime +30 -delete
+```
+
+::: callout-danger
+## `-delete` es irreversible
+`-delete` no pide confirmación y no va a la papelera. **Antes de aplicar `-delete`, ejecuta el mismo `find` sin la acción** y revisa la lista:
+
+```bash
+find . -name "*.tmp" -mtime +30      # revisa qué archivos aparecerían
+find . -name "*.tmp" -mtime +30 -delete    # solo si estás seguro
+```
+
+Nunca uses `-delete` sobre `/`, `/etc`, `/usr` o cualquier ruta del sistema sin verificar primero.
+:::
+
+### Ejecutar fastqc en todos los `.fastq.gz`
+
+```bash
+find . -name "*.fastq.gz" -exec fastqc {} +
+```
+
+`+` en lugar de `\;` para que `fastqc` reciba varios archivos a la vez: invocaciones menos y mejor uso de CPU.
+
+### Buscar reads de una muestra en muchos FASTQ
+
+```bash
+grep -l "SRR123456" *.fastq
+```
+
+`-l` lista solo los archivos que contienen el patrón (no las líneas, que podrían ser millones).
+
+## 7.8. Combinaciones prácticas
+
+### Pipeline: encontrar BAMs sin índice
+
+```bash
+find . -name "*.bam" | while read bam; do
+    [[ -f "${bam}.bai" || -f "${bam%.bam}.bai" ]] || echo "$bam"
+done
+```
+
+### Buscar un oligo en muchos FASTA recursivamente
+
+```bash
+grep -r -l --include=*.fa "ACGTACGTACGT" /data/assembly/
+```
+
+### Listar archivos SAM sin su BAM correspondiente
+
+```bash
+find . -name "*.sam" | while read s; do
+    [[ -f "${s%.sam}.bam" ]] || echo "$s"
+done
+```
+
+::: callout-note
+## WSL2: permisos y accesos
+En WSL, `/mnt/c/`, `/mnt/d/`... son las unidades de Windows. `find /mnt/c -name "*.fastq"` funciona pero es **muy lento** (sistema 9P para acceder a NTFS). Si necesitas buscar mucho en datos de Windows, cópialos a `~` dentro del sistema de archivos de Linux (`ext4` virtual de WSL) y busca ahí: será 10x más rápido.
+:::
+
+---
+
+## Ejercicios
+
+### Ejercicio 1
+
+Busca el motif "TATAAA" (TATA box) en un archivo `promoters.fa`. Debes:
+
+1. Mostrar las líneas que contienen el motif con **número de línea** y **2 líneas de contexto**.
+2. Contar cuántas veces aparece el motif, sin importar la orientación del genoma (usa `-i`).
+3. Listar en qué posiciones (número de línea) aparece, sin el contexto.
+
+### Ejercicio 2
+
+Encuentra todos los archivos `.bam` y `.bai` en `/data` modificados en los últimos 7 días, lista cada uno con su tamaño. El comando esperado usa `find ... -mtime -7 -exec ls -lh {} \;`.
+
+### Ejercicio 3
+
+Usa `find` con `-exec` para **eliminar** archivos `.log` en `/tmp` modificados hace más de 30 días. Muestra el comando correcto. **ADVERTENCIA**: nunca uses `-delete` con rutas del sistema sin verificar primero la lista.
+
+---
+
+## Soluciones
+
+### Solución 1
+
+```bash
+# (a) Mostrar líneas con número y 2 líneas de contexto
+grep -n -C 2 -i "TATAAA" promoters.fa
+
+# (b) Contar ocurrencias (no líneas) del motif, ignorando mayúsculas/minúsculas
+grep -i -o "TATAAA" promoters.fa | wc -l
+
+# (c) Listar números de línea donde aparece (sin contexto)
+grep -n -i "TATAAA" promoters.fa | cut -d: -f1
+```
+
+Explicación:
+
+- `-i` ignora mayúsculas/minúsculas: el motif puede aparecer como `tataaa`, `TataaA`, etc., y todos los genomas deberían contar.
+- `-n` añade el número de línea delante de cada coincidencia.
+- `-C 2` muestra 2 líneas antes y 2 después, lo que permite ver qué gen/promotor está alrededor del motif.
+- `-o` imprime solo el match (uno por línea) en lugar de la línea completa. Esto permite que `wc -l` cuente **ocurrencias**, no líneas: si una línea tiene 2 TATA boxes, contará como 2.
+- `cut -d: -f1` en la parte (c) extrae la primera columna del formato de salida de `grep -n`, que es `número:línea`. Separa por `:` y se queda con el número.
+
+::: callout-tip
+## Versión más robusta del conteo
+Para contar también apariciones en la hebra negativa, donde el motif aparecería como `TTTATA` (reverso complementario), tendrías que buscar ambos:
+
+```bash
+{ grep -i -o "TATAAA" promoters.fa; grep -i -o "TTTATA" promoters.fa; } | wc -l
+```
+
+Esto es una simplificación; para análisis serio de motifs usa herramientas dedicadas (MEME, FIMO).
+:::
+
+### Solución 2
+
+```bash
+# Buscar .bam y .bai modificados en los últimos 7 días y listar con tamaño
+find /data \( -name "*.bam" -o -name "*.bai" \) -type f -mtime -7 -exec ls -lh {} \;
+```
+
+Desglose:
+
+- `find /data` inicia la búsqueda en `/data` (recursivo por defecto).
+- `\( -name "*.bam" -o -name "*.bai" \)` agrupa un OR: archivos que terminen en `.bam` **o** `.bai`. Los paréntesis están escapados con `\` para que `find` los interprete, no el shell.
+- `-type f` restringe a archivos regulares (no directorios ni enlaces).
+- `-mtime -7` filtra por modificados hace **menos** de 7 días (24h × 7 = 168 h).
+- `-exec ls -lh {} \;` ejecuta `ls -lh` para cada archivo encontrado, mostrando tamaño legible (-h → "1.2G" en lugar de "1288490188").
+
+Salida típica:
+
+```text
+-rw-r--r-- 1 bioinfo bioinfo 2.1G ene 15 11:30 /data/sample1/aligned.bam
+-rw-r--r-- 1 bioinfo bioinfo 4.5M ene 14 18:22 /data/sample1/aligned.bam.bai
+-rw-r--r-- 1 bioinfo bioinfo 3.8G ene 13 09:15 /data/sample2/aligned.bam
+```
+
+::: callout-note
+## Alternativa más eficiente con `+`
+```bash
+find /data \( -name "*.bam" -o -name "*.bai" \) -type f -mtime -7 -exec ls -lh {} +
+```
+Con `+`, `ls` recibe todos los archivos en una sola invocación: mucho más rápido cuando hay cientos. La salida es similar, aunque los archivos aparecen agrupados por directorio.
+:::
+
+### Solución 3
+
+```bash
+# PASO 1 (verificación OBLIGATORIA): listar qué archivos se eliminarían
+find /tmp -name "*.log" -type f -mtime +30 -print
+
+# PASO 2 (solo si el listado del paso 1 es correcto): eliminar
+find /tmp -name "*.log" -type f -mtime +30 -delete
+```
+
+Alternativa equivalente con `-exec rm`:
+
+```bash
+find /tmp -name "*.log" -type f -mtime +30 -exec rm -v {} +
+```
+
+Desglose:
+
+- `/tmp` es la ruta donde buscar (relativamente segura, pero revisa igualmente: algunos programas guardan datos ahí).
+- `-name "*.log"` filtra por extensión.
+- `-type f` evita eliminar directorios que se llamen "algo.log".
+- `-mtime +30` selecciona archivos modificados hace **más** de 30 días.
+- `-delete` elimina cada archivo encontrado (sin papelera, sin confirmación).
+- `-exec rm -v {} +` hace lo mismo pero con `rm -v` (verbose): imprime cada archivo borrado. Útil para logs de mantenimiento.
+- `-print` en el paso 1 es la acción por defecto, pero lo explicito para que quede claro que es solo un listado.
+
+::: callout-danger
+## Reglas de oro para `-delete`
+1. **Nunca** uses `-delete` sobre `/`, `/etc`, `/usr`, `/var`, `/sys`, `/proc`.
+2. **Siempre** ejecuta primero el `find` sin `-delete` y revisa el listado.
+3. **Encierra entre comillas** los patrones: `-name "*.log"`, no `-name *.log` (el shell expandiría `*` antes).
+4. **Verifica el directorio**: en WSL, `/tmp` es real y se borra al reiniciar WSL. En Linux de servidor, `/tmp` puede contener datos importantes de otros usuarios.
+:::
+
+::: callout-tip
+## Versión interactiva con `-ok`
+Si quieres que `find` pida confirmación **antes de borrar cada archivo**, usa `-ok`:
+
+```bash
+find /tmp -name "*.log" -mtime +30 -ok rm {} \;
+# <rm ... /tmp/app.log> ?  → responde y o n
+```
+Más seguro en producción, aunque tedioso si hay muchos archivos.
+:::
+
+::: callout-note
+## Resumen del capítulo
+Hemos visto `grep` con todas sus opciones clave (`-i`, `-v`, `-c`, `-n`, `-l`, `-r`, `-w`, `-x`, `-o`, `-A/-B/-C`, `-e`, `-f`, `-E`, `-F`, `--color`), la equivalencia con `egrep`/`fgrep`, las bases de **expresiones regulares**, `find` con criterios de nombre, tipo, tamaño, tiempo, permisos, dueño y combinaciones lógicas, las acciones `-print`, `-ls`, `-delete`, `-exec {} \;` y `-exec {} +` (incluyendo el patrón avanzado `sh -c '...' _ {} +`), `locate` para búsquedas indexadas, y `which`/`whereis`/`type` para resolver ejecutables. Con esto ya puedes localizar archivos en cualquier rincón del sistema y encontrar cualquier patrón en cualquier texto. En el Capítulo 8 entraremos en el **procesamiento de texto** con `cut`, `sort`, `uniq`, `tr`, `paste` y `column`.
+:::

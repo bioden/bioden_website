@@ -1,0 +1,525 @@
+---
+title: "Capítulo 2: Instalación en WSL2 y Windows nativo"
+---
+
+## 2.1 Introducción
+
+Este capítulo recorre las **cuatro rutas** principales para tener Conda funcionando en una máquina Windows 10/11:
+
+- **Ruta A**: Miniconda en WSL2 con Ubuntu (recomendada para bioinformática "seria").
+- **Ruta B**: Miniforge en WSL2 (recomendada en 2024+, evita problemas con `defaults`).
+- **Ruta C**: Anaconda en Windows nativo (con GUI Navigator, para principiantes).
+- **Ruta D**: Miniconda en Windows nativo (alternativa ligera a Anaconda).
+
+Cubriremos cada ruta paso a paso, con comandos verificables, configuración post-instalación, estructura de directorios, solución de problemas comunes y desinstalación. Antes de empezar, asegúrate de tener al menos **5 GB libres** y permisos de administrador local (no son necesarios para las rutas A, B y D si instalas "Just Me").
+
+::: callout-important
+Si vas a trabajar con herramientas bioinformáticas reales (BWA, samtools, STAR, GATK...), **elige la Ruta A o B (WSL2)**. Bioconda publica la inmensa mayoría de sus paquetes solo para `linux-64`. En Windows nativo (Rutas C y D) funcionarán bien paquetes de Python puro y R, pero el catálogo bioinformático es muy limitado.
+:::
+
+## 2.2 Ruta A: Miniconda en WSL2 con Ubuntu
+
+### 2.2.1 Prerrequisitos
+
+Asume que tienes instalado WSL2 con Ubuntu 22.04 o superior. Si no es así, en PowerShell de Windows (como administrador):
+
+```powershell
+wsl --install -d Ubuntu-22.04
+```
+
+Reinicia el equipo, abre Ubuntu desde el menú inicio, crea tu usuario y contraseña Linux. A continuación, dentro de WSL2, actualiza el sistema:
+
+```bash
+sudo apt update && sudo apt upgrade -y
+```
+
+### 2.2.2 Descargar el instalador
+
+```bash
+cd ~
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+```
+
+::: callout-tip
+Si tu máquina es ARM64 (p. ej. un equipo con Snapdragon X), descarga la versión `Linux-aarch64.sh` en lugar de `Linux-x86_64.sh`. Comprueba tu arquitectura con `uname -m` antes de descargar.
+:::
+
+### 2.2.3 Verificar la integridad (recomendado)
+
+Aunque el instalador viene por HTTPS, conviene verificar el hash SHA256:
+
+```bash
+sha256sum Miniconda3-latest-Linux-x86_64.sh
+# Compara el hash con los publicados en:
+# https://docs.conda.io/en/latest/miniconda/hashes/
+```
+
+Si el hash no coincide, **no ejecutes el instalador**: podría haber sido manipulado o descargado parcialmente.
+
+### 2.2.4 Ejecutar el instalador
+
+```bash
+bash Miniconda3-latest-Linux-x86_64.sh -b -p $HOME/miniconda3
+```
+
+Las banderas significan:
+
+- `-b`: *batch mode*, sin preguntas interactivas (instalación silenciosa).
+- `-p $HOME/miniconda3`: ruta de instalación. Conviene usar `$HOME` en lugar de `/opt` para no requerir sudo.
+
+### 2.2.5 Inicializar Conda en Bash
+
+```bash
+# Hook temporal para tener `conda` disponible en esta sesión
+eval "$($HOME/miniconda3/bin/conda shell.bash hook)"
+
+# Inicialización permanente: añade un bloque a ~/.bashrc
+conda init bash
+```
+
+Cierra y vuelve a abrir la terminal. Tu prompt debería mostrar `(base)` al inicio, indicando que el entorno base está activo (lo desactivaremos en §2.6). Verifica:
+
+```bash
+conda --version
+# Salida esperada: conda 24.x.x o superior
+```
+
+## 2.3 Ruta B: Miniforge (recomendada en 2024+)
+
+Miniforge es idéntico a Miniconda, pero viene con `conda-forge` como canal por defecto en lugar de `defaults`. Esto evita el problema de los ToS comerciales de Anaconda Inc. y los conflictos de canal que veremos en el capítulo 4.
+
+```bash
+cd ~
+wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh
+
+# Verificar (opcional)
+sha256sum Miniforge3-Linux-x86_64.sh
+
+# Instalación silenciosa
+bash Miniforge3-Linux-x86_64.sh -b -p $HOME/miniforge3
+
+# Inicializar
+eval "$($HOME/miniforge3/bin/conda shell.bash hook)"
+conda init bash
+```
+
+Cierra y abre la terminal. Verifica que el canal por defecto es `conda-forge`:
+
+```bash
+conda config --show channels
+# channels:
+#   - conda-forge
+```
+
+::: callout-tip
+Si ya tenías Miniconda instalado y quieres migrar a Miniforge, primero desinstala Miniconda (ver §2.9) y luego instala Miniforge. No conviene tener ambos en paralelo: el `conda init` sobrescribiría entradas en `~/.bashrc`.
+:::
+
+## 2.4 Ruta C: Anaconda en Windows nativo
+
+### 2.4.1 Descargar
+
+Visita <https://www.anaconda.com/download> y descarga el instalador `.exe` de Windows (x86_64 o ARM64 según tu equipo).
+
+### 2.4.2 Ejecutar el instalador
+
+Doble clic en el `.exe`. En el asistente:
+
+1. **Tipo de instalación**: elige **"Just Me"** (no "All Users"). Instalar "All Users" requiere permisos de administrador y complica las actualizaciones.
+2. **Ruta de instalación**: deja la propuesta (`C:\Users\TuUsuario\anaconda3`).
+3. **Opciones avanzadas**:
+   - **NO marcar** "Add Anaconda to my PATH environment variable". Esto puede romper otros programas que dependan del Python del sistema.
+   - **Sí marcar** "Register Anaconda as my default Python 3.x" (recomendado salvo que uses Python del sistema para otra cosa).
+
+### 2.4.3 Verificar
+
+Abre **"Anaconda Prompt"** desde el menú Inicio (es un acceso directo a un `cmd` con variables de entorno de Anaconda configuradas):
+
+```powershell
+conda --version
+# conda 24.x.x
+
+python --version
+# Python 3.12.x (o la versión que venga con Anaconda)
+```
+
+### 2.4.4 Anaconda Navigator (GUI opcional)
+
+Desde el menú Inicio puedes abrir **"Anaconda Navigator"**: una interfaz gráfica desde donde lanzar JupyterLab, Spyder, VS Code, RStudio, etc. Es útil para principiantes pero consume recursos; en bioinformática profesional se prefiere la línea de comandos.
+
+::: callout-warning
+Anaconda Navigator a veces falla al arrancar por conflictos con la caché. Si no abre, prueba desde Anaconda Prompt: `anaconda-navigator`. Si sigue fallando, ejecuta `conda update anaconda-navigator`.
+:::
+
+## 2.5 Ruta D: Miniconda en Windows nativo
+
+Miniconda es la versión ligera (~80 MB) de Anaconda: solo Python + conda + pip. Recomendada para usuarios intermedios que no necesitan Navigator ni los 2500 paquetes preinstalados.
+
+### 2.5.1 Descargar
+
+Descarga el instalador desde <https://docs.conda.io/en/latest/miniconda.html> (sección Windows, `Miniconda3-latest-Windows-x86_64.exe`).
+
+### 2.5.2 Instalación interactiva
+
+Doble clic en el `.exe`. Mismas opciones avanzadas que Anaconda: "Just Me", **no añadir al PATH**, sí registrar como Python por defecto.
+
+### 2.5.3 Instalación silenciosa (PowerShell)
+
+Para instalaciones automatizadas o scripting:
+
+```powershell
+Start-Process -FilePath ".\Miniconda3-latest-Windows-x86_64.exe" `
+  -ArgumentList "/S","/InstallationType=JustMe","/AddToPath=0","/RegisterPython=1","/D=$env:USERPROFILE\miniconda3" `
+  -Wait
+```
+
+Las banderas:
+
+- `/S`: instalación silenciosa.
+- `/InstallationType=JustMe`: no requiere admin.
+- `/AddToPath=0`: **no** modifica el PATH del sistema (recomendado).
+- `/RegisterPython=1`: registra como Python por defecto.
+- `/D=$env:USERPROFILE\miniconda3`: ruta de instalación (debe ir al final sin comillas).
+
+### 2.5.4 Trabajar desde "Anaconda Prompt"
+
+Tras instalar Miniconda, abre **"Anaconda Prompt (miniconda3)"** desde el menú Inicio. Allí funcionan los mismos comandos que en Linux (`conda`, `python`, `pip`), pero adaptados a Windows:
+
+```powershell
+conda --version
+conda info
+```
+
+::: callout-note
+En Windows nativo, los comandos de conda funcionan en **Anaconda Prompt** y en **PowerShell** (si ejecutaste `conda init powershell`). En **cmd.exe** estándar no funcionará salvo que añadas la carpeta `Scripts/` al PATH.
+:::
+
+## 2.6 Configuración post-instalación (común a todas las rutas)
+
+### 2.6.1 Desactivar auto-activación de `base`
+
+Por defecto, al abrir una terminal se activa automáticamente el entorno `base`. Esto es molesto si quieres usar el Python del sistema en algunos casos. Recomendado:
+
+```bash
+conda config --set auto_activate_base false
+```
+
+### 2.6.2 Configurar `channel_priority`
+
+La estrategia de resolución de conflictos entre canales:
+
+```bash
+conda config --set channel_priority flexible
+```
+
+`flexible` (recomendado) permite mezclar canales con prudencia. `strict` es más rígido pero más reproducible. `disabled` desactiva la prioridad (no recomendado).
+
+### 2.6.3 Configurar canales
+
+```bash
+# En Miniforge, conda-forge ya está por defecto; solo falta bioconda
+conda config --add channels bioconda
+
+# En Miniconda/Anaconda, añadimos ambos y evitamos defaults
+conda config --add channels conda-forge
+conda config --add channels bioconda
+# IMPORTANTE: no ejecutar `conda config --add channels defaults`
+```
+
+### 2.6.4 Verificar configuración
+
+```bash
+conda config --show channels
+conda config --show channel_priority
+conda info
+```
+
+Salida esperada:
+
+```text
+channels:
+  - conda-forge
+  - bioconda
+channel_priority: flexible
+```
+
+## 2.7 Estructura de directorios tras la instalación
+
+```
+~/miniconda3/     (o ~/miniforge3/, ~/anaconda3/, C:\Users\Tu\anaconda3)
+├── bin/              # ejecutables (conda, python, pip) en Linux/macOS
+├── Scripts/          # equivalente en Windows (conda.exe, pip.exe)
+├── Lib/              # bibliotecas y site-packages de Python
+├── envs/             # entornos virtuales (uno por subdirectorio)
+│   └── base/         # entorno base (puede vivir en la raíz)
+├── pkgs/             # caché de paquetes descargados (.tar.bz2 / .conda)
+├── condarc           # config dentro de la instalación
+├── etc/              # configuraciones globales
+└── ~500 MB (Miniconda) o ~3 GB (Anaconda)
+```
+
+En Windows, la raíz suele estar en `C:\Users\TuUsuario\miniconda3\`. Los subdirectorios son los mismos, con la diferencia de que los ejecutables viven en `Scripts\` en lugar de `bin\`.
+
+## 2.8 El archivo `~/.condarc`
+
+El archivo `~/.condarc` (en tu directorio `$HOME`, en Windows `%USERPROFILE%\.condarc`) guarda tu configuración personal de Conda. Un ejemplo recomendado:
+
+```yaml
+channels:
+  - conda-forge
+  - bioconda
+channel_priority: flexible
+auto_activate_base: false
+envs_dirs:
+  - ~/miniconda3/envs
+pkgs_dirs:
+  - ~/miniconda3/pkgs
+```
+
+::: callout-tip
+Puedes editar `~/.condarc` directamente con tu editor favorito (`nano`, `vim`, VS Code) o usar los comandos `conda config --set` / `--add` / `--remove`. Ambos métodos son equivalentes.
+:::
+
+Para evitar que Conda añada `defaults` automáticamente, incluye la palabra clave `nodefaults` como último canal:
+
+```yaml
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults
+```
+
+## 2.9 Verificación final de la instalación
+
+```bash
+conda info
+# Muestra: versión, ruta de instalación, plataforma (linux-64 / win-64), canales...
+
+conda list
+# Lista todos los paquetes en el entorno base (~70 en Miniconda, ~2500 en Anaconda)
+
+which conda
+# /home/usuario/miniconda3/bin/conda   (en WSL2)
+# equivalente en Windows:  where conda  dentro de Anaconda Prompt
+```
+
+## 2.10 Desinstalación
+
+### 2.10.1 En WSL2 / Linux
+
+```bash
+# 1) Eliminar el directorio de instalación
+rm -rf ~/miniconda3            # o ~/miniforge3, ~/anaconda3
+
+# 2) Eliminar directorio de configuración de usuario
+rm -rf ~/.conda
+
+# 3) Editar ~/.bashrc y borrar el bloque "conda initialize" (entre los marcadores)
+nano ~/.bashrc
+# >>> conda initialize >>>
+# ... (borrar todo el bloque)
+# <<< conda initialize <<<
+
+# 4) Recargar bashrc
+source ~/.bashrc
+```
+
+### 2.10.2 En Windows nativo
+
+```powershell
+# Opción 1: Add or Remove Programs (interfaz gráfica)
+#   Configuración → Aplicaciones → Anaconda/Miniconda → Desinstalar
+
+# Opción 2: limpieza manual de restos
+Remove-Item -Recurse -Force $env:USERPROFILE\miniconda3
+Remove-Item -Recurse -Force $env:USERPROFILE\.conda
+Remove-Item -Force $env:USERPROFILE\.condarc
+```
+
+## 2.11 Solución de problemas comunes
+
+### `conda: command not found` después de instalar
+
+Causa: el bloque `conda init` no se ha cargado en la sesión actual.
+
+```bash
+source ~/.bashrc          # recarga configuración
+# o cierra y abre una terminal nueva
+```
+
+Si aún no funciona, ejecuta manualmente:
+
+```bash
+eval "$($HOME/miniconda3/bin/conda shell.bash hook)"
+conda init bash
+```
+
+### `CondaError: Permission denied`
+
+Causa: permisos incorrectos en `~/miniconda3` (p. ej., si lo instalaste con `sudo` por error).
+
+```bash
+# Reasignar ownership al usuario actual
+sudo chown -R $USER:$USER ~/miniconda3
+```
+
+### Lentitud al resolver dependencias
+
+Causa: el resolvedor clásico de Conda es lento en entornos grandes. Soluciones:
+
+1. Instalar **Mamba** (capítulo 5): `conda install -n base -c conda-forge mamba`.
+2. Reducir el número de canales: solo `conda-forge` + `bioconda`.
+3. Usar `conda config --set channel_priority flexible` para que el resolvedor no pruebe combinaciones imposibles.
+
+### En Windows: `conda` no funciona en cmd.exe o PowerShell estándar
+
+Causa: Conda solo se inicializa en **Anaconda Prompt**, no en consolas genéricas. Soluciones:
+
+- Usar siempre Anaconda Prompt.
+- Para PowerShell: `conda init powershell`, reiniciar la consola y permitir ejecución de scripts: `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`.
+
+### En WSL2: `conda init` no se carga automáticamente
+
+Asegúrate de que tu `~/.bashrc` contiene el bloque `# >>> conda initialize >>>` al final. Si no lo tiene, ejecuta `conda init bash` de nuevo. Si usas `zsh` o `fish`, ejecuta `conda init zsh` o `conda init fish`.
+
+::: callout-warning
+En WSL2, a veces el instalador no detecta el shell correctamente. Si usas **zsh** (común en entornos *oh-my-zsh*), ejecuta `conda init zsh` manualmente tras la instalación.
+:::
+
+## 2.12 Recomendación final
+
+Para este curso, la configuración recomendada es:
+
+- **Ruta B (Miniforge en WSL2)** como instalación principal.
+- `channel_priority: flexible`.
+- `auto_activate_base: false`.
+- Canales: `conda-forge` + `bioconda` (sin `defaults`).
+- Mamba instalado en el entorno base (lo veremos en el capítulo 5).
+
+Con esta base, en los siguientes capítulos crearemos entornos reproducibles para RNA-seq, filogenia y análisis estadístico en R.
+
+## 2.13 Ejercicios
+
+### Ejercicio 1
+Instala **Miniforge en WSL2** (o Miniconda si lo prefieres). Configura los canales `conda-forge` + `bioconda` con `channel_priority flexible`. Verifica con `conda info`. Toma nota de las versiones de `conda`, Python y la plataforma.
+
+### Ejercicio 2 (para usuarios de Windows)
+Instala **Anaconda o Miniconda nativo** en Windows. Verifica la instalación desde Anaconda Prompt. Crea un acceso directo a Anaconda Prompt en el escritorio para acceso rápido futuro.
+
+### Ejercicio 3
+Personaliza el archivo `~/.condarc` (o `%USERPROFILE%\.condarc` en Windows) con: (a) canales `conda-forge` + `bioconda`, (b) `channel_priority flexible`, (c) `auto_activate_base false`. Verifica con `conda config --show-sources`. Reinicia la terminal y comprueba que `conda info` muestra los cambios.
+
+## 2.14 Soluciones
+
+### Solución Ejercicio 1
+
+```bash
+# 1. Descargar Miniforge
+cd ~
+wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh
+
+# 2. Instalar en batch mode
+bash Miniforge3-Linux-x86_64.sh -b -p $HOME/miniforge3
+
+# 3. Inicializar
+eval "$($HOME/miniforge3/bin/conda shell.bash hook)"
+conda init bash
+
+# 4. Cerrar y reabrir la terminal (o recargar .bashrc)
+source ~/.bashrc
+
+# 5. Configurar canales (en Miniforge, conda-forge ya está; añadimos bioconda)
+conda config --add channels bioconda
+conda config --set channel_priority flexible
+conda config --set auto_activate_base false
+
+# 6. Verificar
+conda info
+# Salida esperada (extracto):
+#   active environment : base
+#   platform : linux-64
+#   conda version : 24.x.x
+#   python version : 3.12.x
+#   channels:
+#     - conda-forge
+#     - bioconda
+
+# 7. Tomar nota de las versiones en un archivo
+{
+  echo "Conda:   $(conda --version)"
+  echo "Python:  $(python --version)"
+  echo "Plataforma: $(conda info | grep platform)"
+} > mi_instalacion.txt
+cat mi_instalacion.txt
+```
+
+### Solución Ejercicio 2
+
+Pasos en Windows nativo:
+
+1. Descargar instalador desde <https://docs.conda.io/en/latest/miniconda.html> (Windows x86_64).
+2. Doble clic, elegir "Just Me", **no** añadir al PATH, registrar como Python por defecto.
+3. Abrir **"Anaconda Prompt (miniconda3)"** desde el menú Inicio y verificar:
+
+```powershell
+conda --version
+# conda 24.x.x
+
+conda info
+# platform : win-64
+# base environment : C:\Users\TuUsuario\miniconda3
+```
+
+4. Crear acceso directo en el escritorio: en el menú Inicio, botón derecho sobre "Anaconda Prompt (miniconda3)" → **Enviar a → Escritorio (crear acceso directo)**. Renómbralo como "Conda" para acceder más rápido.
+
+::: callout-note
+Recuerda: aunque Anaconda Prompt funcione bien para Python y R, las herramientas bioinformáticas de bioconda (samtools, bwa, GATK) **no están disponibles** para `win-64`. Para bioinformática "seria", instala WSL2 y sigue la Ruta A o B.
+:::
+
+### Solución Ejercicio 3
+
+Edita `~/.condarc` (Linux/WSL) o `%USERPROFILE%\.condarc` (Windows) directamente:
+
+```bash
+# En WSL2, usando nano
+nano ~/.condarc
+```
+
+Contenido a pegar:
+
+```yaml
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults
+channel_priority: flexible
+auto_activate_base: false
+```
+
+Guarda (`Ctrl+O`, `Enter`, `Ctrl+X` en nano) y verifica:
+
+```bash
+conda config --show-sources
+# Salida esperada:
+# channel_priority: flexible
+# auto_activate_base: False
+# channels:
+#   - conda-forge
+#   - bioconda
+#   - nodefaults
+
+# Reinicia la terminal
+exec $SHELL        # en WSL2/Linux
+# o cierra y abre la ventana en Windows
+
+# Verifica que conda info refleja los cambios
+conda info
+# Debe mostrar:
+#   channel_priority : flexible
+#   auto_activate_base: False
+#   channels:
+#     - conda-forge
+#     - bioconda
+```
+
+El `nodefaults` final es importante: asegura que Conda no reintroduzca `defaults` automáticamente en operaciones como `conda install`. Si el archivo `.condarc` no existe, créalo; `conda config --show-sources` lee también la configuración implícita del sistema (en `~/miniforge3/.condarc`), por lo que si en algún momento ves `defaults` listado, basta con repetir el paso del archivo de usuario para que prevalezca.

@@ -1,0 +1,595 @@
+---
+title: "Capítulo 7: Bioconda para bioinformática"
+---
+
+## 7.1 Qué es Bioconda
+
+**Bioconda** es un canal comunitario de Conda especializado en software bioinformático. Es, sin discusión, el canal más importante para cualquier investigador que trabaje con datos biológicos: contiene más de **10.000 paquetes** que cubren virtualmente todas las áreas de la bioinformática moderna, desde alineadores de NGS hasta herramientas de predicción de estructura 3D.
+
+Bioconda nació en **2014** como un esfuerzo coordinado por varios grupos de investigación (incluyendo el equipo de Johannes Köster, autor de Snakemake) para resolver un problema endémico: cada herramienta bioinformática se distribuía de una forma distinta (tarball de código fuente, binario precompilado, GitHub releases, contenedor Docker ad-hoc) y reproducir un pipeline completo era una pesadilla de compilaciones cruzadas y dependencias de sistema. Bioconda lo unificó todo bajo el paraguas de Conda.
+
+### Estadísticas actuales (2024)
+
+- **+10.000 paquetes** bioinformáticos
+- **+5.000 contribuidores** registrados
+- **+24 millones de descargas mensuales**
+- **+200.000 Pull Requests** mergeados desde 2014
+- Soporte para **linux-64, osx-64, osx-arm64** (Windows nativo limitado a paquetes Python puros)
+
+::: callout-note
+Bioconda es **un canal Conda**, no una distribución separada. No hay "Bioconda installer": se instala Anaconda/Miniconda/Miniforge y luego se añade el canal `bioconda`. Ver capítulo 4 para configuración detallada.
+:::
+
+## 7.2 Cómo está organizado Bioconda
+
+Bioconda funciona como un proyecto **comunitario abierto en GitHub**: https://github.com/bioconda/bioconda-recipes
+
+Cada paquete es una **"recipe"** (receta) que contiene un archivo `meta.yaml` con la descripción del paquete: nombre, versión, dependencias, URL del código fuente, hash SHA256 y tests básicos. El proceso para añadir o actualizar un paquete es:
+
+1. Hacer **fork** del repositorio `bioconda/bioconda-recipes`.
+2. Crear o modificar una recipe en `recipes/<nombre_paquete>/meta.yaml`.
+3. Probar el build localmente con `conda build`.
+4. Enviar un **Pull Request** a `bioconda/bioconda-recipes`.
+5. Recibir **feedback** de los mantenedores (uno o varios).
+6. Cuando se aprueba, sistemas de CI (Azure Pipelines, GitHub Actions) construyen el paquete para linux-64, osx-64 y osx-arm64 automáticamente.
+7. El paquete se **sube a anaconda.org/bioconda** en cuestión de minutos, disponible para todos.
+
+### Integración con otros canales
+
+Bioconda depende estrechamente de **conda-forge** para muchas dependencias (bibliotecas C, Python base, R base) y, en menor medida, de **defaults** (algunos binarios cerrados). Por eso la regla nemotécnica del capítulo 4: **`bioconda` > `conda-forge` > `defaults`**, con `defaults` idealmente ausente.
+
+::: callout-warning
+**Nunca** pongas `defaults` por encima de `bioconda`: puede provocar conflictos de versión que rompen dependencias bioinformáticas. Si necesitas mantener `defaults`, ponlo **al final**.
+:::
+
+## 7.3 Categorías de paquetes en Bioconda
+
+Bioconda organiza su catálogo por área de aplicación. Las categorías más relevantes para bioinformática son:
+
+### NGS (Next-Gen Sequencing)
+
+- **Alineamiento**: `bwa`, `bowtie2`, `minimap2`, `star`, `hisat2`, `bwa-mem2`
+- **Manipulación BAM**: `samtools`, `picard`, `bamtools`, `sambamba`
+- **Variantes**: `bcftools`, `gatk`, `freebayes`, `varscan`, `deepvariant`
+- **Trimming/QC**: `fastp`, `fastqc`, `trimmomatic`, `multiqc`, `seqkit`
+- **Cuantificación**: `salmon`, `kallisto`, `rsem`, `htseq`, `featurecounts`
+- **Ensamblaje**: `spades`, `megahit`, `velvet`, `flye`, `hifiasm`
+- **Llamada de peaks**: `macs2`, `genrich`, `macs3`
+
+### Filogenia
+
+- **Alineamiento MSA**: `mafft`, `muscle5`, `clustalo`, `t-coffee`
+- **ML (Maximum Likelihood)**: `iqtree`, `raxml-ng`, `fasttree`, `phyml`
+- **Bayesiano**: `mrbayes`, `beast2`, `revbayes`
+- **Modelos de sustitución**: `modeltest-ng`, `jmodeltest`, `prottest`
+- **Reconstruction de árboles**: `astral`, `mp-est`, `treepl`
+
+### RNA-seq
+
+- **Pseudo-alineamiento**: `salmon`, `kallisto`
+- **Alineamiento splice-aware**: `star`, `hisat2`, `tophat2`
+- **Cuantificación**: `stringtie`, `cufflinks`, `rsem`
+- **R/Bioconductor**: `bioconductor-deseq2`, `bioconductor-edger`, `bioconductor-limma`, `bioconductor-tximport`
+
+### Metagenómica
+
+- **Profiling taxonómico**: `kraken2`, `bracken`, `metaphlan`, `kaiju`
+- **Ensamblaje**: `metaspades`, `megahit`
+- **Binning**: `metabat2`, `maxbin2`, `concoct`
+- **Calidad MAGs**: `checkm-genome`, `checkm2`, `dastool`
+- **Anotación**: `prokka`, `bakta`, `pgap`
+- **Pipelines**: `qiime2`, `mothur`, `vsearch`
+
+### Biología estructural
+
+- **Dinámica molecular**: `gromacs`, `openmm`, `namd`, `ambermini`
+- **Docking**: `autodock-vina`, `autodock`, `gnina`, `hdock`, `haddock`
+- **Visualización**: `pymol-open-source`, `vmd`, `nglview`
+- **Análisis**: `mdanalysis`, `mdtraj`, `prody`
+
+### Análisis estadístico y visualización
+
+- **R base**: `r-base`, `r-tidyverse`, `r-ggplot2`
+- **Bioconductor**: `bioconductor-deseq2`, `bioconductor-edger`, `bioconductor-clusterprofiler`
+- **Python**: `pandas`, `biopython`, `scikit-learn`, `seaborn`, `plotly`
+
+## 7.4 Buscar paquetes en Bioconda
+
+Hay tres formas principales:
+
+### Web oficial
+
+La **mejor opción** para exploración visual: https://bioconda.github.io/
+
+Muestra todos los paquetes con buscador, descripción, dependencias, número de descargas y plataformas soportadas.
+
+### CLI con Conda/Mamba
+
+```bash
+# Buscar paquete
+mamba search -c bioconda samtools
+
+# Información detallada de un paquete (dependencias, builds, plataformas)
+mamba search -c bioconda samtools --info
+
+# Salida típica:
+# samtools 1.18 h117ee10_1 (bioconda, linux-64)
+#   depends on:
+#     - htslib >=1.18
+#     - libgcc
+#     - libzlib
+#     - ncurses
+#   license: MIT
+```
+
+### Anaconda.org
+
+Lista todas las versiones y builds disponibles con número de descargas: https://anaconda.org/bioconda
+
+::: callout-tip
+Si no encuentras un paquete en bioconda, búscalo en **conda-forge** primero (algunas herramientas bioinformáticas se publican ahí si tienen uso más general, como `biopython`). Si no está en ninguno, considera contribuirlo (ver §7.6).
+:::
+
+## 7.5 Cómo contribuir a Bioconda (resumen)
+
+Bioconda sobrevive gracias a contribuciones de la comunidad. Si usas una herramienta que aún no está empaquetada, contribuirla es relativamente sencillo:
+
+1. **Fork** https://github.com/bioconda/bioconda-recipes
+2. **Crear recipe** en `recipes/<paquete>/meta.yaml`. Plantilla mínima:
+   ```yaml
+   package:
+     name: mi_herramienta
+     version: 1.0.0
+   source:
+     url: https://github.com/usuario/mi_herramienta/archive/v1.0.0.tar.gz
+     sha256: abc123def456...
+   build:
+     number: 0
+   requirements:
+     host:
+       - python
+       - pip
+     run:
+       - python
+       - biopython
+   test:
+     commands:
+       - mi_herramienta --version
+   about:
+     home: https://github.com/usuario/mi_herramienta
+     license: MIT
+     summary: Herramienta bioinformática que hace X
+   ```
+3. **Probar build localmente**:
+   ```bash
+   conda install -c conda-forge conda-build
+   conda build recipes/mi_herramienta
+   ```
+4. **Enviar PR** al repo oficial. Recibirás feedback de mantenedores en 1-3 días.
+5. Cuando se merge, el paquete se construye automáticamente y aparece en bioconda en ~30 minutos.
+
+::: callout-note
+Contribuir a bioconda es una de las formas más útiles de "devolver" a la comunidad bioinformática. Cada recipe nueva ayuda a miles de investigadores en el mundo.
+:::
+
+## 7.6 Verificar paquete bioconda
+
+```bash
+# Ver info completa de un paquete
+mamba search -c bioconda samtools --info
+
+# Listar todas las versiones disponibles
+mamba search -c bioconda samtools
+
+# Salida esperada:
+# Loading channels: done
+# # Name        Version  Build         Channel
+# samtools      0.1.19   ...           bioconda
+# samtools      1.9      ...           bioconda
+# samtools      1.10     ...           bioconda
+# samtools      1.17     ...           bioconda
+# samtools      1.18     h117ee10_1    bioconda
+```
+
+## 7.7 Ejemplos prácticos de entornos bioconda por caso de uso
+
+### Pipeline de variant calling bacteriano
+
+```yaml
+name: bacterial_variant
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults
+dependencies:
+  - fastp=0.23.4
+  - fastqc=0.12.1
+  - bwa=0.7.17
+  - samtools=1.18
+  - bcftools=1.18
+  - multiqc=1.14
+  - quast=5.2
+  - prokka=1.14
+```
+
+### Pipeline de RNA-seq humano
+
+```yaml
+name: rnaseq_human
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults
+dependencies:
+  - fastp=0.23.4
+  - fastqc=0.12.1
+  - star=2.7.11
+  - salmon=1.10
+  - samtools=1.18
+  - multiqc=1.14
+  - r-base=4.3
+  - bioconductor-deseq2
+  - bioconductor-tximport
+  - r-tidyverse
+```
+
+### Pipeline filogenético
+
+```yaml
+name: phylogeny
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults
+dependencies:
+  - mafft=7.525
+  - muscle5=5.1
+  - trimal=1.4
+  - iqtree=2.2
+  - raxml-ng=1.2
+  - mrbayes=3.2
+  - modeltest-ng=0.1
+  - figtree=1.4
+```
+
+### Pipeline metagenómica
+
+```yaml
+name: metagenomics
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults
+dependencies:
+  - fastp=0.23.4
+  - fastqc=0.12.1
+  - kraken2=2.1
+  - bracken=2.8
+  - metabat2=2.15
+  - checkm-genome=1.1
+  - prokka=1.14
+  - spades=3.15
+  - quast=5.2
+```
+
+::: callout-tip
+**Plantilla común**: `fastp` + `fastqc` + `multiqc` aparecen en casi cualquier pipeline de NGS. Si los pones como base, sólo necesitas añadir las herramientas específicas del análisis.
+:::
+
+## 7.8 Versiones de paquetes bioconda
+
+Bioconda mantiene:
+
+- **Versión actual** (la última release estable)
+- **2-3 versiones anteriores** por compatibilidad
+- Versiones **muy antiguas** pueden desaparecer del canal tras un tiempo
+
+Si necesitas una versión obsoleta (p. ej. para reproducir un paper de 2015):
+
+- **Opción 1**: usar un **biocontainer** antiguo (capítulo 10).
+- **Opción 2**: compilar desde código fuente con `conda build`.
+- **Opción 3**: si está archivado en anaconda.org, puede seguir descargándose por URL directa:
+  ```bash
+  conda install https://anaconda.org/bioconda/samtools/1.9/download/linux-64/samtools-1.9-ha92aebf_2.tar.bz2
+  ```
+
+## 7.9 Problemas comunes con Bioconda
+
+| Problema                              | Causa probable                              | Solución                                          |
+|---------------------------------------|---------------------------------------------|---------------------------------------------------|
+| `PackageNotFoundError`                | Nombre mal escrito o no existe              | Buscar en bioconda.github.io                      |
+| `UnsatisfiableError` (conflictos)     | Mezcla con `defaults` o versiones cruzadas  | Usar mamba, quitar `defaults`, fijar versiones    |
+| Binario no funciona (segfault)        | Build roto o libc incompat                  | Reinstalar con `--force-reinstall`, reportar issue |
+| Instalación lentísima                 | Solver clásico de Conda                     | Migrar a Mamba (capítulo 5)                       |
+| Paquete no en win-64                  | Binario Linux/macOS sólo                    | Usar WSL2 o Docker                                 |
+| Paquete desactualizado                | Recipe no actualizada                       | Enviar PR o abrir issue en bioconda-recipes       |
+
+::: callout-warning
+Si después de varias horas un entorno no se resuelve, **no insistas**: lo más probable es que haya un conflicto real de dependencias. Crea un entorno vacío y añade paquetes uno a uno para aislar el culpable.
+:::
+
+## 7.10 Compatibilidad con sistemas operativos
+
+| Plataforma            | Soporte en bioconda                       |
+|-----------------------|-------------------------------------------|
+| **linux-64**          | Casi todos los paquetes (~99%)            |
+| **osx-64** (Intel)    | Mayoría (~90%)                            |
+| **osx-arm64** (Apple Silicon) | En crecimiento (~70%)              |
+| **win-64**            | Sólo paquetes Python puros, casi ningún binario bioinformático |
+
+### Por qué Windows nativo no soporta la mayoría de paquetes bioconda
+
+Las herramientas bioinformáticas se escriben típicamente en **C/C++** o **Python con extensiones C** y se compilan para Linux y macOS. Compilarlas para Windows requeriría:
+
+- Adaptar el código a las APIs de Windows (en lugar de POSIX).
+- Mantener un pipeline de CI en Windows.
+- Probar la funcionalidad específica de Windows.
+
+La comunidad bioinformática es mayoritariamente Linux/macOS, así que el esfuerzo de mantener ports Windows no se justifica. **Solución recomendada**: usar **WSL2** (donde se ejecutan los binarios Linux nativos sin limitaciones) o **Docker**.
+
+::: callout-important
+Si trabajas en Windows nativo y necesitas bioconda, **instala WSL2 antes de seguir**. Te dará acceso al catálogo completo de 10.000 paquetes. Ver capítulo 2 para instrucciones de instalación de WSL2.
+:::
+
+## 7.11 Biocontainers (mención, profundizado en capítulo 10)
+
+**Biocontainers** es un proyecto paralelo a bioconda que genera automáticamente imágenes Docker para cada paquete publicado en bioconda:
+
+- URL: https://quay.io/repository/biocontainers/
+- Cada paquete bioconda tiene una imagen Docker con tag por versión.
+- Útil cuando:
+  - El HPC no permite Conda (algunos clusters lo prohíben por razones de rendimiento I/O).
+  - Quieres aislamiento total del sistema.
+  - Necesitas reproducir un análisis en un entorno 100% controlado.
+
+```bash
+# Ejemplo: correr samtools vía biocontainer
+docker run --rm -v $(pwd):/data quay.io/biocontainers/samtools:1.18--h117ee10_1 \
+    samtools view -h /data/aligned.bam
+```
+
+## 7.12 Reportar bugs en paquetes bioconda
+
+Si un paquete falla en una operación que debería funcionar:
+
+1. Verifica en la web de bioconda si la versión que usas es la más reciente.
+2. Busca el issue tracker: https://github.com/bioconda/bioconda-recipes/issues
+3. Si no hay un issue similar, abre uno nuevo con:
+   - Nombre y versión del paquete (`samtools 1.18 h117ee10_1`)
+   - Sistema operativo (`Ubuntu 22.04 via WSL2`)
+   - Comando ejecutado (`samtools view -b aligned.bam`)
+   - Mensaje de error completo
+   - Versión de conda/mamba
+4. Si eres desarrollador, considera enviar un **PR con el fix**: la comunidad es muy receptiva.
+
+::: callout-tip
+Bioconda tiene una cultura muy **abierta y colaborativa**. Si contribuyes con un fix pequeño, lo más probable es que se merge en días.
+:::
+
+## 7.13 Ejercicios
+
+### Ejercicio 1
+
+Busca 5 herramientas bioinformáticas que uses frecuentemente en https://bioconda.github.io/. Para cada una, reporta: versión actual, dependencias principales, sistemas operativos soportados. Si hay alguna que no exista en bioconda, propone alternativa.
+
+### Ejercicio 2
+
+Crea tres entornos para tres pipelines distintos: (a) `pipeline_variant` con `bwa`, `samtools`, `bcftools`; (b) `pipeline_rnaseq` con `star`, `salmon`, `bioconductor-deseq2`; (c) `pipeline_metag` con `kraken2`, `bracken`, `metabat2`. Verifica que cada entorno funciona probando `--version` en cada herramienta.
+
+### Ejercicio 3
+
+Crea un archivo `environment.yml` para tu pipeline personal de bioinformática (puede ser uno real o imaginario). Justifica la elección de cada paquete y versión. Genera `conda-lock.yml` con `conda-lock`. Documenta cómo un colega reproduciría el análisis.
+
+## 7.14 Soluciones
+
+### Solución ejercicio 1
+
+```bash
+# Búsqueda de 5 herramientas frecuentes en bioconda
+# Ejemplo de búsqueda CLI para cada una:
+
+# 1. bwa - alineamiento de reads cortos
+mamba search -c bioconda bwa --info 2>&1 | head -20
+# Versión actual: 0.7.17
+# Dependencias: htslib, libgcc, libzlib, zlib
+# Sistemas: linux-64, osx-64, osx-arm64 (no win-64 binario)
+
+# 2. samtools - manipulación BAM/SAM
+mamba search -c bioconda samtools --info 2>&1 | head -25
+# Versión actual: 1.18 (o 1.19+)
+# Dependencias: htslib, libgcc, ncurses, zlib
+# Sistemas: linux-64, osx-64, osx-arm64 (no win-64 binario)
+
+# 3. fastp - trimming y QC de reads
+mamba search -c bioconda fastp --info 2>&1 | head -15
+# Versión actual: 0.23.4
+# Dependencias: libgcc, libstdcpp
+# Sistemas: linux-64, osx-64, osx-arm64
+
+# 4. kraken2 - clasificación taxonómica metagenómica
+mamba search -c bioconda kraken2 --info 2>&1 | head -15
+# Versión actual: 2.1.3
+# Dependencias: libgcc, openmp, perl, tar, wget
+# Sistemas: linux-64, osx-64
+
+# 5. prokka - anotación de genomas bacterianos
+mamba search -c bioconda prokka --info 2>&1 | head -20
+# Versión actual: 1.14.6
+# Dependencias: aragorn, blast, hmmer, infernal, miniprot, perl, prodigal
+# Sistemas: linux-64, osx-64
+
+# Alternativa si una herramienta no está en bioconda:
+# Ejemplo: AlphaFold2 no está en bioconda (se instala desde GitHub)
+# Alternativa: usar ColabFold (tampoco en bioconda) o un contenedor
+# Docker específico. Ver capítulo 8.
+
+# Tabla resumen a entregar:
+# | Herramienta | Versión | SO soportados         | Dependencias clave            |
+# |-------------|---------|-----------------------|-------------------------------|
+# | bwa         | 0.7.17  | linux, osx-64, arm64  | htslib, libgcc                |
+# | samtools    | 1.18    | linux, osx-64, arm64  | htslib, ncurses, zlib         |
+# | fastp       | 0.23.4  | linux, osx-64, arm64  | libgcc, libstdcpp             |
+# | kraken2     | 2.1.3   | linux, osx-64         | libgcc, openmp, perl          |
+# | prokka      | 1.14.6  | linux, osx-64         | blast, hmmer, prodigal, perl  |
+```
+
+### Solución ejercicio 2
+
+```bash
+# (a) Pipeline de variant calling
+mamba create -n pipeline_variant -c conda-forge -c bioconda \
+    bwa=0.7.17 samtools=1.18 bcftools=1.18 -y
+mamba activate pipeline_variant
+
+# Verificar cada herramienta
+bwa 2>&1 | head -3 | tail -1          # Version: 0.7.17-r1188
+samtools --version | head -1          # samtools 1.18
+bcftools --version | head -1          # bcftools 1.18
+
+# (b) Pipeline de RNA-seq
+mamba create -n pipeline_rnaseq -c conda-forge -c bioconda \
+    star=2.7.11 salmon=1.10 bioconductor-deseq2 -y
+mamba activate pipeline_rnaseq
+
+STAR --version                        # STAR 2.7.11b
+salmon --version                      # salmon 1.10.0
+R -e "library(DESeq2); packageVersion('DESeq2')"  # [1] '1.40.2'
+
+# (c) Pipeline metagenómica
+mamba create -n pipeline_metag -c conda-forge -c bioconda \
+    kraken2=2.1.3 bracken=2.8 metabat2=2.15 -y
+mamba activate pipeline_metag
+
+kraken2 --version                     # 2.1.3
+bracken --version 2>&1 | head -1      # Bracken version 2.8
+metabat2 --help 2>&1 | head -1        # MetaBAT 2 version 2.15
+
+# Reporte final:
+# - Los tres entornos se crearon correctamente sin conflictos
+# - Todas las herramientas responden a --version
+# - Tamaño aproximado de cada entorno:
+du -sh ~/miniforge3/envs/pipeline_variant  # ~150 MB
+du -sh ~/miniforge3/envs/pipeline_rnaseq   # ~1.5 GB (incluye R + Bioconductor)
+du -sh ~/miniforge3/envs/pipeline_metag    # ~250 MB
+```
+
+### Solución ejercicio 3
+
+```bash
+# Crear carpeta de proyecto
+mkdir -p ~/mi_pipeline_personal
+cd ~/mi_pipeline_personal
+
+# Definir el pipeline (ejemplo: identificación de SNPs en genoma bacteriano
+# con anotación funcional posterior)
+
+cat > environment.yml << 'EOF'
+name: snp_bacterial
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults
+dependencies:
+  # Python core
+  - python=3.11
+  - pip
+
+  # QC y trimming de reads
+  - fastp=0.23.4          # trimming adaptadores + QC en una sola herramienta
+  - fastqc=0.12.1         # reporte detallado de calidad
+  - multiqc=1.14          # agregación de QC
+
+  # Alineamiento y llamado de variantes
+  - bwa=0.7.17            # alineador de reads cortos, estándar para bacteriano
+  - samtools=1.18         # manipulación de BAM/CRAM
+  - bcftools=1.18         # llamado y filtrado de variantes (VCF)
+  - picard=3.1            # marcado de duplicados (aunque en bacteriano rara vez hace falta)
+
+  # Anotación
+  - snpeff=5.2            # anotación funcional de variantes VCF
+  - prokka=1.14           # anotación del genoma de referencia
+
+  # Análisis en Python
+  - pandas=2.1            # manipulación del VCF parseado
+  - biopython=1.83        # parseo de genomas y anotaciones GFF
+  - matplotlib=3.8        # gráficos de distribución de variantes
+  - seaborn=0.13          # visualización estadística
+EOF
+
+# Justificación (a incluir en README.md):
+# - fastp: una sola herramienta hace trimming + poly-G + QC, muy eficiente
+# - bwa: estándar de facto para reads cortos en genomas pequeños (bacteriano)
+# - bcftools: más rápido y ligero que GATK para genomas no humanos
+# - snpeff: anotación rápida de SNPs con bases de datos precompiladas
+# - prokka: anotación rápida específica para microorganismos
+# - Versions fijadas a las últimas estables probadas en octubre 2024
+
+# Generar conda-lock.yml para reproducibilidad exacta
+mamba install -n base -c conda-forge conda-lock -y
+conda-lock -f environment.yml --platform linux-64 --platform osx-64
+ls -lh conda-lock.yml
+# -rw-r--r-- 1 user user 45K conda-lock.yml
+
+# Crear README.md con instrucciones de reproducción
+cat > README.md << 'EOF'
+# Pipeline de identificación de SNPs bacterianos
+
+## Objetivo
+Identificar variantes (SNPs) en un genoma bacteriano a partir de reads
+Illumina, con anotación funcional posterior.
+
+## Reproducción del análisis
+
+1. Instalar Miniforge3 (incluye Mamba):
+   https://github.com/conda-forge/miniforge
+
+2. Clonar este repositorio:
+   ```bash
+   git clone https://github.com/usuario/snp_bacterial.git
+   cd snp_bacterial
+   git checkout v1.0
+   ```
+
+3. Crear entorno desde conda-lock.yml (reproducibilidad exacta):
+   ```bash
+   conda-lock install -n snp_bacterial --mamba conda-lock.yml
+   mamba activate snp_bacterial
+   ```
+
+   Alternativa desde environment.yml (reproducibilidad aproximada):
+   ```bash
+   mamba env create -f environment.yml
+   mamba activate snp_bacterial
+   ```
+
+4. Ejecutar pipeline:
+   ```bash
+   bash run_pipeline.sh reads_R1.fq.gz reads_R2.fq.gz reference.fasta
+   ```
+
+## Software versions
+Ver environment.yml y conda-lock.yml. Tag estable: v1.0 (DOI 10.5281/zenodo.XXX)
+EOF
+
+# Verificación final
+mamba env create -f environment.yml -n snp_bacterial_test
+mamba activate snp_bacterial_test
+
+# Verificar que todas las herramientas funcionan
+fastp --version
+bwa 2>&1 | head -3 | tail -1
+samtools --version | head -1
+bcftools --version | head -1
+snpEff -version 2>&1 | head -1
+prokka --version 2>&1 | head -1
+
+# Documentación del proceso para el colega:
+# 1. Tarda ~3 minutos en crear el entorno con mamba (vs ~15 con conda)
+# 2. El entorno ocupa ~800 MB
+# 3. Todas las herramientas responden correctamente
+# 4. Con conda-lock.yml la reproducción es bit-exacta en linux-64 y osx-64
+```
+
+## Resumen
+
+Bioconda es el canal imprescindible para cualquier bioinformático que use Conda: más de 10.000 paquetes que cubren virtualmente cualquier área de la bioinformática moderna, mantenidos por una comunidad activa y abierta. La **combinación `conda-forge` + `bioconda`** (sin `defaults`) es la configuración recomendada para prácticamente cualquier proyecto bioinformático. Para Windows nativo, los binarios bioinformáticos no están disponibles, por lo que **WSL2 es prácticamente obligatorio**. Para HPC sin Conda, los **biocontainers** (imágenes Docker generadas automáticamente) son la alternativa. En el siguiente capítulo veremos cómo construir entornos completos para un caso de uso específico y exigente: biología estructural, donde herramientas como GROMACS, OpenMM, AutoDock Vina y PyMOL conviven en el mismo pipeline.

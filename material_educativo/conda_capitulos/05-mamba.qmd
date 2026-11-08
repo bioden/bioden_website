@@ -1,0 +1,437 @@
+---
+title: "Capítulo 5: Mamba y micromamba"
+---
+
+## 5.1 Qué es Mamba y por qué existe
+
+**Mamba** es una reescritura en C++ de las partes críticas de Conda, en particular del **resolver** (el algoritmo que decide qué paquetes instalar, actualizar o desinstalar para satisfacer todas las dependencias). El proyecto nació en 2019, liderado por Wolf Vollprecht y otros miembros de QuantStack, con un objetivo claro: **acabar con el problema más antiguo y doloroso de Conda, que es la lentitud del solver**.
+
+Conda clásico está escrito en Python y usa un solver SAT (*Boolean Satisfiability*) implementado en Python puro (Pycosat). Cuando el espacio de búsqueda es grande —muchos canales, muchas versiones de un mismo paquete, dependencias profundas— ese solver puede tardar minutos, o incluso quedarse colgado indefinidamente. Cualquiera que haya intentado `conda install -c bioconda bwa samtools bcftools` en un entorno con media docena de paquetes R instalados sabe de qué hablo.
+
+Mamba sustituye ese núcleo Python por la biblioteca **`libsolv`** (escrita en C++, usada también por Zypper de openSUSE y DNF de Fedora). El resultado es un speedup de **5x a 10x** en la mayoría de operaciones y, sobre todo, **nunca se cuelga**: si no hay solución, `libsolv` lo dice en segundos, mientras que Conda puede quedarse minutos "pensando" antes de rendirse.
+
+::: callout-note
+Mamba **no es un fork** de Conda: es un *frontend* que reutiliza toda la infraestructura de Conda (formato de paquetes, canales, entornos, `environment.yml`, `~/.condarc`), pero reemplaza el solver lento por `libsolv`. Por eso se le llama **drop-in replacement**: en la mayoría de comandos puedes cambiar `conda` por `mamba` y todo funciona igual, sólo que más rápido.
+:::
+
+## 5.2 Mamba vs Conda vs Micromamba
+
+A partir de 2020, el ecosistema se diversificó en tres herramientas complementarias. Conviene tener muy clara la diferencia, porque elegir la adecuada según el contexto (workstation personal, HPC, CI/CD, contenedor) marca la diferencia.
+
+| Característica            | Conda                | Mamba                   | Micromamba             |
+|---------------------------|----------------------|-------------------------|------------------------|
+| Lenguaje                  | Python               | C++/Python              | C++ standalone         |
+| Dependencias              | Python + ~80 pkgs    | Conda instalado         | Ninguna                |
+| Velocidad                 | Lenta                | Rápida                  | Muy rápida             |
+| Tamaño instalador         | ~80 MB               | Requiere Conda previo   | ~10 MB                 |
+| Reemplaza a Conda         | —                    | Sí (drop-in)            | Sí (sintaxis propia)   |
+| Ideal para                | General, principiantes | Workstation bioinfo     | CI/CD, contenedores, HPC |
+| Soporte Windows nativo    | Sí                   | Sí                      | Mejorando              |
+
+**Cuándo usar cada uno:**
+
+- **Conda**: si ya lo tienes instalado, no te importa la velocidad y trabajas con paquetes sencillos.
+- **Mamba**: reemplazo directo para trabajo diario en bioinformática. **Recomendado por defecto** en este curso.
+- **Micromamba**: CI/CD (GitHub Actions, GitLab CI), contenedores Docker, HPC limpio donde no hay Conda preinstalado.
+
+## 5.3 Instalación de Mamba
+
+Hay tres rutas principales, todas válidas pero con distintos casos de uso.
+
+### Ruta A: instalar Mamba dentro del `base` de Conda existente
+
+Si ya tienes Anaconda o Miniconda funcionando, basta con instalar Mamba en el entorno `base`. A partir de entonces usarás `mamba` en lugar de `conda` para todo:
+
+```bash
+conda install -n base -c conda-forge mamba
+# A partir de aquí:
+mamba create -n bio -c bioconda bwa samtools
+mamba install -c bioconda fastp
+mamba env list
+```
+
+::: callout-tip
+Instalar Mamba en `base` es la opción más sencilla si ya llevas tiempo usando Conda. No necesitas reinstalar nada: los entornos existentes siguen funcionando, sólo ganas velocidad.
+:::
+
+### Ruta B (recomendada 2024+): Miniforge
+
+**Miniforge** es un instalador mínimo (como Miniconda) pero preconfigurado con los canales `conda-forge` y `bioconda`, e incluye Mamba como gestor por defecto. En 2024 los proyectos **Miniforge y Mambaforge se unificaron**: hoy `Miniforge` ya trae Mamba integrado, y `Mambaforge` queda como alias histórico.
+
+```bash
+# Linux / WSL2
+wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh
+bash Miniforge3-Linux-x86_64.sh -b -p $HOME/miniforge3
+
+# Inicializar el shell
+$HOME/miniforge3/bin/conda init bash
+exec $SHELL
+
+# Comprobar
+mamba --version
+# mamba 1.5.x
+# conda 23.x
+```
+
+En PowerShell nativo de Windows el procedimiento es análogo:
+
+```powershell
+# Descargar el instalador
+Invoke-WebRequest -Uri "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Windows-x86_64.exe" -OutFile "Miniforge3.exe"
+# Ejecutar el instalador (GUI)
+Start-Process -FilePath ".\Miniforge3.exe" -Wait
+```
+
+### Ruta C: Micromamba standalone (sin Conda previo)
+
+Micromamba es un único binario de ~10 MB sin dependencias. Es ideal cuando quieres una instalación mínima y rápida, por ejemplo en un contenedor Docker o en un runner de CI efímero:
+
+```bash
+# Linux / WSL2 / macOS
+curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj bin/micromamba
+./bin/micromamba shell init -s bash -p ~/micromamba
+source ~/.bashrc
+
+# Comprobar
+micromamba --version
+```
+
+::: callout-important
+Micromamba **no requiere** Conda ni Python previo. Es un binario standalone. Esto lo hace perfecto para imágenes Docker base `ubuntu:22.04` donde no quieres instalar 80 MB de Conda sólo para tener un entorno.
+:::
+
+## 5.4 Sintaxis de Mamba (idéntica a Conda)
+
+Una de las grandes virtudes de Mamba es que **acepta casi todos los comandos de Conda** sin cambios. Si ya sabes Conda, sabes Mamba.
+
+```bash
+mamba create -n bio python=3.11
+mamba activate bio
+mamba install -c bioconda bwa
+mamba env list
+mamba env export --name bio > environment.yml
+mamba search -c bioconda samtools
+mamba update --all -n bio
+mamba remove -n bio fastqc
+mamba clean --all
+```
+
+La diferencia más visible al ejecutar un `install` es que Mamba **muestra primero una tabla con lo que va a hacer** (paquetes a instalar, actualizar, desinstalar, con tamaño de descarga) y pide confirmación:
+
+```text
+Looking for: ['bwa']
+
+Pkg     Version  Build         Channel     Size
+─ bwa   0.7.17   h7d875b9_9    bioconda    1.2 MB
+─ samtools 1.18  h117ee10_1    bioconda    4.5 MB
+─ zlib   1.2.13  h300927b_2    conda-forge 90 kB
+
+Total download: 5.8 MB
+
+Confirm changes [Y/n]:
+```
+
+Si algo no te convence, pulsa `n` y Mamba cancela sin tocar nada.
+
+## 5.5 Sintaxis de Micromamba (ligera diferencia)
+
+Micromamba, al no depender de Conda, tiene una sintaxis ligeramente distinta. Lo más notable es que **los canales se declaran con `-c` en cada comando** (no lee `~/.condarc`) y los subcomandos son más explícitos:
+
+```bash
+micromamba create -n bio -c conda-forge -c bioconda python=3.11 bwa
+micromamba activate bio
+micromamba install -c bioconda fastp
+micromamba env list
+micromamba env export --name bio > environment.yml
+micromamba create -f environment.yml -n bio2  # crear desde YAML
+```
+
+La activación de entorno se hace con `micromamba activate`, que requiere haber ejecutado antes `micromamba shell init -s bash`.
+
+## 5.6 Comparación real de velocidad
+
+Una demostración típica que vale la pena reproducir es instalar tres herramientas bioinfomáticas con cada gestor y cronometrar:
+
+```bash
+# Conda clásico
+time conda create -n test_conda -c bioconda samtools bcftools bwa
+# real    1m 32s
+
+# Mamba
+time mamba create -n test_mamba -c bioconda samtools bcftools bwa
+# real    0m 12s
+
+# Micromamba
+time micromamba create -n test_micro -c conda-forge -c bioconda samtools bcftools bwa
+# real    0m 7s
+```
+
+Resultados representativos (tu Mileage puede variar según red y disco):
+
+| Operación                     | Conda   | Mamba   | Speedup |
+|-------------------------------|---------|---------|---------|
+| `search samtools`             | 15 s    | 3 s     | 5x      |
+| `install samtools`            | 60 s    | 10 s    | 6x      |
+| `create` con 5 paquetes bio   | 90 s    | 15 s    | 6x      |
+| Resolver conflicto difícil    | timeout | 8 s     | ∞       |
+
+::: callout-warning
+El speedup es mayor cuando hay **conflictos** o **muchos paquetes**. En un entorno vacío con un solo paquete trivial, Conda y Mamba están a la par. La ventaja de Mamba crece con la complejidad del entorno.
+:::
+
+## 5.7 Mamba como drop-in replacement
+
+Si quieres "olvidarte" de Conda y usar siempre Mamba, define un alias en `~/.bashrc`:
+
+```bash
+echo "alias conda=mamba" >> ~/.bashrc
+source ~/.bashrc
+# Ahora `conda install ...` ejecuta mamba por debajo
+```
+
+::: callout-warning
+El alias funciona para la mayoría de casos, pero algunos comandos poco comunes de Conda (p. ej. `conda debug`, `conda constructor`) no están implementados en Mamba. Si un comando falla, prueba temporalmente con la ruta absoluta al binario Conda original: `$(which -a conda | tail -1) install ...`.
+:::
+
+## 5.8 El solver de Mamba: cómo funciona
+
+El solver es el componente que decide qué combinación exacta de paquetes (versión + build) satisface todas las restricciones del usuario y las dependencias internas. Mamba usa **`libsolv`**, una biblioteca SAT industrial escrita en C++, mientras que Conda usa PyCosat (Python) o, en versiones recientes, el *plugin* `conda-libmamba-solver` (que es exactamente `libsolv` integrado dentro de Conda).
+
+::: callout-note
+Desde Conda 23.10+, Anaconda Inc. empezó a integrar `libsolv` directamente dentro de Conda mediante el plugin `conda-libmamba-solver`. Si lo activas, **Conda se vuelve casi tan rápido como Mamba**:
+```bash
+conda install -n base conda-libmamba-solver
+conda config --set solver libmamba
+```
+Aun así, Mamba y Micromamba siguen siendo más rápidos en la mayoría de benchmarks, porque su frontend también está optimizado.
+:::
+
+El solver de Mamba reporta en tiempo real qué paquetes va a instalar, actualizar o desinstalar **antes** de tocar nada. Esto te permite detectar conflictos peligrosos (p. ej. que se va a bajar Python de 3.11 a 3.9 para cuadrar una dependencia) y cancelar con `n`.
+
+## 5.9 Micromamba para CI/CD
+
+El gran nicho de Micromamba es la integración continua. En un runner de GitHub Actions, instalar Conda completo toma ~60-90 segundos y ocupa ~500 MB. Micromamba se instala en **~5 segundos** y ocupa ~10 MB.
+
+```yaml
+# .github/workflows/test.yml
+name: Tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Micromamba
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-file: environment.yml
+          cache-downloads: true
+          cache-environment: true
+      - name: Run tests
+        shell: micromamba-shell {0}
+        run: |
+          samtools --version
+          bwa 2>&1 | head -1
+          pytest tests/
+```
+
+Para GitLab CI equivalente, se usa el script de instalación en una línea:
+
+```yaml
+# .gitlab-ci.yml
+test:
+  image: condaforge/mambaforge:latest
+  script:
+    - mamba env create -f environment.yml
+    - mamba activate bio
+    - pytest tests/
+```
+
+## 5.10 Crear entornos desde YAML con Mamba/Micromamba
+
+Mamba hereda el comando `env create -f` de Conda:
+
+```bash
+mamba env create -f environment.yml -n bio
+# o sin especificar -n (usa el name del YAML)
+mamba env create -f environment.yml
+```
+
+Micromamba usa `create -f`:
+
+```bash
+micromamba create -f environment.yml -n bio
+```
+
+Actualizar un entorno existente aplicando cambios del YAML:
+
+```bash
+mamba env update -f environment.yml --prune
+# --prune elimina paquetes que ya no están en el YAML
+```
+
+## 5.11 Mamba y conda-lock
+
+Mamba soporta **`conda-lock`** (capítulo 6), archivos de bloqueo con hashes SHA256 para reproducibilidad total cross-plataforma:
+
+```bash
+mamba install -n base -c conda-forge conda-lock
+conda-lock -f environment.yml --platform linux-64 --platform osx-64
+mamba lock install -n bio_locked conda-lock.yml   # o:
+conda-lock install --mamba -n bio_locked conda-lock.yml
+```
+
+Los lockfiles son la base de la reproducibilidad en publicaciones científicas (ver capítulo 6).
+
+## 5.12 Migrar de Conda a Mamba
+
+Tres escenarios típicos:
+
+1. **Mamba en `base` (sin tocar nada más)**: instala Mamba con `conda install -n base -c conda-forge mamba` y empieza a usar `mamba ...` para todo. Los entornos existentes funcionan sin cambios.
+
+2. **Reinstalar todo con Miniforge (recomendado)**: borra la carpeta de Anaconda (`rm -rf ~/anaconda3`), instala Miniforge3 con el script de la Ruta B, y vuelve a crear tus entornos con `mamba env create -f environment.yml`. Es lo más limpio si estabas mezclando `defaults` con `bioconda` y tenías conflictos.
+
+3. **Mantener Conda y Mamba en paralelo**: útil si necesitas Conda para un comando específico. No pongas alias, ejecuta cada uno explícitamente.
+
+::: callout-important
+Los entornos creados con Conda son **100% compatibles** con Mamba: ambos escriben en el mismo formato `conda-meta/` y usan el mismo `envs/` directory. No hay que migrar entornos uno por uno.
+:::
+
+## 5.13 Limitaciones de Mamba y Micromamba
+
+- **Comandos no implementados**: `mamba debug`, `mamba constructor`, algunos flags experimentales de `conda` pueden no existir.
+- **Windows nativo**: Mamba funciona bien en Anaconda Prompt, pero Micromamba tiene mejor soporte para Windows en sus últimas versiones.
+- **Documentación**: la wiki de Mamba está muy orientada a Linux/macOS. Para Windows nativo, suele ser más fácil quedarse con Conda clásico o usar WSL2.
+
+## 5.14 Mamba en Windows nativo (Anaconda Prompt)
+
+```powershell
+# Desde Anaconda Prompt
+conda install -n base -c conda-forge mamba
+mamba create -n bio -c bioconda bwa
+mamba activate bio
+mamba install -c bioconda fastp
+```
+
+::: callout-warning
+Muchos paquetes bioconda **no tienen versión win-64** (son binarios Linux/macOS). En Windows nativo, lo más probable es que `mamba install -c bioconda bwa` falle con *PackageNotFoundError*. Solución: **usar WSL2**, donde tendrás el catálogo completo de bioconda.
+:::
+
+## 5.15 Cuándo usar qué: resumen práctico
+
+| Situación                                    | Recomendación          |
+|----------------------------------------------|------------------------|
+| Workstation bioinfo con Linux/WSL2           | Mamba (Miniforge)      |
+| Workstation con Windows y BioPython          | Conda + Mamba en base  |
+| HPC sin Conda, sin permisos root             | Micromamba en `$HOME`  |
+| Imagen Docker para pipeline                  | Micromamba             |
+| GitHub Actions / GitLab CI                    | `setup-micromamba@v1`  |
+| Publicación científica (reproducibilidad)     | Mamba + conda-lock     |
+
+## 5.16 Ejercicios
+
+### Ejercicio 1
+
+Si tienes Conda instalado, instala Mamba en `base` con `conda install -n base -c conda-forge mamba`. Compara la velocidad de `conda search samtools` vs `mamba search samtools` usando `time`. Reporta la diferencia.
+
+### Ejercicio 2
+
+Crea el mismo entorno dos veces: una con `conda create -n bio_conda -c bioconda bwa samtools bcftools fastp fastqc` y otra con `mamba create -n bio_mamba -c bioconda bwa samtools bcftools fastp fastqc`. Mide el tiempo con `time`. ¿Cuál es más rápido?
+
+### Ejercicio 3
+
+Instala Micromamba standalone (sin Conda previo) usando el comando `curl`. Crea un entorno `micromamba_test` con Python y biopython. Compara el tamaño de la instalación de micromamba vs miniconda con `du -sh`.
+
+## 5.17 Soluciones
+
+### Solución ejercicio 1
+
+```bash
+# Instalar Mamba en base
+conda install -n base -c conda-forge mamba
+
+# Medir tiempo de conda search
+time conda search -c bioconda samtools > /tmp/conda_search.txt
+# Salida típica:
+# real    0m 14.832s
+# user    0m 11.451s
+# sys     0m 1.214s
+
+# Medir tiempo de mamba search
+time mamba search -c bioconda samtools > /tmp/mamba_search.txt
+# Salida típica:
+# real    0m 2.913s
+# user    0m 1.872s
+# sys     0m 0.312s
+
+# Comparar resultados (deben ser idénticos en contenido)
+diff /tmp/conda_search.txt /tmp/mamba_search.txt && echo "Mismo contenido"
+
+# Speedup observado: ~5x (14.8s / 2.9s)
+```
+
+### Solución ejercicio 2
+
+```bash
+# Crear entorno con Conda y medir tiempo
+time conda create -n bio_conda -c conda-forge -c bioconda \
+    bwa samtools bcftools fastp fastqc -y
+# Salida típica:
+# real    1m 28.541s
+
+# Crear entorno con Mamba y medir tiempo
+time mamba create -n bio_mamba -c conda-forge -c bioconda \
+    bwa samtools bcftools fastp fastqc -y
+# Salida típica:
+# real    0m 14.123s
+
+# Speedup: ~6.3x
+# Comprobar que ambos entornos tienen las mismas versiones
+diff <(conda list -n bio_conda --json | jq 'sort_by(.name)') \
+     <(conda list -n bio_mamba --json | jq 'sort_by(.name)')
+
+# Limpieza (opcional)
+conda env remove -n bio_conda
+conda env remove -n bio_mamba
+```
+
+### Solución ejercicio 3
+
+```bash
+# Instalar Micromamba standalone
+curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj bin/micromamba
+./bin/micromamba shell init -s bash -p ~/micromamba
+source ~/.bashrc
+
+# Comprobar versión
+micromamba --version
+# micromamba 1.5.x
+
+# Crear entorno con Python y biopython
+micromamba create -n micromamba_test -c conda-forge python=3.11 biopython -y
+micromamba activate micromamba_test
+
+# Verificar
+python -c "import Bio; print(Bio.__version__)"
+
+# Comparar tamaños de instalación
+du -sh ~/micromamba
+# Salida típica: 240M  /home/z/micromamba  (incluye el entorno base)
+
+# Comparar con Miniconda (si está instalado)
+du -sh ~/miniconda3 2>/dev/null || echo "Miniconda no instalado"
+# Salida típica: 1.2G  /home/z/miniconda3  (con base + entornos)
+
+# Tamaño del binario micromamba solo
+du -sh ~/micromamba/bin/micromamba
+# Salida típica: 11M
+
+# Conclusion:
+# - Micromamba (~11 MB binario, ~240 MB instalación base con entorno)
+# - Miniconda (~80 MB instalador, ~1.2 GB tras crear entorno base)
+# - Speedup de instalación: 5-10x
+```
+
+## Resumen
+
+Mamba y Micromamba son herramientas complementarias, no competidoras de Conda: lo extienden y lo aceleran. Para trabajo diario de bioinformática en WSL2/Linux, **Mamba vía Miniforge es la opción recomendada**. Para CI/CD y contenedores, **Micromamba** es insuperable por su tamaño y ausencia de dependencias. En Windows nativo, Mamba funciona pero el catálogo de bioconda es muy limitado, así que se recomienda WSL2. En el siguiente capítulo veremos cómo usar Mamba para garantizar reproducibilidad científica con `environment.yml` y `conda-lock`.

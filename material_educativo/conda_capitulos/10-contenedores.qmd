@@ -1,0 +1,536 @@
+---
+title: "Capítulo 10: Conda y contenedores (Docker, Singularity)"
+---
+
+## 10.1 Por qué combinar Conda con contenedores
+
+En el Capítulo 9 vimos que Conda, integrado en Snakemake o Nextflow, ya ofrece un alto grado de reproducibilidad. Sin embargo, todavía quedan grietas: dependencias del **sistema operativo** (glibc, libstdc++, OpenSSL), versiones de kernel de Linux, y bibliotecas nativas que Conda no empaqueta. Si ejecutas tu pipeline en Ubuntu 22.04 y tu colaborador lo ejecuta en CentOS 7, pueden aparecer errores crípticos aunque los entornos Conda sean idénticos.
+
+Los **contenedores** resuelven esto encapsulando no sólo las herramientas sino también su sistema operativo base completo: binarios, librerías, entorno de usuario, todo. La combinación **contenedor + Conda** es el estándar de reproducibilidad absoluta en bioinformática profesional:
+
+1. **Reproducibilidad máxima**: contenedor + conda = imposible tener versiones distintas, incluso entre distribuciones de Linux.
+2. **Portabilidad**: el mismo contenedor corre en tu portátil, en el cluster HPC, en AWS, en Azure.
+3. **Aislamiento total**: las dependencias del SO también están contenidas, no sólo las de Conda.
+
+::: callout-important
+Para publicaciones en *Nature Methods*, *Genome Biology* o *Bioinformatics* en 2024+, se espera que un pipeline bioinformático venga con: (a) repositorio GitHub, (b) archivo `environment.yml` o `conda-lock.yml`, **y** (c) al menos un `Dockerfile` o imagen en un registry público.
+:::
+
+## 10.2 Docker: el estándar de facto
+
+Docker es el sistema de contenedores más extendido en desarrollo software. Cada contenedor se construye desde un `Dockerfile`, una receta textual que describe la imagen base, los paquetes a instalar y el comando de entrada.
+
+- Requiere el **Docker daemon** corriendo (un servicio en background).
+- En **WSL2**: funciona perfectamente con Docker Desktop + WSL2 backend.
+- En **Linux nativo**: `docker-ce` desde el repositorio oficial.
+- En **Anaconda Prompt nativo de Windows**: no se instala dentro de conda; necesitas Docker Desktop.
+
+::: callout-note
+No intentes instalar Docker dentro de un entorno Conda. Docker es un servicio de sistema, no un paquete de usuario. Se instala a nivel de SO y se invoca desde cualquier shell.
+:::
+
+## 10.3 Dockerfile con Conda: la receta base
+
+La imagen base más común para construir contenedores con Conda es `continuumio/miniconda3`. Un Dockerfile típico:
+
+```dockerfile
+FROM continuumio/miniconda3:latest
+
+# Copiar environment.yml
+COPY environment.yml /tmp/environment.yml
+
+# Crear entorno conda
+RUN conda env create -f /tmp/environment.yml
+
+# Activar entorno
+SHELL ["conda", "run", "-n", "bio_env", "/bin/bash", "-c"]
+
+# Copiar código
+COPY . /app
+WORKDIR /app
+
+# Comando por defecto
+ENTRYPOINT ["conda", "run", "-n", "bio_env", "python", "analysis.py"]
+```
+
+Construir la imagen:
+
+```bash
+docker build -t mi_analisis:latest .
+```
+
+Ejecutar el contenedor, montando un directorio de datos como volumen:
+
+```bash
+docker run --rm -v $(pwd):/data mi_analisis:latest --input /data/input.fasta
+```
+
+::: callout-tip
+El flag `-v $(pwd):/data` monta el directorio actual del host dentro del contenedor en `/data`. Sin esto, el contenedor no vería tus archivos del host.
+:::
+
+## 10.4 Docker con Mamba: builds más rápidos
+
+`conda env create` puede tardar 10-15 minutos en imágenes con muchos paquetes bioconda. **micromamba** (de los creadores de mamba) es standalone y mucho más rápido:
+
+```dockerfile
+FROM mambaorg/micromamba:latest
+
+COPY environment.yml /tmp/environment.yml
+RUN micromamba install -y -n base -f /tmp/environment.yml
+
+COPY . /app
+WORKDIR /app
+ENTRYPOINT ["micromamba", "run", "-n", "base", "python", "analysis.py"]
+```
+
+Ventajas de micromamba:
+
+- Imagen base ~150 MB vs ~400 MB de miniconda3.
+- Resolución con solver libsolv (C++) en lugar de Python.
+- No requiere Python preinstalado.
+
+## 10.5 Imágenes oficiales conda
+
+| Imagen                            | Tamaño aprox. | Uso recomendado                           |
+|-----------------------------------|---------------|-------------------------------------------|
+| `continuumio/miniconda3`          | ~400 MB       | Si necesitas `conda` completo en el contenedor |
+| `continuumio/anaconda3`           | ~2.5 GB       | Sólo si necesitas Anaconda completo (Numpy, SciPy, Jupyter...) |
+| `mambaorg/micromamba`             | ~150 MB       | Recomendado para contenedores de producción |
+| `condaforge/mambaforge` (legacy)  | ~600 MB       | Miniforge, deprecado en favor de Miniforge puro |
+
+::: callout-warning
+`condaforge/mambaforge` está deprecado. Para nuevos proyectos, usa `mambaorg/micromamba` o descarga Miniforge directamente desde su GitHub releases.
+:::
+
+## 10.6 Biocontainers: imágenes Docker ya listas
+
+Bioconda genera automáticamente una imagen Docker para cada paquete publicado. Esto significa que no tienes que construir nada: ya existe una imagen con `samtools`, otra con `bwa`, otra con `fastp`, etc. Se publican en Quay.io:
+
+URL pattern: `quay.io/biocontainers/<paquete>:<version>--<build>`
+
+```bash
+# Verificar samtools desde biocontainers
+docker run --rm quay.io/biocontainers/samtools:1.18--h00cdaf9_1 samtools --version
+
+# Fastp
+docker run --rm quay.io/biocontainers/fastp:0.23.4--h5f559ff_0 fastp --version
+
+# MultiQC
+docker run --rm quay.io/biocontainers/multiqc:1.14--pyhdfd78af_0 multiqc --version
+```
+
+::: callout-tip
+Para encontrar el tag exacto de un paquete bioconda, busca el paquete en https://bioconda.github.io/recipes.html y mira la columna "Container". El formato `version--build` debe coincidir exactamente con el que aparece allí.
+:::
+
+## 10.7 Singularity / Apptainer: contenedores para HPC
+
+En clusters HPC académicos, **Docker no es permitido** porque requiere permisos de root y un daemon, lo que es un problema de seguridad en multi-usuario. **Singularity** (ahora bifurcado como **Apptainer**) es el estándar de facto en HPC porque:
+
+- No requiere daemon.
+- Ejecuta como usuario sin privilegios.
+- Las imágenes son archivos `.sif` (Singularity Image Format), portables.
+- Compatible con imágenes Docker (las puede convertir).
+
+::: callout-note
+**Apptainer** es el fork open-source de Singularity tras la adquisición por Sylabs. Ambos nombres coexisten; los comandos son equivalentes (`singularity` vs `apptainer`). En HPCs modernos, el comando suele ser `apptainer`.
+:::
+
+## 10.8 Convertir Docker a Singularity
+
+El flujo típico: construyes tu imagen con Docker en tu portátil, luego la conviertes a `.sif` para llevarla al cluster:
+
+```bash
+# En tu portátil con Docker
+docker build -t mi_imagen .
+
+# Convertir a Singularity (descarga desde Docker Hub)
+singularity pull mi_imagen.sif docker://mi_imagen:latest
+
+# O usando el daemon local directamente
+singularity build mi_imagen.sif docker-daemon://mi_imagen:latest
+```
+
+El archivo `mi_imagen.sif` (~500 MB - 3 GB según contenido) puede copiarse al cluster vía `scp` y ejecutarse sin root.
+
+## 10.9 Crear Singularity recipe directamente
+
+También puedes escribir un recipe de Singularity sin pasar por Docker:
+
+```singularity
+Bootstrap: docker
+From: continuumio/miniconda3:latest
+
+%files
+    environment.yml /opt/environment.yml
+
+%post
+    conda env create -f /opt/environment.yml
+
+%runscript
+    conda run -n bio_env python /app/analysis.py "$@"
+
+%environment
+    export PATH=/opt/conda/envs/bio_env/bin:$PATH
+```
+
+Construir (requiere root):
+
+```bash
+sudo singularity build mi_imagen.sif Singularity.def
+```
+
+::: callout-warning
+Construir imágenes Singularity requiere **root**, lo cual normalmente no tienes en el cluster. La solución práctica es construirlas en tu portátil (con `sudo`) o usar un servicio como **Singularity Cloud Builder**, y luego transferir el `.sif` al HPC.
+:::
+
+## 10.10 Ejecutar contenedor Singularity en HPC
+
+Sin root, sin daemon, ejecuta como usuario:
+
+```bash
+# Ejecutar un comando dentro de la imagen
+singularity exec mi_imagen.sif samtools --version
+
+# Con bind de directorios del host al contenedor
+singularity exec -B /data:/data mi_imagen.sif \
+    bwa mem /data/ref.fa /data/R1.fq /data/R2.fq > /data/aln.sam
+```
+
+El flag `-B /data:/data` monta `/data` del host en `/data` del contenedor. Por defecto, Singularity ya monta `$HOME`, `$PWD` y `/tmp`.
+
+## 10.11 Snakemake con Singularity
+
+Snakemake integra Singularity de forma nativa. En el `Snakefile`:
+
+```python
+rule fastqc:
+    input: "..."
+    output: "..."
+    singularity: "docker://quay.io/biocontainers/fastqc:0.12.1"
+    shell: "fastqc {input}"
+```
+
+Ejecutar:
+
+```bash
+snakemake --use-singularity -j 4
+```
+
+Snakemake descarga la imagen Docker, la convierte a `.sif` automáticamente y la cachea en `.snakemake/singularity/`.
+
+## 10.12 Nextflow con contenedores
+
+Equivalente en Nextflow:
+
+```groovy
+process FASTQC {
+    container 'quay.io/biocontainers/fastqc:0.12.1'
+    // ...
+}
+```
+
+Ejecutar con Docker:
+
+```bash
+nextflow run main.nf -profile docker
+```
+
+O con Singularity (para HPC):
+
+```bash
+nextflow run main.nf -profile singularity
+```
+
+Nextflow descarga y cachea las imágenes automáticamente en `work/singularity/`.
+
+## 10.13 Comparación Docker vs Singularity
+
+| Característica       | Docker              | Singularity/Apptainer |
+|----------------------|---------------------|----------------------|
+| Permisos root        | Sí (daemon)         | No                   |
+| Daemon               | Sí                  | No                   |
+| HPC friendly         | No                  | Sí                   |
+| Imágenes compartidas | Registry (público)  | Archivos `.sif`      |
+| Multi-usuario        | Limitado            | Excelente            |
+| En WSL2              | Sí (Docker Desktop) | Vía Docker conversion|
+| En Linux nativo      | Sí                  | Sí                   |
+| Bind de paths        | `-v host:cont`      | `-B host:cont`       |
+| Tamaño imágenes      | Comprimido en layers| Monolítico `.sif`    |
+
+::: callout-important
+**Regla práctica**: desarrollo local con Docker, despliegue en HPC con Singularity. Snakemake y Nextflow soportan ambos modos de forma transparente.
+:::
+
+## 10.14 Pipeline con Conda + Singularity para HPC
+
+Flujo recomendado para un pipeline que se desarrolla localmente y se ejecuta en HPC:
+
+1. Desarrollar localmente con **Conda** (rápido, fácil de iterar).
+2. Para cada regla, especificar `conda:` **y** `singularity:` en el `Snakefile`.
+3. En local: `snakemake --use-conda -j 4`.
+4. En HPC: `snakemake --use-singularity -j 100 --profile slurm`.
+
+Snakemake usa el modo Conda localmente y el modo Singularity en HPC automáticamente según el flag.
+
+## 10.15 Plantilla Dockerfile para pipeline bio
+
+```dockerfile
+FROM mambaorg/micromamba:1.5-latest
+
+LABEL maintainer="tu@correo.com"
+LABEL description="Pipeline de variant calling"
+
+# Metadatos OCI
+ARG BUILD_DATE
+ARG VERSION=1.0
+LABEL org.label-schema.build-date=$BUILD_DATE
+LABEL org.label-schema.version=$VERSION
+LABEL org.label-schema.schema-version="1.0"
+
+# Copiar specifications
+COPY environment.yml /tmp/environment.yml
+COPY Snakefile /app/Snakefile
+COPY envs/ /app/envs/
+COPY scripts/ /app/scripts/
+
+# Crear entorno conda y limpiar cache
+RUN micromamba install -y -n base -f /tmp/environment.yml && \
+    micromamba clean --all --yes
+
+WORKDIR /app
+
+# Comando por defecto: snakemake
+ENTRYPOINT ["micromamba", "run", "-n", "base", "snakemake"]
+CMD ["--help"]
+```
+
+## 10.16 Tamaños de imágenes
+
+| Componente                              | Tamaño aproximado |
+|-----------------------------------------|-------------------|
+| Imagen base miniconda3                  | ~400 MB           |
+| Imagen base micromamba                  | ~150 MB           |
+| Con entorno bio básico (samtools+bwa)   | ~500 MB           |
+| Con entorno completo (GATK+BWA+samtools+bcftools+fastp+multiqc) | ~1.5-3 GB |
+| Biocontainers individuales              | 50-300 MB cada una |
+
+::: callout-tip
+Optimización: usa `conda clean --all` después de instalar para reducir tamaño. Multi-stage builds (sección siguiente) pueden reducir hasta un 60% el tamaño final.
+:::
+
+## 10.17 Multi-stage build: optimización
+
+```dockerfile
+# Stage 1: build
+FROM continuumio/miniconda3 AS build
+COPY environment.yml .
+RUN conda env create -f environment.yml && conda clean --all --yes
+
+# Stage 2: runtime (más pequeño, sólo conda base + entorno copiado)
+FROM continuumio/miniconda3
+COPY --from=build /opt/conda/envs/bio_env /opt/conda/envs/bio_env
+RUN echo "source activate bio_env" >> /etc/bash.bashrc
+ENV PATH /opt/conda/envs/bio_env/bin:$PATH
+```
+
+Con multi-stage, la imagen final no contiene archivos `.tar.bz2` cacheados ni temporales de instalación, ahorrando cientos de MB.
+
+## 10.18 Docker en Windows con WSL2
+
+Pasos concretos:
+
+1. Instalar **Docker Desktop** desde https://www.docker.com/products/docker-desktop/
+2. Durante la instalación, activar **"Use the WSL 2 based engine"**.
+3. En Docker Desktop > Settings > Resources > WSL Integration, activar tu distribución Ubuntu.
+4. Verificar dentro de WSL2:
+
+```bash
+docker --version
+docker run hello-world
+docker images
+```
+
+::: callout-note
+Con Docker Desktop + WSL2 backend, **no necesitas instalar Docker dentro de WSL2**. Docker Desktop expone el daemon a WSL2 automáticamente, y desde tu shell Ubuntu puedes usar `docker`, `docker-compose`, etc. como si estuvieran instalados nativamente.
+:::
+
+::: callout-warning
+En **Anaconda Prompt nativo de Windows**, Docker Desktop también funciona, pero debes estar atento a paths: usa paths con `/c/Users/...` (estilo Git Bash) en lugar de `C:\Users\...` cuando montes volúmenes.
+:::
+
+## 10.19 Ejercicios
+
+### Ejercicio 1
+
+Crea un `Dockerfile` que use `mambaorg/micromamba` como base, instale un entorno conda con `bwa`, `samtools`, `bcftools` y `fastp`, y tenga como `ENTRYPOINT` un script que ejecute `bwa --version` y `samtools --version`. Construye la imagen y ejecútala.
+
+### Ejercicio 2
+
+Busca y ejecuta tres imágenes **biocontainers** oficiales de diferentes herramientas (por ejemplo: `samtools`, `fastp`, `multiqc`) desde `quay.io/biocontainers/`. Verifica que cada una funciona. Compara el tamaño de las imágenes con `docker images`.
+
+### Ejercicio 3
+
+Crea un archivo `Singularity.def` que construya una imagen Singularity con el mismo entorno del ejercicio 1. Construye con `singularity build`. Ejecuta con `singularity exec`. Documenta las diferencias clave con Docker (tamaño, tiempo de build, modo de ejecución).
+
+## 10.20 Soluciones
+
+### Solución ejercicio 1
+
+```bash
+mkdir -p docker_bio
+cd docker_bio
+
+# environment.yml
+cat > environment.yml << 'EOF'
+name: bio_tools
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - bwa=0.7.17
+  - samtools=1.18
+  - bcftools=1.18
+  - fastp=0.23.4
+EOF
+
+# run.sh: script que imprime versiones
+cat > run.sh << 'EOF'
+#!/bin/bash
+echo "=== Versiones instaladas ==="
+echo -n "BWA:     "; bwa 2>&1 | head -3 | grep Version || bwa 2>&1 | head -1
+echo -n "Samtools:"; samtools --version | head -1
+echo -n "Bcftools:"; bcftools --version | head -1
+echo -n "Fastp:   "; fastp --version 2>&1
+EOF
+chmod +x run.sh
+
+# Dockerfile
+cat > Dockerfile << 'EOF'
+FROM mambaorg/micromamba:latest
+
+LABEL maintainer="tu@correo.com"
+LABEL description="Entorno con bwa, samtools, bcftools y fastp"
+
+USER root
+
+# Copiar environment.yml
+COPY --chown=$MAMBA_USER:$MAMBA_USER environment.yml /tmp/environment.yml
+
+# Instalar entorno
+RUN micromamba install -y -n base -f /tmp/environment.yml && \
+    micromamba clean --all --yes
+
+# Copiar script
+COPY --chown=$MAMBA_USER:$MAMBA_USER run.sh /app/run.sh
+RUN chmod +x /app/run.sh
+
+WORKDIR /app
+USER $MAMBA_USER
+
+ENTRYPOINT ["/usr/local/bin/micromamba", "run", "-n", "base", "/app/run.sh"]
+EOF
+
+# Construir
+docker build -t bio_tools:latest .
+
+# Ejecutar
+docker run --rm bio_tools:latest
+
+# Salida esperada:
+# === Versiones instaladas ===
+# BWA:     Version: 0.7.17-r1188
+# Samtools:samtools 1.18
+# Bcftools:bcftools 1.18
+# Fastp:   fastp 0.23.4
+```
+
+### Solución ejercicio 2
+
+```bash
+# Buscar tags disponibles en Quay.io (o en bioconda.github.io)
+# Tags verificados:
+#   samtools:1.18--h00cdaf9_1
+#   fastp:0.23.4--h5f559ff_0
+#   multiqc:1.14--pyhdfd78af_0
+
+# 1. Samtools
+docker run --rm quay.io/biocontainers/samtools:1.18--h00cdaf9_1 \
+    samtools --version | head -3
+
+# 2. Fastp
+docker run --rm quay.io/biocontainers/fastp:0.23.4--h5f559ff_0 \
+    fastp --version
+
+# 3. MultiQC
+docker run --rm quay.io/biocontainers/multiqc:1.14--pyhdfd78af_0 \
+    multiqc --version
+
+# Comparar tamaños
+docker images | grep -E "biocontainers|REPOSITORY"
+# REPOSITORY                             TAG                    SIZE
+# quay.io/biocontainers/samtools         1.18--h00cdaf9_1       45 MB
+# quay.io/biocontainers/fastp            0.23.4--h5f559ff_0     18 MB
+# quay.io/biocontainers/multiqc          1.14--pyhdfd78af_0     280 MB
+```
+
+**Observaciones**: las imágenes de samtools y fastp son minúsculas porque sólo contienen el binario y sus dependencias directas. MultiQC es más grande porque arrastra Python + muchas dependencias de plotting. La estrategia de **un contenedor por herramienta** (estilo biocontainers) da imágenes pequeñas y modulares.
+
+### Solución ejercicio 3
+
+```bash
+# Singularity.def
+cat > Singularity.def << 'EOF'
+Bootstrap: docker
+From: mambaorg/micromamba:latest
+
+%files
+    environment.yml /tmp/environment.yml
+    run.sh /app/run.sh
+
+%post
+    # Instalar entorno con micromamba
+    micromamba install -y -n base -f /tmp/environment.yml
+    micromamba clean --all --yes
+    chmod +x /app/run.sh
+
+%environment
+    export PATH=/opt/conda/bin:$PATH
+    export MAMBA_ROOT_PREFIX=/opt/conda
+
+%runscript
+    /opt/conda/bin/micromamba run -n base /app/run.sh "$@"
+EOF
+
+# Construir (requiere sudo)
+sudo singularity build bio_tools.sif Singularity.def
+
+# Ejecutar
+singularity exec bio_tools.sif samtools --version
+singularity run bio_tools.sif
+
+# Diferencias clave con Docker:
+# 1. Build requiere root (sudo), mientras que docker build no
+# 2. Imagen .sif es un archivo único (~250 MB aquí), portable por scp
+# 3. Ejecución sin daemon, sin root
+# 4. Bind de paths con -B en lugar de -v
+# 5. Perfecto para HPC donde Docker está prohibido
+```
+
+**Comparación documentada**:
+
+| Métrica              | Docker                | Singularity             |
+|----------------------|-----------------------|-------------------------|
+| Tiempo de build      | ~90 s                 | ~180 s (conversión)     |
+| Tamaño de imagen     | Imagen en layers ~250 MB | Archivo `.sif` ~280 MB |
+| Permisos para build  | Usuario normal        | Root (`sudo`)           |
+| Permisos para run    | Miembro grupo docker  | Cualquier usuario       |
+| Daemon               | Necesario             | No                      |
+| Bind paths           | `-v host:cont`        | `-B host:cont`          |
+| Portabilidad         | Vía registry          | Vía archivo `.sif`      |
+| HPC ready            | No                    | Sí                      |
+
+## 10.21 Resumen
+
+En este capítulo hemos visto cómo Conda y contenedores se complementan para ofrecer **reproducibilidad absoluta**. La regla práctica: Docker para desarrollo y portátiles (rápido, integrado con Docker Desktop + WSL2), Singularity/Apptainer para HPC (sin root, sin daemon, portable como archivo `.sif`). Las imágenes biocontainers ya preconstruidas por el proyecto Bioconda nos ahorran trabajo: en la mayoría de casos, no hace falta construir nada. En el Capítulo 11 veremos cómo ejecutar estos pipelines containerizados en un cluster HPC con SLURM, y en el Capítulo 12 integraremos todo en un proyecto profesional completo.

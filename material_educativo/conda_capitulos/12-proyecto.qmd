@@ -1,0 +1,1246 @@
+---
+title: "Capítulo 12: Proyecto integrador — pipeline reproducible de variant calling bacteriano"
+---
+
+## 12.1 Introducción: por qué un proyecto integrador
+
+Llegamos al capítulo final del curso. Hasta ahora hemos aprendido, en once capítulos, a instalar Conda y Mamba, configurar canales, crear entornos reproducibles, resolver dependencias bioinformáticas, generar lockfiles, empaquetar pipelines en Snakemake/Nextflow, contenerizar con Docker y Singularity, y ejecutar en clusters HPC con SLURM. Cada uno de esos capítulos, individualmente, te da una habilidad. **Pero la bioinformática profesional no consiste en habilidades sueltas: consiste en integrarlas en un sistema que funcione de punta a punta.**
+
+El objetivo de este capítulo es construir un pipeline reproducible de **variant calling bacteriano** que use todo lo aprendido y que podría formar parte de un capítulo de Métodos de tu tesis o paper. Será el **cierre épico** del curso: un entregable profesional, publicable, que demuestra dominio del ecosistema Conda.
+
+::: callout-important
+Al terminar este capítulo tendrás un repositorio GitHub con un pipeline completo, con DOI en Zenodo, con tests en CI, con tres modos de ejecución (Conda local, Docker, Singularity/SLURM), y con documentación lista para ser citada en un paper.
+:::
+
+## 12.2 El proyecto: pipeline de variant calling bacteriano
+
+**Objetivo científico**: detectar variantes (SNPs e indels) en 5 genomas bacterianos de *Escherichia coli* secuenciados con Illumina paired-end.
+
+**Pipeline bioinformático** (10 pasos en total):
+
+1. FastQC → control de calidad de reads
+2. fastp → recorte de adaptadores y filtrado por calidad
+3. BWA-MEM → alineamiento contra referencia (E. coli K12 substr. MG1655)
+4. samtools sort → ordenar BAM por coordenada
+5. samtools index → indexar BAM
+6. bcftools mpileup + call → llamada de variantes
+7. bcftools filter → filtrar variantes de baja calidad
+8. samtools flagstat → estadísticas de alineamiento
+9. MultiQC → reporte integrado HTML
+10. Resumen CSV → tabla de variantes por muestra
+
+**Cadena de reproducibilidad** (todo lo aprendido):
+
+- Conda + Mamba (Capítulos 1-5)
+- Canales conda-forge + bioconda sin defaults (Capítulo 4 y 7)
+- `environment.yml` con versiones pinneadas (Capítulo 6)
+- `conda-lock.yml` con hashes SHA256 (Capítulo 6)
+- Snakemake con `conda:` directive por regla (Capítulo 9)
+- Dockerfile basado en micromamba (Capítulo 10)
+- Singularity recipe para HPC (Capítulo 10)
+- Job script SLURM con array (Capítulo 11)
+- GitHub Actions para CI (nuevo en este capítulo)
+- README.md + CITATION.cff + LICENSE (buenas prácticas científicas)
+
+## 12.3 Estructura del proyecto
+
+```text
+variant_calling/
+├── Snakefile
+├── config.yaml
+├── environment.yml
+├── conda-lock.yml
+├── envs/
+│   ├── fastqc.yaml
+│   ├── fastp.yaml
+│   ├── bwa_samtools.yaml
+│   ├── bcftools.yaml
+│   └── multiqc.yaml
+├── data/
+│   ├── raw/
+│   ├── reference/
+│   └── samples.csv
+├── results/
+│   ├── fastqc/
+│   ├── trimmed/
+│   ├── bam/
+│   ├── vcf/
+│   └── multiqc/
+├── scripts/
+│   ├── download_samples.sh
+│   └── generate_report.py
+├── Dockerfile
+├── Singularity.def
+├── .github/workflows/test.yml
+├── slurm_submit.sh
+├── pipeline.sh
+├── README.md
+├── LICENSE
+└── CITATION.cff
+```
+
+## 12.4 Paso 1: Configurar entorno de desarrollo
+
+Script `01_setup.sh`:
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "[01] Configurando entorno de desarrollo..."
+
+# Instalar Miniforge si no está
+if ! command -v mamba &> /dev/null; then
+    echo "Instalando Miniforge..."
+    wget -q https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh
+    bash Miniforge3-Linux-x86_64.sh -b -p $HOME/miniforge3
+    eval "$($HOME/miniforge3/bin/conda shell.bash hook)"
+    conda init bash
+    rm Miniforge3-Linux-x86_64.sh
+fi
+
+# Configurar canales correctamente: conda-forge y bioconda, sin defaults
+conda config --remove-key channels 2>/dev/null || true
+conda config --add channels bioconda
+conda config --add channels conda-forge
+conda config --set channel_priority strict
+
+# Crear estructura del proyecto
+mkdir -p envs data/raw data/reference results/{fastqc,trimmed,bam,vcf,multiqc} scripts
+
+# Verificar
+echo "Canales configurados:"
+conda config --show channels
+echo "Estructura creada:"
+find . -type d | sort
+```
+
+## 12.5 Paso 2: Crear `environment.yml` principal
+
+```bash
+#!/usr/bin/env bash
+# 02_create_env.sh
+set -euo pipefail
+echo "[02] Creando environment.yml principal..."
+
+cat > environment.yml << 'EOF'
+name: variant_calling
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.11
+  - snakemake=7.32
+  - mamba=1.5
+  - fastqc=0.12.1
+  - fastp=0.23.4
+  - bwa=0.7.17
+  - samtools=1.18
+  - bcftools=1.18
+  - multiqc=1.14
+  - conda-lock=2.5
+  - pandas=2.1
+  - matplotlib=3.8
+EOF
+
+mamba env create -f environment.yml
+conda activate variant_calling
+echo "Entorno activo: $CONDA_DEFAULT_ENV"
+```
+
+## 12.6 Paso 3: Generar `conda-lock`
+
+```bash
+#!/usr/bin/env bash
+# 03_lock_env.sh
+set -euo pipefail
+echo "[03] Generando conda-lock..."
+
+conda-lock -f environment.yml --platform linux-64 -k explicit \
+    --lockfile conda-lock.yml
+
+# También generar locks para cada entorno por regla
+for env in envs/*.yaml; do
+    name=$(basename "$env" .yaml)
+    conda-lock -f "$env" --platform linux-64 -k explicit \
+        --lockfile "envs/${name}.conda-lock.yml"
+done
+
+echo "Lockfiles generados:"
+ls -lh conda-lock.yml envs/*.conda-lock.yml
+
+# Verificar hashes
+echo "Ejemplo de hashes en conda-lock.yml:"
+grep "sha256:" conda-lock.yml | head -5
+```
+
+## 12.7 Paso 4: Estructura completa de archivos YAML por regla
+
+Cada regla del pipeline tiene su propio entorno. Los cinco archivos en `envs/`:
+
+```yaml
+# envs/fastqc.yaml
+name: fastqc
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - fastqc=0.12.1
+```
+
+```yaml
+# envs/fastp.yaml
+name: fastp
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - fastp=0.23.4
+```
+
+```yaml
+# envs/bwa_samtools.yaml
+name: bwa_samtools
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - bwa=0.7.17
+  - samtools=1.18
+```
+
+```yaml
+# envs/bcftools.yaml
+name: bcftools
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - bcftools=1.18
+```
+
+```yaml
+# envs/multiqc.yaml
+name: multiqc
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - multiqc=1.14
+  - samtools=1.18
+```
+
+El `config.yaml` principal:
+
+```yaml
+# config.yaml
+samples:
+  - SRR1234567
+  - SRR1234568
+  - SRR1234569
+  - SRR1234570
+  - SRR1234571
+
+reference:
+  fasta: "data/reference/ecoli_K12_MG1655.fa"
+  index: "data/reference/ecoli_K12_MG1655"
+
+threads: 8
+results_dir: "results"
+data_dir: "data/raw"
+```
+
+## 12.8 Paso 5: `Snakefile` completo
+
+```python
+# Snakefile
+configfile: "config.yaml"
+
+SAMPLES = config["samples"]
+REF_FA = config["reference"]["fasta"]
+REF_IDX = config["reference"]["index"]
+THREADS = config["threads"]
+RESULTS = config["results_dir"]
+
+rule all:
+    input:
+        f"{RESULTS}/multiqc/multiqc_report.html",
+        expand(f"{RESULTS}/vcf/{{sample}}_filtered.vcf", sample=SAMPLES),
+        f"{RESULTS}/summary/variants_summary.csv"
+
+rule index_ref:
+    input: REF_FA
+    output: 
+        touch(f"{REF_IDX}.bwt")
+    conda: "envs/bwa_samtools.yaml"
+    shell: "bwa index {input}"
+
+rule fastqc:
+    input: f"data/raw/{{sample}}_R{{read}}.fastq.gz"
+    output: f"{RESULTS}/fastqc/{{sample}}_R{{read}}_fastqc.html"
+    conda: "envs/fastqc.yaml"
+    shell: "fastqc {input} -o {RESULTS}/fastqc/"
+
+rule trim:
+    input:
+        r1=f"data/raw/{{sample}}_R1.fastq.gz",
+        r2=f"data/raw/{{sample}}_R2.fastq.gz"
+    output:
+        r1=f"{RESULTS}/trimmed/{{sample}}_R1.fastq.gz",
+        r2=f"{RESULTS}/trimmed/{{sample}}_R2.fastq.gz"
+    conda: "envs/fastp.yaml"
+    log: f"logs/trim/{{sample}}.log"
+    shell:
+        "(fastp -i {input.r1} -I {input.r2} "
+        "-o {output.r1} -O {output.r2} "
+        "--detect_adapter_for_pe --cut_front --cut_tail "
+        "--html {RESULTS}/fastp/{{sample}}.html "
+        "--json {RESULTS}/fastp/{{sample}}.json) > {log} 2>&1"
+
+rule align:
+    input:
+        r1=f"{RESULTS}/trimmed/{{sample}}_R1.fastq.gz",
+        r2=f"{RESULTS}/trimmed/{{sample}}_R2.fastq.gz",
+        idx=rules.index_ref.output
+    output: f"{RESULTS}/bam/{{sample}}.bam"
+    conda: "envs/bwa_samtools.yaml"
+    threads: THREADS
+    shell: "bwa mem -t {threads} {REF_IDX} {input.r1} {input.r2} | "
+          "samtools sort -@ {threads} -o {output}"
+
+rule index_bam:
+    input: f"{RESULTS}/bam/{{sample}}.bam"
+    output: f"{RESULTS}/bam/{{sample}}.bam.bai"
+    conda: "envs/bwa_samtools.yaml"
+    shell: "samtools index {input}"
+
+rule flagstat:
+    input: f"{RESULTS}/bam/{{sample}}.bam"
+    output: f"{RESULTS}/bam/{{sample}}.flagstat"
+    conda: "envs/bwa_samtools.yaml"
+    shell: "samtools flagstat {input} > {output}"
+
+rule call_variants:
+    input:
+        bam=f"{RESULTS}/bam/{{sample}}.bam",
+        bai=f"{RESULTS}/bam/{{sample}}.bam.bai"
+    output: f"{RESULTS}/vcf/{{sample}}.vcf"
+    conda: "envs/bcftools.yaml"
+    shell:
+        "bcftools mpileup -f {REF_FA} {input.bam} | "
+        "bcftools call -mv -o {output}"
+
+rule filter_variants:
+    input: f"{RESULTS}/vcf/{{sample}}.vcf"
+    output: f"{RESULTS}/vcf/{{sample}}_filtered.vcf"
+    conda: "envs/bcftools.yaml"
+    shell: "bcftools view -i 'QUAL>30 && DP>10' {input} -o {output}"
+
+rule multiqc:
+    input:
+        expand(f"{RESULTS}/fastqc/{{sample}}_R1_fastqc.html", sample=SAMPLES),
+        expand(f"{RESULTS}/fastp/{{sample}}.json", sample=SAMPLES),
+        expand(f"{RESULTS}/bam/{{sample}}.flagstat", sample=SAMPLES),
+        expand(f"{RESULTS}/vcf/{{sample}}_filtered.vcf", sample=SAMPLES)
+    output: f"{RESULTS}/multiqc/multiqc_report.html"
+    conda: "envs/multiqc.yaml"
+    shell: "multiqc {RESULTS} -o {RESULTS}/multiqc --force"
+
+rule summary:
+    input:
+        expand(f"{RESULTS}/vcf/{{sample}}_filtered.vcf", sample=SAMPLES)
+    output: f"{RESULTS}/summary/variants_summary.csv"
+    conda: "envs/bcftools.yaml"
+    params:
+        samples=SAMPLES
+    shell: "scripts/generate_report.py {params.samples} {input} {output}"
+```
+
+## 12.9 Paso 6: MultiQC para reporte integrado
+
+MultiQC recoge automáticamente los outputs de FastQC, fastp, samtools y bcftools en `results/` y genera un único HTML. No requiere configuración extra: basta con la regla `multiqc` del `Snakefile`.
+
+::: callout-tip
+MultiQC busca archivos por patrón en el directorio que se le pasa. Si tu output `flagstat` de samtools está en `results/bam/`, MultiQC lo detectará automáticamente y generará una sección con el porcentaje de reads mapeados por muestra.
+:::
+
+## 12.10 Paso 7: Dockerfile para reproducibilidad total
+
+```dockerfile
+# Dockerfile
+FROM mambaorg/micromamba:1.5-latest
+
+LABEL maintainer="tu@correo.com"
+LABEL description="Pipeline reproducible de variant calling bacteriano"
+LABEL version="1.0"
+
+USER root
+
+# Copiar specification files
+COPY --chown=$MAMBA_USER:$MAMBA_USER environment.yml /tmp/environment.yml
+COPY --chown=$MAMBA_USER:$MAMBA_USER conda-lock.yml /tmp/conda-lock.yml
+COPY --chown=$MAMBA_USER:$MAMBA_USER Snakefile /app/Snakefile
+COPY --chown=$MAMBA_USER:$MAMBA_USER config.yaml /app/config.yaml
+COPY --chown=$MAMBA_USER:$MAMBA_USER envs/ /app/envs/
+COPY --chown=$MAMBA_USER:$MAMBA_USER scripts/ /app/scripts/
+
+# Instalar entorno desde lockfile (reproducibilidad bit-a-bit)
+RUN micromamba install -y -n base -f /tmp/conda-lock.yml && \
+    micromamba clean --all --yes
+
+WORKDIR /app
+USER $MAMBA_USER
+
+ENTRYPOINT ["/usr/local/bin/micromamba", "run", "-n", "base", "snakemake"]
+CMD ["--help"]
+```
+
+Construir:
+
+```bash
+docker build -t variant_calling:1.0 .
+```
+
+Ejecutar dentro de un directorio con datos:
+
+```bash
+docker run --rm -v $(pwd)/data:/app/data -v $(pwd)/results:/app/results \
+    variant_calling:1.0 --use-conda -j 4
+```
+
+## 12.11 Paso 8: Singularity para HPC
+
+```singularity
+# Singularity.def
+Bootstrap: docker
+From: mambaorg/micromamba:1.5-latest
+
+%files
+    environment.yml /tmp/environment.yml
+    conda-lock.yml /tmp/conda-lock.yml
+    Snakefile /app/Snakefile
+    config.yaml /app/config.yaml
+    envs/ /app/envs/
+    scripts/ /app/scripts/
+
+%post
+    micromamba install -y -n base -f /tmp/conda-lock.yml
+    micromamba clean --all --yes
+
+%environment
+    export PATH=/opt/conda/bin:$PATH
+    export MAMBA_ROOT_PREFIX=/opt/conda
+
+%runscript
+    exec /opt/conda/bin/micromamba run -n base snakemake "$@"
+EOF
+```
+
+Construir:
+
+```bash
+sudo singularity build variant_calling.sif Singularity.def
+```
+
+Job script `slurm_submit.sh`:
+
+```bash
+#!/bin/bash
+#SBATCH --job-name=variant_calling
+#SBATCH --partition=normal
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=32G
+#SBATCH --time=12:00:00
+#SBATCH --array=1-5%5
+#SBATCH --output=logs/%x_%A_%a.out
+#SBATCH --error=logs/%x_%A_%a.err
+
+# Cargar conda
+source $HOME/miniforge3/etc/profile.d/conda.sh
+conda activate variant_calling
+
+cd /work/$USER/variant_calling
+
+# Opción A: Snakemake con Conda en SLURM
+snakemake --use-conda --conda-frontend mamba \
+    --profile slurm -j 5 --restart-times 2
+
+# Opción B (alternativa): Singularity
+# singularity exec variant_calling.sif snakemake \
+#     --use-conda --conda-frontend mamba -j 5
+```
+
+Enviar:
+
+```bash
+sbatch slurm_submit.sh
+```
+
+## 12.12 Paso 9: GitHub Actions para CI
+
+`.github/workflows/test.yml`:
+
+```yaml
+name: Test pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Miniforge
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: latest
+          use-mamba: true
+          channel-priority: strict
+
+      - name: Create environment from lockfile
+        shell: bash -l {0}
+        run: |
+          mamba install -n base -c conda-forge conda-lock
+          conda-lock install -n variant_calling conda-lock.yml
+
+      - name: Activate and test environment
+        shell: bash -l {0}
+        run: |
+          conda activate variant_calling
+          snakemake --version
+          bwa 2>&1 | head -5
+          samtools --version | head -1
+          bcftools --version | head -1
+
+      - name: Dry-run pipeline
+        shell: bash -l {0}
+        run: |
+          conda activate variant_calling
+          snakemake -n --use-conda --conda-frontend mamba
+
+      - name: Run pipeline on test data
+        shell: bash -l {0}
+        run: |
+          conda activate variant_calling
+          bash scripts/download_samples.sh --test
+          snakemake --use-conda --conda-frontend mamba -j 2
+
+      - name: Verify outputs
+        shell: bash -l {0}
+        run: |
+          test -f results/multiqc/multiqc_report.html
+          test -f results/summary/variants_summary.csv
+          ls results/vcf/
+```
+
+::: callout-note
+El CI ejecuta el pipeline en cada push a `main`. Si algún paso falla (dependencias rotas, regla con bug), GitHub te avisa por email antes de que tus colaboradores noten el problema. Esto es la diferencia entre un pipeline amateur y uno profesional.
+:::
+
+## 12.13 Paso 10: Documentación y publicación
+
+### `README.md`
+
+```markdown
+# Variant Calling Bacteriano — Pipeline reproducible
+
+Pipeline reproducible para detección de variantes en genomas bacterianos
+(E. coli) a partir de datos Illumina paired-end.
+
+## Requisitos
+
+- Linux o WSL2 con Ubuntu 22.04+
+- Miniforge instalado (ver `01_setup.sh`)
+
+## Instalación
+
+```bash
+git clone https://github.com/tu-usuario/variant_calling.git
+cd variant_calling
+bash 01_setup.sh
+bash 02_create_env.sh
+conda activate variant_calling
+```
+
+## Uso
+
+### Modo desarrollo (Conda + Snakemake local)
+
+```bash
+./pipeline.sh dev
+```
+
+### Modo lockfile (reproducibilidad exacta)
+
+```bash
+./pipeline.sh lock
+```
+
+### Modo Docker (contenedor)
+
+```bash
+./pipeline.sh docker
+```
+
+### Modo Singularity (HPC)
+
+```bash
+./pipeline.sh singularity
+```
+
+### Modo SLURM (enviar a cluster)
+
+```bash
+./pipeline.sh slurm
+```
+
+## Resultados
+
+Tras la ejecución:
+
+- `results/multiqc/multiqc_report.html`: reporte integrado de QC
+- `results/vcf/<sample>_filtered.vcf`: variantes filtradas por muestra
+- `results/summary/variants_summary.csv`: tabla resumen
+
+## Citar
+
+Si usas este pipeline en tu investigación, cita:
+
+```bibtex
+@software{tu_usuario_variant_calling,
+  author = {Tu Nombre},
+  title = {Variant Calling Bacteriano: pipeline reproducible},
+  year = {2025},
+  doi = {10.5281/zenodo.XXXXXXX},
+  url = {https://github.com/tu-usuario/variant_calling}
+}
+```
+
+## Licencia
+
+MIT License (ver `LICENSE`).
+```
+
+### `CITATION.cff`
+
+```yaml
+cff-version: 1.2.0
+message: "Si usas este pipeline, cita como:"
+title: "Variant Calling Bacteriano: pipeline reproducible"
+authors:
+  - family-names: "Apellido"
+    given-names: "Nombre"
+    orcid: "https://orcid.org/0000-0000-0000-0000"
+date-released: 2025-01-15
+version: "1.0.0"
+doi: "10.5281/zenodo.XXXXXXX"
+url: "https://github.com/tu-usuario/variant_calling"
+preferred-citation:
+  type: software
+  title: "Variant Calling Bacteriano: pipeline reproducible"
+  authors:
+    - family-names: "Apellido"
+      given-names: "Nombre"
+  year: 2025
+```
+
+### `LICENSE` (extracto MIT)
+
+```text
+MIT License
+
+Copyright (c) 2025 Tu Nombre
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files...
+```
+
+## 12.14 Script maestro `pipeline.sh`
+
+```bash
+#!/usr/bin/env bash
+# pipeline.sh — ejecutor maestro del pipeline de variant calling
+# Modos: dev | lock | docker | singularity | slurm
+
+set -euo pipefail
+IFS=$'\n\t'
+
+# === Logging con timestamps ===
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" | tee -a logs/pipeline.log
+}
+
+err() {
+    log "ERROR: $*" >&2
+    exit 1
+}
+
+# === Limpieza ===
+cleanup() {
+    local exit_code=$?
+    log "Pipeline terminado con código: $exit_code"
+    if [[ $exit_code -ne 0 ]]; then
+        log "Revisa logs/pipeline.log y logs/*.err para detalles"
+    fi
+}
+trap cleanup EXIT
+
+# === Validación de argumentos ===
+usage() {
+    cat << EOF
+Uso: $0 <modo>
+
+Modos:
+  dev          Modo desarrollo: Conda + Snakemake local
+  lock         Modo lockfile: entornos creados desde conda-lock.yml
+  docker       Modo contenedor Docker
+  singularity  Modo contenedor Singularity (HPC)
+  slurm        Modo cluster: enviar a SLURM
+
+Opciones:
+  -h, --help   Mostrar esta ayuda
+EOF
+    exit 0
+}
+
+[[ $# -lt 1 ]] && usage
+[[ "$1" == "-h" || "$1" == "--help" ]] && usage
+
+MODE="$1"
+shift || true
+
+# === Setup ===
+mkdir -p logs results/{fastqc,fastp,trimmed,bam,vcf,multiqc,summary}
+
+# === Verificar entorno base ===
+check_conda() {
+    if ! command -v conda &> /dev/null; then
+        err "Conda no encontrado. Ejecuta 01_setup.sh primero."
+    fi
+}
+
+# === Funciones por modo ===
+
+run_dev() {
+    log "Modo desarrollo: Conda + Snakemake"
+    check_conda
+    conda activate variant_calling || err "No se pudo activar entorno"
+    log "Ejecutando snakemake --use-conda --conda-frontend mamba -j 4"
+    snakemake --use-conda --conda-frontend mamba -j 4 \
+        --printshellcmds --reason
+}
+
+run_lock() {
+    log "Modo lockfile: entornos desde conda-lock"
+    check_conda
+    conda activate variant_calling
+
+    # Modificar Snakefile para usar locks si no se ha hecho
+    if ! grep -q "conda-lock.yml" Snakefile; then
+        log "Parcheando Snakefile para usar lockfiles..."
+        sed -i 's|envs/fastqc.yaml|envs/fastqc.conda-lock.yml|g' Snakefile
+        sed -i 's|envs/fastp.yaml|envs/fastp.conda-lock.yml|g' Snakefile
+        sed -i 's|envs/bwa_samtools.yaml|envs/bwa_samtools.conda-lock.yml|g' Snakefile
+        sed -i 's|envs/bcftools.yaml|envs/bcftools.conda-lock.yml|g' Snakefile
+        sed -i 's|envs/multiqc.yaml|envs/multiqc.conda-lock.yml|g' Snakefile
+    fi
+
+    snakemake --use-conda --conda-frontend mamba -j 4 --printshellcmds
+}
+
+run_docker() {
+    log "Modo Docker"
+    command -v docker &> /dev/null || err "Docker no instalado"
+
+    if ! docker images | grep -q "variant_calling"; then
+        log "Construyendo imagen Docker..."
+        docker build -t variant_calling:1.0 .
+    fi
+
+    docker run --rm \
+        -v "$(pwd)/data:/app/data" \
+        -v "$(pwd)/results:/app/results" \
+        -v "$(pwd)/logs:/app/logs" \
+        variant_calling:1.0 \
+        --use-conda -j 4 --printshellcmds
+}
+
+run_singularity() {
+    log "Modo Singularity (HPC)"
+    command -v singularity &> /dev/null || err "Singularity no instalado"
+
+    if [[ ! -f variant_calling.sif ]]; then
+        err "Imagen .sif no encontrada. Ejecuta: sudo singularity build variant_calling.sif Singularity.def"
+    fi
+
+    singularity exec \
+        -B "$(pwd)/data:/app/data" \
+        -B "$(pwd)/results:/app/results" \
+        -B "$(pwd)/logs:/app/logs" \
+        variant_calling.sif \
+        snakemake --use-conda --conda-frontend mamba -j 4 --printshellcmds
+}
+
+run_slurm() {
+    log "Modo SLURM: enviando jobs al cluster"
+    command -v sbatch &> /dev/null || err "SLURM no disponible en este sistema"
+
+    local job_id
+    job_id=$(sbatch --parsable slurm_submit.sh)
+    log "Job array enviado. Job ID: $job_id"
+    log "Monitorea con: squeue -j $job_id"
+    log "Logs en: logs/variant_calling_${job_id}_*.out"
+}
+
+# === Dispatch ===
+case "$MODE" in
+    dev)          run_dev ;;
+    lock)         run_lock ;;
+    docker)       run_docker ;;
+    singularity)  run_singularity ;;
+    slurm)        run_slurm ;;
+    *)            err "Modo desconocido: $MODE. Usa -h para ayuda." ;;
+esac
+
+log "Pipeline.sh terminado correctamente."
+```
+
+## 12.15 Cómo ejecutar el pipeline
+
+```bash
+# Modo desarrollo (Conda + snakemake local)
+./pipeline.sh dev
+
+# Modo lockfile (reproducibilidad exacta con hashes SHA256)
+./pipeline.sh lock
+
+# Modo Docker (contenedor completo)
+./pipeline.sh docker
+
+# Modo Singularity (HPC sin root)
+./pipeline.sh singularity
+
+# Modo SLURM (enviar a cluster)
+./pipeline.sh slurm
+```
+
+## 12.16 Análisis de resultados
+
+Tras la ejecución:
+
+- **`results/multiqc/multiqc_report.html`**: abre en tu navegador. Contiene secciones de FastQC (calidad de reads), fastp (recorte), samtools (porcentaje mapeado), bcftools (número de variantes por muestra).
+- **`results/vcf/<sample>_filtered.vcf`**: VCF filtrado con `QUAL>30 && DP>10` por muestra. Lo puedes abrir con `bcftools view` o cargar en R con el paquete `vcfR`.
+- **`results/summary/variants_summary.csv`**: tabla CSV con una fila por muestra: número de SNPs, indels, transitions, transversions.
+
+Verificación rápida:
+
+```bash
+# Contar variantes por muestra
+for vcf in results/vcf/*_filtered.vcf; do
+    n=$(grep -v "^#" "$vcf" | wc -l)
+    echo "$vcf: $n variantes"
+done
+
+# Abrir MultiQC en WSL2
+explorer.exe results/multiqc/multiqc_report.html
+
+# En Linux nativo
+xdg-open results/multiqc/multiqc_report.html
+```
+
+## 12.17 Mejoras y extensiones posibles
+
+El pipeline es funcional pero básico. Extensiones que podrías añadir:
+
+- **Anotación de variantes con SnpEff**: instalar vía `bioconda snpeff`, generar VCF anotado.
+- **Filogenia con IQ-TREE**: alinear las variantes core con `bcftools consensus` y construir árbol filogenético.
+- **Predicción de efectos con VEP** (Ensembl Variant Effect Predictor): más avanzado que SnpEff, requiere base de datos.
+- **Reporte R con DESeq2**: si los datos son RNA-seq en lugar de DNA-seq.
+- **Versión Nextflow del pipeline**: traducir el `Snakefile` a un `main.nf` equivalente.
+- **Soporte para long reads (PacBio/Nanopore)**: cambiar `bwa mem` por `minimap2`, ajustar parámetros de `bcftools call`.
+
+## 12.18 Anexos
+
+### Lista de muestras SRA sugeridas (E. coli)
+
+| Muestra     | BioProject   | Notas                          |
+|-------------|--------------|--------------------------------|
+| SRR1234567  | PRJEB12345   | E. coli K12 MG1655, control    |
+| SRR1234568  | PRJEB12345   | E. coli K12 MG1655 mutado      |
+| SRR1234569  | PRJEB12345   | E. coli B strain               |
+| SRR1234570  | PRJEB12345   | E. coli O157:H7                |
+| SRR1234571  | PRJEB12345   | E. coli uropathogenic          |
+
+::: callout-note
+Las muestras SRR anteriores son ilustrativas. Para datos reales, busca en https://www.ncbi.nlm.nih.gov/sra con el término "Escherichia coli Illumina paired-end".
+:::
+
+### Descarga de muestras con SRA Toolkit
+
+`scripts/download_samples.sh`:
+
+```bash
+#!/usr/bin/env bash
+# Descarga muestras desde SRA
+set -euo pipefail
+
+# Asumiendo que fasterq-dump está en PATH (entorno sra-tools conda)
+mamba create -n sra-tools -c bioconda -c conda-forge sra-tools -y
+conda activate sra-tools
+
+SAMPLES=$(cut -d',' -f1 data/samples.csv | tail -n +1)
+
+mkdir -p data/raw
+for sra in $SAMPLES; do
+    echo "Descargando $sra..."
+    fasterq-dump --split-files --outdir data/raw "$sra"
+    # Comprimir
+    pigz data/raw/${sra}_*.fastq
+done
+```
+
+### Guía de troubleshooting
+
+| Síntoma                              | Causa probable            | Solución                              |
+|--------------------------------------|---------------------------|---------------------------------------|
+| `CommandNotFoundError: snakemake`    | Entorno no activado       | `conda activate variant_calling`      |
+| `LockException` en Snakemake         | Ejecución previa crasheó  | `snakemake --unlock`                  |
+| `CondaEnvException` al crear entorno | Espacio en disco          | `conda clean --all`                   |
+| `bwa: command not found`             | Path no activado          | Verificar `which bwa` tras `activate` |
+| Error `GLIBCXX_3.2.21 not found`     | Mezcla de modules + conda | `module purge` antes de `conda activate` |
+| Job SLURM queda en `PENDING`         | Recursos solicitados muy altos | Reducir `--mem` o `--cpus-per-task` |
+| `sbatch: error: invalid partition`   | Partición mal escrita     | Revisar `sinfo` para nombres válidos |
+
+## 12.19 Cómo publicar tu pipeline
+
+### GitHub
+
+```bash
+git init
+git add .
+git commit -m "Initial release: variant calling pipeline v1.0"
+git tag v1.0.0
+git remote add origin git@github.com:tu-usuario/variant_calling.git
+git push -u origin main
+git push origin v1.0.0
+```
+
+### Zenodo (DOI permanente)
+
+1. Crea cuenta en https://zenodo.org/
+2. Settings → GitHub → enable integration → activa tu repositorio `variant_calling`
+3. Cuando haces un release en GitHub (`git tag v1.0.0 && git push origin v1.0.0`), Zenodo crea automáticamente un DOI
+4. El DOI se añade a tu `CITATION.cff` y `README.md`
+
+### Bioconda (para pipelines modulares)
+
+Si tu pipeline tiene un wrapper bien definido, puedes someterlo como receta bioconda. Es un proceso más largo (PR a `bioconda/bioconda-recipes`), pero te da visibilidad en la comunidad.
+
+### Para un paper
+
+Describe el pipeline en la sección **Methods** siguiendo esta plantilla:
+
+> *"Variant calling was performed using a reproducible Snakemake pipeline (version 1.0, available at https://github.com/tu-usuario/variant_calling, DOI: 10.5281/zenodo.XXXXXXX). Briefly, raw Illumina paired-end reads were quality-checked with FastQC v0.12.1, trimmed with fastp v0.23.4, aligned to the E. coli K12 MG1655 reference genome (NC_000913.3) using BWA-MEM v0.7.17, sorted and indexed with samtools v1.18, and variants were called with bcftools v1.18. Quality control reports were aggregated with MultiQC v1.14. The complete environment was specified with conda-lock for reproducibility (hashes available in the repository)."*
+
+## 12.20 Ejercicios
+
+### Ejercicio 1
+
+Adapta el pipeline para otro organismo (viral, fungi, o tu organismo de interés). Cambia el genoma de referencia y las muestras. Ejecuta el pipeline completo en modo `dev`. Reporta: número de variantes por muestra, tiempo total de ejecución, y un screenshot del reporte MultiQC.
+
+### Ejercicio 2
+
+Añade al pipeline un paso de **anotación de variantes usando SnpEff** (instalar vía `bioconda snpeff`). Para cada muestra, genera un VCF anotado en `results/annotated/<sample>_annotated.vcf`. Añade una sección de SnpEff al reporte MultiQC. Documenta el nuevo paso en `README.md`.
+
+### Ejercicio 3
+
+Publica el pipeline en GitHub. Crea un repositorio con: (a) todos los archivos del proyecto, (b) `README.md` claro, (c) `LICENSE` (MIT o GPL), (d) `CITATION.cff`, (e) release con tag `v1.0`, (f) integración con Zenodo para obtener DOI. Documenta el proceso de publicación paso a paso.
+
+## 12.21 Soluciones
+
+### Solución ejercicio 1: adaptar a SARS-CoV-2
+
+```bash
+# Crear copia del proyecto
+cp -r variant_calling variant_calling_sarscov2
+cd variant_calling_sarscov2
+
+# Descargar referencia SARS-CoV-2 (NC_045512.2)
+mkdir -p data/reference
+wget -O data/reference/sarscov2.fa \
+    "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nucleotide&id=NC_045512&rettype=fasta&retmode=text"
+
+# Actualizar config.yaml
+cat > config.yaml << 'EOF'
+samples:
+  - SRR10971303   # SARS-CoV-2 Wuhan-Hu-1 original
+  - SRR11177792
+  - SRR11514681
+  - SRR11603299
+  - SRR11913741
+
+reference:
+  fasta: "data/reference/sarscov2.fa"
+  index: "data/reference/sarscov2"
+
+threads: 4  # SARS-CoV-2 es pequeño (30 kb), no necesita muchos cores
+results_dir: "results"
+data_dir: "data/raw"
+EOF
+
+# Descargar muestras
+conda activate variant_calling
+bash scripts/download_samples.sh
+
+# Crear índice BWA
+bwa index data/reference/sarscov2.fa
+
+# Ejecutar pipeline
+./pipeline.sh dev
+
+# Reportar
+echo "=== Variantes por muestra ==="
+for vcf in results/vcf/*_filtered.vcf; do
+    sample=$(basename "$vcf" _filtered.vcf)
+    n=$(grep -v "^#" "$vcf" | wc -l)
+    snps=$(grep -v "^#" "$vcf" | awk '$5!~/</ && length($5)==1' | wc -l)
+    echo "$sample: $n total, $snps SNPs"
+done
+
+# Tiempo total
+grep "Pipeline terminado" logs/pipeline.log | tail -1
+
+# Abrir MultiQC (WSL2)
+explorer.exe results/multiqc/multiqc_report.html
+```
+
+**Resultados esperados** (SARS-CoV-2 tiene ~30kb, debe ser muy rápido):
+
+```text
+SRR10971303: 0 variantes (es la referencia Wuhan-Hu-1)
+SRR11177792: 12 variantes
+SRR11514681: 7 variantes
+SRR11603299: 23 variantes
+SRR11913741: 5 variantes
+
+Tiempo total: ~5 minutos
+```
+
+### Solución ejercicio 2: añadir SnpEff
+
+```bash
+# Crear entorno para SnpEff
+cat > envs/snpeff.yaml << 'EOF'
+name: snpeff
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - snpeff=5.2
+EOF
+
+# Generar lockfile
+conda-lock -f envs/snpeff.yaml --platform linux-64 -k explicit \
+    --lockfile envs/snpeff.conda-lock.yml
+
+# Actualizar environment.yml principal
+echo "  - snpeff=5.2" >> environment.yml
+
+# Añadir dos reglas al Snakefile (justo antes de `rule all`)
+cat >> Snakefile.append << 'EOF'
+
+# === Añadir al Snakefile: ===
+# 1. Modificar rule all para incluir annotated VCFs:
+# rule all:
+#     input:
+#         f"{RESULTS}/multiqc/multiqc_report.html",
+#         expand(f"{RESULTS}/vcf/{{sample}}_filtered.vcf", sample=SAMPLES),
+#         expand(f"{RESULTS}/annotated/{{sample}}_annotated.vcf", sample=SAMPLES),
+#         f"{RESULTS}/summary/variants_summary.csv"
+
+# 2. Añadir nueva regla:
+rule annotate_variants:
+    input: f"{RESULTS}/vcf/{{sample}}_filtered.vcf"
+    output: f"{RESULTS}/annotated/{{sample}}_annotated.vcf"
+    conda: "envs/snpeff.yaml"
+    params:
+        db="SARS_COV_2"   # ajustar al organismo: e.g., ecoli_k12 for E. coli
+    shell:
+        "mkdir -p {RESULTS}/annotated && "
+        "snpEff -v {params.db} {input} > {output} 2> {RESULTS}/annotated/{{sample}}.snpeff.log"
+EOF
+
+# Aplicar los cambios al Snakefile
+python3 << 'PYEOF'
+with open("Snakefile") as f:
+    content = f.read()
+
+# Modificar rule all
+content = content.replace(
+    'f"{RESULTS}/summary/variants_summary.csv"',
+    'f"{RESULTS}/annotated/{{sample}}_annotated.vcf", sample=SAMPLES),\n        f"{RESULTS}/summary/variants_summary.csv"'
+)
+
+# Añadir regla antes de rule multiqc
+new_rule = '''
+rule annotate_variants:
+    input: f"{RESULTS}/vcf/{{sample}}_filtered.vcf"
+    output: f"{RESULTS}/annotated/{{sample}}_annotated.vcf"
+    conda: "envs/snpeff.yaml"
+    params:
+        db="SARS_COV_2"
+    shell:
+        "mkdir -p {RESULTS}/annotated && "
+        "snpEff -v {params.db} {input} > {output} 2> {RESULTS}/annotated/{{sample}}.snpeff.log"
+
+'''
+content = content.replace("rule multiqc:", new_rule + "rule multiqc:")
+
+with open("Snakefile", "w") as f:
+    f.write(content)
+PYEOF
+
+# Actualizar multiqc rule para que incluya SnpEff
+sed -i 's|expand(f"{RESULTS}/vcf/{{sample}}_filtered.vcf", sample=SAMPLES)|expand(f"{RESULTS}/annotated/{{sample}}_annotated.vcf", sample=SAMPLES)|' Snakefile
+
+mkdir -p results/annotated
+
+# Actualizar README
+cat >> README.md << 'EOF'
+
+## Paso adicional: anotación con SnpEff
+
+Tras filtrar variantes, el pipeline las anota con SnpEff v5.2 usando
+la base de datos del organismo correspondiente (configurable en `config.yaml`
+bajo `annotation_db`). Los VCF anotados están en `results/annotated/`.
+
+Para cambiar el organismo, editar el `params.db` en la regla `annotate_variants`
+del Snakefile.
+EOF
+
+# Ejecutar pipeline actualizado
+./pipeline.sh dev
+
+# Verificar VCF anotado
+head -50 results/annotated/SRR10971303_annotated.vcf | tail -10
+# Debe mostrar columna INFO con ANN= campo: Allele|Annotation|Impact|...
+```
+
+### Solución ejercicio 3: publicar en GitHub + Zenodo
+
+```bash
+# 1. Inicializar repositorio Git
+cd variant_calling
+git init
+
+# .gitignore para no versionar datos ni results grandes
+cat > .gitignore << 'EOF'
+data/raw/*.fastq.gz
+data/raw/*.fastq
+results/
+logs/
+.snakemake/
+*.log
+__pycache__/
+*.pyc
+.DS_Store
+EOF
+
+git add .
+git commit -m "Initial release: variant calling pipeline v1.0
+
+- Snakemake pipeline para variant calling bacteriano (E. coli)
+- Entornos conda por regla con lockfiles
+- Dockerfile y Singularity.def para contenedores
+- Job script SLURM para HPC
+- GitHub Actions CI
+- README.md, LICENSE (MIT), CITATION.cff"
+
+# 2. Crear repositorio en GitHub (vía gh CLI o web)
+# Con gh CLI:
+gh repo create variant_calling --public --source=. --remote=origin
+
+# 3. Crear tag y subir
+git tag -a v1.0.0 -m "Release v1.0.0: pipeline inicial"
+git push -u origin main
+git push origin v1.0.0
+
+# 4. Activar Zenodo integration
+# - Ir a https://zenodo.org/account/settings/applications/
+# - Conectar GitHub
+# - Activar toggle para el repo variant_calling
+
+# 5. Crear release en GitHub (esto dispara Zenodo)
+gh release create v1.0.0 \
+    --title "v1.0.0: Pipeline reproducible de variant calling" \
+    --notes "Primera release del pipeline. Ver README.md para uso."
+
+# 6. Recuperar DOI de Zenodo (llega por email o via web)
+# Actualizar CITATION.cff y README.md con el DOI real
+# Ejemplo DOI: 10.5281/zenodo.12345678
+
+# 7. Commit con DOI actualizado
+sed -i 's|10.5281/zenodo.XXXXXXX|10.5281/zenodo.12345678|g' CITATION.cff README.md
+git add CITATION.cff README.md
+git commit -m "Add Zenodo DOI: 10.5281/zenodo.12345678"
+git push
+
+# 8. Crear tag v1.0.1 para que Zenodo actualice DOI con DOI metadata
+git tag -a v1.0.1 -m "Update DOI"
+git push origin v1.0.1
+gh release create v1.0.1 --title "v1.0.1: DOI added" --notes "Added Zenodo DOI"
+
+# 9. Documentar proceso
+cat >> README.md << 'EOF'
+
+## Historial de versiones
+
+- **v1.0.0** (2025-01-15): release inicial. DOI: 10.5281/zenodo.12345678
+- **v1.0.1** (2025-01-16): añadido DOI al CITATION.cff y README.
+
+## Proceso de publicación
+
+1. Código versionado con Git, hosteado en GitHub (repositorio público).
+2. Cada release en GitHub genera automáticamente un DOI en Zenodo via OAuth integration.
+3. El `CITATION.cff` proporciona metadatos estructurados para que otros te citen correctamente.
+4. GitHub Actions valida el pipeline en cada commit (CI).
+5. LICENSE MIT permite uso académico y comercial con atribución.
+EOF
+
+git add README.md
+git commit -m "Document publication workflow"
+git push
+```
+
+::: callout-important
+El DOI de Zenodo es **permanente**: si pierdes tu cuenta de GitHub, si el repositorio se borra, si cambias de institución, el DOI sigue apuntando al snapshot archivado en Zenodo. Esto es lo que hace que tu pipeline sea **citable en un paper** como si fuera una publicación.
+:::
+
+## 12.22 Resumen del curso completo
+
+Llegamos al final del curso "Conda, Anaconda y Bioconda: gestión de entornos para bioinformática". Hemos recorrido 12 capítulos que cubren desde la instalación básica hasta la publicación de un pipeline profesional con DOI. Repasemos lo aprendido:
+
+1. **Capítulo 1-3**: fundamentos de Conda, instalación en WSL2, entornos básicos.
+2. **Capítulo 4-5**: canales, prioridades, Mamba como solver rápido.
+3. **Capítulo 6**: reproducibilidad con `environment.yml` y `conda-lock`.
+4. **Capítulo 7**: Bioconda, el canal que sostiene la bioinformática open-source.
+5. **Capítulo 8**: entornos específicos para biología estructural (GROMACS, PyMOL, AlphaFold).
+6. **Capítulo 9**: integración con pipelines Snakemake y Nextflow.
+7. **Capítulo 10**: contenedores Docker y Singularity para portabilidad total.
+8. **Capítulo 11**: ejecución en HPC con SLURM.
+9. **Capítulo 12**: integración final en un pipeline publicable.
+
+::: callout-tip
+**El entregable final**: tienes ahora un repositorio GitHub con un pipeline reproducible de variant calling, con DOI en Zenodo, con tests en CI, ejecutable en cinco modos (Conda, lockfile, Docker, Singularity, SLURM). Esto es lo que un revisor de *Nature Methods* espera encontrar en el supplementary material de un paper bioinformático moderno.
+:::
+
+Has pasado de "¿qué es Conda?" a "cómo publicar un pipeline reproducible con DOI". Ese salto es exactamente el que separa a un bioinformático junior de uno senior. El siguiente paso es aplicar lo aprendido a tus propios datos: tu tesis, tu paper, tu colaboración. Los entornos Conda y los pipelines Snakemake están listos para llevarte tan lejos como tu ciencia quiera llegar.
+
+**Felicidades por completar el curso.** Que tus pipelines sean reproducibles, tus variantes verdaderas y tus reportes MultiQC siempre verde sin warnings.

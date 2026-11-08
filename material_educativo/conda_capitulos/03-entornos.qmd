@@ -1,0 +1,442 @@
+---
+title: "Capítulo 3: Entornos virtuales: creación, activación, gestión"
+---
+
+## 3.1 Qué es un entorno virtual y por qué usarlo en bioinformática
+
+Un **entorno virtual Conda** es un directorio aislado con su propia versión de Python (o sin Python), sus propias bibliotecas y sus propios binarios. Activarlo equivale a "cambiar de sistema operativo" dentro de tu shell: el `python`, el `samtools`, el `R` que se ejecutan son los del entorno, no los del sistema ni los de otro entorno.
+
+En bioinformática, los entornos virtuales son **esenciales** por tres motivos:
+
+1. **Reproducibilidad**: cada análisis publicado debería poder repetirse con las mismas versiones de software años después. Un `environment.yml` describe exactamente qué paquetes y versiones se usaron.
+2. **Aislamiento**: si tu pipeline RNA-seq usa `STAR` 2.7.11 y tu vecino de laboratorio usa `STAR` 2.7.10, ambos pueden convivir en la misma máquina sin pisarse.
+3. **Diagnóstico de fallos**: cuando algo deja de funcionar tras una actualización, puedes volver a una versión anterior del entorno (Conda guarda un historial con `conda list --revisions`).
+
+::: callout-important
+**Regla de oro**: nunca instales paquetes bioinformáticos en el entorno `base`. `base` es para Conda y utilidades del propio gestor (`mamba`, `jupyter`, `conda-build`). Cada proyecto o pipeline debe tener su propio entorno.
+:::
+
+## 3.2 El entorno `base`
+
+Al instalar Miniconda/Miniforge/Anaconda, Conda crea automáticamente un entorno llamado `base` que contiene Python y los paquetes mínimos para que `conda` funcione. Características:
+
+- Se activa automáticamente al abrir una terminal **a menos que** hayas puesto `auto_activate_base: false` (recomendado en el capítulo 2).
+- No se recomienda instalar en él paquetes de usuario: mezclar `pandas`, `numpy` de un proyecto con el `conda` que gestiona todo puede llevar a problemas difíciles de diagnosticar.
+- Para actualizarlo, ejecuta `conda update -n base conda` (o `mamba update -n base conda` si ya instalaste mamba).
+
+Ver tu estado actual:
+
+```bash
+conda info --envs
+# Salida:
+# # conda environments:
+# #
+# base                  *  /home/usuario/miniforge3
+```
+
+El asterisco `*` indica el entorno activo.
+
+## 3.3 Crear un entorno nuevo
+
+Conda ofrece mucha flexibilidad para crear entornos. A continuación, los patrones más útiles:
+
+```bash
+# 1) Entorno vacío con Python específico
+conda create -n bio python=3.11
+
+# 2) Entorno con Python y paquetes básicos
+conda create -n analisis python=3.11 pandas numpy matplotlib seaborn
+
+# 3) Entorno con paquetes de un canal concreto (bioconda)
+conda create -n ngs -c bioconda bwa samtools bcftools
+
+# 4) Entorno con versión específica congelada (para reproducibilidad)
+conda create -n legacy python=3.8 "biopython=1.79"
+
+# 5) Entorno sin Python (solo binarios)
+conda create -n tools -c bioconda fastp fastqc multiqc
+
+# 6) Entorno a partir de un archivo YAML (reproducibilidad)
+conda env create -f environment.yml
+```
+
+::: callout-tip
+**Recomendación**: especifica siempre la versión de Python al crear el entorno (`python=3.11`). Si no la especificas, Conda elegirá la versión por defecto del canal `conda-forge`, que puede variar con el tiempo y romper reproducibilidad.
+:::
+
+La sintaxis general:
+
+```
+conda create -n <nombre> [-c <canal>] <paquete>=<versión> [<paquete>=<versión> ...]
+```
+
+- `-n` o `--name`: nombre del entorno.
+- `-c` o `--channel`: canal desde el que instalar (por defecto, los canales de `~/.condarc`).
+- `<paquete>=<versión>`: especifica versión exacta. Admite operadores `>=`, `<=`, `>`, `<` entre comillas: `"python>=3.10,<3.12"`.
+
+## 3.4 Activar y desactivar entornos
+
+```bash
+conda activate bio        # activar entorno 'bio'
+conda deactivate          # desactivar (volver al anterior: base o ninguno)
+conda activate base       # activar base explícitamente
+conda activate ngs        # cambiar directamente a otro entorno
+```
+
+En **Windows Anaconda Prompt** el comando es idéntico: `conda activate bio`. En **cmd.exe** estándar sin inicializar habría que usar `activate bio` (sin `conda`), pero esto es marginal; recomendamos siempre Anaconda Prompt o PowerShell inicializado.
+
+::: callout-note
+Activar un entorno modifica varias variables de entorno: `PATH`, `CONDA_PREFIX`, `CONDA_DEFAULT_ENV`, `CONDA_PROMPT_MODIFIER`. Por eso el prompt cambia a `(bio) usuario@maquina:~$`. `conda deactivate` revierte estos cambios.
+:::
+
+## 3.5 Listar entornos
+
+```bash
+conda env list            # lista entornos
+conda info --envs         # equivalente
+```
+
+Salida:
+
+```text
+# conda environments:
+#
+base                  *  /home/usuario/miniforge3
+bio                      /home/usuario/miniforge3/envs/bio
+ngs                      /home/usuario/miniforge3/envs/ngs
+stats                    /home/usuario/miniforge3/envs/stats
+```
+
+El `*` marca el activo.
+
+## 3.6 Ver paquetes instalados en un entorno
+
+```bash
+conda list                # lista paquetes del entorno activo
+conda list -n bio         # lista paquetes de 'bio' sin necesidad de activarlo
+conda list python         # filtra paquetes cuyo nombre contiene 'python'
+conda list --revisions    # historial de cambios del entorno activo
+conda list -n bio --revisions   # historial de un entorno concreto
+```
+
+::: callout-tip
+`conda list --revisions` es oro puro: muestra cada operación realizada (instalación, actualización, eliminación) con timestamp, paquetes añadidos/eliminados y hash. Puedes revertir a una revisión concreta con `conda install --rev N` donde N es el número de revisión.
+:::
+
+## 3.7 Instalar paquetes en un entorno existente
+
+```bash
+# 1) Asegúrate de estar en el entorno correcto
+conda activate bio
+
+# 2) Instala paquetes (usa los canales configurados en ~/.condarc)
+conda install numpy pandas scipy
+
+# 3) Con canal explícito (sobrescribe el orden de ~/.condarc para esta operación)
+conda install -c bioconda bwa
+
+# 4) Con versión específica
+conda install "biopython=1.83"
+conda install "python>=3.10,<3.12"
+
+# 5) Múltiples paquetes de golpe
+conda install bwa samtools bcftools fastp
+
+# 6) Dry-run: ver qué haría Conda sin instalar nada
+conda install bwa --dry-run
+```
+
+::: callout-warning
+Si vas a instalar varios paquetes, **hazlo en una sola invocación** (`conda install bwa samtools bcftools`) en lugar de tres invocaciones separadas. El resolvedor optimiza mejor y se reduce el riesgo de incompatibilidades.
+:::
+
+## 3.8 Actualizar paquetes
+
+```bash
+conda update numpy                  # un paquete
+conda update --all                  # todos los paquetes del entorno activo
+conda update -c bioconda bwa        # desde canal específico
+conda update -n base conda          # actualizar el propio conda en base
+conda update -n bio python          # actualizar python en el entorno bio
+```
+
+::: callout-important
+**`conda update --all` puede romper un entorno** si las versiones nuevas son incompatibles entre sí. Úsalo solo en entornos experimentales, y siempre tras un `conda list --export > backup.txt` por si necesitas restaurar.
+:::
+
+## 3.9 Eliminar y renombrar entornos
+
+Conda no tiene un comando `rename` directo. Para renombrar, **clona y elimina**:
+
+```bash
+# Eliminar
+conda env remove -n bio            # eliminar entorno 'bio'
+conda env list                     # verificar que ya no aparece
+
+# Renombrar 'viejo' → 'nuevo'
+conda create --name nuevo --clone viejo
+conda env remove -n viejo
+```
+
+## 3.10 Clonar entornos
+
+Útil para experimentar sin romper el original:
+
+```bash
+conda create --name bio_backup --clone bio
+```
+
+El clon es una copia exacta en otro directorio. Ocupa el mismo espacio en disco (no se enlazan archivos), aunque Conda reutiliza la caché de `pkgs/` para no volver a descargar.
+
+## 3.11 Compartir entornos (introducción)
+
+La reproducibilidad en bioinformática pasa por **exportar** el estado de un entorno y poder **recrearlo** en otra máquina:
+
+```bash
+# Exportar a YAML (incluye nombres, versiones y builds)
+conda env export --name bio > environment.yml
+
+# Exportar solo nombres (sin builds; más portable pero menos reproducible)
+conda env export --name bio --no-builds > environment_portable.yml
+
+# Exportar solo nombres (sin versiones; útil como plantilla)
+conda env export --name bio --from-history > environment_minimal.yml
+
+# Crear entorno desde YAML
+conda env create -f environment.yml
+
+# Actualizar un entorno existente con un YAML
+conda env update -f environment.yml --prune
+```
+
+::: callout-tip
+Para publicaciones científicas, usa siempre `conda env export` (con builds). Para compartir con colegas que pueden tener otra arquitectura, usa `--no-builds`. Para una "plantilla" humanamente legible, `--from-history`.
+:::
+
+Profundizaremos en esto en el capítulo 6 (reproducibilidad).
+
+## 3.12 Tamaño y consumo de disco
+
+Cada entorno es independiente: tres entornos con Python + NumPy + SciPy pueden ocupar 3–5 GB en total. Para auditar:
+
+```bash
+# Tamaño de cada entorno
+du -sh ~/miniforge3/envs/*
+
+# Tamaño total de la carpeta de entornos
+du -sh ~/miniforge3/envs
+
+# Tamaño de la caché de paquetes
+du -sh ~/miniforge3/pkgs
+
+# Limpiar cache (¡libera mucho espacio!)
+conda clean --all            # paquetes + tarballs + index + cache
+conda clean --packages       # solo paquetes no usados
+conda clean --tarballs       # solo .tar.bz2/.conda comprimidos
+conda clean -i               # solo índices de canales
+```
+
+::: callout-note
+`conda clean --all` es seguro: solo borra la caché. Los entornos instalados no se rompen. Conda redescargará los paquetes la próxima vez que los necesite. Típico ahorro: 2–5 GB.
+:::
+
+## 3.13 Entornos en rutas personalizadas (`-p`)
+
+A veces conviene que el entorno viva **dentro del proyecto** en lugar de en `~/miniforge3/envs/`. Por ejemplo, para proyectos puntuales que quieres borrar junto con sus datos:
+
+```bash
+# Crear en ruta específica
+conda create -p /ruta/al/proyecto/env python=3.11 -c bioconda bwa
+
+# Activar con ruta completa
+conda activate /ruta/al/proyecto/env
+
+# Eliminar (también por ruta)
+conda env remove -p /ruta/al/proyecto/env
+```
+
+Los entornos por ruta (`-p`) no aparecen en `conda env list` salvo que se añadan a `envs_dirs` en `~/.condarc`:
+
+```yaml
+envs_dirs:
+  - ~/miniforge3/envs
+  - ~/proyectos/conda_envs
+```
+
+## 3.14 Buenas prácticas para entornos bioinformáticos
+
+1. **Un entorno por pipeline o flujo de trabajo**: si haces RNA-seq con STAR+featureCounts+DESeq2, crea un entorno `rnaseq_v2`.
+2. **Nombres descriptivos y versionados**: `rnaseq_v2`, `phyl_2024`, `md_amber`, `vcf_gatk4`. Evita `env1`, `test`, `mi_entorno`.
+3. **Documenta versiones con `environment.yml`** y guárdalo en el repositorio Git del proyecto.
+4. **No mezcles `conda` con `pip` en el mismo entorno** salvo que sea estrictamente necesario. Si lo haces, instala primero los paquetes conda, luego pip, y registra el orden en el README.
+5. **Recrea entornos periódicamente**: cada 6–12 meses, borra y recrea tus entornos desde su `environment.yml` para aprovechar actualizaciones de seguridad y rendimiento.
+6. **Nunca instales en `base`** nada que no sea Conda, mamba o utilidades del propio gestor.
+
+::: callout-warning
+Si tu entorno ha acumulado muchas modificaciones y ya no sabes qué tiene, **no lo parchees**: expórtalo a YAML con `--from-history`, crea un entorno nuevo limpio y prueba que todo sigue funcionando. Si sí, elimina el viejo.
+:::
+
+## 3.15 Estructura típica de un proyecto bioinformático
+
+```
+proyecto_tesis/
+├── datos/                # fastq, BAM, VCF, etc. (no en git)
+├── scripts/              # scripts Python, R, bash
+├── env/                  # entorno conda local (con -p ./env)
+├── environment.yml       # especificación reproducible
+├── environment.lock.yml  # conda env export con builds (para reproducibilidad exacta)
+├── resultados/           # outputs
+├── README.md             # documentación del proyecto
+└── .gitignore            # ignora datos/, resultados/, env/
+```
+
+`.gitignore` típico:
+
+```text
+datos/
+resultados/
+env/
+*.bam
+*.fastq
+```
+
+## 3.16 Cuándo usar `mamba` en lugar de `conda`
+
+El resolvedor de Conda es lento en entornos grandes. **Mamba** es una reimplementación en C++ del resolvedor que es típicamente 10–100x más rápido. Se usa igual que `conda`, cambiando `conda` por `mamba`:
+
+```bash
+mamba create -n ngs -c bioconda bwa samtools bcftools   # mucho más rápido
+mamba install -n ngs fastp
+mamba env create -f environment.yml
+```
+
+Lo veremos en detalle en el capítulo 5. Por ahora, baste saber que **mamba es un alias casi drop-in de conda**: cualquier comando `conda create`, `conda install`, `conda env create` funciona también con `mamba`.
+
+## 3.17 Ejercicios
+
+### Ejercicio 1
+Crea tres entornos conda con propósitos distintos:
+
+- (a) `pybasico` con Python 3.11 y `biopython` desde conda-forge.
+- (b) `ngs_tools` con `fastp`, `fastqc`, `bwa`, `samtools`, `bcftools` (todos desde bioconda).
+- (c) `stats` con `r-base` 4.3 y `r-tidyverse` desde conda-forge.
+
+Verifica que cada entorno tiene lo necesario con `conda list`.
+
+### Ejercicio 2
+En el entorno `ngs_tools` del ejercicio anterior:
+
+- (a) instala además `multiqc` desde bioconda,
+- (b) actualiza `samtools` a la última versión,
+- (c) verifica las versiones instaladas de cada herramienta (`fastp --version`, `samtools --version`, etc.),
+- (d) clona el entorno como `ngs_tools_backup`.
+
+### Ejercicio 3
+Limpia el sistema:
+
+- (a) lista todos los entornos con `conda env list`,
+- (b) elimina el entorno `pybasico` (del ejercicio 1),
+- (c) ejecuta `conda clean --all` para liberar espacio,
+- (d) reporta cuánto espacio se liberó con `du -sh ~/miniforge3/pkgs/` antes y después.
+
+## 3.18 Soluciones
+
+### Solución Ejercicio 1
+
+```bash
+# (a) Entorno pybasico con Python 3.11 y biopython
+conda create -n pybasico -c conda-forge python=3.11 biopython -y
+
+# (b) Entorno ngs_tools con herramientas de bioconda
+#     Importante: -c bioconda (y conda-forge por defecto en .condarc)
+conda create -n ngs_tools -c bioconda fastp fastqc bwa samtools bcftools -y
+
+# (c) Entorno stats con R base + tidyverse
+conda create -n stats -c conda-forge r-base=4.3 r-tidyverse -y
+
+# Verificar
+conda env list
+# base, pybasico, ngs_tools, stats
+
+# Verificar contenido de cada uno
+conda list -n pybasico | grep -E "biopython|python"
+conda list -n ngs_tools | grep -E "fastp|fastqc|bwa|samtools|bcftools"
+conda list -n stats | grep -E "r-base|r-tidyverse"
+```
+
+Salida esperada (extracto):
+
+```text
+# ngs_tools
+bwa                0.7.17    h...
+bcftools           1.20      h...
+fastp              0.24.0    h...
+fastqc             0.12.1    h...
+samtools           1.20      h...
+```
+
+### Solución Ejercicio 2
+
+```bash
+# (a) Instalar multiqc en ngs_tools
+conda activate ngs_tools
+conda install -c bioconda multiqc -y
+
+# (b) Actualizar samtools a última versión
+conda update -c bioconda samtools -y
+
+# (c) Verificar versiones de cada herramienta
+fastp --version 2>&1          # fastp 0.24.0
+fastqc --version              # FastQC v0.12.1
+bwa 2>&1 | head -n 3          # Version: 0.7.17-r1188
+samtools --version            # samtools 1.20
+bcftools --version            # bcftools 1.20
+multiqc --version             # MultiQC v1.20
+
+# (d) Clonar el entorno como ngs_tools_backup
+conda deactivate
+conda create --name ngs_tools_backup --clone ngs_tools -y
+
+# Verificar
+conda env list
+# Debe mostrar ngs_tools y ngs_tools_backup
+```
+
+::: callout-tip
+`fastp --version` escribe en stderr, no stdout; por eso conviene añadir `2>&1` para verlo correctamente redirigido.
+:::
+
+### Solución Ejercicio 3
+
+```bash
+# Medir espacio ANTES
+du -sh ~/miniforge3/pkgs
+# (ejemplo) 1.8G  /home/usuario/miniforge3/pkgs
+
+# (a) Listar todos los entornos
+conda env list
+# base, pybasico, ngs_tools, ngs_tools_backup, stats
+
+# (b) Eliminar pybasico
+conda env remove -n pybasico -y
+conda env list   # confirmar que ya no aparece
+
+# (c) Limpiar cache
+conda clean --all -y
+# Salida típica:
+#   Cleaning tarballs: removed 124 files (1.2 GB)
+#   Cleaning packages: removed 87 files (450 MB)
+#   Cleaning index:    removed 3 files (15 MB)
+#   Total: 1.7 GB reclaimed
+
+# Medir espacio DESPUÉS
+du -sh ~/miniforge3/pkgs
+# (ejemplo) 110M  /home/usuario/miniforge3/pkgs
+
+# (d) Reportar espacio liberado
+echo "Espacio antes: 1.8 GB"
+echo "Espacio después: 110 MB"
+echo "Espacio liberado: ~1.7 GB"
+```
+
+Si tienes `mamba` instalado, puedes sustituir `conda clean` por `mamba clean --all`, que a veces libera algo más de caché de índices. Tras limpiar, los entornos que sigas usando (como `ngs_tools`, `ngs_tools_backup` y `stats`) siguen funcionando con normalidad: la caché solo afecta a futuras instalaciones.

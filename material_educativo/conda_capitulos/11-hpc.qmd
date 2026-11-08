@@ -1,0 +1,700 @@
+---
+title: "Capítulo 11: Conda en HPC y SLURM"
+---
+
+## 11.1 Qué es HPC y por qué importa en bioinformática
+
+Un **cluster HPC** (High Performance Computing) es un conjunto de nodos de cómputo interconectados por red de alta velocidad, gestionados por un **scheduler** que reparte los trabajos (jobs) de los usuarios entre los recursos disponibles. En bioinformática moderna, el HPC es ubicuo: ensamblajes de genoma, llamadas de variantes a escala poblacional, simulaciones de dinámica molecular largas y entrenamientos de modelos de machine learning (AlphaFold, ESMFold) son trabajos que tardarían días en un portátil y minutos u horas en un cluster.
+
+Aprender a usar Conda correctamente en un HPC es crítico porque: (a) los clusters suelen tener políticas estrictas sobre qué se puede instalar, (b) las cuotas de disco son limitadas, y (c) la reproducibilidad debe garantizar que un job corriendo en un nodo compute a las 3 a.m. produzca el mismo resultado que corriendo a las 3 p.m.
+
+::: callout-important
+La regla de oro del HPC: **nunca ejecutes análisis pesados en el nodo login**. El nodo login es para editar código, mandar jobs y leer resultados. Cualquier cosa que tarde más de 5 minutos o use más de 4 GB de RAM debe ir al scheduler.
+:::
+
+## 11.2 Arquitectura típica de un cluster HPC
+
+Un cluster HPC académico típico tiene:
+
+- **Nodo login (head node)**: puerta de entrada por SSH. Aquí editas código, mandas jobs, lees correos. **No correr análisis pesados aquí**.
+- **Nodos compute**: donde se ejecutan los jobs. Pueden ser cientos, con decenas de cores cada uno.
+- **Storage compartido**: volúmenes NFS o Lustre accesibles desde todos los nodos. Suelen existir tres paths:
+  - `/home/$USER`: cuota pequeña (10-50 GB), para código y configuración.
+  - `/work/$USER` o `/project/$USER`: cuota grande (cientos de GB-TB), para datos y resultados.
+  - `/scratch/$USER`: disco rápido, sin cuota pero con purga automática (los archivos >30 días se borran).
+- **Scheduler**: software que gestiona la cola de jobs. Los más comunes son **SLURM** (90% del HPC académico actual), PBS/Torque y SGE.
+
+## 11.3 SLURM: el scheduler dominante
+
+SLURM (Simple Linux Utility for Resource Management) es el scheduler más común en HPC académico. Sus comandos básicos:
+
+| Comando            | Función                                  |
+|--------------------|------------------------------------------|
+| `sinfo`            | Estado de particiones y nodos            |
+| `squeue -u $USER`  | Jobs tuyos en cola                       |
+| `sbatch script.sh` | Enviar job batch                         |
+| `scancel job_id`   | Cancelar job                             |
+| `sacct -j job_id`  | Info histórica de un job                 |
+| `srun`             | Lanzar job interactivo                   |
+| `seff job_id`      | Eficiencia (CPU y memoria usadas)        |
+
+Ejemplos:
+
+```bash
+# Ver particiones disponibles
+sinfo
+
+# Ver tus jobs
+squeue -u $USER
+
+# Lanzar un job interactivo con 4 cores y 8 GB por 1 hora
+srun --partition=normal --cpus-per-task=4 --mem=8G --time=01:00:00 --pty bash
+
+# Cancelar job
+scancel 12345678
+
+# Ver stats de eficiencia tras terminar
+seff 12345678
+```
+
+::: callout-tip
+Tras cada job, ejecuta `seff <job_id>` para ver si solicitaste demasiada o muy poca memoria. Un job eficiente usa entre 50% y 80% de los recursos pedidos.
+:::
+
+## 11.4 Instalar Conda en HPC sin sudo
+
+En un HPC académico, **rara vez tienes sudo**. La instalación de Conda debe ser a nivel de usuario, en el `$HOME`. Miniconda o Miniforge son las opciones estándar.
+
+### Miniconda (clásico)
+
+```bash
+cd $HOME
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash Miniconda3-latest-Linux-x86_64.sh -b -p $HOME/miniconda3
+eval "$($HOME/miniconda3/bin/conda shell.bash hook)"
+conda init bash
+# Recargar shell
+source ~/.bashrc
+```
+
+### Miniforge (recomendado para HPC)
+
+Miniforge viene preconfigurado con `conda-forge` como único canal, lo que evita la trampa de mezclar canales `defaults` y `conda-forge` (fuente número uno de incompatibilidades). Además trae `mamba` integrado:
+
+```bash
+cd $HOME
+wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh
+bash Miniforge3-Linux-x86_64.sh -b -p $HOME/miniforge3
+eval "$($HOME/miniforge3/bin/conda shell.bash hook)"
+conda init bash
+source ~/.bashrc
+
+# Verificar
+which mamba
+# ~/miniforge3/bin/mamba
+```
+
+::: callout-important
+En HPC, **siempre Miniforge** antes que Miniconda. Esto te ahorra tener que recordar `conda config --remove channels defaults` y evita decenas de problemas de compatibilidad.
+:::
+
+## 11.5 Limitaciones de Conda en `$HOME`
+
+`$HOME` suele tener cuota de 10-50 GB. Cada entorno Conda con paquetes bioinformatics puede ocupar 1-3 GB, y el cache `pkgs_dirs` crece sin límite. Con 10 entornos te quedas sin espacio. La solución: mover `envs_dirs` y `pkgs_dirs` a `/work/` o `/scratch/`:
+
+```bash
+# Crear directorios en storage grande
+mkdir -p /work/$USER/conda/envs
+mkdir -p /work/$USER/conda/pkgs
+
+# Configurar conda
+conda config --add envs_dirs /work/$USER/conda/envs
+conda config --add pkgs_dirs /work/$USER/conda/pkgs
+
+# Verificar
+conda config --show envs_dirs
+conda config --show pkgs_dirs
+```
+
+::: callout-warning
+El `--add` antepone a la lista, por lo que el primer directorio listado es el que se usará por defecto. Si quieres forzar que sea `/work`, asegúrate de que aparece primero con `conda config --show envs_dirs`.
+:::
+
+## 11.6 Modules del HPC vs Conda
+
+Casi todos los HPCs tienen un **sistema de modules** (`module load gcc/11.2`, `module load samtools/1.18`) para cargar software preinstalado por el administrador. Es tentador mezclar modules y Conda, pero esto da conflictos: dos versiones de libstdc++ pueden chocar y dar errores `GLIBCXX_3.2.21 not found`.
+
+Recomendación: **limpiar modules antes de activar conda**:
+
+```bash
+module purge                   # limpia todos los modules
+module load gcc/11.2           # si estrictamente necesario para conda
+conda activate bio_env
+```
+
+::: callout-note
+Algunos HPCs están configurados para que `module purge` también desactive paths críticos (como el path a `python` para el scheduler). Si tras `module purge` algo deja de funcionar, recarga el module base del cluster: suele llamarse algo como `module load cluster-utils` o `module load site-defaults`.
+:::
+
+## 11.7 Job script SLURM + Conda
+
+Plantilla estándar de job script para alineamiento con BWA:
+
+```bash
+#!/bin/bash
+#SBATCH --job-name=bwa_align
+#SBATCH --partition=normal
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=16G
+#SBATCH --time=04:00:00
+#SBATCH --output=logs/%x_%j.out
+#SBATCH --error=logs/%x_%j.err
+
+# Cargar conda (no usa conda init para evitar dependencias del shell)
+source $HOME/miniforge3/etc/profile.d/conda.sh
+conda activate bio_env
+
+# Variables
+REF=/work/data/reference/genome.fa
+R1=/work/data/samples/${SAMPLE}_R1.fastq.gz
+R2=/work/data/samples/${SAMPLE}_R2.fastq.gz
+
+# Crear directorio de salida si no existe
+mkdir -p /work/results
+
+# Ejecutar usando los cores pedidos a SLURM
+bwa mem -t $SLURM_CPUS_PER_TASK $REF $R1 $R2 | \
+    samtools sort -@ $SLURM_CPUS_PER_TASK -o /work/results/${SAMPLE}.bam
+
+# Reportar
+echo "Job $SLURM_JOB_ID terminado en nodo $SLURM_JOB_NODELIST"
+samtools flagstat /work/results/${SAMPLE}.bam
+```
+
+Enviar el job:
+
+```bash
+# Crear logs/ si no existe
+mkdir -p logs
+
+# Exportar la variable SAMPLE
+export SAMPLE=SRR1234567
+sbatch align.sh
+```
+
+::: callout-tip
+La variable `$SLURM_CPUS_PER_TASK` se pasa al script desde el header `#SBATCH`. Úsala dentro del script para que tus herramientas (`bwa mem -t`, `samtools sort -@`) usen exactamente los cores que pediste. No hardcodees `-t 8`: si un día pides 16 cores, el job no los aprovechará.
+:::
+
+## 11.8 Arrays de jobs: procesar múltiples muestras en paralelo
+
+Para procesar 10 muestras en paralelo (con un máximo de 4 concurrentes):
+
+```bash
+#!/bin/bash
+#SBATCH --job-name=bwa_array
+#SBATCH --partition=normal
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=16G
+#SBATCH --time=04:00:00
+#SBATCH --array=1-10%4
+#SBATCH --output=logs/%x_%A_%a.out
+#SBATCH --error=logs/%x_%A_%a.err
+
+source $HOME/miniforge3/etc/profile.d/conda.sh
+conda activate bio_env
+
+# Lista de muestras (indexada desde 1)
+SAMPLES=(sample1 sample2 sample3 sample4 sample5 sample6 sample7 sample8 sample9 sample10)
+SAMPLE=${SAMPLES[$SLURM_ARRAY_TASK_ID-1]}
+
+echo "Array job $SLURM_ARRAY_JOB_ID, task $SLURM_ARRAY_TASK_ID"
+echo "Procesando muestra: $SAMPLE"
+echo "Nodo: $SLURM_JOB_NODELIST"
+echo "Inicio: $(date)"
+
+REF=/work/data/reference/genome.fa
+R1=/work/data/samples/${SAMPLE}_R1.fastq.gz
+R2=/work/data/samples/${SAMPLE}_R2.fastq.gz
+
+bwa mem -t $SLURM_CPUS_PER_TASK $REF $R1 $R2 | \
+    samtools sort -@ $SLURM_CPUS_PER_TASK -o /work/results/${SAMPLE}.bam
+
+echo "Fin: $(date)"
+samtools flagstat /work/results/${SAMPLE}.bam
+```
+
+Enviar:
+
+```bash
+mkdir -p logs
+sbatch align_array.sh
+# Submitted batch job 12345678
+```
+
+SLURM lanzará 10 tasks con IDs 1-10, ejecutando máximo 4 simultáneamente. Verifica:
+
+```bash
+squeue -u $USER
+# Verás 4 jobs RUNNING y 6 PENDING al principio
+```
+
+::: callout-note
+`$SLURM_ARRAY_JOB_ID` es el ID común del array (12345678), `$SLURM_ARRAY_TASK_ID` es el índice (1-10). En el `%x_%A_%a` de output, `%A` es el job array ID y `%a` el task ID, así cada task escribe a su propio log.
+:::
+
+## 11.9 conda-lock para reproducibilidad exacta en HPC
+
+El flujo recomendado para reproducibilidad de nivel publicación:
+
+1. Genera el lockfile localmente (en tu portátil con WSL2):
+
+```bash
+# En WSL2 local
+mamba install -n base -c conda-forge conda-lock
+conda-lock -f environment.yml --platform linux-64 -k explicit \
+    --lockfile conda-lock.yml
+```
+
+2. Sube `environment.yml` y `conda-lock.yml` al HPC:
+
+```bash
+scp environment.yml conda-lock.yml user@cluster:/work/$USER/pipeline/
+```
+
+3. Crea el entorno desde el lockfile en el HPC:
+
+```bash
+# En el HPC
+cd /work/$USER/pipeline
+conda-lock install -n bio_env conda-lock.yml
+```
+
+Ventaja: los hashes SHA256 del lockfile garantizan que los binarios instalados en el HPC son **idénticos** a los de tu portátil. Sin lockfile, el solver puede elegir builds distintos según qué esté disponible el día de la instalación.
+
+## 11.10 Mejores prácticas para Conda en HPC
+
+1. **No usar `defaults`**: sólo `conda-forge` + `bioconda`. (Miniforge ya lo hace por defecto.)
+2. **Centralizar entornos** en `/work/$USER/conda/envs/`, no en `$HOME`.
+3. **Limpiar cache regularmente**: `conda clean --all` mensual.
+4. **Usar `conda-lock`** para reproducibilidad publicable.
+5. **`module purge`** antes de activar conda.
+6. **Especificar CPUs y memoria** explícitamente en el script SLURM.
+7. **Usar Singularity** si la política del cluster no permite Conda (algunos HPCs no permiten a usuarios instalar su propio Conda).
+
+## 11.11 Conda compartido en HPC (instalación central)
+
+Algunos clusters instalan Conda centralmente en `/opt/conda/` o similar. Los usuarios lo leen pero no escriben; cada uno crea sus entornos propios en `$HOME` o `/work`. Verifica:
+
+```bash
+which conda
+# Si es /opt/conda/bin/conda → instalación central
+# Si es ~/miniforge3/bin/conda → instalación propia
+
+# En cualquier caso, tus entornos personales están en:
+conda config --show envs_dirs
+```
+
+## 11.12 Alternativa: micromamba para HPC
+
+Si el HPC tiene políticas estrictas (no permite Python ni ejecutables arbitrarios en `$HOME`), **micromamba** es standalone: un único binario en C++ que no depende de nada más.
+
+```bash
+# Instalación en una línea
+curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | \
+    tar -xvj bin/micromamba -C $HOME
+
+# Inicializar
+$HOME/bin/micromamba shell init -s bash -p $HOME/micromamba
+source ~/.bashrc
+
+# Verificar
+micromamba --version
+```
+
+Ventajas: ~5 MB de tamaño, sin dependencias, rápido. Desventajas: no tiene todos los comandos de `conda` (por ejemplo, `conda search` funciona distinto).
+
+## 11.13 Conda en SLURM con Snakemake
+
+Snakemake detecta SLURM y puede enviar cada regla como un job SLURM separado. Se configura con un **profile**:
+
+```bash
+mkdir -p ~/.config/snakemake/slurm
+cat > ~/.config/snakemake/slurm/config.yaml << 'EOF'
+cluster: "sbatch --time={resources.time} --mem={resources.mem_mb}M --cpus-per-task={threads}"
+jobs: 100
+latency-wait: 60
+restart-times: 2
+default-resources: [time=60, mem_mb=4000]
+use-conda: true
+conda-frontend: mamba
+EOF
+```
+
+Ejecutar:
+
+```bash
+snakemake --profile slurm -j 100
+```
+
+Snakemake envía cada regla como un `sbatch` independiente y espera a que termine. `-j 100` permite hasta 100 jobs concurrentes en cola.
+
+::: callout-tip
+Si tu cluster tiene un **login node** con un límite de procesos en segundo plano, ejecuta Snakemake dentro de un job interactivo (`srun --pty bash`) en lugar de directamente en el login node.
+:::
+
+## 11.14 Singularity para HPC (cuando Conda no está permitido)
+
+Algunos clusters prohiben Conda por políticas de seguridad o porque el administrador no quiere miles de entornos dispersos. La alternativa es Singularity:
+
+```bash
+# En el login node: pull imagen desde Docker Hub/Quay
+singularity pull fastqc.sif docker://quay.io/biocontainers/fastqc:0.12.1
+
+# En el job script
+singularity exec fastqc.sif fastqc input.fastq -o results/
+```
+
+Job script completo con Singularity:
+
+```bash
+#!/bin/bash
+#SBATCH --job-name=fastqc_sing
+#SBATCH --cpus-per-task=2
+#SBATCH --mem=4G
+#SBATCH --time=01:00:00
+#SBATCH --output=logs/%x_%j.out
+
+SAMPLE=$1
+SIF=/work/$USER/singularity/fastqc.sif
+INPUT=/work/data/samples/${SAMPLE}_R1.fastq.gz
+
+singularity exec -B /work:/work $SIF fastqc $INPUT -o /work/results/fastqc/
+```
+
+## 11.15 Monitorización de recursos
+
+Tras cada job, comprueba su eficiencia:
+
+```bash
+# Estado actual de la cola
+squeue -u $USER
+
+# Tras terminar, eficiencia (CPU y memoria usadas)
+seff 12345678
+# Job ID: 12345678
+# Cluster: mycluster
+# User/Group: user/user
+# State: COMPLETED (exit code 0)
+# Nodes: 1
+# Cores per node: 8
+# CPU Utilized: 01:23:45
+# CPU Efficiency: 78.32% of 01:46:30 core-walltime
+# Job Wall-clock time: 00:13:13
+# Memory Utilized: 4.23 GB
+# Memory Efficiency: 26.44% of 16.00 GB
+
+# Estadísticas históricas detalladas
+sacct -j 12345678 --format=JobID,State,Elapsed,MaxRSS,MaxVMSize,AveCPU
+```
+
+::: callout-note
+`Memory Efficiency: 26.44%` indica que pediste 16 GB pero usaste 4.2 GB. La próxima vez puedes pedir 6 GB sin riesgo. Pedir más memoria de la necesaria reduce tus chances de pasar la cola en clusters saturados.
+:::
+
+## 11.16 Preguntas clave al administrador del cluster
+
+Antes de empezar a trabajar en un HPC nuevo, pregunta al admin:
+
+- ¿Está Conda permitido? ¿Hay Miniforge central o tengo que instalarlo en `$HOME`?
+- ¿Qué particiones existen? ¿Cuáles son los límites de tiempo máximo (wall time) y memoria por partición?
+- ¿Cuál es mi cuota de disco en `/home`, `/work` y `/scratch`?
+- ¿Está Singularity/Apptainer disponible?
+- ¿Cómo configuro SSH keys para acceso sin contraseña entre nodos?
+- ¿Hay límite de jobs concurrentes por usuario?
+- ¿Qué versión de SLURM usan?
+
+::: callout-important
+Nunca asumas que el cluster del laboratorio vecino funciona igual que el tuyo. Lee la documentación local (normalmente en `docs.hpc.tu-univ.edu` o en el mensaje de bienvenida al hacer SSH).
+:::
+
+## 11.17 Tiempo límite y checkpoints
+
+Si un job puede exceder el tiempo máximo de la partición, hay que escribir **checkpoints** para poder reanudar:
+
+```bash
+# Dentro del script: si ya existe output parcial, saltarse pasos
+if [ -f /work/results/${SAMPLE}.bam ]; then
+    echo "BAM ya existe, saltando alineamiento"
+else
+    bwa mem ...
+fi
+```
+
+Snakemake tiene `--restart-times` para reintentar automáticamente jobs que fallan:
+
+```bash
+snakemake --profile slurm --restart-times 3
+```
+
+## 11.18 Ejercicios
+
+### Ejercicio 1
+
+Escribe un job script SLURM que: (a) cargue Conda, (b) active un entorno con `bwa` y `samtools`, (c) alinee una muestra paired-end, (d) convierta SAM a BAM ordenado, y (e) genere estadísticas con `samtools flagstat`. Prueba con `sbatch`.
+
+### Ejercicio 2
+
+Modifica el script del ejercicio 1 para usar SLURM array: procesar 5 muestras en paralelo (una por task del array). Cada job debe reportar su `SAMPLE_ID`, nodo y tiempo de ejecución. Verifica con `squeue` que los jobs están corriendo.
+
+### Ejercicio 3
+
+Crea un entorno Conda con `conda-lock` para HPC: (a) genera `environment.yml` localmente con `bwa`, `samtools`, `bcftools`, `multiqc`; (b) genera `conda-lock.yml` con `conda-lock`; (c) sube ambos archivos al HPC; (d) crea el entorno desde el lockfile en el HPC; (e) verifica que las versiones instaladas coinciden con las del lockfile.
+
+## 11.19 Soluciones
+
+### Solución ejercicio 1
+
+```bash
+mkdir -p ~/jobs logs
+cd ~/jobs
+
+cat > align_single.sh << 'EOF'
+#!/bin/bash
+#SBATCH --job-name=bwa_single
+#SBATCH --partition=normal
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=16G
+#SBATCH --time=04:00:00
+#SBATCH --output=logs/%x_%j.out
+#SBATCH --error=logs/%x_%j.err
+
+# Cargar conda
+source $HOME/miniforge3/etc/profile.d/conda.sh
+conda activate bio_env
+
+# Variables
+SAMPLE=${SAMPLE:-SRR1234567}
+REF=/work/data/reference/ecoli_K12.fa
+R1=/work/data/samples/${SAMPLE}_R1.fastq.gz
+R2=/work/data/samples/${SAMPLE}_R2.fastq.gz
+OUT=/work/results/bam/${SAMPLE}.bam
+
+# Crear directorio
+mkdir -p /work/results/bam
+
+echo "=== Job info ==="
+echo "Job ID:      $SLURM_JOB_ID"
+echo "Nodo:        $SLURM_JOB_NODELIST"
+echo "CPUs:        $SLURM_CPUS_PER_TASK"
+echo "Sample:      $SAMPLE"
+echo "Inicio:      $(date)"
+
+# Alineamiento directo a BAM ordenado (pipe)
+bwa mem -t $SLURM_CPUS_PER_TASK $REF $R1 $R2 | \
+    samtools sort -@ $SLURM_CPUS_PER_TASK -o $OUT
+
+echo "Alineamiento completado: $(date)"
+
+# Indexar BAM
+samtools index $OUT
+
+# Stats con flagstat
+echo "=== samtools flagstat ==="
+samtools flagstat $OUT
+
+echo "=== Fin: $(date) ==="
+EOF
+
+# Enviar
+mkdir -p logs
+export SAMPLE=SRR1234567
+sbatch align_single.sh
+# Submitted batch job 12345678
+
+# Monitorear
+squeue -u $USER
+# JOBID   PARTITION  NAME         USER    ST  TIME  NODES NODELIST
+# 12345678 normal     bwa_single   user    R   0:45  1     node04
+
+# Tras terminar
+seff 12345678
+cat logs/bwa_single_12345678.out
+```
+
+### Solución ejercicio 2
+
+```bash
+cat > align_array.sh << 'EOF'
+#!/bin/bash
+#SBATCH --job-name=bwa_array
+#SBATCH --partition=normal
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=16G
+#SBATCH --time=04:00:00
+#SBATCH --array=1-5%5
+#SBATCH --output=logs/%x_%A_%a.out
+#SBATCH --error=logs/%x_%A_%a.err
+
+source $HOME/miniforge3/etc/profile.d/conda.sh
+conda activate bio_env
+
+# Lista de 5 muestras
+SAMPLES=(SRR1111111 SRR2222222 SRR3333333 SRR4444444 SRR5555555)
+SAMPLE=${SAMPLES[$SLURM_ARRAY_TASK_ID-1]}
+
+REF=/work/data/reference/ecoli_K12.fa
+R1=/work/data/samples/${SAMPLE}_R1.fastq.gz
+R2=/work/data/samples/${SAMPLE}_R2.fastq.gz
+OUT=/work/results/bam/${SAMPLE}.bam
+
+mkdir -p /work/results/bam
+
+echo "=== Array job info ==="
+echo "Array Job ID:  $SLURM_ARRAY_JOB_ID"
+echo "Task ID:       $SLURM_ARRAY_TASK_ID"
+echo "Sample ID:     $SAMPLE"
+echo "Nodo:          $SLURM_JOB_NODELIST"
+echo "CPUs:          $SLURM_CPUS_PER_TASK"
+echo "Inicio:        $(date)"
+
+START=$(date +%s)
+
+bwa mem -t $SLURM_CPUS_PER_TASK $REF $R1 $R2 | \
+    samtools sort -@ $SLURM_CPUS_PER_TASK -o $OUT
+samtools index $OUT
+
+END=$(date +%s)
+ELAPSED=$((END - START))
+
+echo "=== Resultados ==="
+samtools flagstat $OUT
+echo "Tiempo de ejecución: ${ELAPSED} segundos"
+echo "Fin: $(date)"
+EOF
+
+# Enviar
+mkdir -p logs
+sbatch align_array.sh
+# Submitted batch job 12345999
+
+# Verificar jobs corriendo
+squeue -u $USER
+# JOBID      PARTITION  NAME       USER  ST  TIME  NODES NODELIST
+# 12345999_1 normal     bwa_array  user  R   0:30  1     node02
+# 12345999_2 normal     bwa_array  user  R   0:30  1     node05
+# 12345999_3 normal     bwa_array  user  R   0:30  1     node07
+# 12345999_4 normal     bwa_array  user  R   0:30  1     node11
+# 12345999_5 normal     bwa_array  user  R   0:30  1     node13
+
+# Cuando todos terminan
+ls logs/bwa_array_12345999_*.out
+# logs/bwa_array_12345999_1.out
+# logs/bwa_array_12345999_2.out
+# logs/bwa_array_12345999_3.out
+# logs/bwa_array_12345999_4.out
+# logs/bwa_array_12345999_5.out
+
+# Resumen de tiempos
+for i in 1 2 3 4 5; do
+    grep "Tiempo" logs/bwa_array_12345999_${i}.out
+done
+# Tiempo de ejecución: 342 segundos
+# Tiempo de ejecución: 298 segundos
+# Tiempo de ejecución: 412 segundos
+# Tiempo de ejecución: 311 segundos
+# Tiempo de ejecución: 387 segundos
+```
+
+### Solución ejercicio 3
+
+```bash
+# === Paso A: en WSL2 local ===
+# Crear environment.yml
+cat > environment.yml << 'EOF'
+name: bio_hpc
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.11
+  - bwa=0.7.17
+  - samtools=1.18
+  - bcftools=1.18
+  - multiqc=1.14
+EOF
+
+# Instalar conda-lock
+mamba install -n base -c conda-forge conda-lock
+
+# Generar lockfile
+conda-lock -f environment.yml --platform linux-64 -k explicit \
+    --lockfile conda-lock.yml
+
+# Verificar que el lockfile se generó
+head -30 conda-lock.yml
+# version: 1
+# metadata:
+#   content_hash:
+#     linux-64: 8a3f2c9d4e...
+#   channels:
+#     - url: https://conda.anaconda.org/conda-forge
+#       used_env_scheme: ...
+#     - url: https://conda.anaconda.org/bioconda
+#   platforms:
+#     - linux-64
+# packages:
+#   - name: _libgcc_mutex
+#     url: https://conda.anaconda.org/conda-forge/linux-64/_libgcc_mutex-0.1-conda_forge.tar.bz2
+#     hash:
+#       sha256: fe51...
+
+# === Paso B: subir al HPC ===
+scp environment.yml conda-lock.yml user@hpc.univ.edu:/work/$USER/pipeline/
+
+# === Paso C: en el HPC ===
+ssh user@hpc.univ.edu
+cd /work/$USER/pipeline
+
+# Mover envs_dirs a /work si no se hizo antes
+conda config --add envs_dirs /work/$USER/conda/envs
+
+# Crear entorno desde lockfile
+conda-lock install -n bio_hpc conda-lock.yml
+
+# Activar
+conda activate bio_hpc
+
+# === Paso D: verificar versiones coinciden con el lockfile ===
+conda list | grep -E "^(bwa|samtools|bcftools|multiqc)\s"
+# bwa                       0.7.17         h7d875b9_9      bioconda
+# samtools                  1.18           h00cdaf9_1      bioconda
+# bcftools                  1.18           h8b25389_1      bioconda
+# multiqc                   1.14           pyhdfd78af_0    bioconda
+
+# Comparar con el lockfile
+grep -E "(bwa|samtools|bcftools|multiqc)" conda-lock.yml | head -10
+# - name: bwa
+#   version: 0.7.17
+#   build: h7d875b9_9
+#   manager: conda
+#   platform: linux-64
+#   hash:
+#     sha256: ...
+#   url: https://conda.anaconda.org/bioconda/linux-64/bwa-0.7.17-h7d875b9_9.tar.bz2
+
+# Las versiones, builds y hashes deben coincidir exactamente
+# Esto garantiza reproducibilidad bit-a-bit con tu portátil
+```
+
+## 11.20 Resumen
+
+En este capítulo hemos visto cómo usar Conda en un cluster HPC con SLURM: instalar Miniforge sin sudo, centralizar entornos en `/work` para evitar llenar el `$HOME`, integrar Conda con job scripts y arrays de SLURM, garantizar reproducibilidad con `conda-lock`, y caer back a Singularity cuando la política del cluster no permite Conda. Las mejores prácticas (Miniforge, centralizar entornos, `module purge`, especificar recursos, `conda-lock`) son la diferencia entre un HPC que funciona fluidamente y uno que da dolores de cabeza cada semana. En el Capítulo 12, el último del curso, integraremos todo lo aprendido en los 11 capítulos previos en un pipeline reproducible de variant calling bacteriano, listo para publicar como repositorio GitHub con DOI en Zenodo.

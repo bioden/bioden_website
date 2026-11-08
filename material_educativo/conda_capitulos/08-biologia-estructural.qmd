@@ -1,0 +1,746 @@
+---
+title: "Capítulo 8: Entornos para biología estructural"
+---
+
+## 8.1 Qué es la biología estructural
+
+La **biología estructural** estudia la estructura tridimensional de las biomoléculas (proteínas, ácidos nucleicos, lípidos, azúcares) y la relación entre esa estructura y su función. A diferencia de la genómica o la transcriptómica, que operan con secuencias lineales, la biología estructural trabaja con coordenadas atómicas (archivos `.pdb`, `.gro`, `.xyz`), trayectorias temporales de simulaciones y superficies moleculares.
+
+Las áreas principales son:
+
+- **Dinámica molecular (MD)**: simular el movimiento de los átomos a lo largo del tiempo integrando las ecuaciones de Newton con un campo de fuerza. Permite estudiar plegamiento, estabilidad, uniones ligando-receptor, transporte through membranas.
+- **Docking molecular**: predecir cómo se unen dos moléculas (receptor-ligando, proteína-proteína, proteína-ADN). Fundamental en drug discovery.
+- **Visualización 3D**: explorar estructuras, generar imágenes para publicaciones, inspeccionar sitios activos.
+- **Predicción de estructura**: inferir la estructura 3D a partir de la secuencia (AlphaFold, RoseTTAFold, ESMFold).
+- **Análisis de trayectorias**: calcular RMSD, RMSF, distancia, contactos, radios de giro a partir de simulaciones MD.
+
+## 8.2 Software típico en biología estructural
+
+### Dinámica molecular
+
+- **GROMACS**: el más usado en Open Source. Muy optimizado (CPU y GPU), bien documentado. Estándar de facto.
+- **AMBER**: comercial; AMBER Tools es la versión Open Source complementaria.
+- **OpenMM**: API Python para MD, muy flexible. Ideal para scripts y notebooks.
+- **NAMD**: paralelismo masivo, simulaciones muy grandes (millones de átomos).
+- **DESRES Anton**: hardware especializado (no instalable, sólo en la nube D.E. Shaw).
+
+### Docking molecular
+
+- **AutoDock Vina**: el más popular. Open Source, rápido, fácil de usar.
+- **AutoDock 4**: clásico, scoring más antiguo pero aún útil.
+- **HDOCK**: docking proteína-proteína con plantillas.
+- **HADDOCK**: docking data-driven (usa información experimental para guiar el dock).
+- **GNINA**: docking con deep learning (CNN scoring).
+- **rDock**: docking con restricciones espaciales.
+
+### Visualización
+
+- **PyMOL**: clásico, scripting poderoso (Python embebido), estándar en papers.
+- **ChimeraX**: moderno, sucesor de Chimera. Mejor renderizado.
+- **VMD**: visualización de trayectorias MD (con el que se construyeron muchos tutoriales).
+- **NGLView**: widget Jupyter para estructuras y trayectorias.
+
+### Predicción de estructura
+
+- **AlphaFold2 / AlphaFold3**: Google DeepMind. Revolucionó el campo en 2020.
+- **ColabFold**: AlphaFold en la nube (Google Colab), sin necesidad de GPU local.
+- **RoseTTAFold**: Baker Lab, red neuronal tridireccional.
+- **ESMFold**: Meta AI, mucho más rápido que AlphaFold (menos preciso).
+
+### Análisis
+
+- **MDAnalysis**: biblioteca Python para análisis de trayectorias MD.
+- **MDTraj**: alternativa a MDAnalysis, sintaxis más simple.
+- **ProDy**: análisis dinámico de proteínas (modos normales).
+- **gmx_tools**: herramientas de análisis que vienen con GROMACS.
+
+## 8.3 Limitaciones en Windows nativo
+
+::: callout-warning
+**Windows nativo no soporta la mayoría de herramientas de biología estructural**. GROMACS, OpenMM con GPU, VMD, NAMD y varias más **no tienen versión win-64** en conda. La solución es **WSL2** o **Docker**.
+:::
+
+| Software            | Linux | macOS Intel | macOS ARM | Windows nativo |
+|---------------------|-------|-------------|-----------|----------------|
+| GROMACS             | Sí    | Sí          | Sí        | **No**         |
+| OpenMM              | Sí    | Sí          | Sí        | Limitado       |
+| NAMD                | Sí    | Sí          | Parcial   | **No**         |
+| VMD                 | Sí    | Sí          | Parcial   | **No**         |
+| PyMOL (open-source) | Sí    | Sí          | Sí        | **Sí**         |
+| ChimeraX            | Sí    | Sí          | Sí        | **Sí**         |
+| AutoDock Vina       | Sí    | Sí          | Sí        | Limitado       |
+| RDKit               | Sí    | Sí          | Sí        | Sí             |
+
+**Recomendación**: para biología estructural en Windows, **usa WSL2 con WSLg** para visualización. Saltarse Windows nativo ahorra horas de frustración.
+
+## 8.4 Crear entorno para GROMACS
+
+```bash
+# Linux / WSL2
+mamba create -n gromacs -c conda-forge -c bioconda \
+    gromacs=2024 \
+    python=3.11 \
+    jupyter \
+    mdanalysis \
+    nglview \
+    mdtraj
+mamba activate gromacs
+
+# Verificar
+gmx --version
+# Salida esperada:
+# GROMACS:      gmx, version 2024.x
+# ...
+# Precision:          mixed
+# Memory model:       64 bit
+# MPI library:        MPI thread
+# OpenMP support:     enabled
+# GPU support:        CUDA
+# ...
+```
+
+::: callout-note
+La versión conda de GROMACS viene compilada con soporte CUDA para GPU. Si tienes una NVIDIA y los drivers instalados, las simulaciones se ejecutarán automáticamente en GPU. Verifica con `gmx --version` que aparece `GPU support: CUDA`.
+:::
+
+## 8.5 Crear entorno para OpenMM
+
+OpenMM es ideal para hacer MD desde Python scripts o Jupyter notebooks, especialmente cuando quieres automatizar pipelines.
+
+```bash
+mamba create -n openmm -c conda-forge \
+    python=3.11 \
+    openmm=8.1 \
+    pdbfixer \
+    mdtraj \
+    numpy \
+    matplotlib \
+    jupyter
+mamba activate openmm
+
+# Verificar
+python -c "from simtk.openmm import Platform; print(Platform.getNumPlatforms())"
+# 3 (Reference, CPU, CUDA/OpenCL)
+```
+
+## 8.6 Crear entorno para AutoDock Vina
+
+```bash
+mamba create -n vina -c conda-forge -c bioconda \
+    autodock-vina=1.2 \
+    python=3.11 \
+    rdkit \
+    meeko \
+    obabel
+mamba activate vina
+
+# Verificar
+vina --help 2>&1 | head -3
+# AutoDock Vina 1.2.x
+```
+
+`meeko` prepara ligandos a partir de SDF/SMILES; `obabel` convierte formatos químicos.
+
+## 8.7 Crear entorno para PyMOL
+
+```bash
+# En Linux / WSL2
+mamba create -n pymol -c conda-forge pymol-open-source python=3.11
+mamba activate pymol
+pymol --version  # PyMOL 2.5.x
+
+# En Windows nativo también funciona (es uno de los pocos que sí)
+# desde Anaconda Prompt:
+conda create -n pymol -c conda-forge pymol-open-source python=3.11
+conda activate pymol
+pymol --version
+```
+
+::: callout-tip
+La versión `pymol-open-source` de conda-forge es completamente funcional para uso académico. La versión comercial de Schrödinger añade features extra pero no es necesaria para el 99% de los casos.
+:::
+
+## 8.8 Crear entorno para ChimeraX
+
+ChimeraX **no está en conda**. Se descarga desde su web oficial: https://www.cgl.ucsf.edu/chimerax/. Pero se puede integrar con un entorno conda para dependencias Python auxiliares:
+
+```bash
+# Linux/WSL2
+mamba create -n chimerax -c conda-forge python=3.11
+mamba activate chimerax
+
+# Descargar e instalar ChimeraX (Linux .deb)
+wget https://www.cgl.ucsf.edu/chimerax/download/chimerax-1.8.deb
+sudo dpkg -i chimerax-1.8.deb
+
+# Windows nativo: descargar el .exe desde la web e instalarlo.
+```
+
+## 8.9 Entorno combinado para pipeline docking completo
+
+Cuando quieres un pipeline end-to-end de docking (preparar receptor, preparar ligando, hacer dock, analizar, visualizar) lo ideal es un único entorno con todas las dependencias:
+
+```yaml
+name: docking_pipeline
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults
+dependencies:
+  - python=3.11
+
+  # Preparación de receptores
+  - pdbfixer=1.7
+  - openmm=8.1
+
+  # Preparación de ligandos
+  - rdkit=2023.09
+  - meeko=0.5
+  - openbabel=3.1
+
+  # Docking
+  - autodock-vina=1.2
+  - gnina=1.2          # docking con deep learning
+
+  # Análisis
+  - mdanalysis=2.7
+  - prody=2.4
+
+  # Visualización
+  - pymol-open-source=2.5
+  - nglview=3.1
+  - jupyter=1.0
+  - matplotlib=3.8
+  - seaborn=0.13
+```
+
+## 8.10 Entorno para AlphaFold2 / ColabFold
+
+AlphaFold2 **no está en conda** (dependencias muy específicas, integración con bases de datos enormes). Pero sí podemos crear un entorno base con todas las dependencias y luego clonar AlphaFold2 desde GitHub:
+
+```bash
+mamba create -n alphafold -c conda-forge -c bioconda \
+    python=3.11 \
+    tensorflow=2.15 \
+    cuda-toolkit=12.1 \
+    cudnn=8.9 \
+    hmmer=3.4 \
+    hh-suite=3.3 \
+    kalign=3.3 \
+    jupyter
+mamba activate alphafold
+
+# Clonar AlphaFold2
+git clone https://github.com/deepmind/alphafold.git
+cd alphafold
+pip install -e .
+
+# Descargar bases de datos (varios TB, requiere disco y conexión seria)
+# Ver: https://github.com/deepmind/alphafold#genetic-databases
+```
+
+::: callout-important
+AlphaFold2 necesita bases de datos enormes (BFD, MGnify, Uniclust30, PDB70, etc., ~2.7 TB). Para uso esporádico, usa **ColabFold** (https://github.com/sokrypton/ColabFold) en Google Colab: no necesitas instalar nada localmente.
+:::
+
+## 8.11 Configurar GPU para MD
+
+Para simulaciones MD serias (más de unos pocos nanosegundos), **una GPU NVIDIA es esencial**. Una simulación de proteína en agua en CPU tarda días; en GPU, horas.
+
+### Requisitos
+
+- Tarjeta NVIDIA (RTX serie 20/30/40 o Data Center A100/H100).
+- Drivers NVIDIA instalados (`nvidia-smi` funciona).
+- CUDA toolkit y cuDNN (mejor instalarlos **vía conda**, no a nivel sistema):
+
+```bash
+nvidia-smi
+# Salida: información de la GPU, versión de driver
+
+mamba install -c nvidia cuda-toolkit=12.1
+mamba install -c conda-forge cudnn=8.9
+```
+
+### OpenMM con GPU
+
+```python
+from simtk.openmm import Platform
+# Listar plataformas disponibles
+for i in range(Platform.getNumPlatforms()):
+    print(Platform.getPlatform(i).getName())
+# Reference
+# CPU
+# CUDA            <- GPU NVIDIA
+# OpenCL          <- GPU AMD o Intel
+
+# Usar CUDA al crear la simulación
+from simtk.openmm import LangevinIntegrator
+platform = Platform.getPlatformByName('CUDA')
+simulation = Simulation(prmtop.topology, system, integrator, platform)
+```
+
+### GROMACS con GPU
+
+GROMACS compilado con soporte CUDA detecta automáticamente la GPU. Para forzar uso de GPU en cálculos de no-bonded:
+
+```bash
+gmx mdrun -deffnm md -nb gpu   # non-bonded en GPU
+gmx mdrun -deffnm md -bonded gpu  # también bonded en GPU (GROMACS 2021+)
+gmx mdrun -deffnm md -pme gpu  # PME en GPU
+gmx mdrun -deffnm md -update gpu  # actualización de vecinos en GPU (GROMACS 2020+)
+```
+
+::: callout-tip
+Para máxima performance: `gmx mdrun -deffnm md -nb gpu -bonded gpu -pme gpu -update gpu`. Esto descarga prácticamente todo el cálculo a la GPU. En una RTX 3090 puedes simular ~500 ns/día de un sistema de 50.000 átomos.
+:::
+
+## 8.12 Visualización en WSL2
+
+WSL2 no tiene servidor X por defecto. Hay dos caminos:
+
+### Windows 11: WSLg (recomendado)
+
+WSLg viene incluido en Windows 11. Funciona "out of the box" con cualquier app gráfica Linux. Para verificar:
+
+```bash
+echo $DISPLAY
+# Debe devolver algo como :0 (si está vacío, WSLg no está activo)
+
+# Probar con xeyes o PyMOL
+sudo apt install -y x11-apps
+xeyes  # debe abrir una ventana
+
+# PyMOL debería funcionar directamente
+mamba activate pymol
+pymol
+```
+
+### Windows 10: VcXsrv o Xming
+
+En Windows 10, instalar un servidor X externo:
+
+1. Descargar **VcXsrv** desde https://sourceforge.net/projects/vcxsrv/
+2. Ejecutar `XLaunch`, seleccionar "Multiple windows", "Start no client", y activar "Disable access control".
+3. En WSL2:
+
+```bash
+# Añadir al ~/.bashrc
+echo 'export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk "{print \$2}"):0' >> ~/.bashrc
+echo 'export LIBGL_ALWAYS_INDIRECT=1' >> ~/.bashrc
+source ~/.bashrc
+
+# Probar
+mamba activate pymol
+pymol
+```
+
+::: callout-warning
+Visualización 3D con aceleración OpenGL en WSL2 con VcXsrv puede ser **muy lenta**. Para uso intensivo, actualizar a Windows 11 + WSLg es muy recomendable.
+:::
+
+## 8.13 Pipeline típico de docking molecular
+
+Pipeline completo de docking con AutoDock Vina:
+
+```bash
+# 1. Preparar receptor (limpiar PDB, añadir hidrógenos)
+pdbfixer input.pdb --output receptor.pdb
+# Alternativa: openmm con pdbfixer en Python
+
+# 2. Preparar ligando desde SDF/SMILES a PDBQT
+meeko ligand.sdf -o ligand.pdbqt
+# o desde SMILES:
+# obabel -:"CC(=O)Oc1ccccc1C(=O)O" -o pdbqt -O ligand.pdbqt --gen3d
+
+# 3. (Opcional) Convertir receptor PDB a PDBQT
+# Vina 1.2+ acepta PDB directamente, pero PDBQT sigue siendo estándar
+obabel receptor.pdb -o pdbqt -O receptor.pdbqt
+
+# 4. Docking con Vina
+vina --receptor receptor.pdbqt \
+     --ligand ligand.pdbqt \
+     --center_x 10 --center_y 20 --center_z 30 \
+     --size_x 20 --size_y 20 --size_z 20 \
+     --num_modes 10 \
+     --out docked.pdbqt \
+     --log docking.log
+
+# 5. Ver resultados
+cat docking.log | tail -20
+# Salida:
+# mode |   affinity | dist from best mode
+#      | (kcal/mol) | rmsd l.b.| rmsd u.b.
+# -----+------------+----------+----------
+#    1       -8.3      0.000      0.000
+#    2       -7.9      1.234      2.345
+#    3       -7.8      2.012      3.456
+# ...
+
+# 6. Visualizar con PyMOL
+pymol receptor.pdbqt docked.pdbqt
+# En PyMOL:
+# load docked.pdbqt, docked
+# split_states docked
+# hide everything
+# show sticks, docked_0001
+```
+
+## 8.14 Pipeline típico de MD con GROMACS
+
+Pipeline estándar de MD de una proteína en agua (steps 1-7):
+
+```bash
+# 1. Preparar topología
+gmx pdb2gmx -f protein.pdb -o processed.gro -p topol.top \
+    -ff charmm36-jul2022 -water tip3p
+
+# 2. Crear caja y solvatar
+gmx editconf -f processed.gro -o newbox.gro -c -d 1.0 -bt cubic
+gmx solvate -cp newbox.gro -p topol.top -o solv.gro
+
+# 3. Añadir iones (neutralizar)
+gmx grompp -f ions.mdp -c solv.gro -p topol.top -o ions.tpr
+gmx genion -s ions.tpr -o solv_ions.gro -p topol.top \
+    -pname NA -nname CL -neutral
+
+# 4. Minimización de energía
+gmx grompp -f minim.mdp -c solv_ions.gro -p topol.top -o minim.tpr
+gmx mdrun -deffnm minim
+
+# 5. Equilibración NVT (300 K, 100 ps)
+gmx grompp -f nvt.mdp -c minim.gro -p topol.top -o nvt.tpr
+gmx mdrun -deffnm nvt
+
+# 6. Equilibración NPT (1 bar, 100 ps)
+gmx grompp -f npt.mdp -c nvt.gro -p topol.top -o npt.tpr
+gmx mdrun -deffnm npt
+
+# 7. Producción MD (10 ns)
+gmx grompp -f md.mdp -c npt.gro -p topol.top -o md.tpr
+gmx mdrun -deffnm md -nb gpu       # usa GPU para non-bonded
+
+# Análisis post-MD
+gmx rms -s md.tpr -f md.xtc -o rmsd.xvg
+gmx rmsf -s md.tpr -f md.xtc -o rmsf.xvg -res
+gmx gyrate -s md.tpr -f md.xtc -o gyrate.xvg
+```
+
+::: callout-note
+Los archivos `.mdp` (minim.mdp, nvt.mdp, npt.mdp, md.mdp) contienen los parámetros de cada fase. Plantillas se encuentran en cualquier tutorial de GROMACS, p. ej. http://www.mdtutorials.com/gmx/
+:::
+
+## 8.15 Recursos para aprender más
+
+- **GROMACS tutorials**: http://www.mdtutorials.com/gmx/ (Justin Lemkul)
+- **OpenMM docs**: https://docs.openmm.org/ (con ejemplos Python)
+- **AutoDock Vina**: https://vina.scripps.edu/
+- **PyMOL wiki**: https://pymolwiki.org/ (casi todo lo que necesitas)
+- **MDAnalysis tutorials**: https://www.mdanalysis.org/MDAnalysisTutorial/
+- **AlphaFold2 GitHub**: https://github.com/deepmind/alphafold
+- **ColabFold**: https://github.com/sokrypton/ColabFold
+
+## 8.16 Ejercicios
+
+### Ejercicio 1
+
+Crea un entorno `gromacs_env` con GROMACS 2024, Python 3.11, MDAnalysis y Jupyter. Verifica que `gmx --version` funciona. Descarga una PDB de ejemplo (p. ej. `1UBQ.pdb` ubiquitina) con `wget https://files.rcsb.org/download/1UBQ.pdb`.
+
+### Ejercicio 2
+
+Crea un entorno `vina_docking` con AutoDock Vina, RDKit, Meeko y PyMOL. Prepara un receptor de ejemplo y un ligando de ejemplo. Haz un docking básico mostrando los 10 mejores modos. Visualiza con PyMOL.
+
+### Ejercicio 3
+
+Crea un entorno completo `md_pipeline` que incluya: GROMACS, OpenMM, MDAnalysis, PyMOL, NGLView. Escribe `environment.yml` con versiones específicas. Genera `conda-lock.yml`. Documenta el proceso de instalación y verificación de cada componente.
+
+## 8.17 Soluciones
+
+### Solución ejercicio 1
+
+```bash
+# Crear entorno para GROMACS
+mamba create -n gromacs_env -c conda-forge -c bioconda \
+    gromacs=2024 \
+    python=3.11 \
+    mdanalysis=2.7 \
+    nglview=3.1 \
+    jupyter=1.0 \
+    -y
+
+mamba activate gromacs_env
+
+# Verificar GROMACS
+gmx --version
+# Salida esperada (resumen):
+# GROMACS:      gmx, version 2024.x
+# Precision:          mixed
+# Memory model:       64 bit
+# MPI library:        MPI thread
+# OpenMP support:     enabled
+# GPU support:        CUDA (si tienes NVIDIA) o OpenCL
+
+# Verificar MDAnalysis
+python -c "import MDAnalysis as mda; print(mda.__version__)"
+# 2.7.x
+
+# Descargar PDB de ubiquitina
+mkdir -p ~/md_test && cd ~/md_test
+wget https://files.rcsb.org/download/1UBQ.pdb
+ls -lh 1UBQ.pdb
+# -rw-r--r-- 1 user user 39K 1UBQ.pdb
+
+# Verificar que el PDB es válido cargándolo con MDAnalysis
+python << 'EOF'
+import MDAnalysis as mda
+u = mda.Universe("1UBQ.pdb")
+print(f"Átomos: {u.atoms.n_atoms}")
+print(f"Residuos: {u.residues.n_residues}")
+print(f"Primer residuo: {u.residues[0].resname}")
+# Salida:
+# Átomos: 602 (incluyendo hidrógenos en este caso)
+# Residuos: 76
+# Primer residuo: MET
+EOF
+
+# También se puede cargar en GROMACS para ver la estructura
+gmx pdb2gmx -f 1UBQ.pdb -o processed.gro -p topol.top \
+    -ff charmm36-jul2022 -water tip3p -ignh
+# Genera processed.gro y topol.top listos para MD
+
+# Limpieza (opcional)
+# mamba env remove -n gromacs_env
+```
+
+### Solución ejercicio 2
+
+```bash
+# Crear entorno de docking
+mamba create -n vina_docking -c conda-forge -c bioconda \
+    autodock-vina=1.2 \
+    python=3.11 \
+    rdkit=2023.09 \
+    meeko=0.5 \
+    openbabel=3.1 \
+    pymol-open-source=2.5 \
+    -y
+
+mamba activate vina_docking
+
+# Verificar versiones
+vina --version 2>&1 | head -1
+python -c "import rdkit; print(rdkit.__version__)"
+pymol --version 2>&1 | head -1
+obabel -V
+
+# 1. Descargar receptor de ejemplo (HIV proteasa, PDB 1HVR)
+mkdir -p ~/docking_test && cd ~/docking_test
+wget https://files.rcsb.org/download/1HVR.pdb
+
+# 2. Preparar receptor: eliminar ligando, agua, añadir hidrógenos
+python << 'EOF'
+from pdbfixer import PDBFixer
+from openmm.app import PDBFile
+
+fixer = PDBFixer(filename="1HVR.pdb")
+fixer.findMissingResidues()
+fixer.findNonstandardResidues()
+fixer.replaceNonstandardResidues()
+fixer.findMissingAtoms()
+fixer.addMissingAtoms()
+fixer.addMissingHydrogens(7.4)
+# Quitar heteroátomos (agua y ligando original)
+with open("receptor.pdb", "w") as f:
+    PDBFile.writeFile(fixer.topology, fixer.positions, f, keepIds=True)
+print("Receptor preparado: receptor.pdb")
+EOF
+
+# Convertir receptor PDB a PDBQT (formato de Vina)
+obabel receptor.pdb -o pdbqt -O receptor.pdbqt
+
+# 3. Preparar ligando (indinavir, SMILES desde PubChem)
+# SMILES simplificado de un inhibidor análogo
+echo "CC1=C(C(=O)NC2CC2)N2C(=N1)C1=CC=CC=C1NC2=O" > ligand.smi
+# Convertir SMILES a SDF con coordenadas 3D
+obabel -ismi ligand.smi -osdf -O ligand.sdf --gen3d
+
+# Preparar PDBQT con meeko
+meeko ligand.sdf -o ligand.pdbqt
+
+# 4. Definir caja de docking (sitio activo de HIV proteasa: centro ~ -5,25,25)
+# Calcular centro a partir del PDB original:
+python << 'EOF'
+from MDAnalysis import Universe
+import numpy as np
+u = Universe("1HVR.pdb")
+# Seleccionar residuos no-proteína (el ligando original marca el sitio)
+lig = u.select_atoms("resname MK1")  # nombre del ligando en 1HVR
+if len(lig) > 0:
+    center = lig.positions.mean(axis=0)
+else:
+    center = u.select_atoms("protein").positions.mean(axis=0)
+print(f"Centro del sitio activo: {center[0]:.2f},{center[1]:.2f},{center[2]:.2f}")
+EOF
+
+# 5. Ejecutar docking
+vina --receptor receptor.pdbqt \
+     --ligand ligand.pdbqt \
+     --center_x -5 --center_y 25 --center_z 25 \
+     --size_x 25 --size_y 25 --size_z 25 \
+     --num_modes 10 \
+     --energy_range 3 \
+     --exhaustiveness 8 \
+     --out docked.pdbqt \
+     --log docking.log
+
+# 6. Ver resultados
+cat docking.log | tail -20
+# Salida esperada:
+# mode |   affinity | dist from best mode
+#      | (kcal/mol) | rmsd l.b.| rmsd u.b.
+# -----+------------+----------+----------
+#    1       -9.5      0.000      0.000
+#    2       -9.2      1.234      2.567
+# ... (10 modos)
+
+# 7. Visualizar con PyMOL (en WSL2 con WSLg)
+pymol receptor.pdbqt docked.pdbqt
+# En PyMOL:
+# load docked.pdbqt, docked
+# split_states docked
+# hide everything
+# show cartoon, receptor
+# show sticks, docked_0001
+# color cyan, receptor
+# color magenta, docked_0001
+
+# Resultado: 10 modos de docking ordenados por afinidad,
+# visualizados individualmente o en conjunto en PyMOL.
+```
+
+### Solución ejercicio 3
+
+```bash
+# Crear carpeta de proyecto
+mkdir -p ~/md_pipeline
+cd ~/md_pipeline
+
+# 1. Crear environment.yml con versiones específicas
+cat > environment.yml << 'EOF'
+name: md_pipeline
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults
+dependencies:
+  # Python core
+  - python=3.11
+  - pip
+
+  # Dinámica molecular
+  - gromacs=2024           # motor MD principal
+  - openmm=8.1             # API Python alternativa
+  - pdbfixer=1.7           # preparación de estructuras
+  - mdtraj=1.9             # análisis de trayectorias
+
+  # Análisis
+  - mdanalysis=2.7         # análisis flexible de trayectorias
+  - prody=2.4              # análisis dinámico (modos normales)
+
+  # Visualización
+  - pymol-open-source=2.5  # visualización clásica
+  - nglview=3.1            # widget Jupyter para estructuras
+  - jupyter=1.0            # notebooks
+  - matplotlib=3.8         # gráficos
+  - seaborn=0.13           # visualización estadística
+  - pandas=2.1             # manipulación de datos
+  - numpy=1.26             # cálculo numérico
+EOF
+
+# 2. Crear entorno desde YAML
+mamba env create -f environment.yml
+mamba activate md_pipeline
+
+# 3. Verificar cada componente
+echo "=== Verificación de componentes ==="
+gmx --version 2>&1 | head -3 | tail -1
+# GROMACS:      gmx, version 2024.x
+
+python -c "import openmm; print(f'OpenMM: {openmm.__version__}')"
+# OpenMM: 8.1.x
+
+python -c "import MDAnalysis; print(f'MDAnalysis: {MDAnalysis.__version__}')"
+# MDAnalysis: 2.7.x
+
+python -c "import mdtraj; print(f'MDTraj: {mdtraj.__version__}')"
+# MDTraj: 1.9.x
+
+python -c "import prody; print(f'ProDy: {prody.__release__}')"
+# ProDy: 2.4.x
+
+python -c "import nglview; print(f'NGLView: {nglview.__version__}')"
+# NGLView: 3.1.x
+
+pymol --version 2>&1 | head -1
+# PyMOL 2.5.x
+
+# 4. Generar conda-lock.yml para reproducibilidad exacta
+mamba install -n base -c conda-forge conda-lock -y
+conda-lock -f environment.yml --platform linux-64
+ls -lh conda-lock.yml
+
+# 5. Documentar el proceso
+cat > README.md << 'EOF'
+# MD Pipeline: entorno reproducible para dinámica molecular
+
+## Software incluido
+- GROMACS 2024: motor MD optimizado (CPU/GPU)
+- OpenMM 8.1: API Python para MD
+- MDAnalysis 2.7: análisis de trayectorias
+- MDTraj 1.9: análisis alternativo
+- ProDy 2.4: modos normales
+- PyMOL 2.5 (open-source): visualización
+- NGLView 3.1: visualización en Jupyter
+
+## Instalación
+
+```bash
+# Opción A: desde environment.yml (reproducibilidad aproximada)
+mamba env create -f environment.yml
+
+# Opción B: desde conda-lock.yml (reproducibilidad exacta)
+conda-lock install -n md_pipeline --mamba conda-lock.yml
+
+mamba activate md_pipeline
+```
+
+## Verificación
+
+```bash
+gmx --version
+python -c "import openmm, MDAnalysis, mdtraj, prody, nglview; print('OK')"
+pymol --version
+```
+
+## Notas
+- Para GPU: instalar también `cuda-toolkit=12.1` y `cudnn=8.9`.
+- Para visualización en WSL2: requiere Windows 11 con WSLg (recomendado)
+  o VcXsrv en Windows 10.
+- Versiones fijadas a octubre 2024. Tag estable: v1.0.
+EOF
+
+# Inicializar repo y commitear
+git init
+git add environment.yml conda-lock.yml README.md
+git commit -m "v1.0: entorno reproducible para MD pipeline"
+git tag v1.0
+
+# Verificación final
+echo "=== Resumen del entorno ==="
+du -sh ~/miniforge3/envs/md_pipeline
+# Tamaño esperado: ~2 GB (incluye GROMACS + OpenMM + PyMOL + dependencias)
+echo "Componentes instalados y verificados correctamente"
+```
+
+## Resumen
+
+La biología estructural es uno de los casos de uso más exigentes para Conda, porque combina herramientas escritas en lenguajes muy heterogéneos (C++ como GROMACS, Python como OpenMM y MDAnalysis, R en algunos pipelines estadísticos) y muchas dependencias binarias (CUDA, OpenGL, librerías químicas). **WSL2 es prácticamente obligatorio en Windows** para este tipo de software: pocas herramientas de biología estructural funcionan en Windows nativo. La combinación `conda-forge` + `bioconda` cubre prácticamente todas las necesidades, excepto herramientas muy específicas (AlphaFold2, ChimeraX) que se descargan desde su web oficial. Con los entornos y los `conda-lock.yml` adecuados, un pipeline completo de MD o docking se vuelve **totalmente reproducible** y portable entre workstations, HPC y contenedores Docker. Con esto cerramos la parte central del curso; los siguientes capítulos profundizan en casos de uso avanzados como HPC, integración con Snakemake/Nextflow, y biocontainers.

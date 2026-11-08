@@ -1,0 +1,563 @@
+---
+title: "Capítulo 6: Reproducibilidad — environment.yml y conda-lock"
+---
+
+## 6.1 Por qué la reproducibilidad es esencial en ciencia
+
+La **reproducibilidad** es uno de los pilares del método científico: otro investigador (o tú mismo dentro de seis meses) debería poder ejecutar exactamente el mismo análisis y obtener el mismo resultado. En bioinformática esto es particularmente delicado, porque un pipeline típico encadena docenas de herramientas (alineadores, llamadores de variantes, ensambladores, paquetes R de Bioconductor), cada una con su versión y sus dependencias. Cambiar la versión de BWA de 0.7.15 a 0.7.17 puede alterar el alineamiento en posiciones ambiguas, lo que a su vez cambia las variantes llamadas por bcftools, lo que cambia el VCF final, lo que cambia las conclusiones del paper.
+
+La famosa **crisis de reproducibilidad** documentada por Amrhein et al. (Nature, 2017) y por el *Reproducibility Project: Cancer Biology* (eLife, 2014+) mostró que más del 50% de los análisis bioinformáticos publicados no podían reproducirse cuando un equipo independiente intentaba ejecutarlos. Las dos causas principales son:
+
+1. **Versiones de software no documentadas** ("usamos BWA y SAMtools" sin especificar versión).
+2. **Entornos no capturados** (el análisis se ejecutó en una máquina concreta con un conjunto concreto de paquetes que ya no existe).
+
+Conda, Mamba y Bioconda nos dan las herramientas para resolver ambos problemas de forma elegante: `environment.yml` y `conda-lock`. En este capítulo aprenderemos a usarlos a fondo.
+
+## 6.2 Tres niveles de reproducibilidad con Conda
+
+Podemos clasificar la reproducibilidad proporcionada por el ecosistema Conda en tres niveles crecientes de exigencia:
+
+- **Nivel 1**: especificar paquetes y versiones principales (`bwa=0.7`, `samtools=1.18`). Útil para desarrollo rápido, **no suficiente** para publicaciones.
+- **Nivel 2**: especificar versiones exactas + build (`bwa=0.7.17=h7d875b9_9`). Garantiza el mismo binario dentro del mismo sistema operativo.
+- **Nivel 3**: **lockfile con hashes criptográficos** (`conda-lock.yml`). Cada paquete incluye su URL de descarga y un hash SHA256 que verifica integridad. Reproducibilidad total **cross-plataforma** (linux-64, osx-64, osx-arm64, win-64).
+
+::: callout-important
+Para un paper que se va a enviar a Nature Methods o Bioinformatics, el **Nivel 3 (conda-lock) es el estándar recomendado** en 2024+. Revisores y lectores pueden reconstruir el entorno bit a bit.
+:::
+
+## 6.3 El formato `environment.yml`
+
+`environment.yml` es un archivo YAML estándar de Conda que describe un entorno completo: nombre, canales y dependencias. Es la unidad básica de reproducibilidad compartible vía GitHub.
+
+```yaml
+name: bio_analysis
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python=3.11
+  - bwa=0.7.17
+  - samtools=1.18
+  - bcftools=1.18
+  - fastp=0.23.4
+  - fastqc=0.12.1
+  - multiqc=1.14
+  - pip:
+    - custom_pkg==1.0
+```
+
+**Convenciones clave**:
+
+- `name`: nombre del entorno. Si omites `-n` al crear, se usará este.
+- `channels`: en orden de prioridad (igual que `~/.condarc`).
+- `dependencies`: lista de paquetes. Cada entrada puede ser `nombre`, `nombre=versión`, `nombre=versión=build` o un dict con sub-lista (para `pip`).
+- `pip`: sub-sección para paquetes PyPI no disponibles en conda. **Úsalo con moderación**: pip no resuelve dependencias contra conda y puede romper el entorno.
+
+## 6.4 Exportar entorno a YAML
+
+Conda (y Mamba) permiten generar un `environment.yml` automáticamente a partir de un entorno existente:
+
+```bash
+# Exportación completa (TODOS los paquetes, versiones exactas + build)
+conda env export --name bio > environment.yml
+
+# Exportación sólo de paquetes que instalaste explícitamente
+conda env export --name bio --from-history > environment.yml
+
+# Sin builds (versiones pero sin el hash h7d875b9_9)
+conda env export --name bio --no-builds > environment_simple.yml
+
+# Formato JSON (para scripting)
+conda env export --name bio --json > bio.json
+```
+
+### Diferencias `--from-history` vs completa
+
+| Bandera            | Contenido                                              | Reproducibilidad | Legibilidad |
+|--------------------|--------------------------------------------------------|------------------|-------------|
+| (sin flag)         | Todos los paquetes, versiones y builds exactos          | Alta             | Baja (200+ líneas) |
+| `--from-history`   | Sólo paquetes instalados explícitamente                 | Baja             | Alta (10-20 líneas) |
+| `--no-builds`      | Paquetes con versión, sin build                         | Media            | Media |
+
+::: callout-tip
+**Recomendación práctica**: usa `--from-history` mientras desarrollas (legibilidad), y una vez estabilizado el pipeline regenera el YAML **sin** `--from-history` para máxima reproducibilidad antes de publicar.
+:::
+
+## 6.5 Crear y actualizar entornos desde YAML
+
+```bash
+# Crear entorno desde YAML (usa el name del archivo)
+conda env create -f environment.yml
+
+# Crear con otro nombre
+conda env create -f environment.yml -n bio_new
+
+# Actualizar entorno existente aplicando cambios del YAML
+conda env update -f environment.yml --prune
+
+# --prune: elimina paquetes que ya no están en el YAML
+```
+
+## 6.6 Estructura recomendada de `environment.yml` para pipelines bio
+
+La estructura siguiente es la que mejor funciona en pipelines reales de RNA-seq, variant calling o ensamblaje:
+
+```yaml
+name: rnaseq_pipeline
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults  # desactivar defaults explícitamente
+dependencies:
+  # Python core
+  - python=3.11
+  - pip
+
+  # Bio tools (en orden lógico del pipeline)
+  - fastp=0.23.4
+  - fastqc=0.12.1
+  - star=2.7.11
+  - salmon=1.10.0
+  - multiqc=1.14
+
+  # Python packages
+  - pandas=2.1
+  - biopython=1.83
+
+  # R packages (si el pipeline incluye análisis estadístico en R)
+  - r-base=4.3
+  - r-tidyverse
+  - bioconductor-deseq2
+  - bioconductor-tximport
+
+  # Pip packages (sólo si no existen en conda-forge)
+  - pip:
+    - pysam==0.22
+    - custom-pkg==1.0
+```
+
+::: callout-note
+`nodefaults` en la lista de canales **desactiva** el canal `defaults` aunque estuviera en tu `~/.condarc`. Esto evita que se "cuele" algún paquete de Anaconda Inc. sin que te des cuenta.
+:::
+
+## 6.7 Limitaciones de `environment.yml`
+
+Aun en su forma completa, `environment.yml` tiene limitaciones importantes:
+
+- **No garantiza reproducibilidad a nivel de build cross-plataforma**: un YAML exportado en linux-64 puede tener builds `h7d875b9_9` que no existen en osx-arm64, y al recrearlo en macOS el solver puede elegir builds distintos con parches diferentes.
+- **Los canales pueden cambiar con el tiempo**: si una versión concreta se retira del canal (algo que pasa en bioconda cuando una recipe se vuelve obsoleta), el YAML fallará meses después.
+- **Sin verificación de integridad**: si alguien compromete un paquete en el canal, tu YAML no lo detectará.
+
+La solución a los tres problemas es **`conda-lock`**.
+
+## 6.8 `conda-lock`: lockfiles con hashes criptográficos
+
+`conda-lock` es una herramienta externa (no viene con Conda) que toma un `environment.yml` y genera un lockfile **multiplataforma** con todos los paquetes, versiones, builds, URLs de descarga y hashes SHA256. Es el equivalente a `package-lock.json` de Node.js o `poetry.lock` de Python.
+
+### Instalación
+
+```bash
+mamba install -n base -c conda-forge conda-lock
+# o con pip en cualquier entorno
+pip install conda-lock
+```
+
+### Generar lockfile
+
+```bash
+# Para una plataforma
+conda-lock -f environment.yml --platform linux-64
+
+# Para múltiples plataformas (ideal para colaboraciones cross-OS)
+conda-lock -f environment.yml \
+    --platform linux-64 \
+    --platform osx-64 \
+    --platform osx-arm64 \
+    --platform win-64
+```
+
+El resultado es un archivo `conda-lock.yml` en el directorio actual.
+
+### Formato de `conda-lock.yml`
+
+```yaml
+version: 1
+metadata:
+  content_hash: abc123def456...
+  channels:
+    - url: https://conda.anaconda.org/conda-forge
+    - url: https://conda.anaconda.org/bioconda
+  platforms:
+    - linux-64
+    - osx-64
+    - osx-arm64
+    - win-64
+package:
+  - name: python
+    version: 3.11.6
+    manager: conda
+    platform: linux-64
+    url: https://conda.anaconda.org/conda-forge/linux-64/python-3.11.6-hab00b5d_0_conda.conda
+    hash: sha256:def456abc789...
+    category: main
+  - name: bwa
+    version: 0.7.17
+    manager: conda
+    platform: linux-64
+    url: https://conda.anaconda.org/bioconda/linux-64/bwa-0.7.17-h7d875b9_9.tar.bz2
+    hash: sha256:987654ghi321...
+    category: main
+# ... etc, una entrada por paquete y plataforma
+```
+
+### Instalar desde lockfile
+
+```bash
+# Conda nativo
+conda-lock install -n bio_env conda-lock.yml
+
+# Con Mamba como backend (mucho más rápido)
+conda-lock install -n bio_env --mamba conda-lock.yml
+```
+
+`conda-lock install` **no ejecuta el solver**: descarga cada paquete exacto por URL, verifica su hash SHA256 y lo coloca en el entorno. Es **determinista**: dos instalaciones del mismo lockfile producen entornos idénticos byte a byte (modulo el path).
+
+## 6.9 Ventajas de conda-lock
+
+- **Reproducibilidad EXACTA cross-plataforma**: el mismo lockfile sirve para Linux, macOS Intel, macOS ARM y Windows.
+- **Hashes criptográficos**: imposible que un paquete alterado pase desapercibido.
+- **Soporte multiplataforma en un único archivo**: no necesitas mantener un YAML por sistema operativo.
+- **Independencia temporal**: si una versión se retira del canal, el lockfile sigue funcionando mientras la URL siga accesible (los canales bioconda y conda-forge mantienen histórico indefinido).
+- **Ideal para HPC y colaboraciones**: tus colaboradores no tienen que preocuparse de qué versión de Python o de samtools usar; el lockfile decide por ellos.
+
+::: callout-tip
+`conda-lock` es el **estándar de facto** para reproducibilidad en proyectos de bioinformática publicados en Nature Methods, Bioinformatics, Genome Biology, etc. en 2024+.
+:::
+
+## 6.10 Estrategias de reproducibilidad: cuadro comparativo
+
+| Estrategia                            | Reproducibilidad | Complejidad | Recomendado para         |
+|---------------------------------------|------------------|-------------|--------------------------|
+| `environment.yml` (`--from-history`)  | Baja             | Baja        | Desarrollo rápido        |
+| `environment.yml` (full)              | Media            | Media       | Proyectos internos       |
+| `conda-lock.yml`                      | Alta             | Alta        | Publicaciones, HPC       |
+| Contenedor Docker (biocontainers)     | Máxima           | Alta        | Reproducción por terceros |
+
+## 6.11 Versionado semántico
+
+Conda soporta varios operadores para especificar versiones. Conviene conocerlos todos:
+
+| Especificación      | Significado                                   |
+|---------------------|-----------------------------------------------|
+| `bwa`               | Cualquier versión                             |
+| `bwa=0.7.17`        | Exactamente 0.7.17                            |
+| `bwa=0.7.*`         | Cualquier 0.7.x (parche variable)             |
+| `bwa>=0.7.15,<0.8`  | Rango: mínimo 0.7.15, estrictamente menor que 0.8 |
+| `bwa>=0.7.15`       | Mínimo 0.7.15, sin límite superior            |
+| `bwa=0.7.17=h7d875b9_9` | Versión y build exactos                  |
+
+::: callout-important
+Para **publicaciones científicas** se recomienda usar **versiones exactas** (`bwa=0.7.17`). Rangos como `>=` son útiles para desarrollo pero peligrosos para reproducibilidad: dentro de un año alguien puede instalar una versión más nueva que rompa el pipeline.
+:::
+
+## 6.12 Pinning (anclar versiones)
+
+Conda permite "anclar" ciertos paquetes para que no se actualicen accidentalmente:
+
+```bash
+# Anclar Python a 3.11 en el entorno actual
+conda install python=3.11
+echo "python 3.11.*" >> $CONDA_PREFIX/conda-meta/pinned
+
+# Anclar de forma global
+conda config --set pin_run_as_build python 3.11
+```
+
+::: callout-note
+Cuando haces `conda update --all`, los paquetes anclados no se modifican. Útil para mantener Python estable mientras actualizas otras herramientas.
+:::
+
+## 6.13 Verificar reproducibilidad
+
+Para comprobar que un entorno recreado desde YAML es idéntico al original:
+
+```bash
+# Crear entorno desde YAML
+conda env create -f environment.yml -n test_repro
+conda activate test_repro
+
+# Comparar con el entorno original
+diff <(conda list --name bio --json | jq 'sort_by(.name)') \
+     <conda list --name test_repro --json | jq 'sort_by(.name)') && \
+     echo "Entornos idénticos"
+
+# Comparación más estricta (incluyendo builds)
+diff <(conda list --name bio --explicit) \
+     <(conda list --name test_repro --explicit)
+```
+
+Para conda-lock la verificación es trivial: el propio lockfile ya contiene los hashes, y `conda-lock install` fallará si algún hash no coincide.
+
+## 6.14 Buenas prácticas para publicaciones científicas
+
+Cuando envíes un manuscrito que incluya análisis bioinformáticos:
+
+1. **Incluir `environment.yml` como supplementary material** del paper.
+2. **Incluir `conda-lock.yml` si es posible** (especialmente en papers de métodos).
+3. **Documentar en la sección Methods**: "Análisis realizados con Python 3.11, BWA 0.7.17, SAMtools 1.18, etc., gestionados con Conda. El entorno completo está disponible en `environment.yml` (Supplementary Data 1) y en https://github.com/.../tree/v1.0".
+4. **Versionar el repo con Git tags** (`v1.0`, `v1.1`) y citar el tag concreto en el paper.
+5. **Usar Zenodo** para obtener un DOI permanente del repo en el momento de publicación.
+
+Ejemplo de cita recomendada:
+
+```text
+Software versions are specified in environment.yml and conda-lock.yml,
+available at https://github.com/lab/mi-proyecto/tree/v1.0
+(DOI: 10.5281/zenodo.1234567).
+```
+
+## 6.15 GitHub y `environment.yml`
+
+Coloca `environment.yml` **en la raíz del repositorio**. Crea un `README.md` con instrucciones claras:
+
+```markdown
+# Mi proyecto de análisis
+
+## Instalación
+
+```bash
+mamba env create -f environment.yml
+mamba activate mi_proyecto
+```
+
+## Reproducción del análisis
+
+```bash
+bash analysis.sh
+```
+```
+
+Y configura GitHub Actions para que el entorno se valide automáticamente en cada commit (ver capítulo 5, sección 5.9):
+
+```yaml
+# .github/workflows/reproducibility.yml
+name: Verificar entorno reproducible
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-file: environment.yml
+          cache-environment: true
+      - shell: micromamba-shell {0}
+        run: |
+          conda-lock --version
+          conda-lock -f environment.yml --platform linux-64 --lockfile conda-lock.yml
+          bash analysis.sh
+```
+
+## 6.16 Ejercicios
+
+### Ejercicio 1
+
+Crea un entorno `rnaseq` con Python 3.11, fastp, fastqc, salmon y multiqc desde bioconda. Exporta a `environment.yml` (versión **full** con builds). Verifica que el archivo YAML tiene las versiones exactas.
+
+### Ejercicio 2
+
+Sobre el `environment.yml` del ejercicio 1: (a) instala conda-lock con `mamba install conda-lock`; (b) genera `conda-lock.yml` con `conda-lock -f environment.yml --platform linux-64`; (c) crea un nuevo entorno desde el lockfile con `conda-lock install -n rnaseq_locked conda-lock.yml`; (d) verifica que las versiones instaladas coinciden.
+
+### Ejercicio 3
+
+Crea un repositorio de ejemplo: en una carpeta nueva, crea `environment.yml`, `README.md` con instrucciones de instalación, y un script `analysis.sh` que use el entorno. Simula que un colega descarga el repo y reproduce el análisis. Documenta el proceso paso a paso.
+
+## 6.17 Soluciones
+
+### Solución ejercicio 1
+
+```bash
+# Crear entorno
+mamba create -n rnaseq -c conda-forge -c bioconda \
+    python=3.11 fastp fastqc salmon multiqc -y
+
+# Activar
+mamba activate rnaseq
+
+# Verificar versiones instaladas
+fastp --version 2>&1
+fastqc --version 2>&1
+salmon --version 2>&1
+multiqc --version 2>&1
+
+# Exportar a YAML (versión full, con builds)
+mamba env export --name rnaseq > environment.yml
+
+# Verificar el contenido: debe incluir versiones y builds (h...)
+head -20 environment.yml
+# Salida típica:
+# name: rnaseq
+# channels:
+#   - conda-forge
+#   - bioconda
+# dependencies:
+#   - _libgcc_mutex=0.1=conda_forge
+#   - _openmp_mutex=4.5=2_gnu
+#   - bzip2=1.0.8=h4bc722e_7
+#   - fastp=0.23.4=h5f55983_1
+#   - fastqc=0.12.1=hdfd78af_0
+#   - multiqc=1.14=hdfd78af_0
+#   - python=3.11.6=hab00b5d_0
+#   - salmon=1.10.0=h2d0b06e_1
+#   - ...
+
+# Comprobar que tiene versiones exactas y builds (todos los paquetes clave)
+grep -E "fastp|fastqc|salmon|multiqc" environment.yml
+```
+
+### Solución ejercicio 2
+
+```bash
+# (a) Instalar conda-lock
+mamba install -n base -c conda-forge conda-lock -y
+conda-lock --version
+# conda-lock 1.4.x
+
+# (b) Generar conda-lock.yml para linux-64
+conda-lock -f environment.yml --platform linux-64
+ls -lh conda-lock.yml
+# -rw-r--r-- 1 user user 24K conda-lock.yml
+
+# Verificar que tiene hashes
+grep "hash:" conda-lock.yml | head -5
+# hash: sha256:abc123...
+# hash: sha256:def456...
+
+# (c) Crear nuevo entorno desde lockfile
+conda-lock install -n rnaseq_locked --mamba conda-lock.yml
+# Mamba como backend: descarga URLs exactas, verifica hashes SHA256
+
+# (d) Verificar que las versiones coinciden
+mamba activate rnaseq_locked
+fastp --version 2>&1
+fastqc --version 2>&1
+salmon --version 2>&1
+
+# Comparar listados de paquetes (deben ser idénticos en versiones+builds)
+diff <(mamba list -n rnaseq --explicit | sort) \
+     <(mamba list -n rnaseq_locked --explicit | sort) && \
+     echo "Entornos idénticos a nivel de paquete y build"
+
+# Limpieza (opcional)
+mamba env remove -n rnaseq_locked
+```
+
+### Solución ejercicio 3
+
+```bash
+# 1. Crear estructura de carpetas
+mkdir -p ~/mi_proyecto_reproducible
+cd ~/mi_proyecto_reproducible
+git init
+
+# 2. Crear environment.yml con pipeline de ejemplo (variant calling bacteriano)
+cat > environment.yml << 'EOF'
+name: mi_proyecto
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults
+dependencies:
+  - python=3.11
+  - fastp=0.23.4
+  - fastqc=0.12.1
+  - bwa=0.7.17
+  - samtools=1.18
+  - bcftools=1.18
+  - multiqc=1.14
+  - pandas=2.1
+  - biopython=1.83
+EOF
+
+# 3. Crear README.md con instrucciones
+cat > README.md << 'EOF'
+# Mi proyecto de variant calling bacteriano
+
+## Reproducción del análisis
+
+1. Instalar Mamba/Miniforge (ver https://github.com/conda-forge/miniforge)
+2. Crear entorno:
+   ```bash
+   mamba env create -f environment.yml
+   mamba activate mi_proyecto
+   ```
+3. Ejecutar el pipeline:
+   ```bash
+   bash analysis.sh
+   ```
+
+## Versión
+
+v1.0 - DOI: 10.5281/zenodo.XXXXXXX
+EOF
+
+# 4. Crear analysis.sh con pipeline mínimo
+cat > analysis.sh << 'EOF'
+#!/bin/bash
+set -euo pipefail
+
+# Verificar que estamos en el entorno correcto
+test "${CONDA_DEFAULT_ENV:-}" = "mi_proyecto" || {
+    echo "Activa el entorno primero: mamba activate mi_proyecto"
+    exit 1
+}
+
+# Verificar versiones (documentación del entorno)
+echo "=== Versiones de software ==="
+fastp --version 2>&1 | head -1
+fastqc --version 2>&1 | head -1
+bwa 2>&1 | head -3 | tail -1
+samtools --version | head -1
+bcftools --version | head -1
+
+# Crear carpeta de trabajo
+mkdir -p results
+cd results
+
+# Descargar reads de ejemplo (E. coli K12, SRA)
+# wget -nc https://...
+echo "Pipeline ejecutado correctamente con versiones reproducibles"
+EOF
+chmod +x analysis.sh
+
+# 5. Generar conda-lock.yml para máxima reproducibilidad
+conda-lock -f environment.yml --platform linux-64
+git add environment.yml conda-lock.yml README.md analysis.sh
+git commit -m "v1.0: entorno reproducible para variant calling bacteriano"
+git tag v1.0
+
+# 6. Simular que un colega descarga y reproduce
+cd /tmp
+rm -rf repro_test
+git clone ~/mi_proyecto_reproducible repro_test
+cd repro_test
+git checkout v1.0
+
+# El colega crea entorno desde conda-lock.yml (reproducibilidad exacta)
+conda-lock install -n mi_proyecto --mamba conda-lock.yml
+mamba activate mi_proyecto
+
+# El colega ejecuta el pipeline
+bash analysis.sh
+
+# Documentación del proceso:
+# - Paso 1: clonar repo + checkout tag v1.0
+# - Paso 2: conda-lock install (sin necesidad de resolver dependencias)
+# - Paso 3: ejecutar analysis.sh
+# - Resultado garantizado bit-a-bit idéntico al original
+```
+
+## Resumen
+
+La reproducibilidad en bioinformática se construye por capas: `environment.yml` para especificar versiones, `conda-lock.yml` para fijar builds y hashes criptográficos. Para proyectos en desarrollo basta con un YAML `--from-history`; para publicaciones científicas, el estándar actual es **conda-lock multiplataforma + repositorio Git versionado con tag y DOI Zenodo**. Combinado con GitHub Actions validando el entorno en cada commit, garantizamos que el análisis será reproducible años después de publicado. En el siguiente capítulo entraremos de lleno en Bioconda, el canal que hace posible encontrar casi cualquier herramienta bioinformática lista para instalar.

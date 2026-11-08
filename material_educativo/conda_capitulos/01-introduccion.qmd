@@ -1,0 +1,253 @@
+---
+title: "Capítulo 1: Introducción a Conda, Anaconda y Miniconda"
+---
+
+## 1.1 ¿Qué es Conda?
+
+**Conda** es un gestor de paquetes, dependencias y entornos multiplataforma, escrito originalmente en Python y hoy en día con partes reimplementadas en C. A diferencia de `pip`, Conda no se limita a paquetes de Python: puede instalar cualquier binario precompilado para el sistema operativo en el que se ejecute (bibliotecas de C/C++, ejecutables de R, herramientas de línea de comandos escritas en cualquier lenguaje, etc.). Esto lo convierte en una herramienta especialmente valiosa para la **bioinformática**, donde convivimos con software escrito en C (BWA, samtools), C++ (Illumina adapters, GATK), Java (Picard, Trimmomatic), Rust (seqdk) y, por supuesto, Python y R.
+
+Conda resuelve tres problemas de un solo golpe:
+
+1. **Gestión de paquetes**: descarga e instala software, junto con todas sus dependencias, en versiones compatibles entre sí.
+2. **Gestión de dependencias**: garantiza que la versión de `samtools` que instalaste es compatible con la de `htslib` y con la de `python` que tienes en el mismo entorno.
+3. **Gestión de entornos**: permite tener, en la misma máquina, un entorno con Python 3.8 + biopython 1.79 para un proyecto legacy, y otro con Python 3.12 + biopython 1.83 para un proyecto nuevo, sin que uno interfiera con el otro.
+
+::: callout-important
+Conda es **multiplataforma** (Linux, macOS y Windows) y **multi-arquitectura** (x86_64, arm64, ppc64le). Los paquetes de bioconda están disponibles principalmente para `linux-64` y `osx-64`/`osx-arm64`. En Windows nativo muchas herramientas de bioinformática **no están disponibles**, motivo por el cual recomendamos WSL2 con Ubuntu para bioinformática seria.
+:::
+
+## 1.2 Una breve historia
+
+Conda fue creado en 2012 por **Continuum Analytics**, una empresa fundada por Travis Oliphant (creador de NumPy y SciPy) y Peter Wang. La motivación original era resolver el caos que existía en el ecosistema científico de Python a comienzos de los 2010: instalar NumPy+SciPy+Matplotlib en Windows requería compilar bibliotecas C, una tarea poco realista para usuarios no programadores. Conda surgía como una solución: distribuir binarios precompilados y listos para usar.
+
+En 2017 Continuum Analytics se renombró a **Anaconda Inc.**, nombre bajo el cual opera hoy. La empresa mantiene tanto el motor `conda` (de código abierto, licencia BSD) como la distribución **Anaconda** (un "todo en uno" de varios gigabytes). En paralelo, la comunidad desarrolló **conda-forge** (2014) como canal comunitario, y **Bioconda** (2015–2016) como canal especializado en bioinformática. En 2019 apareció **Mamba**, una reimplementación del resolvedor de Conda en C++ que acelera drásticamente la instalación. En 2021–2022 se popularizó **Miniforge** y **Micromamba** como alternativas ligeras, especialmente para integración continua y contenedores.
+
+::: callout-note
+El año **2020** fue un punto de inflexión: Anaconda Inc. actualizó sus términos de servicio para uso comercial, lo que llevó a muchas instituciones a abandonar los canales `defaults` y migrar a `conda-forge` + `bioconda`. Por eso hoy en día la recomendación general es **no usar `defaults`**. Volveremos sobre esto en §1.12.
+:::
+
+## 1.3 Diferencias clave entre distribuciones y herramientas
+
+A menudo se confunden conceptos: *Conda* es el motor, pero existen varias distribuciones y herramientas derivadas. Aquí va una tabla comparativa:
+
+| Herramienta  | Tamaño    | Qué incluye                                              | Cuándo usarlo                                    |
+|--------------|-----------|----------------------------------------------------------|--------------------------------------------------|
+| **Conda**    | N/A       | Solo el motor CLI (no se instala solo)                   | Se instala a través de otra distribución         |
+| **Anaconda** | ~3 GB     | Python + ~2500 paquetes científicos + Navigator + Spyder/Jupyter | Principiantes que quieren GUI y mucho preinstalado |
+| **Miniconda**| ~80 MB    | Python + conda + pip (lo mínimo)                         | Usuarios intermedios que quieren instalar solo lo necesario |
+| **Miniforge**| ~90 MB    | Igual que Miniconda pero con `conda-forge` como canal por defecto | Recomendado en 2024+: evita el problema de `defaults` |
+| **Mamba**    | N/A       | Reescritura en C++ del resolvedor de Conda               | Usuarios avanzados que valoran velocidad         |
+| **Micromamba**| ~10 MB   | Versión standalone sin dependencia de Python             | CI/CD, contenedores Docker, scripts reproducibles |
+
+::: callout-tip
+**Miniforge + Mamba** es la combinación recomendada en 2024+: tienes un instalador mínimo, con `conda-forge` por defecto, y puedes instalar `mamba` dentro del entorno base para tener resolvedor rápido sin renunciar a la interfaz `conda`.
+:::
+
+## 1.4 ¿Cuándo usar cada uno?
+
+- **Anaconda**: para principiantes que valoran una interfaz gráfica (Navigator), quieren Spyder o Jupyter preinstalados y tienen 5+ GB libres en disco. Útil en Windows nativo para tareas docentes o análisis ligeros.
+- **Miniconda**: para usuarios intermedios que prefieren instalar solo lo necesario y ya saben manejarse en la línea de comandos.
+- **Miniforge**: **recomendado por defecto**. Idéntico a Miniconda, pero con `conda-forge` ya configurado como canal prioritario. Elimina el riesgo de mezclar `defaults` con `conda-forge`.
+- **Mamba / Micromamba**: para usuarios avanzados que hacen muchas instalaciones, especialmente de entornos grandes (RNA-seq, filogenómica) donde Conda tarda minutos en resolver. Micromamba es ideal para Dockerfiles y pipelines CI.
+
+## 1.5 Conceptos clave
+
+Antes de instalar nada, conviene fijar vocabulario:
+
+- **Paquete** (*package*): un archivo `.tar.bz2` o `.conda` que contiene el software precompilado + metadata (`info/index.json`, `info/recipe/`). Cada paquete declara sus dependencias y su número de *build*.
+- **Entorno** (*environment*): un directorio aislado con su propio Python, sus bibliotecas y sus binarios. Equivale a un "mini sistema operativo virtual" pero sin virtualización: solo es aislamiento de archivos y variables de entorno.
+- **Canal** (*channel*): un repositorio de paquetes. Los principales son `defaults` (Anaconda Inc.), `conda-forge` (comunitario), `bioconda` (bioinformática) y `r` (R legacy).
+- **Recipe**: archivo `meta.yaml` que describe cómo construir un paquete desde código fuente. Es la "receta" que usa `conda-build` para producir el binario que luego se publica en un canal.
+
+::: callout-note
+Un **paquete** y una **aplicación** no son lo mismo: `samtools` es una aplicación (un binario), pero se distribuye como un paquete conda que incluye el binario + bibliotecas auxiliares + metadata.
+:::
+
+## 1.6 Anatomía de un entorno Conda
+
+Cuando creas un entorno llamado `bio`, conda crea un directorio:
+
+```
+~/miniconda3/envs/bio/
+├── bin/            # ejecutables: python, bwa, samtools, pip...
+├── lib/            # bibliotecas compartidas (.so en Linux, .dll en Windows)
+│   └── python3.11/site-packages/   # paquetes Python instalados
+├── include/        # cabeceras C/C++
+├── share/          # datos, man pages, locales
+├── conda-meta/     # metadata de cada paquete instalado en este entorno
+└── etc/            # configuraciones específicas del entorno
+```
+
+**Activar** un entorno significa, principalmente, dos cosas:
+
+1. Modificar la variable `PATH` para que el `bin/` del entorno se busque primero.
+2. Definir la variable `CONDA_PREFIX` con la ruta del entorno activo.
+
+Esto permite que al escribir `python` el shell encuentre primero el del entorno (p. ej. Python 3.11) en lugar del Python del sistema. **Desactivar** revierte esos cambios.
+
+::: callout-warning
+En Windows, los entornos Conda no son perfectamente equivalentes a los de Linux porque el modelo de bibliotecas dinámicas (DLLs) es distinto. Por eso muchas herramientas de bioinformática (samtools, bwa, GATK) solo funcionan bien bajo WSL2 o Linux nativo.
+:::
+
+## 1.7 Conda frente a pip, apt y homebrew
+
+| Gestor     | Qué instala                          | Multi-lenguaje | Sin sudo | Multiplataforma | Reproducible |
+|------------|--------------------------------------|----------------|----------|-----------------|--------------|
+| **Conda**  | Python + binarios + R + libs C/C++   | Sí             | Sí       | Linux/macOS/Win | Sí (con `environment.yml`) |
+| **pip**    | Solo paquetes Python (PyPI)          | No             | Sí       | Sí              | Parcial (`requirements.txt`) |
+| **apt**    | Paquetes del SO (Debian/Ubuntu)      | Sí             | No       | Linux           | No (depende del SO) |
+| **homebrew** | Paquetes del SO (macOS/Linux)      | Sí             | Sí       | macOS/Linux     | No |
+
+::: callout-important
+**Regla práctica**: usa Conda como gestor principal dentro de tus entornos bioinformáticos. Solo recurre a `pip` para paquetes Python que **no existan** en conda-forge o bioconda. Mezclar `pip` y `conda` libremente dentro del mismo entorno es la causa nº1 de entornos rotos.
+:::
+
+## 1.8 Limitaciones de Conda
+
+A pesar de su potencia, Conda no es perfecto:
+
+- **Lentitud al resolver dependencias**: el resolvedor clásico de Conda puede tardar varios minutos en entornos complejos. Solución: usar **Mamba** (capítulo 5).
+- **Conflictos entre canales**: si mezclas `defaults` con `conda-forge` y `bioconda`, puedes obtener versiones incompatibles. Solución: usar solo `conda-forge` + `bioconda` y `channel_priority flexible`.
+- **No gestiona el SO profundo**: Conda no instala kernels, drivers de GPU, ni herramientas de red. Para eso sigue siendo necesario `apt`/`dnf`/`pacman`.
+- **Disco**: cada entorno es independiente; tres entornos con Python + NumPy + SciPy pueden ocupar 3-5 GB. Solución: `conda clean --all` periódicamente y `mamba` con `--clone` cuando aplique.
+- **Windows nativo**: el catálogo bioconda en Windows es limitadísimo; muchas herramientas solo existen para `linux-64`.
+
+## 1.9 Por qué Conda es ubicuo en bioinformática
+
+Bioinformática significa, en la práctica, **mucho software heterogéneo**: alineadores escritos en C, llamadores de variantes en C++, ensambladores en Python, análisis estadísticos en R, y pipelines en Nextflow o Snakemake. Históricamente, instalar todo esto requería compilar código fuente, pelearse con versiones de bibliotecas del sistema o usar `apt-get` (que en clusters HPC no es posible sin permisos de administrador).
+
+Conda resolvió este problema de forma elegante:
+
+- **Bioconda** publica más de **10.000 paquetes** bioinformáticos listos para instalar.
+- Funciona **sin sudo**: el usuario instala en su `home`, ideal para clusters compartidos.
+- Es **reproducible**: con un `environment.yml` cualquiera puede recrear exactamente tu entorno meses o años después.
+- Es **aislado**: cada pipeline puede tener su entorno con versiones congeladas, sin contaminar al resto.
+
+Por eso hoy la inmensa mayoría de pipelines publicados en *Nature Methods*, *Bioinformatics* o *F1000* incluyen un `environment.yml` de conda como mecanismo de reproducibilidad.
+
+## 1.10 Casos de uso típicos en bioinformática
+
+- **Pipeline RNA-seq**: un entorno para `fastp` + `fastqc` (preprocesamiento), otro para `STAR` (alineamiento), otro para `salmon` o `kallisto` (cuantificación), y un entorno de R con `DESeq2` para el análisis diferencial. Mantener todo en un único entorno provocaría conflictos de versión.
+- **Análisis filogenético**: tener simultáneamente `iqtree` 2.2 y `iqtree` 2.3 para comparar resultados entre versiones, además de `mafft`, `modeltest-ng` y `mrbayes`.
+- **R con Bioconductor actualizado**: un entorno `r_bio` con `r-base` 4.3 + `bioconductor-deseq2` + `bioconductor-edger` + `bioconductor-clusterprofiler`, separado de un entorno `r_legacy` con R 3.6 para scripts antiguos.
+- **Ensamblado de genomas**: entorno con `spades`, `quast`, `busco`, `prokka`, todos de bioconda, versiones congeladas para un proyecto concreto.
+
+## 1.11 Conda frente a contenedores (Docker/Singularity)
+
+Es cada vez más común combinar Conda con contenedores: Nextflow y Snakemake soportan ambos. La regla general es:
+
+- **Conda** para entornos ligeros, desarrollo, exploración interactiva.
+- **Singularity/Apptainer** para entornos que se ejecutarán en un cluster HPC compartido, donde se requiere aislamiento completo del SO.
+- **Docker** para despliegues reproducibles en la nube o pipelines CI.
+
+## 1.12 El problema de los canales `defaults`
+
+Históricamente, al instalar Miniconda o Anaconda, los canales `defaults` (mantenidos por Anaconda Inc.) venían activados por defecto. En **2020**, Anaconda Inc. actualizó sus **Términos de Servicio** exigiendo a organizaciones con más de 200 empleados comprar una licencia comercial para usar el canal `defaults` en contextos comerciales. Esto, unido a problemas técnicos (las versiones de `defaults` a menudo no coinciden con las de `conda-forge`), ha hecho que la recomendación moderna sea:
+
+- **No usar `defaults`**. Configurar `~/.condarc` con solo `conda-forge` + `bioconda`.
+- Usar la palabra clave `nodefaults` para asegurar que Conda no añada `defaults` automáticamente.
+- Preferir **Miniforge** sobre Miniconda, porque ya viene con `conda-forge` por defecto.
+
+::: callout-warning
+Si tu institución está en la lista de "organizaciones comerciales" según los ToS de Anaconda Inc. y usas `defaults` sin licencia, podrías estar infringiendo sus términos. Es un riesgo legal (pequeño, pero real) que se evita simplemente usando `conda-forge` + `bioconda`.
+:::
+
+## 1.13 Resumen
+
+En este capítulo hemos visto que **Conda** es un gestor de paquetes, dependencias y entornos que se ha vuelto ubicuo en bioinformática gracias a su capacidad de instalar binarios precompilados sin sudo, aislar entornos por proyecto y garantizar reproducibilidad. Existen varias distribuciones (Anaconda, Miniconda, Miniforge) y herramientas derivadas (Mamba, Micromamba); la combinación recomendada en 2024+ es **Miniforge + Mamba**. En los próximos capítulos instalaremos Miniforge en WSL2 y Anaconda en Windows nativo, crearemos entornos y aprenderemos a gestionar canales correctamente.
+
+## 1.14 Ejercicios
+
+### Ejercicio 1
+Investiga tu sistema operativo y arquitectura. En WSL2 ejecuta `uname -a` y `cat /etc/os-release`; en Windows nativo abre *Configuración → Sistema → Acerca de*. Verifica que tienes al menos 5 GB libres con `df -h` (en WSL2) o comprobando las propiedades del disco C: en Windows. Documenta toda esta información en un archivo `mi_sistema.txt`.
+
+### Ejercicio 2
+Lee la documentación oficial de Conda en <https://docs.conda.io/projects/conda/en/latest/> y escribe un resumen de **un párrafo** (4–6 líneas) sobre qué puede hacer Conda que `pip` no puede.
+
+### Ejercicio 3
+Lista 5 herramientas bioinformáticas populares (por ejemplo: `bwa`, `samtools`, `bcftools`, `fastp`, `fastqc`) y verifica si existen en Bioconda visitando <https://bioconda.github.io/>. Reporta las versiones disponibles en una tabla.
+
+## 1.15 Soluciones
+
+### Solución Ejercicio 1
+
+```bash
+# Comandos a ejecutar en WSL2 con Ubuntu
+uname -a
+# Salida típica:
+# Linux DESKTOP-XXXX 5.15.153.1-microsoft-standard-WSL2 #1 SMP ... x86_64 GNU/Linux
+
+cat /etc/os-release
+# Muestra información de la distro: VERSION="22.04.3 LTS (Jammy Jellyfish)"
+
+# Espacio libre en disco (5 GB mínimos recomendados)
+df -h ~
+# Filesystem      Size  Used Avail Use% Mounted on
+# /dev/sdc        251G   42G  197G  18% /
+
+# Documentamos todo en un archivo
+{
+  echo "=== Sistema ==="
+  uname -a
+  echo
+  echo "=== OS ==="
+  cat /etc/os-release
+  echo
+  echo "=== Espacio en home ==="
+  df -h ~
+} > mi_sistema.txt
+
+cat mi_sistema.txt   # verificar contenido
+```
+
+Si trabajas en Windows nativo, abre *Configuración → Sistema → Acerca de* y anota: edición de Windows 10/11, versión, compilación, procesador (x64 o ARM64) y RAM. En Anaconda Prompt puedes ejecutar:
+
+```powershell
+# En Windows PowerShell (no WSL)
+systeminfo | Select-String "OS Name","OS Version","System Type"
+Get-PSDrive C | Select-Object Used,Free
+```
+
+### Solución Ejercicio 2
+
+Un resumen posible (de un párrafo):
+
+```text
+Conda es un gestor de paquetes y entornos multiplataforma que, a diferencia de
+pip, no se limita a paquetes de Python: puede instalar binarios precompilados
+de cualquier lenguaje (C, C++, R, Java) y gestionar simultáneamente sus
+dependencias. Además, conda crea entornos virtuales completos con su propia
+versión de Python, lo que permite tener proyectos con versiones incompatibles
+conviviendo en la misma máquina sin interferencias. pip, por el contrario, solo
+instala paquetes desde PyPI y asume que Python ya está disponible en el sistema.
+```
+
+### Solución Ejercicio 3
+
+Tabla orientativa (las versiones concretas evolucionan; comprueba siempre <https://bioconda.github.io/>):
+
+| Herramienta  | Existe en Bioconda | Versión más reciente (aprox.) | Comentario                          |
+|--------------|--------------------|-------------------------------|-------------------------------------|
+| `bwa`        | Sí                 | 0.7.17                        | Alineador BWA-MEM, última versión estable |
+| `samtools`   | Sí                 | 1.19–1.20                     | Manipulación BAM/CRAM/SAM           |
+| `bcftools`   | Sí                 | 1.19–1.20                     | Llamada y filtrado de variantes VCF |
+| `fastp`      | Sí                 | 0.23–0.24                     | Trimming y QC ultra-rápido          |
+| `fastqc`     | Sí                 | 0.12.1                        | Quality control de reads (Java)     |
+
+Comando equivalente en línea de comandos, tras instalar conda:
+
+```bash
+# Busca en bioconda y muestra todas las versiones disponibles
+conda search -c bioconda bwa samtools bcftools fastp fastqc
+
+# Salida (extracto):
+# Loading channels: done
+# # Name        Version   Build  Channel
+# bwa           0.7.17    h...   bioconda
+# samtools      1.20      h...   bioconda
+# bcftools      1.20      h...   bioconda
+# fastp         0.24.0    h...   bioconda
+# fastqc        0.12.1    h...   bioconda
+```
+
+Con esto ya sabemos que las cinco herramientas existen en Bioconda y están disponibles para Linux 64 bits, que es la arquitectura típica de WSL2.

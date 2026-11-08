@@ -1,0 +1,599 @@
+---
+title: "Capítulo 9: Conda en pipelines con Snakemake y Nextflow"
+---
+
+## 9.1 Gestores de pipelines bioinformáticos
+
+Un **pipeline** bioinformático es una cadena ordenada de pasos que transforma datos brutos (FASTQ) en resultados interpretables (VCF, reportes, figuras). Hacer esto a mano, con scripts Bash sueltos, es factible para tres muestras pero se vuelve inmanejable cuando se trata de 50 muestras con control de calidad, recorte, alineamiento, llamada de variantes, anotación y multi-reporte. Aquí entran los **gestores de flujos de trabajo (workflow managers)**: sistemas que declaran *qué* hay que calcular, no *cómo* ni *en qué orden*, y se encargan de ejecutar, paralelizar, reintentar y registrar cada paso.
+
+En bioinformática hay dos dominantes claros:
+
+- **Snakemake**: basado en Python, con sintaxis declarativa inspirada en Make. Creado por Johannes Köster (el mismo que impulsó Bioconda). Muy popular en genómica y bioinformática académica europea.
+- **Nextflow**: basado en Groovy (JVM), con un DSL propio más moderno. Creado por Paolo Di Tommaso (CRG, Barcelona). Predominante en grandes consorcios (nf-core, Sanger, Broad).
+
+::: callout-note
+Ambos integran **Conda de primera clase**: cada paso del pipeline puede tener su propio `environment.yml`, y el motor lo crea y activa automáticamente. Esto cierra el círculo de la reproducibilidad: el pipeline + los entornos se convierten en una unidad transportable.
+:::
+
+## 9.2 Por qué combinar Conda con pipelines
+
+Sin Conda, los pipelines dependen de que el administrador del cluster tenga instaladas las versiones correctas de cada herramienta. Esto raramente ocurre. Las ventajas de la combinación son tres:
+
+1. **Un entorno por paso**: cada regla o proceso especifica exactamente qué necesita. BWA 0.7.17 puede coexistir con BWA-MEM2 2.2.1 en el mismo pipeline sin conflictos.
+2. **Reproducibilidad garantizada**: si otro investigador ejecuta tu pipeline, Snakemake/Nextflow reconstruirá los mismos entornos a partir de los mismos YAML.
+3. **Aislamiento de versiones**: si tu alineador requiere Python 3.9 pero tu llamador de variantes requiere Python 3.11, ambos funcionan en pipelines separados sin pelear entre sí.
+
+::: callout-tip
+La filosofía **"una regla, un entorno"** es el estándar moderno. Evita el anti-patrón de instalar todo en un único mega-entorno, que es lento, frágil y poco reproducible.
+:::
+
+## 9.3 Snakemake: flujo de trabajo basado en reglas
+
+Snakemake usa **reglas** (`rule`) que definen entradas (`input`), salidas (`output`) y el código para transformar unas en otras (`shell:` o `script:`). La sintaxis es Python-like, por lo que es inmediatamente familiar para cualquier biólogo que haya programado algo. Snakemake construye un **DAG** (grafo acíclico dirigido) de dependencias y decide el orden de ejecución.
+
+### Instalación de Snakemake
+
+Instalamos Snakemake en su propio entorno, separado de los entornos del pipeline:
+
+```bash
+# En WSL2 o Linux nativo
+mamba create -n snakemake -c bioconda -c conda-forge \
+    snakemake=7.32 \
+    snakemake-execution-plugin-curl  # para descargar inputs desde URLs
+mamba activate snakemake
+snakemake --version
+```
+
+::: callout-warning
+En **Anaconda Prompt nativo de Windows**, Snakemake no funciona correctamente: requiere paths POSIX y herramientas Unix. Para usar Snakemake en Windows, **es obligatorio WSL2**. No intentes instalarlo en Windows nativo.
+:::
+
+### Snakemake con Conda: `--use-conda`
+
+La directiva `conda:` dentro de una regla indica qué entorno usar. Pero Snakemake no lo activa por defecto: hay que pasarlo en línea de comandos:
+
+```bash
+snakemake --use-conda -j 4
+```
+
+Ejemplo de regla individual:
+
+```python
+rule fastqc:
+    input: "samples/{sample}_R1.fastq.gz"
+    output: "qc/{sample}_fastqc.html"
+    conda: "envs/fastqc.yaml"
+    shell: "fastqc {input} -o qc/"
+```
+
+Y el archivo `envs/fastqc.yaml`:
+
+```yaml
+name: fastqc
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - fastqc=0.12.1
+```
+
+### Snakemake crea entornos automáticamente
+
+Cuando ejecutas `snakemake --use-conda`, el motor:
+
+1. Lee el YAML referenciado por `conda:` en cada regla.
+2. Calcula un **hash MD5** del contenido del YAML.
+3. Crea el entorno en `.snakemake/conda/<hash>/` si no existe ya.
+4. **Cachea** el entorno para que la siguiente ejecución lo reutilice sin reconstruir.
+5. Activa el entorno sólo durante la ejecución del `shell:` de esa regla.
+
+Esto significa que la primera ejecución es lenta (descarga e instala paquetes) pero las siguientes son instantáneas.
+
+## 9.4 Pipeline completo Snakemake + Conda
+
+Veamos un pipeline realista de variant calling. El `Snakefile`:
+
+```python
+configfile: "config.yaml"
+
+rule all:
+    input:
+        "results/multiqc_report.html",
+        "results/variants/all_samples.vcf"
+
+rule fastqc:
+    input: "data/{sample}_R{read}.fastq.gz"
+    output: "results/fastqc/{sample}_R{read}_fastqc.html"
+    conda: "envs/fastqc.yaml"
+    shell: "fastqc {input} -o results/fastqc/"
+
+rule trim:
+    input:
+        r1="data/{sample}_R1.fastq.gz",
+        r2="data/{sample}_R2.fastq.gz"
+    output:
+        r1="results/trimmed/{sample}_R1.fastq.gz",
+        r2="results/trimmed/{sample}_R2.fastq.gz"
+    conda: "envs/fastp.yaml"
+    shell: "fastp -i {input.r1} -I {input.r2} -o {output.r1} -O {output.r2}"
+
+rule align:
+    input:
+        r1="results/trimmed/{sample}_R1.fastq.gz",
+        r2="results/trimmed/{sample}_R2.fastq.gz"
+    output: "results/bam/{sample}.bam"
+    conda: "envs/bwa_samtools.yaml"
+    params:
+        index="data/reference/genome"
+    shell: "bwa mem -t 8 {params.index} {input.r1} {input.r2} | samtools sort -o {output}"
+
+rule variant_calling:
+    input: "results/bam/{sample}.bam"
+    output: "results/variants/{sample}.vcf"
+    conda: "envs/bcftools.yaml"
+    shell: "bcftools mpileup -f data/reference/genome.fa {input} | bcftools call -mv -o {output}"
+```
+
+### Acelerar con `--conda-frontend mamba`
+
+Por defecto, Snakemake usa `conda` para resolver entornos. Esto es lento. Recomendado: usar `mamba` como frontend:
+
+```bash
+snakemake --use-conda --conda-frontend mamba -j 4
+```
+
+Esto puede reducir de 15 minutos a 30 segundos la creación de un entorno complejo.
+
+### Centralizar entornos con `--conda-prefix`
+
+Por defecto, los entornos van a `.snakemake/conda/` dentro del proyecto. Si trabajas con varios pipelines, mejor centralizarlos:
+
+```bash
+snakemake --use-conda --conda-prefix ~/snakemake_conda_envs -j 4
+```
+
+Ventajas: dos pipelines que usan el mismo YAML reutilizan el mismo entorno (mismo hash → mismo path).
+
+### Alternativa: contenedores en Snakemake
+
+Snakemake también soporta contenedores por regla:
+
+```python
+rule fastqc:
+    input: "..."
+    output: "..."
+    container: "docker://quay.io/biocontainers/fastqc:0.12.1"
+    shell: "fastqc {input}"
+```
+
+Se ejecuta con `snakemake --use-container -j 4`. Veremos esto en detalle en el Capítulo 10.
+
+## 9.5 Nextflow: el competidor moderno
+
+Nextflow usa un DSL basado en Groovy. Es más verboso que Snakemake pero más potente para pipelines distribuidos y cloud-native. Soporta Conda, Docker y Singularity de forma nativa.
+
+### Instalación de Nextflow
+
+```bash
+mamba create -n nextflow -c bioconda -c conda-forge nextflow=24.10 openjdk=17
+mamba activate nextflow
+nextflow -version
+```
+
+::: callout-note
+Nextflow requiere Java (OpenJDK 17+). El paquete de conda-forge trae `openjdk=17` como dependencia, así que no necesitas instalar Java aparte.
+:::
+
+### Nextflow con Conda
+
+Un `main.nf` básico:
+
+```groovy
+// main.nf
+params.reads = "data/*_{R1,R2}.fastq.gz"
+params.genome = "data/reference/genome.fa"
+
+process FASTQC {
+    conda 'fastqc'
+    tag "$sample"
+
+    input:
+    tuple val(sample), path(reads)
+
+    output:
+    path "fastqc_${sample}_*"
+
+    script:
+    """
+    fastqc ${reads} -o .
+    """
+}
+
+process ALIGN {
+    conda 'bwa samtools'
+    tag "$sample"
+
+    input:
+    tuple val(sample), path(reads)
+
+    output:
+    path "${sample}.bam"
+
+    script:
+    """
+    bwa mem -t 8 ${params.genome} ${reads[0]} ${reads[1]} | samtools sort -o ${sample}.bam
+    """
+}
+
+workflow {
+    reads = Channel.fromFilePairs(params.reads)
+    FASTQC(reads)
+    ALIGN(reads)
+}
+```
+
+Ejecutar:
+
+```bash
+nextflow run main.nf -profile conda
+```
+
+Nextflow crea un entorno Conda con los paquetes indicados en `conda 'bwa samtools'` la primera vez que se lanza cada proceso. Para más control, puedes referenciar un YAML:
+
+```groovy
+process FASTQC {
+    conda '/path/to/fastqc_env.yml'
+    // ...
+}
+```
+
+Esto es **equivalente** al patrón Snakemake: un YAML versionado en git, máximo control.
+
+## 9.6 Comparación Snakemake vs Nextflow
+
+| Característica      | Snakemake        | Nextflow            |
+|---------------------|------------------|---------------------|
+| Lenguaje            | Python-like      | Groovy DSL          |
+| Curva de aprendizaje| Suave            | Media               |
+| Conda integration   | Excelente        | Excelente           |
+| Cloud-ready         | Mejorando        | Excelente           |
+| Comunidad           | Bioinformatics   | Más amplia (nf-core)|
+| Tutoriales          | Abundantes       | Abundantes          |
+| Soporte Windows     | Solo vía WSL2    | Solo vía WSL2       |
+| Curva de adopción   | Mejor para prototipos rápidos | Mejor para pipelines compartidos a gran escala |
+
+::: callout-tip
+**Recomendación práctica**: empieza por Snakemake si vienes de Python. Pasa a Nextflow si tu equipo ya lo usa o si necesitas ejecutar en AWS Batch / Kubernetes con regularidad.
+:::
+
+## 9.7 Mejores prácticas
+
+1. **Una regla, un entorno**: cada regla debe tener su propio `environment.yml`. Nunca un mega-entorno para todo el pipeline.
+2. **Versionar todos los YAML**: commitear `envs/*.yaml` a git junto con el `Snakefile`. Sin esto, la reproducibilidad se pierde.
+3. **Usar `mamba` como frontend** en Snakemake (`--conda-frontend mamba`).
+4. **Centralizar entornos** con `--conda-prefix ~/snakemake_conda_envs` para reutilizar entre proyectos.
+5. **Para publicaciones**: incluir todos los YAML en supplementary material. Es la única forma de que un revisor pueda reconstruir tu pipeline.
+
+## 9.8 Reproducibilidad con Snakemake + conda-lock
+
+Para reproducibilidad bit-a-bit (Capítulo 6), podemos generar lockfiles para cada entorno:
+
+```bash
+# Generar locks para cada entorno
+for env in envs/*.yaml; do
+    conda-lock -f $env --platform linux-64
+done
+```
+
+Esto genera `envs/fastqc.conda-lock.yml`, `envs/fastp.conda-lock.yml`, etc. En el `Snakefile`:
+
+```python
+rule fastqc:
+    input: "data/{sample}_R1.fastq.gz"
+    output: "results/fastqc/{sample}_fastqc.html"
+    conda: "envs/fastqc.conda-lock.yml"   # lock en lugar de YAML libre
+    shell: "fastqc {input} -o results/fastqc/"
+```
+
+Snakemake detecta el formato lockfile y usa `conda-lock` para crear el entorno con los hashes SHA256 exactos.
+
+## 9.9 Snakemake + Singularity: combinación gold standard
+
+En HPC, donde Conda puede tener problemas de compatibilidad con librerías del sistema, la combinación Snakemake + Singularity + Conda dentro del contenedor es el estándar de facto (lo veremos en Capítulos 10 y 11):
+
+```python
+rule fastqc:
+    input: "..."
+    output: "..."
+    conda: "envs/fastqc.yaml"
+    singularity: "docker://quay.io/biocontainers/fastqc:0.12.1"
+    shell: "fastqc {input}"
+```
+
+Se ejecuta con:
+
+```bash
+snakemake --use-conda --use-singularity -j 4
+```
+
+## 9.10 Plantilla de proyecto Snakemake + Conda
+
+Estructura recomendada para cualquier pipeline:
+
+```text
+proyecto/
+├── Snakefile
+├── config.yaml
+├── envs/
+│   ├── fastqc.yaml
+│   ├── fastp.yaml
+│   ├── bwa_samtools.yaml
+│   ├── bcftools.yaml
+│   └── multiqc.yaml
+├── data/
+│   ├── raw/
+│   └── reference/
+├── results/
+├── scripts/
+└── README.md
+```
+
+::: callout-note
+Snakemake funciona **perfectamente en WSL2** sin configuración especial. Para enviar jobs a SLURM, veremos la configuración en el Capítulo 11.
+:::
+
+## 9.11 Ejercicios
+
+### Ejercicio 1
+
+Crea la estructura de un proyecto Snakemake con: (a) un `Snakefile` que contenga las reglas `fastqc`, `trim`, `align`, `variants`; (b) cuatro archivos `environment.yml` en `envs/` con las herramientas necesarias (fastqc, fastp, bwa+samtools, bcftools); (c) un `config.yaml` con rutas a datos y referencia. Prueba con `snakemake -n --use-conda` (dry-run).
+
+### Ejercicio 2
+
+Crea el pipeline equivalente en Nextflow: un `main.nf` con procesos `FASTQC`, `TRIM`, `ALIGN`, `VARIANTS`, cada uno con directiva `conda`. Prueba con `nextflow run main.nf -profile conda -resume`.
+
+### Ejercicio 3
+
+Sobre el pipeline Snakemake del ejercicio 1, genera `conda-lock.yml` para cada uno de los entornos con `conda-lock`. Configura el `Snakefile` para usar los lockfiles. Ejecuta y compara la reproducibilidad con la versión sin locks (verifica que los hashes SHA256 del entorno creado coinciden con los del lockfile).
+
+## 9.12 Soluciones
+
+### Solución ejercicio 1
+
+```bash
+# Estructura
+mkdir -p pipeline_snakemake/{envs,data/raw,data/reference,results,scripts}
+cd pipeline_snakemake
+
+# envs/fastqc.yaml
+cat > envs/fastqc.yaml << 'EOF'
+name: fastqc
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - fastqc=0.12.1
+EOF
+
+# envs/fastp.yaml
+cat > envs/fastp.yaml << 'EOF'
+name: fastp
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - fastp=0.23.4
+EOF
+
+# envs/bwa_samtools.yaml
+cat > envs/bwa_samtools.yaml << 'EOF'
+name: bwa_samtools
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - bwa=0.7.17
+  - samtools=1.18
+EOF
+
+# envs/bcftools.yaml
+cat > envs/bcftools.yaml << 'EOF'
+name: bcftools
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - bcftools=1.18
+EOF
+
+# config.yaml
+cat > config.yaml << 'EOF'
+samples:
+  - SRR1234567
+  - SRR1234568
+reference: "data/reference/ecoli.fa"
+threads: 8
+EOF
+
+# Snakefile
+cat > Snakefile << 'EOF'
+configfile: "config.yaml"
+
+SAMPLES = config["samples"]
+REF = config["reference"]
+
+rule all:
+    input:
+        expand("results/variants/{s}.vcf", s=SAMPLES)
+
+rule fastqc:
+    input: "data/raw/{sample}_R{read}.fastq.gz"
+    output: "results/fastqc/{sample}_R{read}_fastqc.html"
+    conda: "envs/fastqc.yaml"
+    shell: "fastqc {input} -o results/fastqc/"
+
+rule trim:
+    input:
+        r1="data/raw/{sample}_R1.fastq.gz",
+        r2="data/raw/{sample}_R2.fastq.gz"
+    output:
+        r1="results/trimmed/{sample}_R1.fastq.gz",
+        r2="results/trimmed/{sample}_R2.fastq.gz"
+    conda: "envs/fastp.yaml"
+    shell: "fastp -i {input.r1} -I {input.r2} -o {output.r1} -O {output.r2}"
+
+rule align:
+    input:
+        r1="results/trimmed/{sample}_R1.fastq.gz",
+        r2="results/trimmed/{sample}_R2.fastq.gz"
+    output: "results/bam/{sample}.bam"
+    conda: "envs/bwa_samtools.yaml"
+    params: index=REF
+    threads: 8
+    shell: "bwa mem -t {threads} {params.index} {input.r1} {input.r2} | samtools sort -o {output}"
+
+rule variants:
+    input: "results/bam/{sample}.bam"
+    output: "results/variants/{sample}.vcf"
+    conda: "envs/bcftools.yaml"
+    shell: "bcftools mpileup -f {REF} {input} | bcftools call -mv -o {output}"
+EOF
+
+# Dry-run
+snakemake -n --use-conda --conda-frontend mamba
+```
+
+### Solución ejercicio 2
+
+```bash
+mkdir -p pipeline_nextflow
+cd pipeline_nextflow
+
+cat > main.nf << 'EOF'
+nextflow.enable.dsl=2
+
+params.reads = "data/raw/*_{R1,R2}.fastq.gz"
+params.genome = "data/reference/ecoli.fa"
+
+process FASTQC {
+    conda 'fastqc'
+    tag "$sample"
+    publishDir "results/fastqc", mode: 'copy'
+
+    input:
+    tuple val(sample), path(reads)
+
+    output:
+    path "fastqc_${sample}_*"
+
+    script:
+    """
+    fastqc ${reads} -o .
+    """
+}
+
+process TRIM {
+    conda 'fastp'
+    tag "$sample"
+    publishDir "results/trimmed", mode: 'copy'
+
+    input:
+    tuple val(sample), path(reads)
+
+    output:
+    tuple val(sample), path("${sample}_R{1,2}.trimmed.fastq.gz")
+
+    script:
+    """
+    fastp -i ${reads[0]} -I ${reads[1]} \
+          -o ${sample}_R1.trimmed.fastq.gz \
+          -O ${sample}_R2.trimmed.fastq.gz
+    """
+}
+
+process ALIGN {
+    conda 'bwa samtools'
+    tag "$sample"
+    publishDir "results/bam", mode: 'copy'
+
+    input:
+    tuple val(sample), path(reads)
+
+    output:
+    path "${sample}.bam"
+
+    script:
+    """
+    bwa mem -t 8 ${params.genome} ${reads[0]} ${reads[1]} | \
+    samtools sort -o ${sample}.bam
+    """
+}
+
+process VARIANTS {
+    conda 'bcftools'
+    tag "$sample"
+    publishDir "results/variants", mode: 'copy'
+
+    input:
+    path bam
+
+    output:
+    path "${bam.baseName}.vcf"
+
+    script:
+    """
+    bcftools mpileup -f ${params.genome} ${bam} | \
+    bcftools call -mv -o ${bam.baseName}.vcf
+    """
+}
+
+workflow {
+    reads = Channel.fromFilePairs(params.reads)
+    FASTQC(reads)
+    trimmed = TRIM(reads)
+    bam = ALIGN(trimmed)
+    VARIANTS(bam)
+}
+EOF
+
+# Ejecutar
+nextflow run main.nf -profile conda -resume
+```
+
+### Solución ejercicio 3
+
+```bash
+cd pipeline_snakemake
+
+# Instalar conda-lock si no está
+mamba install -n base -c conda-forge conda-lock
+
+# Generar lockfiles
+for env in envs/*.yaml; do
+    name=$(basename "$env" .yaml)
+    conda-lock -f "$env" --platform linux-64 -k explicit \
+        --lockfile "envs/${name}.conda-lock.yml"
+done
+
+# Verificar que se generaron
+ls envs/*.conda-lock.yml
+
+# Modificar Snakefile para usar locks
+sed -i 's|envs/fastqc.yaml|envs/fastqc.conda-lock.yml|' Snakefile
+sed -i 's|envs/fastp.yaml|envs/fastp.conda-lock.yml|' Snakefile
+sed -i 's|envs/bwa_samtools.yaml|envs/bwa_samtools.conda-lock.yml|' Snakefile
+sed -i 's|envs/bcftools.yaml|envs/bcftools.conda-lock.yml|' Snakefile
+
+# Ejecutar con locks
+snakemake --use-conda --conda-frontend mamba -j 4
+
+# Verificar hashes SHA256
+conda list -n $(conda env list | grep fastqc) --md5
+# Debe coincidir con los hashes del archivo envs/fastqc.conda-lock.yml
+```
+
+La diferencia clave es: sin locks, dos ejecuciones en distintas máquinas pueden resolver versiones distintas de dependencias transitivas. Con locks, los hashes SHA256 son idénticos en cualquier máquina linux-64. Esto es el **Nivel 3 de reproducibilidad** definido en el Capítulo 6, y es lo que debes adjuntar como supplementary material en publicaciones.
+
+## 9.13 Resumen
+
+En este capítulo hemos visto cómo Conda se integra con los dos gestores de pipelines dominantes en bioinformática. La idea clave es **"una regla, un entorno"**: cada paso del pipeline declara su YAML, y el motor (Snakemake o Nextflow) se encarga de crear, activar y cachear ese entorno de forma transparente. Combinado con `conda-lock`, obtenemos reproducibilidad bit-a-bit incluso para pipelines con docenas de pasos. En el Capítulo 10 llevaremos esto más allá empaquetando el pipeline entero en contenedores Docker y Singularity, y en el Capítulo 11 veremos cómo ejecutar pipelines en clusters HPC con SLURM.

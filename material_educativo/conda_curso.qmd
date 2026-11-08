@@ -1,0 +1,118 @@
+---
+title: "Conda, Anaconda y Bioconda: gestión de entornos para bioinformática"
+subtitle: "Un curso completo para instalar, gestionar y reproducir software bioinformático en Windows (WSL2) y Linux con Conda, Mamba y Bioconda."
+image: multimedia/conda.png
+format:
+  html:
+    toc: true
+    css: card.css
+margin-header: |
+  ![Xavier Clemente García Cevallos](multimedia/conda.png)
+---
+
+## Bienvenida
+
+Bienvenido a **Conda, Anaconda y Bioconda: gestión de entornos para bioinformática**. A lo largo de 12 capítulos aprenderás a instalar, configurar y gestionar entornos reproducibles para cualquier herramienta bioinformática moderna, operando desde Windows mediante WSL2 con Ubuntu y desde Anaconda Prompt nativo de Windows.
+
+Este material está pensado para estudiantes e investigadores de biología, bioinformática, biotecnología y áreas afines que necesitan **instalar y mantener software bioinformático** sin perder la cabeza con dependencias rotas, versiones incompatibles y conflictos de paquetes.
+
+## ¿Por qué Conda en bioinformática?
+
+La bioinformática moderna usa **cientos de herramientas** escritas en Python, R, C, C++ y Java, cada una con sus propias dependencias. Sin un gestor de entornos, instalar y mantener todo este software es una pesadilla. Conda resuelve tres problemas:
+
+1.  **Aislamiento**: cada proyecto tiene su propio entorno con versiones específicas de las herramientas.
+2.  **Reproducibilidad**: un archivo `environment.yml` describe exactamente qué versiones se usaron, permitiendo que cualquier persona reproduzca el análisis.
+3.  **Bioconda**: el canal bioconda contiene más de **10,000 paquetes bioinformáticos** curados y listos para instalar con un solo comando.
+
+## Estructura del curso
+
+El curso está dividido en tres bloques temáticos progresivos:
+
+### Bloque I — Básico (Capítulos 1 al 4)
+
+Comenzarás entendiendo qué es Conda, sus diferencias con Anaconda y Miniconda, lo instalarás tanto en WSL2 como en Windows nativo, aprenderás a crear y gestionar entornos virtuales, y dominarás el sistema de canales (conda-forge, bioconda, defaults).
+
+### Bloque II — Intermedio (Capítulos 5 al 8)
+
+Conocerás Mamba y micromamba (sucesores rápidos de Conda), aprenderás a hacer análisis reproducibles con `environment.yml` y `conda-lock`, explorarás el ecosistema Bioconda y crearás entornos especializados para **biología estructural** (dinámica molecular con GROMACS/AMBER/OpenMM, docking con AutoDock Vina/HDOCK).
+
+### Bloque III — Avanzado (Capítulos 9 al 12)
+
+Dominarás la integración de Conda con pipelines modernos (Snakemake, Nextflow), contenedores (Docker, Singularity), uso en clusters HPC con SLURM, y construirás un proyecto integrador con un pipeline reproducible de punta a punta.
+
+## Entorno de trabajo
+
+::: callout-important
+Este curso asume que ya tienes nociones de Bash (equivalente al curso *Bash para dummies*). Si no es así, revisa primero ese curso antes de continuar.
+:::
+
+El curso cubre dos rutas de instalación:
+
+- **WSL2 con Ubuntu** (recomendada para usuarios de Windows que necesitan herramientas solo-Linux como GROMACS, OpenMM, HDOCK).
+- **Anaconda Prompt nativo de Windows** (alternativa para análisis más sencillos: Python, R, Jupyter, herramientas multiplataforma).
+
+## Requisitos
+
+- Windows 10/11 con WSL2 instalado y Ubuntu 22.04+ (recomendado)
+- O alternativamente: Windows con Anaconda/Miniconda instalado
+- Al menos 10 GB de espacio libre en disco (los entornos bioinformáticos ocupan)
+- Conexión a internet para descargar paquetes
+- Conocimientos básicos de Bash (recomendado haber cursado *Bash para dummies*)
+
+## Convenciones del curso
+
+A lo largo de los capítulos encontrarás los siguientes bloques:
+
+::: callout-note
+**Nota:** Información complementaria o aclaratoria.
+:::
+
+::: callout-tip
+**Tip:** Atajos, buenas prácticas o recomendaciones útiles.
+:::
+
+::: callout-warning
+**Advertencia:** Errores comunes o precauciones importantes, especialmente críticos en Conda donde una mala configuración puede corromper tu instalación.
+:::
+
+::: callout-important
+**Importante:** Conceptos clave que debes recordar.
+:::
+
+## Cómo aprovechar el curso
+
+1.  **Lee y ejecuta**: cada comando puede copiarse y pegarse en tu terminal.
+2.  **Crea entornos y rompe cosas**: la mejor forma de aprender Conda es equivocarse y reparar.
+3.  **Resuelve los ejercicios**: antes de mirar la solución, inténtalo tú mismo.
+4.  **Documenta tus entornos**: cuando termines un capítulo, exporta tu `environment.yml` y guárdalo en tu repositorio de código.
+
+## Contenido del curso
+
+A continuación encontrarás el índice de capítulos. Cada uno contiene teoría, ejemplos con comandos reales, ejercicios propuestos y sus soluciones detalladas.
+
+### Bloque I — Básico
+
+1.  [Capítulo 1: Introducción a Conda, Anaconda y Miniconda](conda_capitulos/01-introduccion.qmd) — Qué es cada uno, comparación, cuándo usar qué.
+2.  [Capítulo 2: Instalación en WSL2 y Windows nativo](conda_capitulos/02-instalacion.qmd) — Miniconda en WSL, Anaconda en Windows, configuración inicial.
+3.  [Capítulo 3: Entornos virtuales: creación, activación, gestión](conda_capitulos/03-entornos.qmd) — `conda create`, `activate`, `deactivate`, `env list`, clonar, eliminar.
+4.  [Capítulo 4: Canales y paquetes](conda_capitulos/04-canales.qmd) — conda-forge, bioconda, defaults, prioridad de canales, búsqueda e instalación.
+
+### Bloque II — Intermedio
+
+5.  [Capítulo 5: Mamba y micromamba](conda_capitulos/05-mamba.qmd) — Sucesores rápidos, instalación, migración desde Conda.
+6.  [Capítulo 6: Reproducibilidad: environment.yml y conda-lock](conda_capitulos/06-reproducibilidad.qmd) — Exportar entornos, crear entornos desde YAML, lockfiles exactos.
+7.  [Capítulo 7: Bioconda para bioinformática](conda_capitulos/07-bioconda.qmd) — Catálogo, buenas prácticas, recetas comunes para NGS, filogenia, RNA-seq.
+8.  [Capítulo 8: Entornos para biología estructural](conda_capitulos/08-biologia-estructural.qmd) — GROMACS, AMBER, OpenMM, AutoDock Vina, HDOCK, PyMOL, ChimeraX.
+
+### Bloque III — Avanzado
+
+9.  [Capítulo 9: Conda en pipelines con Snakemake y Nextflow](conda_capitulos/09-pipelines.qmd) — `--use-conda`, integración de entornos por regla.
+10. [Capítulo 10: Conda y contenedores](conda_capitulos/10-contenedores.qmd) — Docker + conda, Singularity para HPC, biocontainers.
+11. [Capítulo 11: Conda en HPC y SLURM](conda_capitulos/11-hpc.qmd) — Instalación compartida, módulos, `conda-lock` para reproducibilidad exacta.
+12. [Capítulo 12: Proyecto integrador](conda_capitulos/12-proyecto.qmd) — Pipeline reproducible de punta a punta con Conda + Snakemake + contenedor.
+
+## Cierre
+
+Dominar Conda transforma por completo la experiencia de hacer bioinformática. Dejas de pelearte con dependencias y empiezas a centrarte en la ciencia. Este curso te dará las herramientas para instalar **cualquier software bioinformático** que exista o existirá en el futuro.
+
+¡Manos a la consola!

@@ -1,0 +1,97 @@
+/* card.css — Estilo mínimo y elegante para el curso de Python en Quarto */
+/* Diseñado para integrarse con el tema por defecto de Quarto sin sobrescribirlo */
+
+/* Tipografía base */
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.7;
+  color: #2d3748;
+}
+
+/* Encabezados con jerarquía clara */
+h1, h2, h3, h4 {
+  font-family: 'Inter', -apple-system, sans-serif;
+  font-weight: 600;
+  color: #1a365d;
+}
+
+h1 {
+  border-bottom: 3px solid #2c7a7b;
+  padding-bottom: 0.3em;
+}
+
+h2 {
+  border-bottom: 1px solid #cbd5e0;
+  padding-bottom: 0.2em;
+  margin-top: 2em;
+}
+
+/* Bloques de código: estilo terminal moderno */
+pre {
+  background: #1e2a3a !important;
+  border-radius: 6px;
+  padding: 1em;
+  overflow-x: auto;
+  font-size: 0.9em;
+}
+
+code {
+  font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+  font-size: 0.92em;
+}
+
+p > code, li > code {
+  background: #edf2f7;
+  color: #2c5282;
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+}
+
+/* Callouts más estilizados */
+.callout {
+  border-radius: 6px;
+  border-left-width: 4px;
+}
+
+/* Tablas con estilo limpio */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1.5em 0;
+}
+
+th, td {
+  padding: 0.6em 0.9em;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+th {
+  background: #f7fafc;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+/* Enlaces */
+a {
+  color: #2c7a7b;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+a:hover {
+  color: #285e61;
+  text-decoration: underline;
+}
+
+/* Listas de capítulos en la página principal */
+.listing-caption {
+  font-weight: 600;
+  color: #2c7a7b;
+}
+
+/* Header de margen */
+.margin-header img {
+  border-radius: 50%;
+  max-width: 60px;
+}

@@ -1,0 +1,467 @@
+---
+title: "Pandas para datos experimentales"
+---
+
+# Pandas para datos experimentales
+
+NumPy es excelente para arrays numéricos homogéneos, pero los datos biológicos reales **no son homogéneos**: una tabla de muestras tiene texto (especie, sitio), fechas, números enteros (conteos) y flotantes (absorbancias), todo a la vez, con valores faltantes y nombres de columnas. **Pandas** es la librería de Python para datos tabulares heterogéneos: piensa en ella como "Excel con superpoderes programables".
+
+En este capítulo aprenderás las dos estructuras (`Series` y `DataFrame`), cómo leer y escribir CSV/Excel, cómo seleccionar y filtrar, agregar con `groupby`, combinar tablas, manejar valores faltantes y crear *pivot tables*. Todos los ejemplos son situaciones reales del laboratorio.
+
+## ¿Qué es Pandas y su rol?
+
+Pandas proporciona estructuras y herramientas para manipular datos tabulares con etiquetas (índices y nombres de columnas). Es la pieza central del flujo de trabajo en ciencia de datos: permite limpiar, transformar, agregar y exportar datos en pocas líneas. Está construido sobre NumPy y se integra perfectamente con matplotlib, seaborn y scikit-learn.
+
+## Instalación e importación
+
+```bash
+pip install pandas
+```
+
+```python
+import pandas as pd   # convención universal
+```
+
+## Series
+
+Una `Series` es un vector unidimensional **con índice etiquetado**:
+
+```python
+import pandas as pd
+
+s = pd.Series([0.1, 0.25, 0.5, 0.95], name="absorbancia")
+print(s.index)      # RangeIndex(start=0, stop=4, step=1)
+print(s.values)     # array([0.1, 0.25, 0.5, 0.95])
+
+# Con índice personalizado (etiquetas)
+s2 = pd.Series({"A1": 0.1, "A2": 0.25, "B1": 0.5, "B2": 0.95})
+print(s2["A1"])     # 0.1
+print(s2.mean())    # 0.45
+```
+
+## DataFrame
+
+Un `DataFrame` es una tabla bidimensional: colección de `Series` (columnas) que comparten un índice.
+
+### Desde diccionario
+
+```python
+df = pd.DataFrame({
+    "gen": ["BRCA1", "TP53", "EGFR", "MYC"],
+    "log2FC": [2.3, -1.8, 1.1, 3.0],
+    "pvalue": [0.001, 0.04, 0.21, 0.0001]
+})
+```
+
+### Desde lista de listas
+
+```python
+df = pd.DataFrame(
+    [["BRCA1", 2.3, 0.001],
+     ["TP53", -1.8, 0.04]],
+    columns=["gen", "log2FC", "pvalue"]
+)
+```
+
+### Desde CSV / Excel / TSV
+
+```python
+df = pd.read_csv("muestras.csv")             # separador coma
+df = pd.read_csv("datos.tsv", sep="\t")      # separador tabulador
+df = pd.read_excel("datos.xlsx")             # requiere openpyxl
+df = pd.read_table("datos.txt")              # alias de read_csv con sep='\t'
+```
+
+## Escritura
+
+```python
+df.to_csv("salida.csv", index=False)         # index=False evita guardar el índice
+df.to_excel("salida.xlsx", index=False)
+```
+
+::: callout-tip
+## `index=False` al exportar
+Casi siempre quieres `index=False` al escribir CSV; si no, aparecerá una columna extra con el índice numérico que ensucia el archivo.
+:::
+
+## Inspección rápida
+
+```python
+df.head()        # primeras 5 filas
+df.head(10)      # primeras 10
+df.tail()        # últimas 5
+df.info()        # tipos y memoria
+df.describe()    # estadísticas de columnas numéricas
+df.shape         # (filas, columnas)
+df.columns       # lista de columnas
+df.dtypes        # tipo de cada columna
+```
+
+## Selección
+
+| Operación | Sintaxis |
+|-----------|----------|
+| Columna por nombre | `df["gen"]` o `df.gen` |
+| Varias columnas | `df[["gen", "log2FC"]]` |
+| Filas por etiqueta | `df.loc[2]` (índice 2) |
+| Filas por posición | `df.iloc[2]` (tercera fila) |
+| Celda por etiqueta | `df.at[2, "gen"]` |
+| Celda por posición | `df.iat[2, 0]` |
+| Filas + columnas | `df.loc[0:2, ["gen", "log2FC"]]` |
+| Filas + columnas por posición | `df.iloc[0:3, 0:2]` |
+
+::: callout-warning
+## `loc` vs `iloc`
+- `loc` usa **etiquetas** y el *slicing* es **inclusivo** en ambos extremos.
+- `iloc` usa **posiciones** y el *slicing* es **exclusivo** al final (como las listas).
+
+No mezclarlas; usar `loc` con números puede causar errores sutiles cuando el índice no es 0,1,2,...
+:::
+
+## Filtrado con condiciones booleanas
+
+```python
+# Genes sobreexpresados (LFC > 1)
+sobre = df[df["log2FC"] > 1]
+
+# Combinar condiciones con & (AND), | (OR)
+deg = df[(df["log2FC"].abs() > 1) & (df["pvalue"] < 0.05)]
+```
+
+::: callout-important
+## Paréntesis obligatorios
+Al combinar condiciones, **cada una debe ir entre paréntesis**:
+
+```python
+df[(df["A"] > 0) & (df["B"] < 1)]   # ✅ correcto
+df[df["A"] > 0 & df["B"] < 1]       # ❌ error de precedencia
+```
+:::
+
+## Columnas nuevas y operaciones vectorizadas
+
+```python
+# Nueva columna calculada
+df["-log10p"] = -np.log10(df["pvalue"])
+
+# Operaciones entre columnas
+df["producto"] = df["log2FC"] * df["-log10p"]
+```
+
+## Agrupación: `groupby`
+
+```python
+# Promedio de absorbancia por grupo de tratamiento
+df.groupby("grupo")["absorbancia"].mean()
+
+# Múltiples estadísticas
+df.groupby("grupo")["absorbancia"].agg(["mean", "std", "count"])
+
+# Por varias columnas (jerárquico)
+df.groupby(["sitio", "especie"])["abundancia"].sum()
+```
+
+## Combinación: `merge`, `concat`, `join`
+
+```python
+# merge: similar a JOIN de SQL
+merged = pd.merge(df_muestras, df_resultados,
+                  on="muestra_id", how="left")
+
+# concat: apilar verticalmente
+df_total = pd.concat([df_rep1, df_rep2, df_rep3], ignore_index=True)
+
+# concat horizontal
+df_ancho = pd.concat([df_a, df_b], axis=1)
+```
+
+## Valores faltantes
+
+```python
+df.isna()              # máscara booleana de NaN
+df.isna().sum()        # conteo de NaN por columna
+df.dropna()            # elimina filas con NaN
+df.fillna(0)           # rellena con 0
+df["col"].fillna(df["col"].mean())  # rellena con la media
+```
+
+## Ordenamiento
+
+```python
+df.sort_values("log2FC")                   # ascendente
+df.sort_values("log2FC", ascending=False)  # descendente
+df.sort_values(["grupo", "absorbancia"], ascending=[True, False])
+df.sort_index()           # por índice
+```
+
+## Pivot tables
+
+```python
+# Conteos de especies (filas) por sitio (columnas)
+tabla = df.pivot_table(
+    index="especie",
+    columns="sitio",
+    values="abundancia",
+    aggfunc="sum",
+    fill_value=0
+)
+```
+
+## Métodos útiles adicionales
+
+| Método | Uso típico |
+|--------|------------|
+| `df["col"].value_counts()` | Contar frecuencias de categorías |
+| `df["col"].unique()` | Valores únicos |
+| `df["col"].map(diccionario)` | Recodificar categorías |
+| `df.apply(func, axis=1)` | Aplicar función por fila |
+| `df.duplicated()` / `drop_duplicates()` | Detectar/eliminar duplicados |
+| `pd.to_datetime(df["fecha"])` | Convertir a tipo fecha |
+| `df.rename(columns={...})` | Renombrar columnas |
+| `df.reset_index()` / `set_index()` | Reorganizar índices |
+
+### Ejemplo: `value_counts` y `map`
+
+```python
+# Cuántas muestras por grupo
+df["grupo"].value_counts()
+
+# Recodificar tratamientos a códigos numéricos
+codigo = {"ctrl": 0, "trat": 1, "control_positivo": 2}
+df["grupo_num"] = df["grupo"].map(codigo)
+```
+
+### Ejemplo: fechas con `to_datetime`
+
+```python
+df["fecha"] = pd.to_datetime(df["fecha"])
+df["mes"] = df["fecha"].dt.month     # extraer mes
+df["dia_semana"] = df["fecha"].dt.day_name()
+```
+
+::: callout-tip
+## Fechas en Pandas
+Las columnas de fecha se convierten a `datetime64`, lo que permite extraer año, mes, día, día de la semana y hacer *resampling* (p. ej. agrupar por semana) con `df.resample("W")`. Es esencial para datos de campo o monitoreo temporal.
+:::
+
+## Ejemplos biológicos
+
+### 1) Tabla de absorbancias con metadatos
+
+```python
+df = pd.DataFrame({
+    "muestra": ["M1", "M2", "M3", "M4", "M5", "M6"],
+    "grupo": ["ctrl", "ctrl", "ctrl", "trat", "trat", "trat"],
+    "od600": [0.12, 0.15, 0.13, 0.45, 0.50, 0.42],
+    "fecha": ["2024-05-01"]*3 + ["2024-05-02"]*3
+})
+```
+
+### 2) Datos de campo
+
+```python
+campo = pd.DataFrame({
+    "especie": ["Qrob", "Qrob", "Ppin", "Ppin", "Qrob"],
+    "sitio": ["A", "B", "A", "B", "A"],
+    "abundancia": [12, 8, 5, 7, 15],
+    "fecha": ["2024-06-01"]*5
+})
+```
+
+### 3) Tabla de expresión génica (genes × muestras)
+
+```python
+expr = pd.DataFrame({
+    "gen": ["BRCA1", "TP53", "EGFR", "MYC"],
+    "muestra_1": [10.2, 8.5, 12.0, 5.1],
+    "muestra_2": [11.0, 7.9, 13.5, 6.2],
+    "muestra_3": [9.8, 8.0, 11.5, 5.5]
+})
+expr = expr.set_index("gen")
+```
+
+### 4) Combinar muestras con resultados
+
+```python
+muestras = pd.DataFrame({"muestra_id": ["M1","M2","M3"], "grupo": ["ctrl","ctrl","trat"]})
+resultados = pd.DataFrame({"muestra_id": ["M1","M2","M3"], "od600": [0.12, 0.15, 0.45]})
+merged = pd.merge(muestras, resultados, on="muestra_id")
+```
+
+### 5) Filtrar genes diferencialmente expresados
+
+```python
+deg = df[(df["log2FC"].abs() > 1) & (df["pvalue"] < 0.05)]
+```
+
+### 6) Promedio de absorbancias por grupo
+
+```python
+resumen = df.groupby("grupo")["od600"].agg(["mean", "std", "count"])
+```
+
+### 7) Pivot de conteos por sitio
+
+```python
+pivot = campo.pivot_table(index="especie", columns="sitio",
+                          values="abundancia", aggfunc="sum", fill_value=0)
+```
+
+## Flujo de trabajo típico
+
+Un análisis real con Pandas suele seguir este patrón de "tidy data":
+
+1. **Leer** los datos crudos con `pd.read_csv`.
+2. **Inspeccionar** con `head`, `info`, `describe` para detectar problemas.
+3. **Limpiar**: eliminar duplicados, gestionar NaN, convertir tipos.
+4. **Filtrar** filas según criterios (condiciones booleanas).
+5. **Transformar** columnas: calcular nuevas, recodificar categorías.
+6. **Agregar** con `groupby` para obtener resúmenes por grupo.
+7. **Combinar** con otras tablas (`merge`, `concat`) si es necesario.
+8. **Exportar** resultados con `to_csv` o visualizar con matplotlib.
+
+```python
+# Pipeline completo en pocas líneas
+df = (pd.read_csv("campo.csv")
+        .drop_duplicates()
+        .dropna(subset=["abundancia"])
+        .query("abundancia > 0")
+        .assign(log_abundancia=lambda x: np.log10(x["abundancia"])))
+
+resumen = (df.groupby(["sitio", "especie"])["log_abundancia"]
+             .agg(["mean", "std", "count"])
+             .reset_index())
+resumen.to_csv("resumen_campo.csv", index=False)
+```
+
+::: callout-tip
+## Encadenamiento de métodos
+Pandas permite **encadenar** operaciones con `.` (método *method chaining*), como en el ejemplo anterior. Usa paréntesis para envolver toda la cadena y `assign` para crear columnas nuevas sin romper la cadena. Es muy legible cuando se acostumbra.
+:::
+
+## Ejercicios
+
+### Ejercicio 1
+
+Crea (con código) un `DataFrame` con columnas `"gen"`, `"log2FC"` y `"pvalue"` y al menos 6 filas (incluye genes sobre y subexpresados, y algún gen no significativo). Filtra los genes **diferencialmente expresados** (`|log2FC| > 1` **Y** `pvalue < 0.05`). Imprime la tabla filtrada.
+
+### Ejercicio 2
+
+Crea con código un archivo CSV llamado `"absorbancias.csv"` con columnas `"muestra"`, `"grupo"` y `"absorbancia"` (al menos 6 filas con dos grupos). Luego léelo con `pd.read_csv` y calcula el promedio de absorbancia **por grupo** usando `groupby`. Imprime el resultado.
+
+### Ejercicio 3
+
+Crea un `DataFrame` de expresión con genes en las filas y muestras en las columnas (al menos 4 genes × 3 muestras). Calcula el `log2` de **todos** los valores numéricos y agrega una columna `"media"` con el promedio por gen (a lo largo de las muestras). Imprime el DataFrame resultante.
+
+## Soluciones
+
+### Solución 1
+
+```python
+import pandas as pd
+
+# DataFrame con 6 genes (mezcla de sobre, sub y no significativos)
+df = pd.DataFrame({
+    "gen":     ["BRCA1", "TP53",  "EGFR", "MYC",   "GAPDH", "ACTB"],
+    "log2FC":  [ 2.5,    -2.1,     1.8,    3.2,     0.1,     -0.05],
+    "pvalue":  [ 0.001,  0.003,    0.04,   0.0001,  0.55,    0.80]
+})
+
+print("Tabla completa:")
+print(df)
+
+# Genes diferencialmente expresados (DEG):
+# |log2FC| > 1 AND pvalue < 0.05
+# Cada condición entre paréntesis (obligatorio al combinar con &)
+cond_lfc = df["log2FC"].abs() > 1
+cond_p = df["pvalue"] < 0.05
+deg = df[cond_lfc & cond_p]
+
+print("\nGenes diferencialmente expresados (|log2FC|>1 y p<0.05):")
+print(deg)
+
+# Podemos ordenar por |log2FC| descendente para ver los más changes
+print("\nOrdenados por magnitud del cambio:")
+print(deg.reindex(deg["log2FC"].abs().sort_values(ascending=False).index))
+```
+
+### Solución 2
+
+```python
+import pandas as pd
+
+# 1) Creamos el CSV escribiendo el texto a mano
+csv_text = """muestra,grupo,absorbancia
+M1,ctrl,0.12
+M2,ctrl,0.15
+M3,ctrl,0.13
+M4,trat,0.45
+M5,trat,0.50
+M6,trat,0.42
+"""
+
+with open("absorbancias.csv", "w") as f:
+    f.write(csv_text)
+
+# 2) Lo leemos con read_csv
+df = pd.read_csv("absorbancias.csv")
+print("DataFrame leído:")
+print(df)
+
+# 3) Promedio de absorbancia por grupo con groupby
+# groupby("grupo") agrupa las filas; ["absorbancia"] selecciona la columna;
+# .mean() aplica la media a cada grupo.
+promedio = df.groupby("grupo")["absorbancia"].mean()
+print("\nPromedio de absorbancia por grupo:")
+print(promedio)
+
+# Estadísticas adicionales por grupo
+resumen = df.groupby("grupo")["absorbancia"].agg(["mean", "std", "count"])
+print("\nResumen por grupo:")
+print(resumen)
+```
+
+### Solución 3
+
+```python
+import pandas as pd
+import numpy as np
+
+# DataFrame con genes en filas, muestras en columnas
+expr = pd.DataFrame({
+    "muestra_1": [10.2, 8.5, 12.0, 5.1],
+    "muestra_2": [11.0, 7.9, 13.5, 6.2],
+    "muestra_3": [9.8,  8.0, 11.5, 5.5]
+}, index=["BRCA1", "TP53", "EGFR", "MYC"])
+
+print("Tabla original:")
+print(expr)
+
+# Seleccionamos solo columnas numéricas (todas en este caso)
+cols_numericas = expr.select_dtypes(include="number").columns
+
+# Calculamos log2 de cada valor
+# np.log2 se aplica elemento a elemento gracias a la vectorización
+expr_log = expr.copy()
+expr_log[cols_numericas] = np.log2(expr[cols_numericas])
+print("\nTabla con log2 aplicado:")
+print(expr_log.round(3))
+
+# Agregamos columna "media": promedio por gen (a lo largo de las muestras)
+# axis=1 significa: calcular la media por fila (gen)
+expr_log["media"] = expr_log[cols_numericas].mean(axis=1)
+print("\nTabla con columna 'media' por gen:")
+print(expr_log.round(3))
+```
+
+::: callout-tip
+## Resumen
+- `pd.read_csv`/`read_excel` para leer; `to_csv`/`to_excel` con `index=False` para escribir.
+- `df.head()`/`info()`/`describe()` para inspeccionar.
+- `df.loc` (etiquetas) vs `df.iloc` (posiciones).
+- Filtra con `df[(cond1) & (cond2)]`.
+- `df.groupby("col")["otra"].mean()` para agregar.
+- `pd.merge` para combinar por columna clave.
+- `df.isna()` / `fillna` / `dropna` para valores faltantes.
+- `df.pivot_table` para reorganizar filas/columnas.
+:::

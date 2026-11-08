@@ -1,0 +1,505 @@
+---
+title: "Diccionarios y conjuntos"
+---
+
+# Diccionarios y conjuntos
+
+Hasta ahora hemos trabajado con secuencias ordenadas (listas, tuplas), donde el acceso a los elementos se realiza por su **posición** (índice 0, 1, 2...). Sin embargo, en biología frecuentemente necesitamos asociar un **nombre** o **clave** con un **valor**: el código genético asocia cada codón con un aminoácido, un catálogo de especies asocia cada nombre con su conteo, una placa de ELISA asocia cada muestra con su absorbancia. Para estos casos Python ofrece los **diccionarios** (`dict`), que son la estructura de datos más utilizada en el lenguaje.
+
+En este capítulo también estudiaremos los **conjuntos** (`set`), que son colecciones no ordenadas de elementos únicos, ideales para responder preguntas como "¿qué genes son comunes entre dos condiciones experimentales?" o "¿qué ortólogos comparten dos especies?".
+
+## Diccionarios
+
+### Qué es un diccionario
+
+Un diccionario es una estructura de datos **mutable** que almacena pares **clave–valor**. Cada clave debe ser única e inmutable (típicamente strings, números o tuplas), y a cada clave se le asocia un valor, que puede ser cualquier objeto: un número, una lista, otro diccionario, etc.
+
+Piénsalo como una tabla de dos columnas: la columna izquierda son las claves, la derecha los valores. Internamente Python usa una **tabla hash**, por lo que el acceso por clave es muy eficiente (tiempo promedio constante, $\mathcal{O}(1)$), mucho más rápido que buscar en una lista.
+
+### Creación de diccionarios
+
+Existen tres formas principales de crear un diccionario:
+
+```python
+# 1. Literal con llaves {}
+codigo_genetico = {
+    "ATG": "Met",
+    "TAA": "Stop",
+    "GAA": "Glu",
+    "TTT": "Phe"
+}
+
+# 2. Función dict() con pares clave=valor
+especies = dict(Brassica=12, Arabidopsis=8, Oryza=15)
+
+# 3. Comprensión de diccionario
+bases = "ATCG"
+complemento = {b: b for b in bases}  # aquí simplemente copiamos
+# Mejor: complemento real
+complemento_dna = {"A": "T", "T": "A", "C": "G", "G": "C"}
+# Equivalente con comprensión:
+bases_origen = "ATCG"
+complemento_dna2 = {b: complemento_dna[b] for b in bases_origen}
+```
+
+La **comprensión de diccionarios** sigue la sintaxis `{clave: valor for elemento in iterable}` y es muy útil para construir diccionarios a partir de otras estructuras.
+
+### Acceso, inserción, modificación y eliminación
+
+```python
+catalogo = {"Homo sapiens": 5, "Mus musculus": 12, "Drosophila": 30}
+
+# Acceso por clave
+print(catalogo["Mus musculus"])  # 12
+
+# Inserción de una nueva clave
+catalogo["Danio rerio"] = 8
+
+# Modificación de un valor existente
+catalogo["Homo sapiens"] = 6
+
+# Eliminación
+del catalogo["Drosophila"]
+# O con pop, que devuelve el valor eliminado:
+eliminado = catalogo.pop("Danio rerio")
+print(eliminado)  # 8
+```
+
+::: callout-warning
+## Cuidado con KeyError
+Si intentas acceder a una clave que no existe con `dict[clave]`, Python lanza un `KeyError`. Es más seguro usar `dict.get(clave)`, que devuelve `None` (o un valor por defecto) si la clave no está.
+:::
+
+### Métodos principales
+
+Los métodos más usados de los diccionarios son:
+
+```python
+absorbancias = {"muestra_1": 0.12, "muestra_2": 0.45, "muestra_3": 0.78}
+
+# keys(): devuelve las claves
+print(list(absorbancias.keys()))  # ['muestra_1', 'muestra_2', 'muestra_3']
+
+# values(): devuelve los valores
+print(list(absorbancias.values()))  # [0.12, 0.45, 0.78]
+
+# items(): devuelve pares (clave, valor) como tuplas
+print(list(absorbancias.items()))
+# [('muestra_1', 0.12), ('muestra_2', 0.45), ('muestra_3', 0.78)]
+
+# get(): acceso seguro con valor por defecto
+print(absorbancias.get("muestra_99", 0.0))  # 0.0
+
+# update(): agrega o actualiza varios pares a la vez
+absorbancias.update({"muestra_4": 0.91, "muestra_5": 0.23})
+
+# pop(): elimina y devuelve el valor asociado a una clave
+valor = absorbancias.pop("muestra_1")
+```
+
+### Iteración sobre diccionarios
+
+```python
+# Iterar sobre claves (por defecto)
+for muestra in absorbancias:
+    print(muestra)
+
+# Iterar sobre valores
+for abs_val in absorbancias.values():
+    print(abs_val)
+
+# Iterar sobre pares clave-valor (lo más común)
+for muestra, abs_val in absorbancias.items():
+    print(f"{muestra}: absorbancia = {abs_val}")
+```
+
+::: callout-tip
+## Consejo de estilo
+Desde Python 3.7 los diccionarios conservan el **orden de inserción** de las claves. Esto significa que al iterar los elementos aparecerán en el mismo orden en que fueron añadidos. No confíes en este orden para lógica sensible, pero síguelo para presentación de resultados.
+:::
+
+### Diccionarios anidados
+
+En biología es común tener estructuras jerárquicas: especies observadas en distintos sitios, con conteos distintos en cada uno. Un diccionario cuyos valores son a su vez diccionarios resuelve esto de forma natural:
+
+```python
+# Conteos de especies por sitio de muestreo
+inventario = {
+    "bosque": {
+        "Quercus": 42,
+        "Pinus": 18,
+        "Acer": 7
+    },
+    "pradera": {
+        "Quercus": 5,
+        "Festuca": 60,
+        "Trifolium": 22
+    },
+    "ribera": {
+        "Salix": 31,
+        "Populus": 12,
+        "Phragmites": 45
+    }
+}
+
+# Acceso a un valor concreto
+print(inventario["bosque"]["Quercus"])  # 42
+
+# Iteración completa
+for sitio, especies in inventario.items():
+    total = sum(especies.values())
+    print(f"Sitio {sitio}: {total} individuos registrados")
+```
+
+### defaultdict y Counter
+
+El módulo `collections` ofrece diccionarios especializados muy útiles en bioinformática.
+
+**`defaultdict`** crea automáticamente un valor por defecto cuando se accede a una clave que no existe:
+
+```python
+from collections import defaultdict
+
+# Contar individuos por especie a partir de observaciones
+observaciones = ["Quercus", "Pinus", "Quercus", "Acer",
+                 "Quercus", "Pinus", "Acer", "Acer", "Acer"]
+
+conteos = defaultdict(int)  # int() devuelve 0 por defecto
+for especie in observaciones:
+    conteos[especie] += 1
+
+print(dict(conteos))
+# {'Quercus': 3, 'Pinus': 2, 'Acer': 4}
+```
+
+Sin `defaultdict`, tendrías que comprobar si la clave existe antes de incrementar:
+
+```python
+conteos = {}
+for especie in observaciones:
+    if especie not in conteos:
+        conteos[especie] = 0
+    conteos[especie] += 1
+```
+
+**`Counter`** es aún más directo para contar elementos:
+
+```python
+from collections import Counter
+
+secuencia = "ATGCGATCGATAGCTAGCTAA"
+conteo_bases = Counter(secuencia)
+print(conteo_bases)
+# Counter({'A': 7, 'G': 4, 'T': 5, 'C': 4})
+
+# Los métodos más útiles de Counter
+print(conteo_bases.most_common(2))  # [('A', 7), ('T', 5)]
+print(conteo_bases.most_common())   # lista ordenada completa
+```
+
+`Counter` es perfecto para contar nucleótidos, aminoácidos, k-mers, lecturas por cromosoma, etc.
+
+## Conjuntos
+
+### Qué es un conjunto y cuándo usarlo
+
+Un **conjunto** (`set`) es una colección **mutable**, **no ordenada** y **sin elementos duplicados**. Es la implementación del concepto matemático de conjunto finito. Sus usos típicos son:
+
+- **Eliminar duplicados** de una lista.
+- **Comprobar pertenencia** eficientemente (`x in mi_set` es mucho más rápido que `x in mi_lista` cuando hay muchos elementos).
+- Realizar **operaciones de conjuntos**: unión, intersección, diferencia.
+
+```python
+genes = {"BRCA1", "TP53", "EGFR", "KRAS"}
+print("TP53" in genes)  # True
+
+# Eliminar duplicados de una lista
+lecturas = ["genA", "genB", "genA", "genC", "genB", "genA"]
+unicos = list(set(lecturas))
+print(unicos)  # ['genA', 'genB', 'genC'] (sin orden garantizado)
+```
+
+::: callout-note
+## ¿Por qué `set` es más rápido que `list` para buscar?
+Porque `set` (como `dict`) usa una tabla hash, mientras que `list` requiere una búsqueda lineal. Para miles o millones de elementos, la diferencia puede ser de segundos a milisegundos.
+:::
+
+### Operaciones de conjuntos
+
+Las operaciones clásicas de la teoría de conjuntos están disponibles como operadores o como métodos:
+
+```python
+expresados_control = {"BRCA1", "TP53", "EGFR", "KRAS"}
+expresados_tratamiento = {"TP53", "KRAS", "MYC", "CDK2"}
+
+# Unión: todos los genes que aparecen en al menos una condición
+union = expresados_control | expresados_tratamiento
+# O: expresados_control.union(expresados_tratamiento)
+print(union)
+# {'BRCA1', 'TP53', 'EGFR', 'KRAS', 'MYC', 'CDK2'}
+
+# Intersección: genes expresados en ambas condiciones
+comunes = expresados_control & expresados_tratamiento
+# O: expresados_control.intersection(expresados_tratamiento)
+print(comunes)  # {'TP53', 'KRAS'}
+
+# Diferencia: genes solo en control
+solo_control = expresados_control - expresados_tratamiento
+print(solo_control)  # {'BRCA1', 'EGFR'}
+
+# Diferencia simétrica: genes que están en una sola condición
+simetrica = expresados_control ^ expresados_tratamiento
+print(simetrica)  # {'BRCA1', 'EGFR', 'MYC', 'CDK2'}
+```
+
+### Métodos de conjuntos
+
+```python
+genes = {"BRCA1", "TP53"}
+
+# add(): añade un elemento
+genes.add("EGFR")
+
+# remove(): elimina; da error si no existe
+genes.remove("EGFR")
+
+# discard(): elimina sin error si no existe
+genes.discard("EGFR")  # no pasa nada aunque no esté
+
+# update(): añade varios elementos a la vez
+genes.update({"EGFR", "KRAS", "MYC"})
+```
+
+### frozenset
+
+Existe una variante **inmutable** del conjunto: `frozenset`. A diferencia de `set`, un `frozenset` no permite `add`/`remove` y, al ser inmutable, **puede usarse como clave de un diccionario** o como elemento de otro conjunto:
+
+```python
+conjunto_inmutable = frozenset({"BRCA1", "TP53"})
+tabla = {conjunto_inmutable: "grupo 1"}
+print(tabla[frozenset({"BRCA1", "TP53"})])  # 'grupo 1'
+```
+
+En la práctica se usa poco, pero es bueno conocerlo.
+
+## Ejemplos biológicos integrados
+
+### 1. Diccionario del código genético
+
+```python
+codigo_genetico = {
+    "TTT": "Phe", "TTC": "Phe", "TTA": "Leu", "TTG": "Leu",
+    "CTT": "Leu", "CTC": "Leu", "CTA": "Leu", "CTG": "Leu",
+    "ATT": "Ile", "ATC": "Ile", "ATA": "Ile", "ATG": "Met",
+    "GTT": "Val", "GTC": "Val", "GTA": "Val", "GTG": "Val",
+    "TAA": "Stop", "TAG": "Stop", "TGA": "Stop",
+    "GAA": "Glu", "GAG": "Glu"
+}
+
+# Traducción manual de un ARN mensajero corto
+arn = "ATGGAA TTT TAA".replace(" ", "")
+protein = ""
+for i in range(0, len(arn) - 2, 3):
+    codon = arn[i:i+3]
+    aa = codigo_genetico.get(codon, "?")
+    protein += aa + "-"
+print(protein)  # Met-Glu-Phe-Stop-
+```
+
+### 2. Catálogo de especies con conteos
+
+```python
+conteo_especies = {"Quercus ilex": 42, "Pinus halepensis": 18,
+                   "Juniperus communis": 7, "Arbutus unedo": 11}
+
+total = sum(conteo_especies.values())
+print(f"Total de individuos censados: {total}")
+
+# La especie más abundante
+especie_top = max(conteo_especies, key=conteo_especies.get)
+print(f"Especie dominante: {especie_top}")
+```
+
+### 3. Tabla de absorbancias
+
+```python
+absorbancias = {
+    "blanco": 0.02,
+    "muestra_A": 0.45,
+    "muestra_B": 0.78,
+    "muestra_C": 0.23,
+    "muestra_D": 0.91
+}
+
+# Restar el blanco (corrección)
+corregidas = {k: v - absorbancias["blanco"] for k, v in absorbancias.items()
+              if k != "blanco"}
+print(corregidas)
+```
+
+### 4. Diccionario anidado: especies → sitios → conteos
+
+```python
+# Ya mostrado arriba con el inventario bosque/pradera/ribera
+```
+
+### 5. Counter para contar nucleótidos
+
+```python
+from collections import Counter
+sec = "ATGCGATCGATAGCTAGCTAA"
+print(Counter(sec))
+```
+
+### 6. Genes únicos entre dos listas
+
+```python
+control = ["BRCA1", "TP53", "EGFR", "KRAS"]
+tratamiento = ["TP53", "KRAS", "MYC", "CDK2"]
+
+union = set(control) | set(tratamiento)
+print(f"Total de genes distintos: {len(union)}")
+```
+
+### 7. Intersección de ortólogos
+
+```python
+ortologos_humanos = {"BRCA1", "TP53", "EGFR", "MYC", "CDK2"}
+ortologos_mouse = {"Brca1", "Trp53", "Egfr", "Myc", "Cdk2", "Rb1"}
+
+# Normalizamos a mayúsculas
+ortologos_mouse_norm = {g.upper() for g in ortologos_mouse}
+compartidos = ortologos_humanos & ortologos_mouse_norm
+print(f"Ortólogos compartidos: {compartidos}")
+```
+
+## Ejercicios
+
+### Ejercicio 1
+
+Dada la secuencia `"ATGCGATCGATAGCTAGCTAA"`, usa `Counter` para contar cuántas veces aparece cada nucleótido e imprime el resultado en formato tabla.
+
+### Ejercicio 2
+
+Crea un diccionario con al menos 10 codones del código genético estándar y traduce manualmente la secuencia `"ATG GAA TTT TAA"` (con espacios) a la cadena de aminoácidos correspondiente.
+
+### Ejercicio 3
+
+Dadas dos listas de genes expresados en dos condiciones:
+
+```python
+control = ["BRCA1", "TP53", "EGFR", "KRAS"]
+tratamiento = ["TP53", "KRAS", "MYC", "CDK2"]
+```
+
+Encuentra, usando operaciones de conjuntos:
+
+- Los genes **comunes** a ambas condiciones.
+- Los genes **únicos** de cada condición.
+- El total de **genes distintos** observados.
+
+## Soluciones
+
+### Solución 1
+
+```python
+from collections import Counter
+
+secuencia = "ATGCGATCGATAGCTAGCTAA"
+conteo = Counter(secuencia)
+
+# Imprimir como tabla alineada
+print("Base\tConteo")
+print("-" * 12)
+for base in "ATCG":  # orden fijo
+    print(f"{base}\t{conteo[base]}")
+print("-" * 12)
+print(f"Total\t{sum(conteo.values())}")
+```
+
+Salida:
+
+```
+Base	Conteo
+------------
+A	7
+T	5
+C	4
+G	4
+------------
+Total	20
+```
+
+### Solución 2
+
+```python
+# Diccionario con 10 codones (incluye inicio y stop)
+codigo_genetico = {
+    "ATG": "Met",   # codón de inicio
+    "GAA": "Glu",
+    "GAG": "Glu",
+    "TTT": "Phe",
+    "TTC": "Phe",
+    "TAA": "Stop",  # codón de paro
+    "TAG": "Stop",
+    "TGA": "Stop",
+    "GGT": "Gly",
+    "GGC": "Gly"
+}
+
+# Secuencia con espacios entre codones
+secuencia = "ATG GAA TTT TAA"
+
+# Dividir por espacios y traducir
+codones = secuencia.split()
+proteina = [codigo_genetico[c] for c in codones]
+
+# Unir con guiones para legibilidad
+print("-".join(proteina))  # Met-Glu-Phe-Stop
+```
+
+### Solución 3
+
+```python
+control = ["BRCA1", "TP53", "EGFR", "KRAS"]
+tratamiento = ["TP53", "KRAS", "MYC", "CDK2"]
+
+set_control = set(control)
+set_tratamiento = set(tratamiento)
+
+# Comunes (intersección)
+comunes = set_control & set_tratamiento
+print(f"Genes comunes: {comunes}")
+# {'TP53', 'KRAS'}
+
+# Únicos de cada condición (diferencia)
+solo_control = set_control - set_tratamiento
+solo_tratamiento = set_tratamiento - set_control
+print(f"Solo en control: {solo_control}")        # {'BRCA1', 'EGFR'}
+print(f"Solo en tratamiento: {solo_tratamiento}")  # {'MYC', 'CDK2'}
+
+# Total de genes distintos (unión)
+total = set_control | set_tratamiento
+print(f"Total de genes distintos: {len(total)}")  # 6
+print(f"Lista: {sorted(total)}")
+# ['BRCA1', 'CDK2', 'EGFR', 'KRAS', 'MYC', 'TP53']
+```
+
+::: callout-important
+## Idea clave
+Los diccionarios son la herramienta ideal para **asociar información** (codón→aminoácido, muestra→valor, especie→conteo). Los conjuntos son la herramienta ideal para responder **preguntas sobre pertenencia y relaciones** entre colecciones de elementos (intersección de ortólogos, genes diferencialmente expresados). Aprender a elegir entre `list`, `dict` y `set` es una de las decisiones de diseño más importantes en bioinformática.
+:::
+
+## Resumen
+
+En este capítulo has aprendido:
+
+- Qué es un diccionario y por qué es la estructura más usada en Python.
+- Cómo crear, acceder, modificar y eliminar pares clave-valor.
+- Los métodos esenciales: `keys`, `values`, `items`, `get`, `pop`, `update`.
+- Cómo anidar diccionarios para representar datos jerárquicos.
+- `defaultdict` y `Counter` para tareas de conteo sin código repetitivo.
+- Qué son los conjuntos, sus operaciones matemáticas y sus métodos.
+- Cuándo usar `frozenset` (cuando necesitas un conjunto inmutable, por ejemplo como clave).
+
+Con estos elementos ya puedes escribir programas de complejidad media para tareas de laboratorio y bioinformática. En el siguiente capítulo aprenderás a **modularizar** tu código en funciones reutilizables.

@@ -1,0 +1,320 @@
+---
+title: "Capítulo 1: Introducción a Python para biólogos"
+---
+
+## 1.1 ¿Qué es Python y por qué es relevante en biología?
+
+Python es un lenguaje de programación de alto nivel, interpretado y de propósito general, creado por Guido van Rossum a comienzos de la década de 1990. Su filosofía privilegia la **legibilidad del código** y una sintaxis clara, lo que lo convierte en uno de los lenguajes más accesibles para personas sin formación previa en informática.
+
+En las ciencias biológicas contemporáneas, Python se ha convertido en una herramienta ubicua. Esto no es casualidad: la biología moderna genera volúmenes masivos de datos (secuenciación genómica, microarreglos, imágenes de microscopía, datos de campo), y analizarlos manualmente es inviable. Python ofrece un ecosistema de librerías científicas que cubren prácticamente cualquier necesidad:
+
+- **NumPy** para cálculo numérico eficiente con arreglos multidimensionales.
+- **pandas** para manipulación de datos tabulares (datos de campo, ensayos, metadatos).
+- **Matplotlib** y **seaborn** para visualización.
+- **SciPy** para estadística, ajuste de curvas y procesamiento de señales.
+- **Biopython** para trabajar con secuencias biológicas, estructuras proteicas y consultas a NCBI.
+- **scikit-image** y **CellProfiler** para análisis de imágenes biológicas.
+- **scikit-learn** y **PyTorch** para aprendizaje automático aplicado a biología.
+
+::: callout-note
+Python no reemplaza al pensamiento científico: lo amplifica. Un buen análisis en Python sigue requiriendo que entiendas la pregunta biológica, el diseño experimental y las limitaciones de los datos.
+:::
+
+Casos concretos de uso en biología incluyen: identificar motivos reguladores en promotores bacterianos, cuantificar densidad celular a partir de imágenes de citometría, modelar crecimiento tumoral, predecir estructuras proteicas secundarias, o analizar comunidades microbianas a partir de secuencias 16S rRNA.
+
+## 1.2 Python 2 vs Python 3
+
+Existen dos ramas principales del lenguaje: Python 2 (lanzado en el año 2000) y Python 3 (lanzado en 2008). Python 2 llegó al **fin de vida útil (end-of-life)** el 1 de enero de 2020, lo que significa que ya no recibe actualizaciones de seguridad ni correcciones.
+
+Las diferencias más visibles entre ambas versiones son:
+
+- **División entera**: en Python 2, `7 / 2` devuelve `3`; en Python 3 devuelve `3.5`.
+- **Función `print`**: en Python 2 era una sentencia (`print "hola"`); en Python 3 es una función (`print("hola")`).
+- **Cadenas Unicode**: en Python 3 todas las cadenas son Unicode por defecto, lo cual es crucial cuando trabajas con nombres de especies con acentos o símbolos especiales.
+- **Iteración y rangos**: funciones como `range()`, `map()`, `zip()` devuelven iteradores en Python 3, más eficientes en memoria.
+
+::: callout-important
+En este curso utilizaremos **Python 3.x** (idealmente 3.10 o superior). Cualquier código Python 2 que encuentres en tutoriales antiguos puede requerir adaptación.
+:::
+
+## 1.3 Instalación de Python 3
+
+### Windows
+
+1.  Visita <https://www.python.org/downloads/windows/> y descarga el instalador más reciente de Python 3.
+2.  Ejecuta el instalador y **marca la casilla "Add Python to PATH"** antes de pulsar *Install Now*. Esto es crítico: si no lo haces, los comandos `python` y `pip` no funcionarán desde la terminal.
+3.  Verifica abriendo PowerShell y escribiendo `python --version`. Deberías ver algo como `Python 3.12.x`.
+
+::: callout-warning
+En Windows, algunas instalaciones instalan también el lanzador `py`. Puedes usar `py` en lugar de `python` si hay conflictos con otras versiones.
+:::
+
+### macOS
+
+macOS incluye una versión antigua de Python 2 del sistema; **no la uses**. La forma recomendada es mediante Homebrew:
+
+``` bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+brew install python
+```
+
+Verifica con `python3 --version`. En macOS normalmente se usa `python3` y `pip3` explícitamente.
+
+### Linux (Debian/Ubuntu)
+
+``` bash
+sudo apt update
+sudo apt install python3 python3-pip python3-venv
+```
+
+En distribuciones basadas en Fedora: `sudo dnf install python3 python3-pip`.
+
+## 1.4 pip: el gestor de paquetes
+
+`pip` es el instalador de paquetes de Python. Permite descargar e instalar librerías desde el repositorio oficial PyPI (Python Package Index), que contiene más de 400 000 paquetes.
+
+``` bash
+pip install numpy pandas matplotlib
+pip install --upgrade biopython
+pip list                  # ver paquetes instalados
+pip uninstall scipy       # desinstalar un paquete
+```
+
+::: callout-tip
+Para evitar problemas de permisos en sistemas Linux/macOS, instala paquetes **dentro de un entorno virtual** (sección siguiente) en lugar de usar `sudo pip install`. Instalar con `sudo` a nivel del sistema puede romper dependencias del propio sistema operativo.
+:::
+
+## 1.5 Entornos virtuales (venv)
+
+Un entorno virtual es un directorio aislado que contiene su propia copia de Python y de los paquetes instalados. Su uso es **una de las buenas prácticas más importantes** en Python por varias razones:
+
+1.  **Aislamiento de dependencias**: un proyecto puede requerir Biopython 1.79 y otro la 1.83; con entornos virtuales ambos conviven sin conflicto.
+2.  **Reproducibilidad**: puedes exportar la lista de paquetes (`pip freeze > requirements.txt`) y compartir un entorno idéntico con colaboradores.
+3.  **Seguridad**: no tocas los paquetes del sistema.
+
+### Crear y activar un entorno virtual
+
+**Linux/macOS:**
+
+``` bash
+python3 -m venv bioenv
+source bioenv/bin/activate
+```
+
+**Windows (PowerShell):**
+
+``` powershell
+python -m venv bioenv
+bioenv\Scripts\Activate.ps1
+```
+
+Cuando el entorno está activo, verás el nombre `(bioenv)` al inicio del *prompt*. Para salir usa `deactivate`.
+
+::: callout-note
+Alternativas populares a `venv` son **conda** (Anaconda/Miniconda), muy extendida en ciencias por su manejo de dependencias no-Python (R, bibliotecas C). En este curso usaremos `venv` por su simplicidad, pero los conceptos son transferibles a `conda`.
+:::
+
+## 1.6 Jupyter Lab y Jupyter Notebook
+
+Jupyter es un entorno interactivo que permite combinar código, salidas, gráficos, ecuaciones y texto explicativo en un documento llamado **notebook** (extensión `.ipynb`). Es el formato estándar de facto en análisis de datos científicos.
+
+Instalación:
+
+``` bash
+pip install jupyterlab
+```
+
+Para iniciarlo:
+
+``` bash
+jupyter lab
+```
+
+Esto abrirá el navegador con la interfaz de Jupyter Lab. Los notebooks se organizan en **celdas**, que pueden ser:
+
+- **Código** (`Code`): ejecutan Python y muestran el resultado debajo.
+- **Markdown** (`Markdown`): texto formateado con encabezados, listas, fórmulas LaTeX.
+
+Para ejecutar una celda usa `Shift + Enter`. Para cambiar el tipo de celda: `M` para Markdown, `Y` para código (en modo comando, presionando `Esc` primero).
+
+::: callout-tip
+Jupyter es ideal para **exploración**: probar ideas, visualizar resultados rápidamente, documentar el análisis. Para **producción** (scripts que se ejecutarán repetidamente o en un servidor) es preferible un script `.py`.
+:::
+
+## 1.7 VS Code como editor recomendado
+
+Visual Studio Code (VS Code) es un editor gratuito, multiplataforma y muy popular. Para Python se recomienda instalar:
+
+- La extensión **Python** (Microsoft) que ofrece autocompletado, depuración y linting.
+- La extensión **Jupyter** para abrir notebooks `.ipynb` dentro del editor.
+- Opcional: **Pylance**, **Ruff** o **Black** para formato automático.
+
+VS Code permite abrir carpetas completas de proyecto, gestionar entornos virtuales desde la paleta de comandos (`Python: Select Interpreter`) y ejecutar celdas Jupyter embebidas en scripts `.py` mediante marcadores `# %%`.
+
+## 1.8 Primer "Hola mundo"
+
+Crea un archivo `hola.py` con el siguiente contenido:
+
+``` python
+print("¡Hola, biología computacional!")
+```
+
+Ejecútalo desde la terminal:
+
+``` bash
+python hola.py
+```
+
+La función `print()` escribe en la salida estándar. Cuando ejecutas un archivo `.py`, el intérprete lo lee línea por línea, de arriba abajo, y ejecuta cada instrucción. No hay un punto de entrada `main()` obligatorio como en C o Java; sin embargo, es buena práctica estructurar scripts largos con:
+
+``` python
+def main():
+    print("¡Hola, biología computacional!")
+
+if __name__ == "__main__":
+    main()
+```
+
+La condición `if __name__ == "__main__":` permite que el script se comporte de manera distinta si se ejecuta directamente versus si se importa como módulo desde otro archivo.
+
+## 1.9 Script vs notebook
+
+| Característica | Script `.py` | Notebook `.ipynb` |
+|----|----|----|
+| Flujo | Secuencial, de arriba abajo | Celdas independientes, reejecutables |
+| Estado | Se reinicia en cada ejecución | Mantiene variables entre celdas |
+| Uso típico | Producción, automatización | Exploración, enseñanza, reportes |
+| Control de versiones | Texto plano, ideal con Git | JSON, más difícil de comparar |
+
+::: callout-warning
+Un error común con notebooks es ejecutar celdas fuera de orden, lo que produce estados inconsistentes. Ante resultados extraños, reinicia el kernel (`Kernel → Restart`) y ejecuta todo de arriba abajo.
+:::
+
+## 1.10 Convenciones PEP 8
+
+PEP 8 es la guía de estilo oficial de Python. Seguirla mejora la legibilidad y facilita la colaboración. Las reglas básicas son:
+
+- **Indentación**: 4 espacios por nivel (no tabs).
+- **Longitud de línea**: máximo 79 caracteres (120 en proyectos modernos).
+- **Nombrado**:
+  - Variables y funciones: `snake_case` (por ejemplo, `temperatura_incubacion`).
+  - Clases: `PascalCase` (por ejemplo, `CadenaADN`).
+  - Constantes: `UPPER_CASE` (por ejemplo, `BOLTZMANN_K`).
+- **Espacios**: un espacio después de comas; sin espacios inmediatamente dentro de paréntesis: `print(x)` y no `print( x )`.
+- **Imports**: al inicio del archivo, una librería por línea.
+
+``` python
+# Correcto
+import numpy as np
+import pandas as pd
+
+longitud_secuencia = 1200
+temperatura_c = 37
+
+# Evitar
+import numpy as np, pandas as pd
+LongitudSecuencia=1200
+temperatura_C=37
+```
+
+::: callout-tip
+VS Code puede formatear automáticamente tu código siguiendo PEP 8 con `Shift + Alt + F` (Windows/Linux) o `Shift + Option + F` (macOS) si tienes instalada la extensión Python y un formateador como Black.
+:::
+
+## 1.11 Ejercicios
+
+### Ejercicio 1
+
+Crea un entorno virtual llamado `bioinfo`, actívalo e instala las siguientes librerías: `numpy`, `pandas`, `matplotlib`, `scipy`, `biopython`. Al final, exporta la lista de paquetes a un archivo `requirements.txt`.
+
+### Ejercicio 2
+
+Escribe un script llamado `bienvenida.py` que imprima un mensaje de bienvenida al curso, incluyendo el nombre del curso, tu nombre y la fecha actual. Usa `print()` y muestra el resultado en la terminal.
+
+### Ejercicio 3
+
+Abre Jupyter Lab y crea un notebook llamado `capitulo1.ipynb`. En una celda, define una variable con la longitud de una proteína (300 aminoácidos), calcula e imprime el número total de átomos de carbono aproximados (asumiendo un promedio de 5 átomos de C por aminoácido) usando Python.
+
+## 1.12 Soluciones
+
+### Solución Ejercicio 1
+
+``` bash
+# 1. Crear el entorno virtual (desde la terminal)
+python3 -m venv bioinfo          # Linux/macOS
+# python -m venv bioinfo         # Windows
+
+# 2. Activar el entorno
+source bioinfo/bin/activate       # Linux/macOS
+# bioinfo\Scripts\Activate.ps1    # Windows (PowerShell)
+
+# 3. Instalar las librerías requeridas
+pip install numpy pandas matplotlib scipy biopython
+
+# 4. Verificar que se instalaron
+pip list
+
+# 5. Exportar las versiones instaladas a un archivo
+pip freeze > requirements.txt
+
+# 6. Salir del entorno (opcional)
+deactivate
+```
+
+Cualquier colega podrá recrear el entorno idéntico con `python -m venv bioinfo && source bioinfo/bin/activate && pip install -r requirements.txt`.
+
+### Solución Ejercicio 2
+
+``` python
+# bienvenida.py
+# Script de bienvenida al curso de Python para Ciencias Biológicas
+
+def main():
+    nombre_curso = "Python para Ciencias Biológicas"
+    nombre_estudiante = "Estudiante Biología"
+    # Usamos el módulo datetime para la fecha actual
+    from datetime import date
+    fecha_actual = date.today().strftime("%d/%m/%Y")
+
+    print("====================================")
+    print(f"Bienvenido/a al curso: {nombre_curso}")
+    print(f"Estudiante: {nombre_estudiante}")
+    print(f"Fecha de inicio: {fecha_actual}")
+    print("====================================")
+
+# Punto de entrada estándar de un script Python
+if __name__ == "__main__":
+    main()
+```
+
+Al ejecutar `python bienvenida.py` se imprimirá un recuadro con el mensaje de bienvenida, el nombre del estudiante y la fecha actual formateada.
+
+### Solución Ejercicio 3
+
+``` python
+# En una celda del notebook capitulo1.ipynb
+
+# Definimos la longitud de la proteína en aminoácidos
+longitud_proteina = 300  # aminoácidos
+
+# Aproximación: cada aminoácido aporta en promedio 5 átomos de carbono
+carbonos_por_aminoacido = 5
+
+# Calculamos el número total de átomos de carbono
+total_carbonos = longitud_proteina * carbonos_por_aminoacido
+
+# Mostramos el resultado de forma clara
+print(f"La proteína tiene {longitud_proteina} aminoácidos.")
+print(f"Aproximadamente {total_carbonos} átomos de carbono.")
+```
+
+Salida esperada:
+
+```         
+La proteína tiene 300 aminoácidos.
+Aproximadamente 1500 átomos de carbono.
+```
+
+::: callout-note
+La aproximación de 5 carbonos por aminoácido es una simplificación didáctica. En la realidad, el contenido de carbono varía entre aminoácidos (la glicina tiene 2, la fenilalanina tiene 9). Para un cálculo exacto necesitarías la secuencia completa y una tabla de composición atómica por residuo.
+:::

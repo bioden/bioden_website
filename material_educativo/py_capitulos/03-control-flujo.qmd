@@ -1,0 +1,431 @@
+---
+title: "Capítulo 3: Estructuras de control: condicionales y bucles"
+---
+
+## 3.1 Condicionales: if, elif, else
+
+Los condicionales permiten que un programa tome decisiones: ejecutar un bloque de código u otro según se cumpla o no una condición. La sintaxis básica en Python es:
+
+```python
+if condicion:
+    # bloque si condicion es verdadera
+elif otra_condicion:
+    # bloque si otra_condicion es verdadera
+else:
+    # bloque si ninguna condición anterior se cumplió
+```
+
+::: callout-important
+Python usa **indentación** (4 espacios) para delimitar bloques, en lugar de llaves `{}` como otros lenguajes. Mezclar tabs y espacios provoca errores. Configura tu editor para usar siempre 4 espacios.
+:::
+
+### Ejemplo biológico: clasificar una muestra por absorbancia
+
+```python
+absorbancia = 0.65
+
+if absorbancia < 0.2:
+    print("Muestra de baja concentración")
+elif absorbancia <= 1.0:
+    print("Muestra de concentración media")
+else:
+    print("Muestra de concentración alta: diluir y volver a medir")
+# Salida: Muestra de concentración media
+```
+
+`elif` es la contracción de *else if* y permite encadenar múltiples condiciones excluyentes. Solo se evalúa si todas las condiciones anteriores fueron falsas.
+
+## 3.2 Expresiones booleanas y evaluación cortocircuito
+
+Una expresión booleana es cualquier expresión cuyo resultado es `True` o `False`. Los operadores lógicos `and`, `or`, `not` combinan expresiones:
+
+```python
+es_aerobica = True
+es_gram_negativa = True
+es_patogeno = es_aerobica and es_gram_negativa   # True
+no_es_patogeno = not es_patogeno                  # False
+es_termofilo_o_psicofilo = False or True          # True
+```
+
+### Cortocircuito
+
+Python evalúa los operadores lógicos de izquierda a derecha y se detiene apenas puede decidir el resultado:
+
+- `a and b`: si `a` es `False`, no evalúa `b`.
+- `a or b`: si `a` es `True`, no evalúa `b`.
+
+Esto es útil para proteger accesos a variables potencialmente inválidas:
+
+```python
+absorbancia = None
+if absorbancia is not None and absorbancia > 0.5:
+    print("Alta absorbancia")
+# Sin cortocircuito, comparar None > 0.5 lanzaría TypeError
+```
+
+::: callout-tip
+Aprovecha el cortocircuito para escribir condiciones más seguras y eficientes: ordena las comprobaciones de menor a mayor costo computacional.
+:::
+
+## 3.3 Bucle for
+
+El bucle `for` en Python itera sobre cualquier objeto **iterable** (listas, cadenas, tuplas, diccionarios, rangos). A diferencia de C o Java, no se define con un contador incremental explícito, sino con un elemento que recorre la colección.
+
+```python
+genes = ["rpoB", "gyrA", "16S", "recA"]
+for gen in genes:
+    print(f"Analizando gen: {gen}")
+```
+
+### Iteración sobre una cadena
+
+```python
+secuencia = "ATGCGAT"
+for nucleotido in secuencia:
+    print(nucleotido, end=" ")
+# A T G C G A T
+```
+
+### range()
+
+La función `range()` genera secuencias de números sin crear una lista completa en memoria:
+
+```python
+range(5)        # 0, 1, 2, 3, 4
+range(2, 8)     # 2, 3, 4, 5, 6, 7
+range(0, 10, 2) # 0, 2, 4, 6, 8 (paso=2)
+range(10, 0, -1)# 10, 9, 8, ..., 1 (cuenta regresiva)
+```
+
+```python
+for generacion in range(1, 11):
+    print(f"Generación {generacion}")
+# Generación 1, 2, ..., 10
+```
+
+### enumerate()
+
+Cuando necesitas el **índice** y el **valor** simultáneamente, usa `enumerate()`:
+
+```python
+especies = ["E. coli", "S. aureus", "B. subtilis"]
+for idx, especie in enumerate(especies):
+    print(f"Muestra {idx + 1}: {especie}")
+# Muestra 1: E. coli
+# Muestra 2: S. aureus
+# Muestra 3: B. subtilis
+```
+
+::: callout-note
+`enumerate()` acepta un segundo argumento para indicar el índice inicial: `enumerate(especies, start=1)`.
+:::
+
+## 3.4 Bucle while
+
+El bucle `while` repite un bloque mientras se cumpla una condición. Es útil cuando **no se conoce de antemano el número de iteraciones**:
+
+```python
+poblacion = 10
+generacion = 0
+while poblacion < 1000:
+    poblacion = poblacion * 2
+    generacion += 1
+print(f"Tras {generacion} generaciones: {poblacion} células")
+# Tras 7 generaciones: 1280 células
+```
+
+### ¿Cuándo usar for vs while?
+
+- **for**: cuando iteras sobre una colección conocida o un número definido de iteraciones.
+- **while**: cuando dependes de una condición dinámica (llegar a un umbral, convergencia de un cálculo).
+
+::: callout-warning
+Cuidado con los **bucles infinitos**: si la condición del `while` nunca se vuelve falsa, el programa no terminará. Asegúrate de modificar alguna variable dentro del bucle que eventualmente cambie la condición.
+:::
+
+## 3.5 break y continue
+
+- `break`: interrumpe el bucle inmediatamente y continúa con el código siguiente.
+- `continue`: salta el resto de la iteración actual y pasa a la siguiente.
+
+```python
+# Encontrar el primer codón de parada en una secuencia
+secuencia = "ATGCGATAGCTAGCTAA"
+codones_parada = {"TAA", "TAG", "TGA"}
+
+for i in range(0, len(secuencia), 3):
+    codon = secuencia[i:i+3]
+    if codon in codones_parada:
+        print(f"Primer codón de parada encontrado en posición {i}: {codon}")
+        break
+# Primer codón de parada encontrado en posición 6: TAG
+```
+
+```python
+# Saltar valores nulos en una lista de absorbancias
+absorbancias = [0.1, None, 0.4, None, 0.8]
+for a in absorbancias:
+    if a is None:
+        continue
+    print(f"Absorbancia válida: {a}")
+# Absorbancia válida: 0.1
+# Absorbancia válida: 0.4
+# Absorbancia válida: 0.8
+```
+
+## 3.6 else en bucles (característica única de Python)
+
+Python permite un bloque `else` después de un `for` o `while`. Este bloque se ejecuta **solo si el bucle terminó normalmente** (sin `break`):
+
+```python
+gen_buscado = "gyrB"
+genes = ["rpoB", "gyrA", "16S", "recA"]
+
+for gen in genes:
+    if gen == gen_buscado:
+        print(f"Gen encontrado: {gen}")
+        break
+else:
+    print(f"Gen {gen_buscado} no estaba en la lista")
+# Gen gyrB no estaba en la lista
+```
+
+::: callout-tip
+El patrón `for...else` es muy elegante para sustituir el uso de variables bandera. En lugar de `encontrado = False` y comprobarlo después del bucle, usas `else`.
+:::
+
+## 3.7 Listas por comprensión (introducción)
+
+Una **lista por comprensión** (*list comprehension*) es una forma concisa de crear listas aplicando una expresión a cada elemento de un iterable, opcionalmente con un filtro:
+
+```python
+# Sintaxis general
+# [expresion for elemento in iterable if condicion]
+
+# Calcular el doble de cada conteo de células
+conteos = [10, 20, 30, 40]
+dobles = [c * 2 for c in conteos]   # [20, 40, 60, 80]
+
+# Filtrar genes largos
+longitudes = [1200, 850, 2300, 500, 1800]
+genes_largos = [l for l in longitudes if l > 1000]   # [1200, 2300, 1800]
+```
+
+## 3.8 Ejemplos biológicos
+
+### Clasificar una muestra según su absorbancia
+
+```python
+def clasificar_absorbancia(a):
+    if a < 0:
+        return "Valor inválido"
+    elif a < 0.2:
+        return "baja"
+    elif a <= 1.0:
+        return "media"
+    else:
+        return "alta"
+
+print(clasificar_absorbancia(0.05))   # baja
+print(clasificar_absorbancia(0.8))    # media
+print(clasificar_absorbancia(1.5))    # alta
+```
+
+### Iterar sobre una lista de genes y detectar uno de interés
+
+```python
+genes_estudio = ["16S", "rpoB", "gyrA", "recA", " gyrA"]
+gen_objetivo = "gyrA"
+
+for gen in genes_estudio:
+    # Normalizamos quitando espacios por si acaso
+    gen_normalizado = gen.strip()
+    if gen_normalizado == gen_objetivo:
+        print(f"Detectado gen de interés: {gen_objetivo}")
+        break
+else:
+    print("Gen de interés no encontrado")
+```
+
+### Contar nucleótidos en una secuencia de ADN
+
+```python
+secuencia = "ATGCGATCGATAGCTAGCTAA"
+conteo = {"A": 0, "T": 0, "G": 0, "C": 0}
+
+for nucleotido in secuencia:
+    if nucleotido in conteo:
+        conteo[nucleotido] += 1
+
+for base, n in conteo.items():
+    print(f"{base}: {n}")
+# A: 8, T: 6, G: 4, C: 5 (los valores exactos dependen de la secuencia)
+```
+
+### Simular crecimiento bacteriano con while
+
+```python
+poblacion = 100
+tasa = 1.5
+generacion = 0
+umbral = 1000
+
+while poblacion <= umbral:
+    print(f"Generación {generacion}: {poblacion:.0f} células")
+    poblacion *= tasa
+    generacion += 1
+
+print(f"Superó el umbral en la generación {generacion} con {poblacion:.0f} células")
+```
+
+### Encontrar el primer codón de parada
+
+```python
+secuencia = "ATGAAACCCGGGTAGAAACCC"
+for i in range(0, len(secuencia) - 2, 3):
+    codon = secuencia[i:i+3]
+    if codon in {"TAA", "TAG", "TGA"}:
+        print(f"Codón de parada {codon} en posición {i}")
+        break
+else:
+    print("No se encontró codón de parada")
+```
+
+### Clasificar especies según su estado de conservación
+
+```python
+especies = {
+    "Panthera leo": "Vulnerable",
+    "Loxodonta africana": "En peligro",
+    "Canis lupus": "Preocupación menor",
+    "Gorilla gorilla": "En peligro crítico"
+}
+
+for especie, estado in especies.items():
+    if estado == "En peligro crítico":
+        print(f"{especie}: prioridad máxima de conservación")
+    elif estado in ("En peligro", "Vulnerable"):
+        print(f"{especie}: monitoreo activo")
+    else:
+        print(f"{especie}: estable")
+```
+
+## 3.9 Ejercicios
+
+### Ejercicio 1
+
+Dada la secuencia `"ATGCGATCGATAGCTAGCTAA"`, cuenta cuántas veces aparece cada nucleótido (A, T, G, C) usando un bucle `for`. Muestra el resultado con f-strings.
+
+### Ejercicio 2
+
+Simula 10 generaciones de crecimiento bacteriano con una tasa de multiplicación de 1.5 y una población inicial de 100 células. Muestra la población en cada generación. Detén el bucle (con `break`) si la población excede 1000 células antes de llegar a la generación 10.
+
+### Ejercicio 3
+
+Dada una lista de absorbancias `[0.1, 0.4, 0.8, 1.2, 0.6, 0.05]`, clasifica cada una como `"baja"` (<0.2), `"media"` (entre 0.2 y 1.0 inclusive) o `"alta"` (>1.0). Muestra cada valor con su categoría usando `enumerate()`.
+
+## 3.10 Soluciones
+
+### Solución Ejercicio 1
+
+```python
+# Datos del problema
+secuencia = "ATGCGATCGATAGCTAGCTAA"
+
+# Inicializamos un diccionario contador para cada nucleótido
+conteo = {"A": 0, "T": 0, "G": 0, "C": 0}
+
+# Recorremos cada nucleótido de la secuencia
+for nucleotido in secuencia:
+    # Solo contamos si es un nucleótido válido (por si hay N u otros)
+    if nucleotido in conteo:
+        conteo[nucleotido] += 1
+
+# Mostramos los resultados con f-strings
+print(f"Secuencia analizada: {secuencia}")
+print(f"Longitud total: {len(secuencia)} pb")
+print(f"Conteo de nucleótidos:")
+for base, n in conteo.items():
+    print(f"  {base}: {n}")
+
+# Verificación: la suma de los conteos debe coincidir con la longitud
+total = sum(conteo.values())
+print(f"Suma de conteos: {total} (debe ser igual a {len(secuencia)})")
+
+# Salida esperada (depende de la secuencia):
+# Secuencia analizada: ATGCGATCGATAGCTAGCTAA
+# Longitud total: 21 pb
+# Conteo de nucleótidos:
+#   A: 8
+#   T: 6
+#   G: 4
+#   C: 3
+# Suma de conteos: 21 (debe ser igual a 21)
+```
+
+### Solución Ejercicio 2
+
+```python
+# Parámetros de la simulación
+poblacion_inicial = 100
+tasa = 1.5
+n_generaciones = 10
+umbral = 1000
+
+poblacion = poblacion_inicial
+
+# Bucle for con las 10 generaciones
+for generacion in range(1, n_generaciones + 1):
+    print(f"Generación {generacion}: {poblacion:.1f} células")
+    # Aplicamos la tasa de crecimiento para la siguiente generación
+    poblacion *= tasa
+    # Si superamos el umbral, detenemos el bucle
+    if poblacion > umbral:
+        print(f"¡Población superó {umbral} células!")
+        break
+else:
+    # Este else se ejecuta solo si el bucle terminó sin break
+    print("Se completaron las 10 generaciones sin superar el umbral")
+
+# Salida esperada:
+# Generación 1: 100.0 células
+# Generación 2: 150.0 células
+# Generación 3: 225.0 células
+# Generación 4: 337.5 células
+# Generación 5: 506.2 células
+# Generación 6: 759.4 células
+# Generación 7: 1139.1 células
+# ¡Población superó 1000 células!
+```
+
+### Solución Ejercicio 3
+
+```python
+# Datos del problema
+absorbancias = [0.1, 0.4, 0.8, 1.2, 0.6, 0.05]
+
+# Recorremos la lista con enumerate() para tener índice + valor
+for i, absorbancia in enumerate(absorbancias, start=1):
+    # Clasificamos según los rangos indicados
+    if absorbancia < 0.2:
+        categoria = "baja"
+    elif absorbancia <= 1.0:   # ya sabemos que es >= 0.2 por el elif
+        categoria = "media"
+    else:
+        categoria = "alta"
+
+    # Mostramos el resultado con f-string
+    print(f"Muestra {i}: A = {absorbancia:.2f} → {categoria}")
+
+# Salida esperada:
+# Muestra 1: A = 0.10 → baja
+# Muestra 2: A = 0.40 → media
+# Muestra 3: A = 0.80 → media
+# Muestra 4: A = 1.20 → alta
+# Muestra 5: A = 0.60 → media
+# Muestra 6: A = 0.05 → baja
+```
+
+::: callout-note
+Observa cómo el uso de `elif` evita comparaciones redundantes: al llegar al `elif absorbancia <= 1.0`, ya sabemos que `absorbancia >= 0.2` porque el `if` anterior falló. Esto hace el código más eficiente y legible.
+:::

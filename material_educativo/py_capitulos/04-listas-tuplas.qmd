@@ -1,0 +1,454 @@
+---
+title: "Capítulo 4: Listas y tuplas"
+---
+
+## 4.1 Listas: creación e indexación
+
+Una **lista** es una colección ordenada y mutable de elementos. En Python se define con corchetes `[]` y puede contener elementos de cualquier tipo, incluso mezclados:
+
+```python
+especies = ["E. coli", "S. aureus", "B. subtilis"]
+mixta = ["ATCG", 1200, 0.85, True]   # tipos heterogéneos
+vacia = []                            # lista vacía
+```
+
+### Indexación
+
+Cada elemento tiene un índice entero que comienza en **0** para el primer elemento:
+
+```python
+especies = ["E. coli", "S. aureus", "B. subtilis", "P. aeruginosa"]
+especies[0]    # "E. coli"
+especies[1]    # "S. aureus"
+especies[3]    # "P. aeruginosa"
+```
+
+### Indexación negativa
+
+Python permite acceder desde el final con índices negativos:
+
+```python
+especies[-1]   # "P. aeruginosa" (último)
+especies[-2]   # "B. subtilis" (penúltimo)
+```
+
+::: callout-warning
+Si intentas acceder a un índice que no existe, obtendrás un `IndexError`. Verifica siempre que el índice está dentro del rango válido (`0` a `len(lista)-1`).
+:::
+
+## 4.2 Slicing [inicio:fin:paso]
+
+El **slicing** (*rebanado*) extrae sublistas. La sintaxis general es `lista[inicio:fin:paso]`:
+
+- `inicio`: índice donde empieza (incluido). Por defecto `0`.
+- `fin`: índice donde termina (**excluido**). Por defecto, hasta el final.
+- `paso`: cada cuántos elementos tomar. Por defecto `1`.
+
+```python
+especies = ["E. coli", "S. aureus", "B. subtilis", "P. aeruginosa", "L. lactis"]
+
+especies[1:3]      # ["S. aureus", "B. subtilis"]
+especies[:2]       # ["E. coli", "S. aureus"]
+especies[2:]       # ["B. subtilis", "P. aeruginosa", "L. lactis"]
+especies[::2]      # ["E. coli", "B. subtilis", "L. lactis"] (cada 2)
+especies[::-1]     # lista invertida
+especies[-2:]      # ["P. aeruginosa", "L. lactis"]
+```
+
+::: callout-tip
+`lista[::-1]` es la forma idiomática de invertir una lista en Python. Útil para obtener secuencias complementarias en ADN o revertir un orden temporal.
+:::
+
+## 4.3 Métodos de listas
+
+Las listas tienen métodos integrados muy útiles:
+
+```python
+lista = [3, 1, 4, 1, 5, 9, 2]
+
+lista.append(6)         # añade al final → [3, 1, 4, 1, 5, 9, 2, 6]
+lista.extend([7, 8])    # añade varios elementos → [3, 1, 4, 1, 5, 9, 2, 6, 7, 8]
+lista.insert(0, 100)    # inserta en la posición 0 → [100, 3, 1, 4, ...]
+lista.remove(1)         # elimina la primera aparición de 1
+lista.pop()             # elimina y devuelve el último elemento
+lista.pop(0)            # elimina y devuelve el elemento en posición 0
+lista.index(4)          # devuelve el índice de la primera aparición de 4
+lista.count(1)          # cuenta cuántas veces aparece el 1
+lista.sort()            # ordena in-place (modifica la lista)
+lista.reverse()         # invierte in-place
+lista.copy()            # devuelve una copia superficial
+lista.clear()           # vacía la lista
+```
+
+::: callout-note
+`sort()` y `reverse()` modifican la lista original y devuelven `None`. Si quieres conservar la original y obtener una nueva lista ordenada, usa `sorted(lista)` y `list(reversed(lista))`.
+:::
+
+### Ordenar con clave
+
+```python
+genes = [("rpoB", 1200), ("gyrA", 850), ("16S", 1500)]
+# Ordenar por el segundo elemento (longitud)
+genes_ordenados = sorted(genes, key=lambda x: x[1], reverse=True)
+# [("16S", 1500), ("rpoB", 1200), ("gyrA", 850)]
+```
+
+## 4.4 Mutabilidad vs inmutabilidad
+
+Las listas son **mutables**: pueden modificarse después de crearse. Las cadenas, tuplas y enteros son **inmutables**.
+
+```python
+lista = [1, 2, 3]
+lista[0] = 99         # válido: [99, 2, 3]
+
+secuencia = "ATCG"
+# secuencia[0] = "G" → TypeError: las cadenas son inmutables
+```
+
+::: callout-warning
+Cuidado con alias accidentales. `lista2 = lista` no crea una copia: ambas variables apuntan al mismo objeto. Modificar una modifica la otra. Usa `lista2 = lista.copy()` o `lista2 = lista[:]` para copiar.
+:::
+
+## 4.5 Listas por comprensión (a profundidad)
+
+Las **listas por comprensión** permiten crear listas de forma concisa y eficiente. La sintaxis general es:
+
+```python
+[expresion for elemento in iterable if condicion]
+```
+
+### Ejemplos biológicos
+
+```python
+# Longitudes de genes
+longitudes = [1200, 850, 2300, 500, 1800]
+
+# Doblar cada longitud
+dobles = [l * 2 for l in longitudes]   # [2400, 1700, 4600, 1000, 3600]
+
+# Filtrar genes largos (>1000 pb)
+largos = [l for l in longitudes if l > 1000]   # [1200, 2300, 1800]
+
+# Convertir temperaturas Celsius a Kelvin
+temps_c = [25, 30, 37, 42]
+temps_k = [t + 273.15 for t in temps_c]   # [298.15, 303.15, 310.15, 315.15]
+
+# Condicional ternario dentro de la comprensión
+absorbancias = [0.1, 0.4, 0.8, 1.2]
+categorias = ["baja" if a < 0.2 else "media" if a <= 1.0 else "alta" for a in absorbancias]
+# ["baja", "media", "media", "alta"]
+```
+
+### Comprensiones anidadas
+
+```python
+# Matriz 3x3 de temperaturas (filas = placas, columnas = pozos)
+matriz = [[i + j for j in range(3)] for i in range(3)]
+# [[0, 1, 2], [1, 2, 3], [2, 3, 4]]
+
+# Aplanar una lista de listas
+anidada = [[1, 2, 3], [4, 5], [6]]
+aplanada = [x for sub in anidada for x in sub]
+# [1, 2, 3, 4, 5, 6]
+```
+
+::: callout-tip
+Las comprensiones son más rápidas que un bucle `for` explícito con `append()` porque se optimizan a nivel de intérprete. Sin embargo, no abuses: si la lógica es compleja, un bucle `for` tradicional es más legible.
+:::
+
+## 4.6 Listas anidadas (matrices básicas)
+
+Una lista puede contener otras listas, formando estructuras bidimensionales:
+
+```python
+# Placa ELISA 96 wells representada como matriz 8x12 (filas A-H, columnas 1-12)
+placa = [
+    [0.12, 0.45, 0.78, 0.23, 0.91, 0.05, 1.10, 0.33, 0.67, 0.21, 0.88, 0.42],
+    [0.15, 0.48, 0.71, 0.26, 0.94, 0.08, 1.05, 0.36, 0.62, 0.24, 0.85, 0.45],
+    # ... resto de filas
+]
+
+# Acceso a un pozo específico: placa[fila][columna]
+print(placa[0][2])   # 0.78 (fila A, columna 3)
+
+# Recorrer toda la placa
+for fila in placa:
+    for pozo in fila:
+        print(pozo, end=" ")
+    print()
+```
+
+## 4.7 Tuplas: por qué y cuándo usarlas
+
+Una **tupla** es una colección ordenada e **inmutable**. Se define con paréntesis `()` o simplemente separando elementos con comas:
+
+```python
+coordenadas = (40.4168, -3.7038)   # lat, lon de Madrid
+especie_datos = ("E. coli", 37, "gram-negativa")
+singleton = (42,)                   # tupla con un solo elemento (¡la coma es clave!)
+vacia = ()
+```
+
+### ¿Por qué usar tuplas en vez de listas?
+
+1. **Inmutabilidad**: garantizan que los datos no cambiarán accidentalmente.
+2. **Eficiencia**: ocupan menos memoria y son ligeramente más rápidas de acceder.
+3. **Semántica**: indican que una colección representa un **registro fijo** (por ejemplo, coordenadas geográficas).
+4. **Usables como claves de diccionario**: las tuplas (de tipos inmutables) pueden ser claves en `dict`; las listas no.
+
+```python
+# Claves de diccionario con tuplas
+sitios = {
+    ("Madrid", 40.42): "Bosque mediterráneo",
+    ("Cádiz", 36.51): "Marismas",
+}
+```
+
+::: callout-note
+Una tupla puede contener objetos mutables (como una lista). Lo que es inmutable es la **estructura** de la tupla, no necesariamente los objetos contenidos.
+:::
+
+## 4.8 Empaquetado y desempaquetado de tuplas
+
+```python
+# Empaquetado: crear una tupla
+muestra = ("S1", 0.85, "alta")
+
+# Desempaquetado: asignar a variables individuales
+codigo, absorbancia, categoria = muestra
+print(codigo)          # "S1"
+print(absorbancia)     # 0.85
+print(categoria)       # "alta"
+
+# Desempaquetado extendido (Python 3)
+primero, *resto = [1, 2, 3, 4, 5]
+# primero = 1, resto = [2, 3, 4, 5]
+```
+
+::: callout-tip
+El desempaquetado es muy útil para devolver múltiples valores desde una función: `return media, desviacion, n`.
+:::
+
+## 4.9 Funciones útiles: len, sum, min, max, sorted, zip
+
+```python
+valores = [12, 5, 8, 130, 44]
+
+len(valores)       # 5 (número de elementos)
+sum(valores)       # 199
+min(valores)       # 5
+max(valores)       # 130
+sorted(valores)    # [5, 8, 12, 44, 130] (devuelve nueva lista)
+
+# zip(): empareja elementos de varios iterables
+nombres = ["E. coli", "S. aureus"]
+conteos = [120, 85]
+for nombre, conteo in zip(nombres, conteos):
+    print(f"{nombre}: {conteo} colonias")
+```
+
+### enumerate() y zip() combinados
+
+```python
+especies = ["E. coli", "S. aureus", "B. subtilis"]
+conteos = [120, 85, 200]
+
+for idx, (especie, conteo) in enumerate(zip(especies, conteos), start=1):
+    print(f"Pozo {idx}: {especie} → {conteo} UFC")
+```
+
+## 4.10 Ejemplos biológicos
+
+### Lista de especies observadas en un transecto
+
+```python
+transecto = ["Quercus ilex", "Pinus halepensis", "Quercus ilex",
+             "Juniperus oxycedrus", "Pinus halepensis", "Quercus ilex"]
+
+# Contar especies únicas y repeticiones
+from collections import Counter
+conteo = Counter(transecto)
+print(conteo)
+# Counter({'Quercus ilex': 3, 'Pinus halepensis': 2, 'Juniperus oxycedrus': 1})
+
+# Riqueza: número de especies únicas
+riqueza = len(set(transecto))
+print(f"Riqueza específica: {riqueza}")
+```
+
+### Absorbancia de una placa ELISA 96 wells
+
+```python
+import random
+random.seed(42)
+# Placa 8x12 con absorbancias simuladas entre 0.0 y 2.0
+placa = [[round(random.uniform(0, 2), 3) for _ in range(12)] for _ in range(8)]
+
+# Calcular absorbancia media y máxima de toda la placa
+todos = [pozo for fila in placa for pozo in fila]
+print(f"Media: {sum(todos)/len(todos):.3f}")
+print(f"Máxima: {max(todos):.3f}")
+
+# Pozos por encima del umbral (positivos)
+positivos = [(i, j) for i, fila in enumerate(placa)
+             for j, v in enumerate(fila) if v > 1.5]
+print(f"Pozos positivos: {len(positivos)}")
+```
+
+### Temperaturas de PCR
+
+```python
+# (desnaturalización, anillamiento, extensión) en °C
+pcr = (95, 55, 72)
+desnaturalizacion, anillamiento, extension = pcr
+print(f"Ciclo PCR: {desnaturalizacion}°C → {anillamiento}°C → {extension}°C")
+```
+
+### Coordenadas de muestreo como tuplas
+
+```python
+sitios_muestreo = [
+    ("Lote A", (40.41, -3.70)),
+    ("Lote B", (40.45, -3.65)),
+    ("Lote C", (40.38, -3.72)),
+]
+for nombre, (lat, lon) in sitios_muestreo:
+    print(f"{nombre}: lat={lat}, lon={lon}")
+```
+
+### Conteo de individuos por especie en cuadrantes
+
+```python
+cuadrantes = [
+    [12, 8, 5],   # cuadrante 1: [especie1, especie2, especie3]
+    [15, 10, 7],
+    [9, 6, 4],
+]
+# Total por especie (sumar por columnas)
+totales_especie = [sum(col) for col in zip(*cuadrantes)]
+print(totales_especie)   # [36, 24, 16]
+```
+
+### Filtrar genes por longitud con comprensión
+
+```python
+genes = [("rpoB", 1200), ("gyrA", 850), ("16S", 1500), ("recA", 1100)]
+umbral = 1000
+genes_largos = [(nombre, long) for nombre, long in genes if long > umbral]
+print(genes_largos)   # [("rpoB", 1200), ("16S", 1500), ("recA", 1100)]
+```
+
+## 4.11 Ejercicios
+
+### Ejercicio 1
+
+Dada una lista de absorbancias `[0.12, 0.45, 0.78, 0.23, 0.91, 0.05, 1.10]`, devuelve solo las que están entre 0.2 y 1.0 (inclusive) usando **una lista por comprensión**. Muestra el resultado.
+
+### Ejercicio 2
+
+Crea una tupla con datos descriptivos de una especie: `("E. coli", 37, "gram-negativa")`. Desempaqueta la tupla en tres variables e imprime cada una por separado con etiquetas descriptivas (especie, temperatura óptima, tipo Gram).
+
+### Ejercicio 3
+
+Dada una lista de longitudes de genes `[1200, 850, 2300, 500, 1800, 3200]`, calcula e imprime:
+- La longitud promedio.
+- La longitud máxima.
+- La longitud mínima.
+- La lista ordenada de mayor a menor.
+
+## 4.12 Soluciones
+
+### Solución Ejercicio 1
+
+```python
+# Datos del problema
+absorbancias = [0.12, 0.45, 0.78, 0.23, 0.91, 0.05, 1.10]
+
+# Lista por comprensión con dos condiciones combinadas con 'and'
+# Conservamos solo las absorbancias entre 0.2 y 1.0 (inclusive)
+validas = [a for a in absorbancias if 0.2 <= a <= 1.0]
+
+# Mostramos resultado
+print(f"Absorbancias originales: {absorbancias}")
+print(f"Absorbancias válidas (0.2 ≤ A ≤ 1.0): {validas}")
+print(f"Número de muestras válidas: {len(validas)}")
+
+# Salida esperada:
+# Absorbancias originales: [0.12, 0.45, 0.78, 0.23, 0.91, 0.05, 1.10]
+# Absorbancias válidas (0.2 ≤ A ≤ 1.0): [0.45, 0.78, 0.23, 0.91]
+# Número de muestras válidas: 4
+```
+
+::: callout-note
+La condición `0.2 <= a <= 1.0` es una **comparación encadenada** propia de Python, equivalente a `0.2 <= a and a <= 1.0` pero más legible y eficiente.
+:::
+
+### Solución Ejercicio 2
+
+```python
+# Datos del problema: tupla con datos de la especie
+datos_especie = ("E. coli", 37, "gram-negativa")
+
+# Desempaquetado en tres variables con nombres descriptivos
+especie, temperatura_optima, tipo_gram = datos_especie
+
+# Mostrar cada elemento por separado con etiquetas
+print(f"Especie:                {especie}")
+print(f"Temperatura óptima:     {temperatura_optima} °C")
+print(f"Tipo Gram:              {tipo_gram}")
+
+# Verificación: confirmamos que la variable original es una tupla
+print(f"Tipo de la estructura:  {type(datos_especie).__name__}")
+
+# Salida esperada:
+# Especie:                E. coli
+# Temperatura óptima:     37 °C
+# Tipo Gram:              gram-negativa
+# Tipo de la estructura:  tuple
+```
+
+### Solución Ejercicio 3
+
+```python
+# Datos del problema
+longitudes_genes = [1200, 850, 2300, 500, 1800, 3200]
+
+# Cálculos básicos usando funciones integradas
+promedio = sum(longitudes_genes) / len(longitudes_genes)
+maxima = max(longitudes_genes)
+minima = min(longitudes_genes)
+ordenadas_mayor_menor = sorted(longitudes_genes, reverse=True)
+
+# Mostrar resultados con f-strings
+print(f"Longitudes originales: {longitudes_genes}")
+print(f"Número de genes:       {len(longitudes_genes)}")
+print(f"Promedio:              {promedio:.2f} pb")
+print(f"Longitud máxima:       {maxima} pb")
+print(f"Longitud mínima:       {minima} pb")
+print(f"Ordenadas (mayor→menor): {ordenadas_mayor_menor}")
+
+# Salida esperada:
+# Longitudes originales: [1200, 850, 2300, 500, 1800, 3200]
+# Número de genes:       6
+# Promedio:              1641.67 pb
+# Longitud máxima:       3200 pb
+# Longitud mínima:       500 pb
+# Ordenadas (mayor→menor): [3200, 2300, 1800, 1200, 850, 500]
+```
+
+::: callout-tip
+`sorted(longitudes, reverse=True)` devuelve una **nueva lista** ordenada de mayor a menor sin modificar la original. Si quisieras modificar la lista original in-place usarías `longitudes.sort(reverse=True)`. La elección depende de si necesitas conservar el orden original.
+:::
+
+## 4.13 Resumen del capítulo
+
+En este capítulo aprendiste a:
+
+- Crear listas y acceder a sus elementos mediante indexación positiva y negativa.
+- Extraer sublistas con *slicing*.
+- Modificar listas con métodos como `append`, `extend`, `insert`, `remove`, `pop`, `sort`, `reverse`.
+- Construir listas nuevas de forma concisa con **comprensiones**.
+- Trabajar con **tuplas** inmutables y desempaquetarlas.
+- Usar funciones como `len`, `sum`, `min`, `max`, `sorted`, `zip`, `enumerate`.
+
+Estas estructuras son la base sobre la que se construyen operaciones más complejas con datos biológicos: tablas (pandas), arreglos numéricos (NumPy) y secuencias (Biopython). En el siguiente capítulo profundizaremos en diccionarios y conjuntos, estructuras ideales para representar muestras etiquetadas y conteos.

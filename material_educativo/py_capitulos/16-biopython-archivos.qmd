@@ -1,0 +1,532 @@
+---
+title: "BioPython II — Archivos biológicos y Entrez"
+---
+
+# BioPython II — Archivos biológicos y Entrez
+
+En el capítulo anterior aprendiste a manipular secuencias *in-memory* con `Seq` y `SeqRecord`. En la práctica real, las secuencias viven en **archivos**: FASTA descargados de NCBI, GenBank con anotaciones, Fastq con lecturas de Illumina, archivos de alineamientos. BioPython ofrece el módulo `Bio.SeqIO` para leerlos y escribirlos de forma unificada, y el módulo `Bio.Entrez` para acceder por red a las bases de datos del NCBI.
+
+En este capítulo aprenderás a parsear archivos multi-FASTA, a leer un GenBank y acceder a sus *features*, a extraer CDS y exportarlos, a convertir entre formatos, y a descargar registros desde NCBI con `Entrez.esearch` y `Entrez.efetch` respetando las normas de uso.
+
+## Importar SeqIO
+
+```python
+from Bio import SeqIO
+```
+
+`SeqIO` es el módulo central de lectura/escritura. Acepta decenas de formatos mediante el parámetro `format`. La filosofía es la misma siempre: un iterador devuelve objetos `SeqRecord`.
+
+## Formatos soportados
+
+Algunos de los más usados en biología:
+
+| Extensión | `format=` | Uso típico                                  |
+|-----------|-----------|---------------------------------------------|
+| `.fasta`  | `"fasta"` | Secuencias de referencia, ensamblajes       |
+| `.gb`     | `"genbank"` | Anotaciones completas (features, CDS)     |
+| `.fastq`  | `"fastq"` | Lecturas de NGS con calidad Phred          |
+| `.fq.gz`  | `"fastq"` (gzip) | Lecturas comprimidas                |
+| `.embl`   | `"embl"`  | Banco europeo                               |
+| `.gbk`    | `"genbank"` | Variante de GenBank                       |
+| `.pdb`    | `"pdb-atom"` | Estructuras 3D                           |
+| `.afn`    | `"fasta"` | Múltiples alineamientos                    |
+| `.nex`    | `"nexus"` | Filogenia                                  |
+
+Puedes ver la lista completa con:
+
+```python
+import Bio.SeqIO as SeqIO
+print(SeqIO.format_to_extension.keys() if hasattr(SeqIO, "format_to_extension") else
+      "ver documentación en https://biopython.org/wiki/SeqIO")
+```
+
+## `SeqIO.parse()` — múltiples secuencias
+
+```python
+from Bio import SeqIO
+
+# Archivo multi-FASTA con N secuencias
+ruta = "secuencias.fasta"
+
+# parse devuelve un ITERADOR: eficiente en memoria
+for registro in SeqIO.parse(ruta, "fasta"):
+    print(registro.id, len(registro.seq))
+```
+
+::: callout-important
+## Iterador, no lista
+`SeqIO.parse()` devuelve un **iterador**: una vez recorrido se agota. Si necesitas acceder varias veces a las secuencias, conviértelo en lista: `registros = list(SeqIO.parse(ruta, "fasta"))`. Para archivos enormes (GB), mantén el iterador y procésalo de una sola pasada.
+:::
+
+## `SeqIO.read()` — una sola secuencia
+
+Cuando un archivo contiene exactamente **una** secuencia:
+
+```python
+from Bio import SeqIO
+
+registro = SeqIO.read("un_gen.gb", "genbank")
+print(registro.id, registro.description)
+print(registro.seq[:50])
+print(len(registro.seq))
+```
+
+::: callout-warning
+## `read()` lanza excepciones
+Si el archivo tiene cero secuencias, lanza `ValueError: No records found`. Si tiene más de una, lanza `ValueError: More than one record found`. Úsalo solo cuando estás seguro del contenido.
+:::
+
+## Conversión entre formatos: `SeqIO.convert()`
+
+```python
+from Bio import SeqIO
+
+# Convertir un GenBank a FASTA en una sola línea
+n = SeqIO.convert("un_gen.gb", "genbank",
+                  "un_gen.fasta", "fasta")
+print(f"Secuencias convertidas: {n}")
+```
+
+`convert()` es eficiente (no construye la lista completa en memoria). Útil para pipelines *ad hoc*.
+
+## Escritura: `SeqIO.write()`
+
+```python
+from Bio import SeqIO
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
+
+registros = [
+    SeqRecord(Seq("ATGGCAGTGAAACTGCTGTTGAA"), id="gen1",
+              description="gen de prueba 1"),
+    SeqRecord(Seq("ATGCGTACGTACGTACGTACGTA"), id="gen2",
+              description="gen de prueba 2"),
+    SeqRecord(Seq("ATGCGTACGTACGTACGTACGTT"), id="gen3",
+              description="gen de prueba 3"),
+]
+
+# FASTA
+SeqIO.write(registros, "salida.fasta", "fasta")
+
+# GenBank (requiere molecule_type en annotations)
+for r in registros:
+    r.annotations["molecule_type"] = "DNA"
+SeqIO.write(registros, "salida.gb", "genbank")
+```
+
+## Análisis básico de un FASTA
+
+```python
+from Bio import SeqIO
+from Bio.SeqUtils import gc_fraction
+
+ruta = "secuencias.fasta"
+
+resumen = []
+for r in SeqIO.parse(ruta, "fasta"):
+    resumen.append({
+        "id":     r.id,
+        "length": len(r.seq),
+        "gc":     gc_fraction(r.seq),
+        "desc":   r.description
+    })
+
+# Guardar resumen como CSV
+import csv
+with open("resumen.csv", "w", newline="") as fh:
+    w = csv.DictWriter(fh, fieldnames=["id","length","gc","desc"])
+    w.writeheader()
+    w.writerows(resumen)
+
+print(f"{len(resumen)} secuencias procesadas.")
+```
+
+## Archivos GenBank: anotaciones, features, qualifiers
+
+Un GenBank es un FASTA enriquecido con metadatos estructurados: organismo, fecha, topología, y **features** (genes, CDS, exones, dominios) cada uno con su *location* y *qualifiers* (gene, locus_tag, product, translation…).
+
+```python
+from Bio import SeqIO
+
+registro = SeqIO.read("un_gen.gb", "genbank")
+
+# Metadatos globales
+print("ID:        ", registro.id)
+print("Nombre:    ", registro.name)
+print("Desc:      ", registro.description)
+print("Organismo: ", registro.annotations.get("organism"))
+print("Topología: ", registro.annotations.get("topology"))
+print("Fecha:     ", registro.annotations.get("date"))
+
+# Iterar features
+for feat in registro.features:
+    print(feat.type, "→", feat.location)
+```
+
+### Acceder a qualifiers
+
+```python
+for feat in registro.features:
+    if feat.type == "CDS":
+        gene = feat.qualifiers.get("gene", ["?"])[0]
+        locus = feat.qualifiers.get("locus_tag", ["?"])[0]
+        product = feat.qualifiers.get("product", ["?"])[0]
+        protein_id = feat.qualifiers.get("protein_id", ["?"])[0]
+        translation = feat.qualifiers.get("translation", ["?"])[0]
+        print(f"CDS: {gene} ({locus}) - {product}")
+        print(f"  protein_id: {protein_id}")
+        print(f"  long. proteína: {len(translation)} aa")
+```
+
+::: callout-tip
+## Qualifiers son listas
+Los `qualifiers` de un `SeqFeature` son **listas** (aunque tengan un único elemento). Por eso siempre se indexa con `[0]` tras `get`. Si el qualifier no existe, `get(key, ["default"])` evita el `KeyError`.
+:::
+
+## Extracción de CDS desde un GenBank
+
+```python
+from Bio import SeqIO
+from Bio.SeqRecord import SeqRecord
+
+registro = SeqIO.read("un_gen.gb", "genbank")
+cds_records = []
+
+for feat in registro.features:
+    if feat.type == "CDS":
+        # Extraer la subsecuencia usando la ubicación
+        seq_cds = feat.extract(registro.seq)
+        gene = feat.qualifiers.get("gene", ["unknown"])[0]
+        prot = feat.qualifiers.get("translation", [""])[0]
+        rec = SeqRecord(
+            seq_cds,
+            id=f"{registro.id}_{gene}_cds",
+            description=f"CDS de {gene}; proteína {len(prot)} aa"
+        )
+        cds_records.append(rec)
+
+# Guardar todos los CDS en un FASTA
+SeqIO.write(cds_records, "cds_extraidos.fasta", "fasta")
+print(f"{len(cds_records)} CDS extraídos.")
+```
+
+::: callout-note
+## `feat.extract(seq)` es listo
+No es un *slicing* simple: respeta la hebra (`feature.location.strand`), los *joins* (exones dispersos se concatenan) y los *gaps*. Por eso siempre se usa `feat.extract()` en vez de `seq[start:end]`.
+:::
+
+## `Bio.Entrez`: acceso a NCBI
+
+El NCBI expone una API web (Entrez Programming Utilities, *E-utilities*) que BioPython envuelve en `Bio.Entrez`. Permite buscar y descargar registros de GenBank, PubMed, Protein, etc.
+
+```python
+from Bio import Entrez
+import time
+
+# OBLIGATORIO: identificar al usuario con un email válido
+Entrez.email = "tu_correo@institucion.edu"
+```
+
+::: callout-important
+## Reglas de uso de NCBI
+1. **Identifícate** con `Entrez.email`. NCBI puede bloquear IPs anónimas.
+2. **Máximo 3 peticiones por segundo** sin clave API. Usa `time.sleep(0.34)` entre llamadas.
+3. Con clave API (pide una gratis en mi cuenta NCBI): hasta 10 peticiones/segundo; configura con `Entrez.api_key = "..."`.
+4. Para descargas masivas usa **datasets** o **Entrez Direct (edirect)**, no un bucle enorme en Python.
+:::
+
+### `Entrez.esearch` — buscar
+
+```python
+from Bio import Entrez
+import time
+
+Entrez.email = "tu_correo@institucion.edu"
+
+# Buscar "Homo sapiens BRCA1" en la base nucleotide
+handle = Entrez.esearch(db="nucleotide",
+                        term="Homo sapiens BRCA1",
+                        retmax=5)
+resultado = Entrez.read(handle)
+handle.close()
+
+print("Conteo total:   ", resultado["Count"])
+print("IDs devueltos:  ", resultado["IdList"])
+ids = resultado["IdList"]
+```
+
+### `Entrez.efetch` — descargar registros
+
+```python
+# Descargar los primeros resultados en formato FASTA
+time.sleep(0.34)   # rate limit respetuoso
+
+handle = Entrez.efetch(db="nucleotide",
+                       id=",".join(ids[:3]),
+                       rettype="fasta",
+                       retmode="text")
+fasta_texto = handle.read()
+handle.close()
+
+# Guardar en disco
+with open("brca1_resultados.fasta", "w") as f:
+    f.write(fasta_texto)
+```
+
+Para GenBank completo (con features):
+
+```python
+handle = Entrez.efetch(db="nucleotide",
+                       id=ids[0],
+                       rettype="gbwithparts",
+                       retmode="text")
+gb_texto = handle.read()
+handle.close()
+with open("brca1.gb", "w") as f:
+    f.write(gb_texto)
+```
+
+### `Entrez.read` — parsear la respuesta XML
+
+```python
+# esummary: metadatos sin secuencia
+handle = Entrez.esummary(db="nucleotide", id=ids[0])
+summary = Entrez.read(handle)
+handle.close()
+print(summary[0]["Title"], "|", summary[0]["TaxId"])
+
+# elink: enlaces entre bases (p. ej. nucleotide → pubmed)
+handle = Entrez.elink(dbfrom="nucleotide", id=ids[0], linkname="nuccore_pubmed")
+links = Entrez.read(handle)
+handle.close()
+```
+
+## `Bio.ExPASy` (mención breve)
+
+```python
+from Bio import ExPASy
+# Acceso a Prosite y SwissProt
+# handle = ExPASy.get_prosite_raw("PS50001")
+# print(handle.read())
+```
+
+::: callout-note
+## ExPASy hoy
+`Bio.ExPASy` está algo en desuso: para SIB/ExPASy moderno conviene acceder por REST directamente con `requests`. ExPASy sigue siendo útil para Prosite documentado y SwissProt viejo.
+:::
+
+## Pipeline mini: NCBI → FASTA proteica
+
+```python
+from Bio import Entrez, SeqIO
+from io import StringIO
+import time
+
+Entrez.email = "tu_correo@institucion.edu"
+
+# 1. Buscar gen
+h = Entrez.esearch(db="nucleotide", term="Homo sapiens BRCA1 mRNA", retmax=1)
+ids = Entrez.read(h)["IdList"]
+h.close()
+
+# 2. Descargar en GenBank
+time.sleep(0.34)
+h = Entrez.efetch(db="nucleotide", id=ids[0], rettype="gb", retmode="text")
+gb_texto = h.read()
+h.close()
+
+# 3. Leer con SeqIO (desde string con StringIO)
+registro = SeqIO.read(StringIO(gb_texto), "genbank")
+
+# 4. Extraer CDS y traducir
+for feat in registro.features:
+    if feat.type == "CDS":
+        proteina = feat.qualifiers["translation"][0]
+        print(f"BRCA1: {len(proteina)} aa")
+
+# 5. Guardar proteína en FASTA
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
+prot_rec = SeqRecord(Seq(proteina),
+                     id=f"{registro.id}_prot",
+                     description=f"BRCA1 protein from {registro.id}")
+SeqIO.write([prot_rec], "brca1_prot.fasta", "fasta")
+```
+
+---
+
+## Ejercicios
+
+### Ejercicio 1
+Crea con código un archivo multi-FASTA con 3 secuencias (`id1`, `id2`, `id3`) cada una con secuencias distintas. Léelo con `SeqIO.parse()` y construye un diccionario `{id: longitud}`.
+
+### Ejercicio 2
+Escribe una función `estadisticas_fasta(ruta)` que reciba la ruta de un FASTA, lea las secuencias con `SeqIO.parse()` y devuelva para cada una: `id`, `longitud` y `%GC`. Pruébala con el archivo del Ejercicio 1.
+
+### Ejercicio 3
+Escribe el código completo para buscar en NCBI `"Homo sapiens BRCA1"` con `Entrez.esearch` y descargar los 3 primeros resultados con `Entrez.efetch` en formato FASTA. Muestra el `id` y la longitud de cada secuencia. Incluye `Entrez.email` y `time.sleep(0.34)` entre llamadas.
+
+::: callout-warning
+## Nota
+El código del Ejercicio 3 debe ser **correcto** aunque para ejecutarlo necesites conexión real a NCBI. En el laboratorio funcionará tal cual.
+:::
+
+---
+
+## Soluciones
+
+### Solución 1
+
+```python
+from Bio import SeqIO
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
+
+# 1) Definir tres secuencias distintas
+registros = [
+    SeqRecord(Seq("ATGGCAGTGAAACTGCTGTTGAAAGCGCAGAAGTTTAA"),
+              id="id1", description="seq uno"),
+    SeqRecord(Seq("ATGCGTACGTACGTACGTACGTACGTACGTACGTAA"),
+              id="id2", description="seq dos"),
+    SeqRecord(Seq("ATGAAACCCGGGTTTAAACCCGGGTTTAAACCCGGG"),
+              id="id3", description="seq tres"),
+]
+
+# 2) Escribir el archivo multi-FASTA
+ruta = "mis_secuencias.fasta"
+SeqIO.write(registros, ruta, "fasta")
+print(f"Archivo '{ruta}' creado con {len(registros)} secuencias.")
+
+# 3) Leer con SeqIO.parse() y construir diccionario {id: longitud}
+longitudes = {}
+for rec in SeqIO.parse(ruta, "fasta"):
+    longitudes[rec.id] = len(rec.seq)
+
+print("Diccionario id → longitud:")
+for k, v in longitudes.items():
+    print(f"  {k}: {v} nt")
+```
+
+**Comentario**: el flujo `crear → escribir → leer → procesar` es exactamente el que usarás cuando recibas un lote de secuencias de un *assembler* o de un colaborador. El diccionario `id → longitud` es la estructura más simple y útil para un informe rápido.
+
+### Solución 2
+
+```python
+from Bio import SeqIO
+from Bio.SeqUtils import gc_fraction
+
+def estadisticas_fasta(ruta):
+    """
+    Recibe la ruta de un FASTA y devuelve una lista de diccionarios
+    con id, longitud y %GC de cada secuencia.
+    """
+    resultados = []
+    for rec in SeqIO.parse(ruta, "fasta"):
+        resultados.append({
+            "id":       rec.id,
+            "longitud": len(rec.seq),
+            "gc":       round(gc_fraction(rec.seq) * 100, 2)
+        })
+    return resultados
+
+# Prueba con el archivo del Ejercicio 1
+ruta = "mis_secuencias.fasta"
+stats = estadisticas_fasta(ruta)
+print(f"{'ID':<8}{'Longitud':<10}{'%GC':<8}")
+for s in stats:
+    print(f"{s['id']:<8}{s['longitud']:<10}{s['gc']:<8}")
+```
+
+**Comentario**: `gc_fraction` devuelve un valor entre 0 y 1; lo multiplicamos por 100 para tener porcentaje. La función devuelve una lista de dicts, fácil de convertir a `pandas.DataFrame`:
+
+```python
+import pandas as pd
+df = pd.DataFrame(estadisticas_fasta(ruta))
+print(df)
+print("Longitud media:", df["longitud"].mean())
+print("%GC medio:     ", df["gc"].mean())
+```
+
+### Solución 3
+
+```python
+from Bio import Entrez, SeqIO
+from io import StringIO
+import time
+
+# 1) IDENTIFICACIÓN OBLIGATORIA: usar email institucional válido
+Entrez.email = "tu_correo@institucion.edu"
+
+# 2) Buscar "Homo sapiens BRCA1" en la base nucleotide
+#    retmax=3 → solo los 3 primeros resultados
+search_handle = Entrez.esearch(
+    db="nucleotide",
+    term="Homo sapiens BRCA1",
+    retmax=3
+)
+search_result = Entrez.read(search_handle)
+search_handle.close()
+
+ids = search_result["IdList"]
+print(f"Total de coincidencias: {search_result['Count']}")
+print(f"IDs a descargar:        {ids}")
+
+# 3) RESPETAR RATE LIMIT de NCBI: dormir 0.34 s (= 3 req/s)
+time.sleep(0.34)
+
+# 4) Descargar los 3 registros en formato FASTA (rettype=fasta, retmode=text)
+#    Pasamos los IDs separados por coma a un único efetch
+fetch_handle = Entrez.efetch(
+    db="nucleotide",
+    id=",".join(ids),
+    rettype="fasta",
+    retmode="text"
+)
+fasta_data = fetch_handle.read()
+fetch_handle.close()
+
+# 5) Guardar a disco para preservar las secuencias
+with open("brca1_ncbi.fasta", "w") as f:
+    f.write(fasta_data)
+print("Sequences guardadas en 'brca1_ncbi.fasta'.")
+
+# 6) Leer las secuencias descargadas con SeqIO (desde string con StringIO)
+#    y mostrar id + longitud de cada una
+time.sleep(0.34)   # respetuoso si hiciéramos otra llamada a continuación
+registros = list(SeqIO.parse(StringIO(fasta_data), "fasta"))
+print(f"\n{'ID':<20}{'Longitud (nt)':<15}")
+print("-" * 35)
+for r in registros:
+    print(f"{r.id:<20}{len(r.seq):<15}")
+```
+
+**Comentario del flujo**:
+
+1. **`Entrez.email`** es obligatorio. NCBI bloquea peticiones anónimas y, en caso de abuso, contacta al responsable de ese email.
+2. **`esearch`** devuelve una lista de IDs en la base elegida; no descarga las secuencias, solo sus identificadores internos.
+3. **`time.sleep(0.34)`** entre llamadas garantiza ≤3 peticiones/segundo, el límite sin clave API. Con una `Entrez.api_key` podrías bajarlo a 0.1 s (10 req/s).
+4. **`efetch`** con `rettype="fasta"` y `retmode="text"` devuelve el FASTA como **string**; lo guardamos en disco y lo releemos con `SeqIO.parse()` para inspeccionarlo.
+5. **`StringIO`** actúa como "archivo en memoria": permite pasar un string a funciones que esperan un *file handle*, evitando leer/escribir en disco dos veces.
+
+::: callout-tip
+## Sin red, ¿qué hacer?
+Si no tienes conexión o vas a probar el pipeline sin red, descarga un GenBank desde la web (p. ej. `https://www.ncbi.nlm.nih.gov/nuccore/NM_007294` → *Send to* → *File* → *GenBank`) y sustituye el bloque `esearch + efetch` por `SeqIO.read("NM_007294.gb", "genbank")`. El resto del código es idéntico.
+:::
+
+---
+
+## Cierre del curso
+
+Con este capítulo finalizas un recorrido completo: desde la **sintaxis básica** de Python (capítulos 1–3) hasta las **estructuras de datos** (4–7), el manejo de **archivos y excepciones** (8–9), el cálculo numérico con **NumPy** (10), el análisis tabular con **pandas** (11), la **visualización** con Matplotlib (12) y Seaborn (13), la **estadística** con SciPy (14) y la **biología molecular computacional** con BioPython (15–16).
+
+Tienes ahora una caja de herramientas lista para:
+
+- Procesar datos experimentales (absorbancias, conteos, morfometrías).
+- Visualizarlos de forma profesional para tesis y *papers*.
+- Aplicar las pruebas estadísticas correctas con criterio.
+- Manipular secuencias biológicas y calcularles %GC, Tm, peso molecular.
+- Descargar y anotar secuencias desde NCBI.
+
+Los siguientes pasos naturales son **scikit-learn** (aprendizaje automático), **statsmodels** (modelos estadísticos avanzados), **scanpy / AnnData** (single-cell RNA-seq), **pysam** (archivos BAM/VCF) y **snakemake / nextflow** (pipelines reproducibles). Pero el andamiaje que has construido aquí es **el suelo** sobre el que todo lo demás se construye.
+
+¡Feliz hacking biológico!

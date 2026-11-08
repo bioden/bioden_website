@@ -1,0 +1,622 @@
+---
+title: "Lectura y escritura de archivos"
+---
+
+# Lectura y escritura de archivos
+
+Hasta ahora hemos trabajado con datos definidos directamente en el código. En la práctica, los datos biológicos viven en **archivos**: placas de absorbancias en CSV, lecturas de secuenciación en FASTA/FASTQ, anotaciones en GFF, tablas de expression en TSV. Saber leer y escribir archivos es, por tanto, una competencia esencial.
+
+En este capítulo aprenderás a abrir, leer y escribir archivos de texto; a usar el *context manager* `with` para evitar fugas de recursos; a manejar rutas con `pathlib`; a leer CSV con el módulo estándar `csv`; y a parsear formatos biológicos simples como FASTA y FASTQ **sin librerías externas**.
+
+## Apertura de archivos: `open()` y modos
+
+La función incorporada `open(ruta, modo)` abre un archivo y devuelve un objeto archivo. Los modos principales son:
+
+| Modo | Significado |
+|------|-------------|
+| `'r'` | Solo lectura (por defecto). El archivo debe existir. |
+| `'w'` | Escritura. **Borra** el contenido previo y crea el archivo si no existe. |
+| `'a'` | *Append* (añadir). Escribe al final sin borrar el contenido. |
+| `'x'` | Creación exclusiva. Falla si el archivo ya existe. |
+| `'r+'` | Lectura y escritura sin truncar. |
+| `'b'` | Sufijo para modo binario (p. ej. `'rb'`, `'wb'`). |
+| `'t'` | Sufijo para modo texto (por defecto). |
+
+```python
+# Abrir en modo texto (por defecto 'r')
+f = open("datos.txt", "r")
+contenido = f.read()
+f.close()  # importante: cerrar siempre
+```
+
+::: callout-warning
+## Cerrar siempre los archivos
+Si abres un archivo con `open()` y no llamas a `close()`, el archivo puede quedar bloqueado o, peor aún, los datos en el búfer pueden no escribirse en disco. La forma segura es usar `with`, que se explica a continuación.
+:::
+
+## Uso de `with` (context manager) — recomendado
+
+La sintaxis `with open(...) as f:` garantiza que el archivo se cierre **automáticamente** al salir del bloque, incluso si ocurre una excepción:
+
+```python
+with open("datos.txt", "r", encoding="utf-8") as f:
+    contenido = f.read()
+# Aquí el archivo ya está cerrado, aunque se haya producido un error dentro.
+```
+
+::: callout-important
+## Regla de oro
+**Nunca** uses `open()` sin `with`. El `with` es más seguro, más legible y más pythonico. A partir de aquí todos los ejemplos lo usarán.
+:::
+
+## Lectura: `read()`, `readline()`, `readlines()`, iteración directa
+
+Existen varias formas de leer el contenido:
+
+```python
+# 1. read(): lee todo el archivo como una sola cadena
+with open("seq.fasta", "r") as f:
+    todo = f.read()
+print(len(todo))
+
+# 2. readline(): lee una línea cada vez
+with open("seq.fasta", "r") as f:
+    primera_linea = f.readline()
+    segunda_linea = f.readline()
+
+# 3. readlines(): devuelve una lista con todas las líneas
+with open("seq.fasta", "r") as f:
+    lineas = f.readlines()
+print(lineas[0])  # primera línea
+
+# 4. Iteración directa (la más eficiente y recomendada)
+with open("seq.fasta", "r") as f:
+    for linea in f:
+        procesar(linea.strip())
+```
+
+::: callout-tip
+## Iteración directa para archivos grandes
+Para archivos grandes (GB), **nunca** uses `read()` ni `readlines()` porque cargarían todo el archivo en memoria. Itera directamente con `for linea in f:`: Python lee línea a línea de forma perezosa.
+:::
+
+## Escritura: `write()`, `writelines()`
+
+```python
+# write(): escribe una cadena
+with open("resultados.txt", "w", encoding="utf-8") as f:
+    f.write("muestra\tabsorbancia\n")
+    f.write("A\t0.45\n")
+    f.write("B\t0.78\n")
+
+# writelines(): escribe una lista de cadenas (sin añadir saltos)
+lineas = ["A\t0.45\n", "B\t0.78\n", "C\t0.23\n"]
+with open("resultados.tsv", "w", encoding="utf-8") as f:
+    f.writelines(lineas)
+```
+
+::: callout-warning
+## `write` no añade `\n`
+A diferencia de `print`, `f.write("hola")` **no** añade salto de línea. Tienes que incluirlo explícitamente (`"hola\n"`), o usar `print("hola", file=f)`.
+:::
+
+## Codificación: especificar `encoding='utf-8'`
+
+Siempre que abras un archivo de texto, especifica la codificación. UTF-8 es el estándar moderno y soporta cualquier carácter (acentos, ñ, símbolos griegos como α, β...). Si no la especificas, Python usa la codificación por defecto del sistema operativo, que puede ser distinta (CP1252 en Windows, por ejemplo) y provocar errores al pasar el script a otra máquina.
+
+```python
+with open("datos.csv", "r", encoding="utf-8") as f:
+    ...
+```
+
+## Manejo de rutas con `os.path` y `pathlib`
+
+El módulo **`pathlib`** (Python ≥ 3.4) ofrece una API orientada a objetos más moderna y legible que `os.path`:
+
+```python
+from pathlib import Path
+
+# Construir rutas de forma multiplataforma
+ruta = Path("data") / "proyectos" / "seq.fasta"
+print(ruta)  # data/proyectos/seq.fasta
+
+# Operaciones útiles
+print(ruta.exists())        # True si existe
+print(ruta.is_file())       # True si es archivo
+print(ruta.parent)          # data/proyectos
+print(ruta.name)            # seq.fasta
+print(ruta.stem)            # seq
+print(ruta.suffix)          # .fasta
+
+# Iterar archivos de un directorio
+for fasta in Path("data").glob("*.fasta"):
+    print(fasta)
+```
+
+`os.path` sigue siendo válido, pero `pathlib` es más recomendable en código nuevo.
+
+## Lectura de CSV con el módulo `csv`
+
+El módulo estándar `csv` lee y escribe archivos de valores separados por comas (o por tabuladores, punto y coma, etc.) respetando las comillas y los campos con separadores internos:
+
+```python
+import csv
+
+# DictReader: cada fila se devuelve como un diccionario {columna: valor}
+with open("absorbancias.csv", "r", encoding="utf-8", newline="") as f:
+    reader = csv.DictReader(f)
+    for fila in reader:
+        print(fila["muestra"], fila["absorbancia"])
+
+# DictWriter: escribir CSV con cabecera
+filas = [
+    {"muestra": "A", "absorbancia": 0.45},
+    {"muestra": "B", "absorbancia": 0.78},
+]
+with open("salida.csv", "w", encoding="utf-8", newline="") as f:
+    writer = csv.DictWriter(f, fieldnames=["muestra", "absorbancia"])
+    writer.writeheader()
+    writer.writerows(filas)
+```
+
+::: callout-note
+## `newline=""` en CSV
+Al abrir un archivo para `csv`, pasa siempre `newline=""` a `open()`. Esto evita que Python traduzca los `\n` dos veces (el módulo `csv` ya gestiona los saltos de línea según el dialecto).
+:::
+
+### Lectura de CSV con tabulador (TSV)
+
+```python
+with open("datos.tsv", "r", encoding="utf-8", newline="") as f:
+    reader = csv.DictReader(f, delimiter="\t")
+    for fila in reader:
+        print(fila)
+```
+
+## Lectura de archivos FASTA y FASTQ simples
+
+### Formato FASTA
+
+Cada registro FASTA tiene:
+
+- Una **cabecera** que empieza con `>`, normalmente con un identificador y una descripción.
+- Una o varias **líneas de secuencia**.
+
+```python
+def leer_fasta(ruta: str) -> dict[str, str]:
+    """
+    Lee un archivo FASTA y devuelve un diccionario {id: secuencia}.
+
+    Args:
+        ruta: ruta al archivo FASTA.
+
+    Returns:
+        Diccionario donde cada clave es el identificador de la secuencia
+        (primera palabra tras '>') y el valor es la secuencia concatenada
+        en mayúsculas, sin saltos de línea.
+    """
+    secuencias: dict[str, str] = {}
+    id_actual: str | None = None
+    with open(ruta, "r", encoding="utf-8") as f:
+        for linea in f:
+            linea = linea.strip()
+            if not linea:
+                continue
+            if linea.startswith(">"):
+                # La cabecera: >id descripcion...
+                id_actual = linea[1:].split()[0]
+                secuencias[id_actual] = ""
+            else:
+                secuencias[id_actual] += linea.upper()
+    return secuencias
+```
+
+### Formato FASTQ
+
+Cada registro FASTQ ocupa **4 líneas**:
+
+1. Cabecera que empieza con `@`.
+2. Secuencia.
+3. Línea `+` (a veces con la cabecera repetida).
+4. Cadena de calidad (Phred+33 típicamente), un carácter por base.
+
+```python
+def leer_fastq(ruta: str) -> list[dict]:
+    """
+    Lee un archivo FASTQ y devuelve una lista de registros.
+    Cada registro es un dict con claves: id, seq, qual.
+    """
+    registros = []
+    with open(ruta, "r", encoding="utf-8") as f:
+        while True:
+            cab = f.readline()
+            if not cab:
+                break  # fin de archivo
+            seq = f.readline()
+            mas = f.readline()
+            qual = f.readline()
+            if not qual:
+                break
+            registros.append({
+                "id": cab.strip()[1:].split()[0],
+                "seq": seq.strip().upper(),
+                "qual": qual.strip()
+            })
+    return registros
+```
+
+## Escritura de resultados en formato tabular
+
+```python
+def escribir_tsv(resultados: list[dict], ruta: str,
+                 columnas: list[str]) -> None:
+    """Escribe una lista de diccionarios como TSV."""
+    with open(ruta, "w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=columnas, delimiter="\t")
+        writer.writeheader()
+        writer.writerows(resultados)
+```
+
+## Trabajo con archivos grandes: iteración perezosa
+
+Si el archivo es enorme (por ejemplo un FASTQ de secuenciación masiva con millones de lecturas), lo importante es **no cargarlo entero en memoria**. Estrategias:
+
+1. **Iterar** línea a línea con `for linea in f`.
+2. **Procesar por bloques** (4 líneas a la vez en FASTQ).
+3. **Filtrar y escribir** resultados inmediatamente, sin acumular listas.
+
+```python
+def contar_reads(ruta_fastq: str) -> int:
+    """Cuenta el número de reads de un FASTQ sin cargarlo entero."""
+    n = 0
+    with open(ruta_fastq, "r", encoding="utf-8") as f:
+        for linea in f:
+            if linea.startswith("@"):
+                n += 1
+    # Esto es aproximado; el patrón más robusto es contar líneas / 4
+    return n
+```
+
+## Ejemplos biológicos
+
+### 1. Leer un CSV de absorbancias y calcular estadísticas
+
+```python
+import csv
+
+def estadisticas_absorbancias(ruta_csv: str) -> tuple[float, float]:
+    """Lee un CSV 'muestra,absorbancia' y devuelve (media, máximo)."""
+    valores = []
+    with open(ruta_csv, "r", encoding="utf-8", newline="") as f:
+        reader = csv.DictReader(f)
+        for fila in reader:
+            valores.append(float(fila["absorbancia"]))
+    media = sum(valores) / len(valores)
+    return media, max(valores)
+```
+
+### 2. Leer un FASTA multiline y concatenar la secuencia
+
+(Equivalente a `leer_fasta` definida arriba.)
+
+### 3. Filtrar secuencias por longitud
+
+```python
+def filtrar_por_longitud(ruta_in: str, ruta_out: str, min_long: int) -> int:
+    """
+    Lee un FASTA y escribe en ruta_out solo las secuencias con
+    longitud >= min_long. Devuelve el número de secuencias escritas.
+    """
+    escritas = 0
+    with open(ruta_in, "r", encoding="utf-8") as fin, \
+         open(ruta_out, "w", encoding="utf-8") as fout:
+        id_actual = None
+        seq_actual = ""
+        for linea in fin:
+            linea = linea.rstrip("\n")
+            if linea.startswith(">"):
+                # Antes de cambiar de registro, procesar el anterior
+                if id_actual is not None and len(seq_actual) >= min_long:
+                    fout.write(f">{id_actual}\n{seq_actual}\n")
+                    escritas += 1
+                id_actual = linea[1:].split()[0]
+                seq_actual = ""
+            else:
+                seq_actual += linea.strip().upper()
+        # Último registro
+        if id_actual is not None and len(seq_actual) >= min_long:
+            fout.write(f">{id_actual}\n{seq_actual}\n")
+            escritas += 1
+    return escritas
+```
+
+### 4. Leer datos de campo y agrupar por especie
+
+```python
+from collections import defaultdict
+
+def resumen_por_especie(ruta_csv: str) -> dict[str, int]:
+    """
+    Lee un CSV 'especie,sitio,conteo' y devuelve el total de individuos
+    por especie.
+    """
+    totales = defaultdict(int)
+    with open(ruta_csv, "r", encoding="utf-8", newline="") as f:
+        reader = csv.DictReader(f)
+        for fila in reader:
+            totales[fila["especie"]] += int(fila["conteo"])
+    return dict(totales)
+```
+
+### 5. Guardar resultados de un análisis en TSV
+
+```python
+resultados = [
+    {"gen": "BRCA1", "log2FC": 2.31, "pvalue": 0.0004},
+    {"gen": "TP53",  "log2FC": -1.78, "pvalue": 0.012},
+    {"gen": "MYC",   "log2FC": 3.05, "pvalue": 0.00002},
+]
+escribir_tsv(resultados, "dif_exp.tsv", columnas=["gen", "log2FC", "pvalue"])
+```
+
+### 6. Procesar *quality scores* de un FASTQ
+
+```python
+def calidad_media(ruta_fastq: str) -> float:
+    """Calcula la calidad Phred media de todas las bases de un FASTQ."""
+    suma = 0
+    n = 0
+    with open(ruta_fastq, "r", encoding="utf-8") as f:
+        while True:
+            cab = f.readline()
+            seq = f.readline()
+            mas = f.readline()
+            qual = f.readline()
+            if not qual:
+                break
+            for c in qual.strip():
+                suma += ord(c) - 33
+                n += 1
+    return suma / n if n else 0.0
+```
+
+## Ejercicios
+
+### Ejercicio 1
+
+Crea (con código Python) un archivo `absorbancias.csv` con cabecera `muestra,absorbancia` y 5 filas de datos. Luego léelo y calcula la **absorbancia promedio**.
+
+### Ejercicio 2
+
+Escribe una función `leer_fasta(ruta)` que reciba la ruta de un archivo FASTA y devuelva un diccionario `{id_secuencia: secuencia}`. Considera que la secuencia puede ocupar **múltiples líneas**. Crea un archivo FASTA de prueba con al menos 2 secuencias y prueba la función.
+
+### Ejercicio 3
+
+Escribe una función `filtrar_por_longitud(ruta_in, ruta_out, min_long)` que lea un archivo FASTA y guarde en otro solo las secuencias cuya longitud sea **≥ `min_long`**. Pruébala con `min_long=100` y verifica cuántas secuencias pasan el filtro.
+
+## Soluciones
+
+### Solución 1
+
+```python
+import csv
+
+# 1) Crear el archivo CSV
+datos = [
+    {"muestra": "A", "absorbancia": 0.12},
+    {"muestra": "B", "absorbancia": 0.45},
+    {"muestra": "C", "absorbancia": 0.78},
+    {"muestra": "D", "absorbancia": 0.23},
+    {"muestra": "E", "absorbancia": 0.91},
+]
+
+ruta = "absorbancias.csv"
+with open(ruta, "w", encoding="utf-8", newline="") as f:
+    writer = csv.DictWriter(f, fieldnames=["muestra", "absorbancia"])
+    writer.writeheader()
+    writer.writerows(datos)
+
+# 2) Leer el archivo y calcular el promedio
+valores = []
+with open(ruta, "r", encoding="utf-8", newline="") as f:
+    reader = csv.DictReader(f)
+    for fila in reader:
+        valores.append(float(fila["absorbancia"]))
+
+promedio = sum(valores) / len(valores)
+print(f"Datos leídos: {valores}")
+print(f"Absorbancia promedio: {promedio:.4f}")
+```
+
+Salida:
+
+```
+Datos leídos: [0.12, 0.45, 0.78, 0.23, 0.91]
+Absorbancia promedio: 0.4980
+```
+
+::: callout-note
+## Alternativa con print
+Para archivos pequeños puedes escribir con `print(..., file=f)`, pero `csv.DictWriter` es más seguro porque maneja correctamente comas dentro de los campos.
+:::
+
+### Solución 2
+
+```python
+def leer_fasta(ruta: str) -> dict[str, str]:
+    """
+    Lee un archivo FASTA y devuelve un diccionario {id: secuencia}.
+
+    Args:
+        ruta: ruta al archivo FASTA. Las secuencias pueden ocupar
+              varias líneas.
+
+    Returns:
+        Diccionario donde cada clave es el identificador (primera
+        palabra tras '>') y el valor es la secuencia en mayúsculas,
+        sin saltos de línea.
+
+    Example:
+        >>> leer_fasta("test.fasta")
+        {'seq1': 'ATGCGATCG', 'seq2': 'GGTACCGAATTCGAA'}
+    """
+    secuencias: dict[str, str] = {}
+    id_actual: str | None = None
+    with open(ruta, "r", encoding="utf-8") as f:
+        for linea in f:
+            linea = linea.strip()
+            if not linea:
+                continue  # ignorar líneas vacías
+            if linea.startswith(">"):
+                # Cabecera: tomamos la primera palabra como id
+                id_actual = linea[1:].split()[0]
+                secuencias[id_actual] = ""
+            elif id_actual is not None:
+                secuencias[id_actual] += linea.upper()
+    return secuencias
+
+
+# Crear un archivo FASTA de prueba con 2 secuencias multiline
+fasta_prueba = """>seq1 descripción de prueba
+ATGCGATCGAT
+AGCTAGCTAA
+>seq2 otro gen de prueba
+GGTACCGAAT
+TCGAAATGGC
+TTAG
+"""
+
+ruta_fasta = "prueba.fasta"
+with open(ruta_fasta, "w", encoding="utf-8") as f:
+    f.write(fasta_prueba)
+
+# Probar la función
+resultado = leer_fasta(ruta_fasta)
+for id_seq, sec in resultado.items():
+    print(f"{id_seq}: longitud={len(sec)}  secuencia={sec}")
+
+# seq1: longitud=21  secuencia=ATGCGATCGATAGCTAGCTAA
+# seq2: longitud=22  secuencia=GGTACCGAATTCGAAATGGCTTAG
+```
+
+::: callout-tip
+## Detalles del parser
+- `linea.strip()` elimina espacios y saltos de línea al inicio y al final.
+- `linea[1:].split()[0]` quita el `>` inicial y se queda con la primera palabra (el identificador), descartando la descripción.
+- `linea.upper()` normaliza a mayúsculas para evitar problemas con bases en minúscula.
+:::
+
+### Solución 3
+
+```python
+from pathlib import Path
+from typing import TextIO
+
+
+def filtrar_por_longitud(ruta_in: str, ruta_out: str, min_long: int) -> int:
+    """
+    Lee un archivo FASTA y escribe en ruta_out solo las secuencias con
+    longitud >= min_long.
+
+    Args:
+        ruta_in: ruta al FASTA de entrada.
+        ruta_out: ruta del FASTA de salida filtrado.
+        min_long: longitud mínima (inclusive) de las secuencias a conservar.
+
+    Returns:
+        Número de secuencias escritas en el archivo de salida.
+
+    Note:
+        Procesa el archivo línea a línea, por lo que es adecuado para
+        archivos grandes.
+    """
+    escritas = 0
+    id_actual: str | None = None
+    cabecera_actual: str = ""
+    seq_actual: str = ""
+
+    with open(ruta_in, "r", encoding="utf-8") as fin, \
+         open(ruta_out, "w", encoding="utf-8") as fout:
+        for linea in fin:
+            linea = linea.rstrip("\n")
+            if linea.startswith(">"):
+                # Procesar el registro anterior antes de cambiar
+                if id_actual is not None and len(seq_actual) >= min_long:
+                    fout.write(cabecera_actual + "\n")
+                    # Escribir la secuencia en bloques de 60 caracteres
+                    # para mantener el formato FASTA convencional
+                    for i in range(0, len(seq_actual), 60):
+                        fout.write(seq_actual[i:i+60] + "\n")
+                    escritas += 1
+                cabecera_actual = linea
+                id_actual = linea[1:].split()[0]
+                seq_actual = ""
+            else:
+                seq_actual += linea.strip().upper()
+        # No olvidar el último registro
+        if id_actual is not None and len(seq_actual) >= min_long:
+            fout.write(cabecera_actual + "\n")
+            for i in range(0, len(seq_actual), 60):
+                fout.write(seq_actual[i:i+60] + "\n")
+            escritas += 1
+    return escritas
+
+
+# ----- Crear un FASTA de prueba con secuencias de longitudes variadas -----
+fasta_prueba = """>corta_30
+ATGCGATCGATAGCTAGCTAAGCGATCGATA
+>media_120
+"""
+seq_media = "ATGCGATCGATAGCTAGCTAA" * 6  # 22 * 6 = 132 pb... ajustamos
+# Generamos 120 pb exactos: 20 codones de 6 pb = 120
+bloque = "ATCGAT" * 20  # 120 pb
+fasta_prueba = f">corta_30\nATGCGATCGATAGCTAGCTAAGCGATCGATA\n>media_120\n{bloque}\n>larga_300\n{'ATCGATCG' * 38}\n"
+
+ruta_in = "entrada.fasta"
+ruta_out = "filtradas.fasta"
+with open(ruta_in, "w", encoding="utf-8") as f:
+    f.write(fasta_prueba)
+
+# Filtrar secuencias con longitud >= 100
+escritas = filtrar_por_longitud(ruta_in, ruta_out, min_long=100)
+print(f"Secuencias escritas: {escritas}")
+
+# Verificar
+with open(ruta_out, "r", encoding="utf-8") as f:
+    print(f.read())
+```
+
+Salida esperada:
+
+```
+Secuencias escritas: 2
+>media_120
+ATCGATATCGATATCGATATCGATATCGATATCGATATCGATATCGATATCGATATCGATATCGATATCGATATCGATATCG
+ATATCGATATCGATATCGATATCGATATCGATATCGAT
+>larga_300
+ATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGATCGAT
+... (resto)
+```
+
+::: callout-important
+## Patrones clave en la solución
+1. **Acumular** la secuencia del registro actual hasta encontrar la siguiente cabecera.
+2. **Procesar el registro anterior** justo cuando aparece una nueva cabecera `>` (no esperar al final del archivo).
+3. **No olvidar el último registro**: tras el bucle, hay que procesar el último registro acumulado, porque ya no habrá otra cabecera que lo dispare.
+4. **Escritura en bloques** de 60 caracteres para mantener la convención FASTA.
+:::
+
+## Resumen
+
+En este capítulo has aprendido:
+
+- A abrir, leer y escribir archivos con `open()` y el *context manager* `with`.
+- Los modos `'r'`, `'w'`, `'a'`, `'x'` y las variantes binarias `'b'`.
+- Las funciones de lectura `read`, `readline`, `readlines` y la **iteración directa** (preferida para archivos grandes).
+- A especificar siempre `encoding="utf-8"`.
+- A manejar rutas con `pathlib.Path`.
+- A leer y escribir **CSV** y **TSV** con el módulo `csv` (`DictReader` y `DictWriter`).
+- A parsear formatos biológicos simples (**FASTA** y **FASTQ**) sin librerías externas.
+- Patrones para **filtrar** y **transformar** archivos grandes de forma perezosa.
+
+Con esto ya estás preparado para construir pipelines de bioinformática caseros que procesen datos reales. En los próximos capítulos introduciremos librerías científicas como `numpy`, `pandas` y `matplotlib` para análisis y visualización.

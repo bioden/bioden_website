@@ -1,0 +1,466 @@
+---
+title: "BioPython I — Secuencias biológicas"
+---
+
+# BioPython I — Secuencias biológicas
+
+Hasta ahora hemos trabajado con datos numéricos: absorbancias, pesos, conteos. Pero la biología molecular vive en **letras**: A, C, G, T en el ADN; A, C, G, U en el ARN; 20 aminoácidos en proteínas. **BioPython** es la librería de referencia en Python para manipular secuencias biológicas, anotarlas, traducirlas, calcularles %GC o temperatura de *melting*, y trabajar con archivos FASTA/GenBank y con NCBI Entrez.
+
+En este capítulo introductorio aprenderás a crear objetos `Seq` y `SeqRecord`, a aplicar las operaciones moleculares centrales (complementaria, reversa complementaria, transcripción, traducción), a usar `Bio.SeqUtils` para %GC, temperatura de *melting* y peso molecular, y a buscar *motifs* en una secuencia.
+
+## ¿Qué es BioPython y qué módulos son relevantes?
+
+BioPython es un proyecto *open source* iniciado en 1999. Se organiza en subpaquetes:
+
+| Subpaquete                | Función principal                                     |
+|---------------------------|--------------------------------------------------------|
+| `Bio.Seq`                 | Objetos `Seq` y `SeqRecord`, operaciones moleculares   |
+| `Bio.SeqRecord`           | Contenedor de secuencia + metadatos                    |
+| `Bio.SeqIO`               | Lectura/escritura de FASTA, GenBank, Fastq, etc.       |
+| `Bio.SeqUtils`            | %GC, Tm, peso molecular, búsqueda, traducciones        |
+| `Bio.Entrez`              | Acceso a NCBI (PubMed, GenBank, nucleótidos)           |
+| `Bio.ExPASy`              | Acceso a Prosite, SwissProt                            |
+| `Bio.PDB`                 | Estructuras 3D de proteínas (PDB)                      |
+| `Bio.Align`               | Alineamientos de secuencias                            |
+| `Bio.Phylo`               | Filogenia                                              |
+| `Bio.Restriction`         | Sitios de restricción                                  |
+
+En este capítulo nos concentraremos en `Bio.Seq`, `Bio.SeqRecord` y `Bio.SeqUtils`.
+
+## Instalación
+
+```bash
+pip install biopython
+```
+
+::: callout-note
+## Importación: convención
+La comunidad BioPython usa `from Bio.Seq import Seq`. Verifica la versión con:
+```python
+import Bio
+print(Bio.__version__)
+```
+:::
+
+## Importación
+
+```python
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
+from Bio import SeqUtils
+```
+
+## El objeto `Seq`
+
+`Seq` es una **cadena inmutable** (como `str`) que "sabe" que contiene una secuencia biológica. La diferencia clave con `str` es que `Seq` expone **métodos moleculares** (`complement`, `reverse_complement`, `transcribe`, `translate`) y valida parcialmente el alfabeto.
+
+```python
+adn = Seq("ATGGCAGTGAAACTGCTGTTGAAAGCGCAGAAGTTTAA")
+print(adn)             # ATGGCAGTGAAACTGCTGTTGAAAGCGCAGAAGTTTAA
+print(type(adn))       # <class 'Bio.Seq.Seq'>
+```
+
+::: callout-tip
+## `Seq` vs `str`
+`Seq` se comporta como `str` para indexación, *slicing* y concatenación. La diferencia está en los **métodos biológicos**. Si solo necesitas contar letras o hacer *slicing*, `str` basta; pero con `Seq` obtienes traducción, complementaria, etc., "gratis".
+:::
+
+## Operaciones básicas: complement, reverse_complement, transcribe, translate
+
+```python
+adn = Seq("ATGGCAGTGAAACTGCTGTTGAAAGCGCAGAAGTTTAA")
+
+# Hebra complementaria (A↔T, C↔G)
+comp = adn.complement()
+print("Complementaria:        ", comp)
+
+# Reversa complementaria (la hebra molde leída 3'->5' → hebra complementaria 5'->3')
+rc = adn.reverse_complement()
+print("Reversa complementaria:", rc)
+
+# Transcripción: ADN -> ARN mensajero (T -> U, sentido 5'->3')
+arn = adn.transcribe()
+print("ARN mensajero:         ", arn)
+
+# Traducción: ARN/ADN -> proteína (codón → aminoácido)
+prot = adn.translate()
+print("Proteína:              ", prot)
+```
+
+Salida esperada:
+
+```
+Complementaria:         TACCGTCACTTTGACGACAAC TTCGCGTCTTCAAATT  (sin espacios)
+Reversa complementaria: TTAAACTTCTGCGCTTTCAACAGCAGTTTCACTGCCAT
+ARN mensajero:          AUGGCAGUGAAACUGCUGUUGAAAGCGCAGAAGUUUAA
+Proteína:               MAVEMLL*KRRKSK* (depende del marco y de codones de parada)
+```
+
+::: callout-important
+## La hebra problema
+Cuando un biólogo dice "el complementario" suele querer la **reversa complementaria** (la hebra que se aparearía antiparalela a la original). `complement()` solo cambia cada base; `reverse_complement()` además invierte el orden. En el laboratorio casi siempre usas `reverse_complement()`.
+:::
+
+## Manipulación como `str`: indexing, slicing, len, count
+
+```python
+adn = Seq("ATGGCAGTGAAACTGCTGTTGAAAGCGCAGAAGTTTAA")
+
+print(len(adn))                  # 36
+print(adn[0])                    # 'A'
+print(adn[:6])                   # Seq('ATGGCA')   ← primeros 6 nucleótidos (codones 1-2)
+print(adn[::-1])                 # reversa (no es reverse_complement)
+print(adn.count("GAA"))          # 1 (apariciones literales)
+print(adn.count("AA"))           # varias
+print(adn.upper(), adn.lower()) # cambia a mayúsculas/minúsculas
+
+# Concatenación
+adn2 = adn + Seq("TAG")
+```
+
+::: callout-warning
+## `count` busca substring literal
+`adn.count("AA")` cuenta solapando o no. `Seq.count` no solapa (como `str.count`). Para contar apariciones solapadas usa un bucle manual.
+:::
+
+## Traducción avanzada
+
+```python
+adn = Seq("ATGGCAGTGAAACTGCTGTTGAAAGCGCAGAAGTTTAA")
+
+# Por defecto: hasta el primer codón de parada natural
+prot1 = adn.translate()
+# to_stop: detenerse en el primer codón de parada sin incluirlo
+prot2 = adn.translate(to_stop=True)
+# cds=True: asume que es un CDS completo; si la longitud no es múltiplo de 3
+# o no empieza con ATG / no acaba con parada, lanza error
+prot3 = adn.translate(cds=True)
+
+print("Traducción completa:   ", prot1)
+print("Traducción hasta stop: ", prot2)
+print("Traducción como CDS:   ", prot3)
+```
+
+### Tabla de codones y código genético alternativo
+
+Existen varias tablas de codones (NCBI): el código estándar (1), el mitocondrial (2), el de cloroplastos (11), etc. Puedes especificarlas con el argumento `table`:
+
+```python
+adn_mito = Seq("ATGGCAGTGAAACTGCTGTTGAAAGCGCAGAAGTTTAA")
+prot_mito = adn_mito.translate(table="Vertebrate Mitochondrial", to_stop=True)
+# o equivalente numérico: table=2
+```
+
+::: callout-note
+## ¿Cuándo usar cds=True?
+Si sabes que tu secuencia es un CDS completo y bien formateado, `cds=True` valida que empiece con `ATG`, termine con codón de parada y la longitud sea múltiplo de 3. Útil para descartar secuencias corruptas al importarlas.
+:::
+
+## `SeqRecord`: secuencia + metadatos
+
+Un `SeqRecord` envuelve un `Seq` con **información biológica**: identificador, nombre, descripción, anotaciones, *features*. Es el formato natural para archivos FASTA/GenBank.
+
+```python
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
+
+record = SeqRecord(
+    Seq("ATGGCAGTGAAACTGCTGTTGAAAGCGCAGAAGTTTAA"),
+    id="mi_gen.1",
+    name="mi_gen",
+    description="Gen de ejemplo del cromosoma 1"
+)
+
+print(record.id)            # 'mi_gen.1'
+print(record.name)          # 'mi_gen'
+print(record.description)   # 'Gen de ejemplo ...'
+print(record.seq)           # Seq('ATGGCAGTG...')
+print(len(record.seq))      # 36
+```
+
+Atributos principales de un `SeqRecord`:
+
+- **`id`**: identificador único (accession, etc.).
+- **`name`**: nombre corto (locus).
+- **`description`**: descripción larga.
+- **`seq`**: el objeto `Seq` asociado.
+- **`annotations`**: diccionario con metadatos globales (organismo, fecha, topología).
+- **`features`**: lista de `SeqFeature` (genes, CDS, exones, dominios) con ubicación y *qualifiers*.
+- **`letter_annotations`**: anotaciones por posición (calidades Phred, dominios por residuo).
+
+```python
+# Añadir anotaciones manualmente
+record.annotations["organism"] = "Homo sapiens"
+record.annotations["molecule_type"] = "DNA"
+record.annotations["topology"] = "linear"
+record.annotations["date"] = "01-SEP-2024"
+
+# Añadir letter_annotations (calidades Phred simuladas)
+import random
+record.letter_annotations["phred_quality"] = [random.randint(30, 40)
+                                              for _ in range(len(record.seq))]
+```
+
+## `Bio.SeqUtils`
+
+### %GC
+
+```python
+from Bio.SeqUtils import gc_fraction, GC, GC123
+adn = Seq("ATGGCAGTGAAACTGCTGTTGAAAGCGCAGAAGTTTAA")
+
+# En BioPython moderno se prefiere gc_fraction (devuelve 0–1)
+print(gc_fraction(adn))      # ~0.44
+print(GC(adn))               # 0–100 (deprecated pero muy común en código viejo)
+```
+
+::: callout-tip
+## %GC y biología
+El %GC es determinante: genomes termófilos tienen %GC alto (unión de 3 puentes H en G-C), los oligos con %GC alto tienen Tm mayor, y las regiones promotoras ricas en AT facilitan el desenrollamiento. Es el primer número que se calcula al recibir una secuencia nueva.
+:::
+
+### Temperatura de *melting* (Tm)
+
+```python
+from Bio.SeqUtils import MeltingTemp as mt
+
+oligo = Seq("GTAAAACGACGGCCAGT")
+
+# Regla de Wallace: rápida, para oligos cortos (<14 nt)
+print("Wallace: ", mt.Tm_Wallace(oligo))
+
+# Fórmula basada en %GC (Marmur–Schildkraut)
+print("GC:      ", mt.Tm_GC(oligo))
+
+# Vecino más cercano (más preciso para oligos largos)
+print("NN:      ", mt.Tm_NN(oligo))
+```
+
+::: callout-important
+## Método a usar
+Para **oligos de PCR** de 18–25 nt, el método **Tm_NN** (vecino más cercano) es el estándar actual porque modela la energía de los pares adyacentes, no solo el conteo global. `Tm_Wallace` es una estimación muy basta útil solo para oligos muy cortos.
+:::
+
+### Peso molecular
+
+```python
+from Bio.SeqUtils import molecular_weight
+
+adn  = Seq("ATGGCAGTGAAACTGCTGTTGAAAGCGCAGAAGTTTAA")
+prot = adn.translate(to_stop=True)
+
+mw_adn  = molecular_weight(adn)             # ds o ss por defecto
+mw_prot = molecular_weight(prot)            # Da (daltons)
+print(f"Peso molecular ADN:      {mw_adn:.1f} Da")
+print(f"Peso molecular proteína: {mw_prot:.1f} Da")
+```
+
+### `seq3` / `seq1`: conversión de códigos de aminoácidos
+
+```python
+from Bio.SeqUtils import seq3, seq1
+
+prot = "MQLLSP"
+print(seq3(prot))   # 'MetGlnLeuLeuSerPro'   (1-letra -> 3-letras)
+print(seq1("MetGlnLeuLeuSerPro"))   # 'MQLLSP'
+```
+
+### `six_frame_translations`
+
+```python
+from Bio.SeqUtils import six_frame_translations
+
+adn = Seq("ATGGCAGTGAAACTGCTGTTGAAAGCGCAGAAGTTTAA")
+print(six_frame_translations(adn))
+```
+
+Imprime las 6 traducciones posibles (3 marcos en sentido, 3 marcos en la reversa complementaria), útil para identificar ORFs *a ojo*.
+
+### Búsqueda de patrones: `nt_search`
+
+```python
+from Bio.SeqUtils import nt_search
+
+genoma = Seq("ATGGCAGTGAAACTGCTGTTGAAAGCGCAGAAGTTTAAATGGCAGTG")
+motif  = Seq("ATGGCAG")
+
+hits = nt_search(str(genoma), str(motif))   # primer elemento = motif, resto = posiciones
+print(hits)                                  # ['ATGGCAG', 0, 37]
+```
+
+::: callout-note
+## Para regex usa Python puro
+`nt_search` sirve para patrones literales. Para patrones con ambigüedades IUPAC (p. ej. "GART" = G A (A o G) T) usa `re` con `Bio.Seq.IUPAC` o la librería `regex` con la sintaxis `{R}`. Para *motifs* degenerados más sofisticados, considera **MOODS** o **Biopython motifs**.
+:::
+
+## Backtranscripción y mutación
+
+```python
+from Bio.Seq import Seq
+
+arn = Seq("AUGGCAGUGAAA")
+adn_back = arn.back_transcribe()   # ARN -> ADN (U -> T)
+print(adn_back)                    # ATGGCAGTGAAA
+
+# Mutación puntuales: como Seq es inmutable, usa operadores
+seq = Seq("ATGGCAGTGA")
+# Cambiar la posición 3 (de 'G' a 'C'): construir nueva secuencia
+mutada = seq[:3] + Seq("C") + seq[4:]
+print(mutada)                      # ATGCAGTGA
+```
+
+## Pipeline biológico completo (ejemplo)
+
+```python
+from Bio.Seq import Seq
+from Bio.SeqUtils import gc_fraction, MeltingTemp as mt, molecular_weight
+
+# 1. Secuencia de un CDS hipotético
+cds = Seq("ATGGCAGTGAAACTGCTGTTGAAAGCGCAGAAGTTTAA")
+
+# 2. Análisis del ADN
+print(f"Longitud (nt): {len(cds)}")
+print(f"%GC:           {gc_fraction(cds)*100:.1f}%")
+
+# 3. Hebra molde y ARNm
+molde = cds.reverse_complement()
+arnm  = cds.transcribe()
+print(f"Hebra molde:   {molde}")
+print(f"ARNm:          {arnm}")
+
+# 4. Traducción
+prot = cds.translate(to_stop=True)
+print(f"Proteína:      {prot}  ({len(prot)} aa)")
+
+# 5. Peso molecular de la proteína
+print(f"PM proteína:   {molecular_weight(prot):.1f} Da")
+
+# 6. Búsqueda de motif restrictivo EcoRI: GAATTC
+from Bio.SeqUtils import nt_search
+hits = nt_search(str(cds), "GAATTC")
+print(f"Sitios EcoRI:  {hits[1:] if len(hits)>1 else 'ninguno'}")
+```
+
+---
+
+## Ejercicios
+
+### Ejercicio 1
+Dada la secuencia `"ATGGCAGTGAAACTGCTGTTGAAAGCGCAGAAGTTTAA"`, obtén: (a) complementaria reversa, (b) ARN mensajero, (c) proteína traducida usando `to_stop=True`, (d) %GC y Tm usando la regla de Wallace.
+
+### Ejercicio 2
+Crea un `SeqRecord` con `id="mi_gen"`, `description="Gen de ejemplo"`, y la secuencia del Ejercicio 1. Añade `annotations` con `organism`, `molecule_type` y accede a sus atributos imprimiéndolos.
+
+### Ejercicio 3
+Escribe una función `peso_molecular_proteina(sec_aa)` que reciba una secuencia de aminoácidos (como `str` o `Seq`) de al menos 20 aminoácidos y use `Bio.SeqUtils.molecular_weight` para devolver el peso molecular en Daltons. Verifica que la secuencia cumpla la longitud mínima; si no, lanza `ValueError`.
+
+---
+
+## Soluciones
+
+### Solución 1
+
+```python
+from Bio.Seq import Seq
+from Bio.SeqUtils import gc_fraction, MeltingTemp as mt
+
+sec = Seq("ATGGCAGTGAAACTGCTGTTGAAAGCGCAGAAGTTTAA")
+
+# (a) Reversa complementaria (la hebra molde leída 5'->3')
+rc = sec.reverse_complement()
+print("Reversa complementaria:", rc)
+
+# (b) ARN mensajero (transcripción: ADN -> ARNm)
+arn = sec.transcribe()
+print("ARN mensajero:         ", arn)
+
+# (c) Proteína traducida deteniéndose en el primer codón de parada
+prot = sec.translate(to_stop=True)
+print("Proteína:              ", prot)
+
+# (d) %GC y Tm con Wallace
+print(f"%GC:                   {gc_fraction(sec)*100:.2f}%")
+print(f"Tm (Wallace):          {mt.Tm_Wallace(sec):.2f} °C")
+```
+
+**Comentario**: la regla de Wallace asigna 2 °C a cada A/T y 4 °C a cada G/C; funciona para oligos muy cortos (<14 nt). Para una secuencia de 36 nt Wallace subestima severamente; deberías usar `mt.Tm_NN` o `mt.Tm_GC` para resultados realistas.
+
+### Solución 2
+
+```python
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
+
+record = SeqRecord(
+    Seq("ATGGCAGTGAAACTGCTGTTGAAAGCGCAGAAGTTTAA"),
+    id="mi_gen",
+    name="mi_gen_locus",
+    description="Gen de ejemplo"
+)
+
+# Añadir anotaciones
+record.annotations["organism"] = "Homo sapiens"
+record.annotations["molecule_type"] = "DNA"
+record.annotations["topology"] = "linear"
+record.annotations["date"] = "01-SEP-2024"
+
+# Acceder a los atributos
+print("id:           ", record.id)
+print("name:         ", record.name)
+print("description:  ", record.description)
+print("seq:          ", record.seq)
+print("length:       ", len(record.seq))
+print("annotations:  ", record.annotations)
+```
+
+**Comentario**: `annotations` es un diccionario libre: puedes meter cualquier par clave-valor. Para anotaciones ligadas a regiones (un gen ocupa de la posición 100 a la 500) se usan `features` (objetos `SeqFeature`), que veremos en el siguiente capítulo al parsear GenBank.
+
+### Solución 3
+
+```python
+from Bio.Seq import Seq
+from Bio.SeqUtils import molecular_weight
+
+def peso_molecular_proteina(sec_aa):
+    """
+    Devuelve el peso molecular (Da) de una proteína.
+    Parámetros
+    ----------
+    sec_aa : str o Seq
+        Secuencia de aminoácidos (1 letra por residuo).
+    Devuelve
+    --------
+    float
+        Peso molecular en Daltons.
+    Lanza
+    -----
+    ValueError
+        Si la secuencia tiene menos de 20 aminoácidos.
+    """
+    # Convertir a Seq si viene como str
+    sec = Seq(sec_aa) if isinstance(sec_aa, str) else sec_aa
+
+    if len(sec) < 20:
+        raise ValueError(
+            f"La proteína tiene {len(sec)} aa, mínimo 20 requeridos."
+        )
+    # molecular_weight acepta Seq o str; por defecto asume proteína (monoisotópico=False)
+    return molecular_weight(sec, seq_type="protein")
+
+# Prueba
+prot = "MVLSPADKTNVKAAWGKVGAHAGEYGAEALERMFLSFPTTKTYFPHFDLSHGSAQ"
+pm = peso_molecular_proteina(prot)
+print(f"Peso molecular: {pm:.1f} Da  ({len(prot)} aa)")
+
+# Verificación de error
+try:
+    peso_molecular_proteina("MQLL")
+except ValueError as e:
+    print("Error controlado:", e)
+```
+
+**Comentario**: la función normaliza la entrada (`str` o `Seq`) y valida la longitud antes de calcular. El parámetro `seq_type="protein"` es explícito para evitar ambigüedades — por defecto `molecular_weight` infiere el tipo pero es buena práctica indicarlo. Una proteína de 58 aa como la del ejemplo pesa ~6.4 kDa, en línea con la regla empírica de ~110 Da/aminoácido.
+
+---
+
+En el siguiente capítulo veremos **BioPython II**: cómo leer y escribir archivos FASTA/GenBank con `SeqIO`, extraer CDS de un GenBank, y descargar secuencias directamente desde NCBI usando `Bio.Entrez`.

@@ -1,0 +1,581 @@
+---
+title: "Visualización avanzada con Seaborn"
+---
+
+# Visualización avanzada con Seaborn
+
+Matplotlib es potente pero *verboso*: para hacer un boxplot agrupado y coloreado por tratamiento necesitas varias líneas de configuración manual. **Seaborn** es una librería de visualización estadística construida encima de Matplotlib que se integra de forma nativa con **pandas DataFrame**. Con una sola línea puedes producir un gráfico con estimator, intervalo de confianza, leyenda y paleta — exactamente el tipo de gráfico que un biólogo necesita para un *paper* o un informe de laboratorio.
+
+En este capítulo aprenderás a configurar el tema global, a elegir paletas adecuadas (cualitativas, secuenciales, divergentes), a generar todos los gráficos estadísticos típicos (scatter, box, violin, bar, point, hist, kde, pair, heatmap, joint), a usar *FacetGrid* y *relplot* para multiplicar paneles por categoría, y a combinar Seaborn con Matplotlib para el ajuste fino.
+
+## ¿Qué es Seaborn y por qué usarlo sobre Matplotlib?
+
+Seaborn (importado como `sns`) ofrece tres ventajas clave sobre Matplotlib puro en análisis biológico:
+
+1. **Acepta DataFrames directamente**: pasas `data=df, x="grupo", y="respuesta"` y seaborn se encarga del resto.
+2. **Estadísticas integradas**: `barplot` calcula la media y su intervalo de confianza, `kdeplot` estima la densidad, `lmplot` añade regresión por defecto.
+3. **Estética por defecto cuidada**: paletas *colorblind-friendly*, cuadrículas, tipografía y leyendas consistentes sin que tengas que tocar nada.
+
+::: callout-note
+## Nombre curioso
+El nombre **seaborn** no es un acrónimo. Es un homenaje a un personaje (Samuel Norman Seaborn) de la serie *The West Wing*. La convención `import seaborn as sns` viene de sus iniciales.
+:::
+
+## Instalación e importación
+
+```python
+# Desde la terminal:
+# pip install seaborn
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+```
+
+::: callout-tip
+## Versión
+Seaborn >= 0.12 unifica la API en torno a un parámetro común (`hue`) y deprecia funciones antiguas como `tsplot`. Verifica tu versión con `print(sns.__version__)`.
+:::
+
+## Configuración global: tema, contexto y estilo
+
+```python
+# Tema global (afecta a todos los gráficos posteriores)
+sns.set_theme(
+    context="notebook",   # paper | notebook | talk | poster
+    style="whitegrid",    # white | dark | whitegrid | darkgrid | ticks
+    palette="deep",       # paleta por defecto
+    font="sans-serif",
+    font_scale=1.0
+)
+```
+
+- **context**: ajusta tamaño de fuente/grosor de línea. `paper` para figuras de *paper*, `talk`/`poster` para presentaciones.
+- **style**: controla fondo y cuadrícula. `whitegrid` destaca para leer datos; `ticks` añade *ticks* en los ejes, elegante en *papers*.
+- **palette**: paleta categórica por defecto.
+
+## Paletas de colores
+
+Seaborn distingue tres familias de paletas:
+
+```python
+# Cualitativas (categorías sin orden: especies, tratamientos)
+sns.color_palette("Set2")
+sns.color_palette("pastel")
+sns.color_palette("deep")
+
+# Secuenciales (magnitud creciente: expresión, temperatura)
+sns.color_palette("Blues")
+sns.color_palette("viridis")        # colorblind-friendly
+sns.color_palette("rocket")
+
+# Divergentes (desviación respecto a un centro: correlación, log2FC)
+sns.color_palette("coolwarm")
+sns.color_palette("RdBu_r")
+sns.color_palette("vlag")
+```
+
+```python
+# Visualizar cualquier paleta
+sns.palplot(sns.color_palette("Set2", n_colors=8))
+plt.show()
+
+# Crear paleta propia a partir de una lista de colores hex
+mi_paleta = ["#264653", "#2a9d8f", "#e9c46a", "#f4a261", "#e76f51"]
+sns.set_palette(mi_paleta)
+```
+
+::: callout-important
+## Paletas accesibles
+Para evitar rojo/verde (8% de varones con daltonismo) en resultados críticos, usa **viridis**, **rocket** o **magma**. Para categóricas, **Set2** y **deep** están bien.
+:::
+
+## Tipos principales de gráficos
+
+### `scatterplot` — dispersión con variables categóricas
+
+```python
+# Datos simulados: medidas de campo de 3 especies de iris-like
+np.random.seed(0)
+df = pd.DataFrame({
+    "largo_petalo": np.concatenate([
+        np.random.normal(1.4, 0.2, 50),
+        np.random.normal(4.5, 0.4, 50),
+        np.random.normal(5.5, 0.5, 50)
+    ]),
+    "ancho_petalo": np.concatenate([
+        np.random.normal(0.2, 0.1, 50),
+        np.random.normal(1.3, 0.2, 50),
+        np.random.normal(2.1, 0.3, 50)
+    ]),
+    "especie": ["E1"]*50 + ["E2"]*50 + ["E3"]*50
+})
+
+sns.scatterplot(data=df, x="largo_petalo", y="ancho_petalo",
+                hue="especie", style="especie", s=60, alpha=0.8)
+plt.title("Morfometría de pétalos por especie")
+plt.show()
+```
+
+- **hue**: colorea por categoría.
+- **style**: cambia el marcador por categoría.
+- **size**: tamaño del marcador según una variable (numérica o categórica).
+- **alpha**: transparencia, clave para datos solapados.
+
+### `boxplot` y `violinplot` — distribución por categoría
+
+```python
+# Boxplot de absorbancia por tratamiento
+trat = ["control"]*8 + ["bajo"]*8 + ["alto"]*8
+absorb = np.concatenate([
+    np.random.normal(0.12, 0.02, 8),
+    np.random.normal(0.28, 0.04, 8),
+    np.random.normal(0.55, 0.06, 8)
+])
+df_abs = pd.DataFrame({"tratamiento": trat, "absorbancia": absorb})
+
+sns.boxplot(data=df_abs, x="tratamiento", y="absorbancia",
+            palette="Set2")
+sns.stripplot(data=df_abs, x="tratamiento", y="absorbancia",
+              color="black", size=3, alpha=0.6)   # puntos individuales encima
+plt.ylabel("Absorbancia (A595)")
+plt.title("Absorbancia por tratamiento")
+plt.show()
+```
+
+```python
+# Violin plot de expresión génica por tejido
+tejidos = ["cerebro"]*30 + ["higado"]*30 + ["musculo"]*30
+expr = np.concatenate([
+    np.random.normal(7.5, 1.2, 30),
+    np.random.normal(3.0, 0.8, 30),
+    np.random.normal(11.0, 1.5, 30)
+])
+df_expr = pd.DataFrame({"tejido": tejidos, "expr_log2": expr})
+
+sns.violinplot(data=df_expr, x="tejido", y="expr_log2",
+               inner="quartile", palette="muted", cut=0)
+plt.ylabel("Expresión (log2 TPM)")
+plt.title("Expresión génica por tejido")
+plt.show()
+```
+
+::: callout-note
+## ¿Box o violin?
+El *boxplot* muestra mediana, cuartiles y *outliers*; es compacto y estándar. El *violinplot* añade la densidad de la distribución, lo que revela bimodalidad que el boxplot oculta. Si tienes n>20 por grupo y quieres ver forma, usa violin.
+:::
+
+### `barplot` (con error bars) y `pointplot`
+
+```python
+# Barplot de conteo promedio de individuos por sitio con IC 95%
+sitios = ["S1"]*5 + ["S2"]*5 + ["S3"]*5 + ["S4"]*5
+conteos = np.concatenate([
+    np.random.poisson(12, 5),
+    np.random.poisson(25, 5),
+    np.random.poisson(8, 5),
+    np.random.poisson(40, 5)
+])
+df_con = pd.DataFrame({"sitio": sitios, "conteo": conteos})
+
+sns.barplot(data=df_con, x="sitio", y="conteo",
+            errorbar=("ci", 95), palette="Blues_d", edgecolor="black")
+plt.ylabel("Conteo medio (IC 95%)")
+plt.title("Abundancia por sitio de muestreo")
+plt.show()
+```
+
+```python
+# Pointplot: ideal para series temporales o interacción
+sns.pointplot(data=df_con, x="sitio", y="conteo",
+              errorbar="se", markers="o", linestyles="-", color="firebrick")
+plt.title("Tendencia de abundancia entre sitios")
+plt.show()
+```
+
+- **errorbar**: `"ci"`, `"se"`, `"pi"` (percentil), `"sd"` o `None`.
+- En seaborn moderno se reemplazó `ci=95` por `errorbar=("ci", 95)`.
+
+### `histplot` y `kdeplot`
+
+```python
+# Histograma + KDE
+datos = np.random.normal(50, 10, 500)
+sns.histplot(datos, kde=True, bins=20, color="#2a9d8f", edgecolor="white")
+plt.xlabel("Peso (g)")
+plt.title("Distribución de pesos corporales")
+plt.show()
+
+# KDE por grupo
+sns.kdeplot(data=df_expr, x="expr_log2", hue="tejido", fill=True, alpha=0.3)
+plt.title("Densidad de expresión por tejido")
+plt.show()
+```
+
+### `pairplot` — matriz de dispersión
+
+```python
+# Datos morfométricos de 3 especies (estilo Iris)
+df_morfo = pd.DataFrame({
+    "largo_sepalo":  np.concatenate([np.random.normal(5.0,0.3,40),
+                                     np.random.normal(5.9,0.4,40),
+                                     np.random.normal(6.6,0.5,40)]),
+    "ancho_sepalo":  np.concatenate([np.random.normal(3.4,0.3,40),
+                                     np.random.normal(2.8,0.3,40),
+                                     np.random.normal(3.0,0.3,40)]),
+    "largo_petalo":  np.concatenate([np.random.normal(1.5,0.2,40),
+                                     np.random.normal(4.3,0.5,40),
+                                     np.random.normal(5.6,0.6,40)]),
+    "ancho_petalo":  np.concatenate([np.random.normal(0.2,0.1,40),
+                                     np.random.normal(1.4,0.3,40),
+                                     np.random.normal(2.1,0.4,40)]),
+    "especie": ["setosa"]*40 + ["versicolor"]*40 + ["virginica"]*40
+})
+
+sns.pairplot(df_morfo, hue="especie", palette="Set1",
+             diag_kind="kde", markers=["o","s","D"], height=2.2)
+plt.suptitle("Matriz de dispersión morfométrica", y=1.02)
+plt.show()
+```
+
+`pairplot` crea scatter dos a dos para todas las variables numéricas, y en la diagonal un histograma o KDE. Es la forma más rápida de explorar estructura en datos multivariados biológicos.
+
+### `heatmap` — matrices
+
+```python
+# Matriz de expresión: 8 genes x 6 muestras
+np.random.seed(7)
+genes = [f"GENE{i}" for i in range(1, 9)]
+muestras = ["Ctrl_1","Ctrl_2","Trat_1","Trat_2","Trat_3","Trat_4"]
+matriz = np.random.normal(0, 1, (8, 6))
+matriz[:, 2:] += np.random.normal(2, 0.5, (8, 4))   # tratamiento up-regulado
+
+sns.heatmap(matriz, annot=True, fmt=".1f", cmap="vlag",
+            xticklabels=muestras, yticklabels=genes,
+            linewidths=0.5, linecolor="white",
+            cbar_kws={"label": "log2 FC"})
+plt.title("Matriz de expresión génica")
+plt.show()
+```
+
+```python
+# Heatmap de correlación entre variables fisiológicas
+df_fisio = pd.DataFrame({
+    "temperatura": np.random.normal(36.8, 0.4, 100),
+    "frecuencia_cardiaca": np.random.normal(72, 8, 100),
+    "presion_sistolica": np.random.normal(120, 10, 100),
+    "glucosa": np.random.normal(95, 12, 100),
+    "colesterol": np.random.normal(180, 25, 100)
+})
+df_fisio["frecuencia_cardiaca"] += (df_fisio["temperatura"]-36.8)*10  # correlación
+corr = df_fisio.corr()
+
+sns.heatmap(corr, annot=True, cmap="coolwarm", center=0,
+            vmin=-1, vmax=1, square=True,
+            linewidths=0.5, fmt=".2f")
+plt.title("Correlación entre variables fisiológicas")
+plt.show()
+```
+
+### `jointplot` — dispersión + distribuciones marginales
+
+```python
+# Largo vs peso de peces
+df_peces = pd.DataFrame({
+    "longitud_cm": np.random.normal(20, 4, 200),
+    "peso_g":      np.random.normal(120, 35, 200)
+})
+df_peces["peso_g"] += (df_peces["longitud_cm"]-20)*8   # relación biológica
+
+sns.jointplot(data=df_peces, x="longitud_cm", y="peso_g",
+              kind="reg", color="#e76f51", height=5)
+plt.suptitle("Longitud vs peso en peces", y=1.02)
+plt.show()
+```
+
+`kind` puede ser `"scatter"`, `"hist"`, `"kde"`, `"reg"` (regresión), `"resid"`.
+
+## FacetGrid y relplot — multiplicar paneles por categoría
+
+Para dividir una figura en paneles según una variable categórica:
+
+```python
+# relplot: figura nivel superior, crea múltiples axes
+df_multi = pd.DataFrame({
+    "tiempo": np.tile(np.arange(0, 24, 2), 12),
+    "crecimiento": np.random.normal(0.2, 0.05, 144).cumsum() + np.repeat(
+                    np.random.normal(0,1,12), each=12)[:144],
+    "tratamiento": np.repeat(["control","nutriente","hormona","mixto"], 36),
+    "genotipo":    np.tile(np.repeat(["WT","mut"], 12), 6)
+})
+
+sns.relplot(data=df_multi, x="tiempo", y="crecimiento",
+            kind="line", col="tratamiento", row="genotipo",
+            height=2.5, aspect=1.3, marker="o", errorbar="se")
+plt.show()
+```
+
+```python
+# FacetGrid manual: más flexible para otros tipos
+g = sns.FacetGrid(df_morfo, col="especie", hue="especie", height=3)
+g.map_dataframe(sns.histplot, x="largo_petalo", kde=True, color="steelblue")
+g.set_titles("Especie: {col_name}")
+g.set_axis_labels("Largo de pétalo (cm)", "Frecuencia")
+plt.show()
+```
+
+::: callout-tip
+## figure-level vs axes-level
+Funciones como `relplot`, `displot`, `catplot`, `pairplot`, `jointplot` son **figure-level**: devuelven un objeto `FacetGrid`/`JointGrid` que gestiona su propia figura. Funciones como `scatterplot`, `boxplot`, `kdeplot` son **axes-level**: devuelven un `Axes` de Matplotlib y se pueden incrustar en cualquier `fig, ax` que ya existas.
+:::
+
+## Personalización fina
+
+```python
+fig, ax = plt.subplots(figsize=(6, 4))
+sns.boxplot(data=df_abs, x="tratamiento", y="absorbancia",
+            palette="Set2", ax=ax)
+ax.set_xlabel("Tratamiento", fontsize=11)
+ax.set_ylabel("Absorbancia $A_{595}$", fontsize=11)
+ax.set_title("Absorbancia tras 24 h", fontsize=13, fontweight="bold")
+ax.set_ylim(0, 0.8)
+
+# Mover leyenda si la hubiera
+# handles, labels = ax.get_legend_handles_labels()
+# ax.legend(handles, labels, title="Grupo", loc="upper left", frameon=False)
+
+# Quitar bordes superior y derecho (estilo "despine")
+sns.despine(ax=ax)
+plt.tight_layout()
+plt.show()
+```
+
+## Integración con Matplotlib
+
+```python
+# Combinar dos plots de seaborn en una sola figura
+fig, axes = plt.subplots(1, 2, figsize=(10, 4), sharey=True)
+sns.boxplot(data=df_abs, x="tratamiento", y="absorbancia",
+            palette="Set2", ax=axes[0])
+axes[0].set_title("Boxplot")
+
+sns.violinplot(data=df_abs, x="tratamiento", y="absorbancia",
+               palette="Set2", inner="quartile", ax=axes[1])
+axes[1].set_title("Violinplot")
+for ax in axes:
+    sns.despine(ax=ax)
+plt.tight_layout()
+plt.show()
+```
+
+## Guardar figuras
+
+```python
+# Guardar en alta resolución
+plt.figure(figsize=(6,4))
+sns.scatterplot(data=df, x="largo_petalo", y="ancho_petalo", hue="especie")
+plt.title("Dispersión morfométrica")
+plt.savefig("dispersion.png", dpi=300, bbox_inches="tight")
+plt.savefig("dispersion.pdf", bbox_inches="tight")   # vectorial para paper
+plt.savefig("dispersion.svg", bbox_inches="tight")   # editable en Inkscape/Illustrator
+plt.show()
+```
+
+::: callout-important
+## Resolución para *paper*
+La mayoría de revistas piden **300 dpi** mínimo. Para figuras de tamaño variable, **PDF/SVG** (vectorial) es mejor: no pierde resolución al hacer *zoom* ni al redimensionar.
+:::
+
+## Ejemplos biológicos adicionales
+
+### Barplot con barra de error de conteos por sitio
+
+```python
+# Conteos de avistamientos de aves por sitio (5 réplicas por sitio)
+np.random.seed(11)
+sitios = ["A"]*5 + ["B"]*5 + ["C"]*5 + ["D"]*5
+conteos = np.concatenate([
+    np.random.poisson(8,  5),
+    np.random.poisson(15, 5),
+    np.random.poisson(22, 5),
+    np.random.poisson(30, 5)
+])
+df_av = pd.DataFrame({"sitio": sitios, "conteo": conteos})
+
+plt.figure(figsize=(6,4))
+sns.barplot(data=df_av, x="sitio", y="conteo",
+            errorbar="sd", capsize=0.1, palette="Greens_d",
+            edgecolor="black")
+sns.stripplot(data=df_av, x="sitio", y="conteo",
+              color="black", alpha=0.5, size=4)
+plt.ylabel("Conteo medio ± DE")
+plt.xlabel("Sitio de muestreo")
+plt.title("Abundancia de aves por sitio (n=5 réplicas)")
+plt.tight_layout()
+plt.show()
+```
+
+El parámetro `capsize` añade las **barbaritas** (*caps*) en los extremos de las barras de error. Combinado con `stripplot` encima, da el estándar moderno de publicaciones.
+
+### Scatter con `hue` = especie de datos de campo
+
+```python
+# Datos de campo: tres especies de planta, largo y ancho de hoja
+np.random.seed(3)
+df_campo = pd.DataFrame({
+    "largo_hoja": np.concatenate([
+        np.random.normal(8, 1.2, 60),
+        np.random.normal(12, 1.5, 60),
+        np.random.normal(18, 2.0, 60)
+    ]),
+    "ancho_hoja": np.concatenate([
+        np.random.normal(3, 0.5, 60),
+        np.random.normal(5, 0.8, 60),
+        np.random.normal(7, 1.0, 60)
+    ]),
+    "especie": ["Quercus_ilex"]*60 + ["Quercus_robur"]*60 + ["Quercus_pubescens"]*60,
+    "humedad":  np.random.uniform(30, 90, 180)   # variable continua para size
+})
+
+sns.scatterplot(data=df_campo, x="largo_hoja", y="ancho_hoja",
+                hue="especie", style="especie",
+                size="humedad", sizes=(20, 120), alpha=0.7,
+                palette="Dark2")
+plt.xlabel("Largo de hoja (cm)")
+plt.ylabel("Ancho de hoja (cm)")
+plt.title("Morfometría foliar por especie (tamaño ∝ humedad)")
+plt.legend(bbox_to_anchor=(1.02, 1), loc="upper left", borderaxespad=0)
+plt.tight_layout()
+plt.show()
+```
+
+Aquí se combinan **tres dimensiones** en un solo scatter: eje x, eje y, color (`hue`) y tamaño (`size`) para una variable continua. La leyenda se mueve fuera del gráfico con `bbox_to_anchor`.
+
+---
+
+## Ejercicios
+
+### Ejercicio 1
+Crea un DataFrame con columnas `"grupo"` (tres niveles: `control`, `tratamiento_A`, `tratamiento_B`) y `"respuesta"` (numérica) con al menos 30 filas simuladas. Realiza un boxplot de `respuesta` por `grupo` con Seaborn, añadiendo los puntos individuales encima.
+
+### Ejercicio 2
+Crea una matriz 10×10 de correlaciones simuladas entre variables fisiológicas y grafícala como `heatmap` con `annot=True` y `cmap="coolwarm"`.
+
+### Ejercicio 3
+Crea un DataFrame con 4 variables numéricas (`largo`, `ancho`, `peso`, `edad`) y una columna `especie` con 3 especies. Realiza un `pairplot` coloreado por especie.
+
+---
+
+## Soluciones
+
+### Solución 1
+
+```python
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+np.random.seed(42)
+# 30 filas totales: 10 por grupo
+df = pd.DataFrame({
+    "grupo": ["control"]*10 + ["tratamiento_A"]*10 + ["tratamiento_B"]*10,
+    "respuesta": np.concatenate([
+        np.random.normal(10, 2, 10),    # control
+        np.random.normal(14, 2, 10),    # tratamiento_A
+        np.random.normal(18, 2.5, 10)   # tratamiento_B
+    ])
+})
+
+sns.set_theme(style="whitegrid", context="notebook")
+sns.boxplot(data=df, x="grupo", y="respuesta", palette="Set2")
+# Puntos individuales (jitter) encima del boxplot
+sns.stripplot(data=df, x="grupo", y="respuesta",
+              color="black", alpha=0.6, size=4, jitter=True)
+plt.ylabel("Respuesta (u.a.)")
+plt.xlabel("Grupo experimental")
+plt.title("Respuesta por tratamiento (n=10 por grupo)")
+sns.despine()
+plt.tight_layout()
+plt.show()
+```
+
+**Comentario**: la combinación `boxplot + stripplot` es un estándar moderno en publicaciones porque muestra tanto resumen (cuartiles) como datos individuales.
+
+### Solución 2
+
+```python
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+np.random.seed(0)
+# Variables fisiológicas simuladas
+variables = ["temp","FC","pSis","pDia","glucosa",
+             "colesterol","LDL","HDL","trigliceridos","creatinina"]
+n = 80
+datos = np.random.normal(0, 1, (n, 10))
+
+# Forzamos algunas correlaciones realistas
+datos[:, 2] += 0.6*datos[:, 1]    # presión sistólica ↔ FC
+datos[:, 6] += 0.8*datos[:, 5]    # LDL ↔ colesterol
+datos[:, 7] -= 0.5*datos[:, 5]    # HDL ↔ colesterol (negativa)
+datos[:, 8] += 0.4*datos[:, 4]    # triglicéridos ↔ glucosa
+
+df = pd.DataFrame(datos, columns=variables)
+corr = df.corr()
+
+plt.figure(figsize=(9, 7))
+sns.heatmap(corr, annot=True, fmt=".2f", cmap="coolwarm",
+            center=0, vmin=-1, vmax=1, square=True,
+            linewidths=0.5, linecolor="white",
+            cbar_kws={"label": "Correlación de Pearson"})
+plt.title("Heatmap de correlación (10 variables fisiológicas)")
+plt.tight_layout()
+plt.show()
+```
+
+**Comentario**: `center=0` con `vmin=-1, vmax=1` y `cmap="coolwarm"` produce el esquema clásico azul–blanco–rojo para correlaciones. El parámetro `square=True` mantiene celdas iguales.
+
+### Solución 3
+
+```python
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+np.random.seed(7)
+n = 40
+df = pd.DataFrame({
+    "largo": np.concatenate([np.random.normal(12,1.2,n),
+                             np.random.normal(18,1.6,n),
+                             np.random.normal(25,2.0,n)]),
+    "ancho": np.concatenate([np.random.normal(5,0.6,n),
+                             np.random.normal(7,0.8,n),
+                             np.random.normal(10,1.0,n)]),
+    "peso":  np.concatenate([np.random.normal(20,3,n),
+                             np.random.normal(55,6,n),
+                             np.random.normal(120,12,n)]),
+    "edad":  np.concatenate([np.random.normal(1.5,0.3,n),
+                             np.random.normal(3.0,0.5,n),
+                             np.random.normal(5.5,0.8,n)]),
+    "especie": ["sp_A"]*n + ["sp_B"]*n + ["sp_C"]*n
+})
+
+sns.set_theme(style="ticks", context="notebook")
+g = sns.pairplot(df, hue="especie", palette="Set1",
+                 diag_kind="kde", markers=["o","s","D"],
+                 height=2.3, plot_kws={"alpha":0.7, "s":25})
+g.fig.suptitle("Matriz de dispersión morfométrica por especie",
+               y=1.02, fontsize=13)
+plt.show()
+```
+
+**Comentario**: `diag_kind="kde"` suaviza la diagonal. `plot_kws={"alpha":0.7}` reduce solapamientos. El `pairplot` revela de inmediato qué variables separan mejor las especies (en este caso, todas).
+
+---
+
+En el siguiente capítulo abordaremos **SciPy** para poner a estas visualizaciones un respaldo estadístico riguroso: tests de hipótesis, regresión y correlaciones con p-values interpretables.

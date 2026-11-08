@@ -1,0 +1,369 @@
+---
+title: "Capítulo 2: Sintaxis básica: variables y tipos de datos"
+---
+
+## 2.1 Variables: qué son y cómo declararlas
+
+Una **variable** es un nombre que hace referencia a un valor almacenado en memoria. En Python, las variables se crean en el momento de la asignación: no se declaran explícitamente con un tipo, como ocurre en lenguajes como C o Java. Esta característica se llama **tipado dinámico**.
+
+```python
+temperatura = 37         # se infiere tipo int
+concentracion = 0.5      # se infiere tipo float
+especie = "E. coli"      # se infiere tipo str
+es_patogeno = True       # se infiere tipo bool
+```
+
+Para conocer el tipo de una variable puedes usar la función `type()`:
+
+```python
+type(temperatura)        # <class 'int'>
+type(concentracion)      # <class 'float'>
+```
+
+### Reglas de nombrado
+
+- Deben comenzar con una letra o guion bajo (`_`), nunca con un número.
+- Pueden contener letras, números y guiones bajos, pero no espacios ni caracteres especiales como `-`, `+`, `@`.
+- Distinguen mayúsculas y minúsculas: `temperatura` y `Temperatura` son variables distintas.
+- No pueden coincidir con palabras reservadas del lenguaje (`if`, `for`, `while`, `class`, `def`, `True`, `False`, `None`, etc.).
+
+::: callout-tip
+Sigue la convención **snake_case**: palabras en minúsculas separadas por guion bajo (`longitud_adn`, `temperatura_incubacion`). Usa nombres descriptivos: `n_celulas_ml` es mejor que `n` o `x`.
+:::
+
+## 2.2 Tipos básicos de datos
+
+Python tiene cuatro tipos primitivos fundamentales:
+
+| Tipo | Nombre | Ejemplo |
+|---|---|---|
+| Entero | `int` | `37`, `-5`, `1200` |
+| Flotante | `float` | `0.5`, `3.1416`, `2.0` |
+| Cadena | `str` | `"E. coli"`, `'ATGCGAT'` |
+| Booleano | `bool` | `True`, `False` |
+
+### Enteros (`int`)
+
+Representan números sin parte decimal. En Python 3 no tienen límite de tamaño (salvo memoria disponible):
+
+```python
+numero_bases_adn = 3_200_000_000   # guion bajo como separador visual
+```
+
+### Flotantes (`float`)
+
+Números con parte decimal, almacenados como punto flotante de doble precisión (IEEE 754). Esto implica limitaciones de precisión que conviene conocer:
+
+```python
+0.1 + 0.2   # 0.30000000000000004
+```
+
+::: callout-warning
+Nunca compares flotantes con `==`. Usa tolerancias: `abs(a - b) < 1e-9`. Para cálculos financieros o científicos críticos, considera el módulo `decimal`.
+:::
+
+### Cadenas (`str`)
+
+Secuencias inmutables de caracteres. Pueden escribirse con comillas simples, dobles o triples (para textos multilínea):
+
+```python
+secuencia = "ATGCGATCGATA"
+descripcion = '''Esta secuencia corresponde
+al gen rpoB de E. coli.'''
+
+# Caracteres especiales con barra invertida
+salto = "Línea 1\nLínea 2"
+tabulado = "Col1\tCol2"
+```
+
+### Booleanos (`bool`)
+
+Solo dos valores: `True` y `False`. Resultan de expresiones lógicas o comparaciones:
+
+```python
+es_gram_negativa = True
+es_aerobica = False
+ambas = es_gram_negativa and es_aerobica   # False
+```
+
+## 2.3 Conversión entre tipos
+
+Python ofrece funciones constructoras para convertir entre tipos:
+
+```python
+int("42")       # 42
+int(3.9)        # 3 (trunca la parte decimal)
+float("0.5")    # 0.5
+float(7)        # 7.0
+str(37)         # "37"
+bool(0)         # False
+bool("")        # False (cadena vacía es falsa)
+bool("E. coli") # True
+bool(0.0)       # False
+```
+
+::: callout-note
+Los valores considerados "falsos" en Python son: `0`, `0.0`, `""`, `[]`, `{}`, `None` y `False`. Cualquier otro valor se considera "verdadero". Esto se llama **verdad/falsedad** (*truthiness*) y es muy útil en condicionales.
+:::
+
+## 2.4 Operadores aritméticos
+
+| Operador | Operación | Ejemplo | Resultado |
+|---|---|---|---|
+| `+` | Suma | `5 + 3` | `8` |
+| `-` | Resta | `5 - 3` | `2` |
+| `*` | Multiplicación | `5 * 3` | `15` |
+| `/` | División | `7 / 2` | `3.5` |
+| `//` | División entera | `7 // 2` | `3` |
+| `%` | Módulo (resto) | `7 % 2` | `1` |
+| `**` | Potencia | `2 ** 10` | `1024` |
+
+```python
+moles = 0.5
+volumen_litros = 0.250
+concentracion = moles / volumen_litros   # 2.0 M
+```
+
+::: callout-tip
+El operador `%` es muy útil para verificar paridad o extraer el último dígito. Por ejemplo, `numero % 2 == 0` verifica si un número es par.
+:::
+
+## 2.5 Operadores de asignación
+
+| Operador | Equivalente |
+|---|---|
+| `=` | `x = 5` |
+| `+=` | `x = x + 5` |
+| `-=` | `x = x - 5` |
+| `*=` | `x = x * 5` |
+| `/=` | `x = x / 5` |
+| `//=` | `x = x // 5` |
+| `%=` | `x = x % 5` |
+| `**=` | `x = x ** 5` |
+
+```python
+conteo_celulas = 100
+conteo_celulas += 50     # ahora 150
+conteo_celulas *= 2      # ahora 300
+```
+
+## 2.6 Operadores de comparación
+
+| Operador | Significado | Ejemplo |
+|---|---|---|
+| `==` | Igualdad | `5 == 5` → `True` |
+| `!=` | Desigualdad | `5 != 3` → `True` |
+| `<` | Menor que | `3 < 5` → `True` |
+| `>` | Mayor que | `3 > 5` → `False` |
+| `<=` | Menor o igual | `5 <= 5` → `True` |
+| `>=` | Mayor o igual | `6 >= 5` → `True` |
+
+```python
+absorbancia = 0.8
+es_valida = 0.0 <= absorbancia <= 1.0   # True, comparación encadenada
+```
+
+## 2.7 Operadores lógicos
+
+Python usa palabras en lugar de símbolos para los operadores lógicos:
+
+- `and`: verdadero si ambos operandos son verdaderos.
+- `or`: verdadero si al menos uno es verdadero.
+- `not`: invierte el valor booleano.
+
+```python
+es_aerobica = True
+es_gram_negativa = True
+es_patogeno = es_aerobica and es_gram_negativa   # True
+no_patogeno = not es_patogeno                    # False
+```
+
+### Evaluación de cortocircuito
+
+Python evalúa `and` y `or` de izquierda a derecha deteniéndose apenas conoce el resultado. En `a and b`, si `a` es falso, no evalúa `b`. Esto es útil para evitar errores:
+
+```python
+absorbancia = None
+if absorbancia is not None and absorbancia > 0.5:
+    print("Alta absorbancia")
+# Sin cortocircuito, comparar None con > lanzaría error
+```
+
+## 2.8 f-strings para formato de texto
+
+Las **f-strings** (cadenas con formato), introducidas en Python 3.6, son la forma moderna y recomendada de insertar variables dentro de texto:
+
+```python
+especie = "E. coli"
+temperatura = 37
+print(f"La especie {especie} se incubó a {temperatura} °C")
+# La especie E. coli se incubó a 37 °C
+```
+
+### Formato numérico
+
+```python
+pi = 3.141592653589
+print(f"Pi con 2 decimales: {pi:.2f}")        # 3.14
+print(f"Pi en notación científica: {pi:.3e}") # 3.142e+00
+
+concentracion = 0.0025
+print(f"Concentración: {concentracion:.2%}")  # 0.25%
+
+n_celulas = 1_500_000
+print(f"Total: {n_celulas:,}")                # Total: 1,500,000
+```
+
+::: callout-tip
+Las f-strings también permiten **expresiones** dentro de las llaves: `print(f"El doble es {2*x}")`. Y para depuración rápida, usa `=` después del nombre: `print(f"{x=}")` imprime `x=10`.
+:::
+
+## 2.9 Ejemplos biológicos
+
+### Calcular concentración molar
+
+La concentración molar $M = \text{moles}/\text{volumen (L)}$:
+
+```python
+moles = 0.5
+volumen_ml = 250
+volumen_l = volumen_ml / 1000.0   # convertir mL a L
+concentracion = moles / volumen_l
+print(f"Concentración: {concentracion:.2f} M")   # 2.00 M
+```
+
+### Peso molecular de una proteína
+
+Aproximación: el peso molecular promedio de un aminoácido en una proteína es ~110 Da (ya descontada el agua de la unión peptídica):
+
+```python
+longitud_aa = 300
+peso_promedio_da = 110
+peso_molecular = longitud_aa * peso_promedio_da
+print(f"Peso molecular: {peso_molecular} Da = {peso_molecular/1000:.1f} kDa")
+# Peso molecular: 33000 Da = 33.0 kDa
+```
+
+### Conversión de temperaturas
+
+```python
+temp_c = 37
+temp_k = temp_c + 273.15
+temp_f = (temp_c * 9/5) + 32
+print(f"{temp_c} °C = {temp_k:.2f} K = {temp_f:.1f} °F")
+# 37 °C = 310.15 K = 98.6 °F
+```
+
+### Operar con conteos de células
+
+```python
+conteo_inicial = 100
+factor_dilucion = 10
+volumen_total_ml = 5
+total_celulas = conteo_inicial * factor_dilucion * volumen_total_ml
+print(f"Total células estimadas: {total_celulas:,}")
+# Total células estimadas: 5,000
+```
+
+### Verificar absorbancia dentro de rango
+
+```python
+absorbancia = 0.65
+rango_min = 0.0
+rango_max = 1.0
+es_valida = rango_min <= absorbancia <= rango_max
+print(f"Absorbancia {absorbancia} es válida: {es_valida}")   # True
+```
+
+## 2.10 Ejercicios
+
+### Ejercicio 1
+
+Calcula la concentración molar de una solución que contiene 0.5 moles de soluto disueltos en 250 mL de solvente. Muestra el resultado en M (molar) usando f-strings con 3 decimales.
+
+### Ejercicio 2
+
+Dada una secuencia de ADN de 1200 pares de bases, calcula su masa aproximada considerando que cada par de bases contribuye en promedio 650 Da. Muestra el resultado en Da y en kDa, con f-strings.
+
+### Ejercicio 3
+
+La temperatura de incubación de un cultivo es 37 °C. Conviértela a grados Kelvin y Fahrenheit, y muestra un mensaje con f-strings que indique claramente los tres valores. Verifica además si la temperatura en Kelvin está por encima del punto de congelación del agua (273.15 K).
+
+## 2.11 Soluciones
+
+### Solución Ejercicio 1
+
+```python
+# Datos del problema
+moles_solutos = 0.5            # moles de soluto
+volumen_ml = 250               # volumen en mililitros
+
+# Paso 1: convertir el volumen a litros (la unidad de M es mol/L)
+volumen_l = volumen_ml / 1000.0   # 0.25 L
+
+# Paso 2: aplicar la fórmula M = moles / volumen(L)
+concentracion_molar = moles_solutos / volumen_l   # 2.0 M
+
+# Paso 3: mostrar resultado con 3 decimales usando f-string
+print(f"Concentración: {concentracion_molar:.3f} M")
+# Salida: Concentración: 2.000 M
+```
+
+### Solución Ejercicio 2
+
+```python
+# Datos del problema
+longitud_pb = 1200              # pares de bases
+masa_por_pb_da = 650            # Da por par de bases (aproximación)
+
+# Paso 1: calcular masa total en Daltons
+masa_da = longitud_pb * masa_por_pb_da
+# 1200 * 650 = 780 000 Da
+
+# Paso 2: convertir a kDa (1 kDa = 1000 Da)
+masa_kda = masa_da / 1000.0
+# 780.0 kDa
+
+# Paso 3: mostrar ambos resultados con f-strings
+print(f"Secuencia de {longitud_pb} pb")
+print(f"Masa aproximada: {masa_da:,} Da")     # con separador de miles
+print(f"Masa aproximada: {masa_kda:.2f} kDa")
+# Salida:
+# Secuencia de 1200 pb
+# Masa aproximada: 780,000 Da
+# Masa aproximada: 780.00 kDa
+```
+
+### Solución Ejercicio 3
+
+```python
+# Datos del problema
+temp_c = 37                     # temperatura en °C
+
+# Conversión a Kelvin: K = °C + 273.15
+temp_k = temp_c + 273.15        # 310.15 K
+
+# Conversión a Fahrenheit: °F = (°C * 9/5) + 32
+temp_f = (temp_c * 9/5) + 32    # 98.6 °F
+
+# Verificación: ¿la temperatura en K está por encima del punto de congelación del agua?
+punto_congelacion_agua_k = 273.15
+esta_por_encima = temp_k > punto_congelacion_agua_k   # True
+
+# Mostrar resultados con f-strings
+print(f"Temperatura de incubación:")
+print(f"  {temp_c} °C")
+print(f"  {temp_k:.2f} K")
+print(f"  {temp_f:.1f} °F")
+print(f"¿Por encima del punto de congelación del agua? {esta_por_encima}")
+# Salida:
+# Temperatura de incubación:
+#   37 °C
+#   310.15 K
+#   98.6 °F
+# ¿Por encima del punto de congelación del agua? True
+```
+
+::: callout-note
+Estas conversiones son exactas (no son aproximaciones). El Kelvin es una escala absoluta, donde 0 K es el cero absoluto de temperatura. Por eso `temp_k > 273.15` compara con el punto de congelación del agua, no con el cero absoluto.
+:::

@@ -1,0 +1,457 @@
+---
+title: "Manejo de errores y excepciones"
+---
+
+# Manejo de errores y excepciones
+
+Al programar para análisis biológico, los errores son inevitables: un archivo FASTA que se movió de carpeta, una concentración introducida con signo negativo, un valor `NA` en un CSV que no se pudo convertir a `float`, una división por cero al normalizar datos cuando el máximo es cero. La diferencia entre un script amateur y uno robusto está en **cómo se manejan esos errores**.
+
+En este capítulo aprenderás la diferencia entre errores de sintaxis y excepciones, las excepciones más comunes, la estructura `try/except/else/finally`, cómo lanzar y crear tus propias excepciones, y cómo usar `assert` para validar invariantes. El objetivo no es *evitar* todos los errores (imposible), sino **fallar de forma informativa y controlada**.
+
+## Errores de sintaxis vs excepciones
+
+Un **error de sintaxis** (*SyntaxError*) ocurre cuando el código viola las reglas gramaticales de Python. Se detecta al *compilar* (antes de ejecutar) y nunca llega a producirse la ejecución:
+
+```python
+# Error de sintaxis: falta dos puntos
+if x > 0
+    print("positivo")
+```
+
+Un **error en tiempo de ejecución** o **excepción** ocurre durante la ejecución de código sintácticamente correcto:
+
+```python
+# Sintaxis correcta, pero falla en ejecución si n = 0
+n = 0
+resultado = 10 / n   # ZeroDivisionError
+```
+
+::: callout-note
+## Distinción clave
+- **SyntaxError**: el intérprete no entiende el código → arréglalo en el editor.
+- **Excepción**: el código es válido pero algo salió mal al ejecutarlo → manéjalo con `try/except`.
+:::
+
+## Excepciones comunes
+
+| Excepción | Cuándo ocurre |
+|-----------|---------------|
+| `TypeError` | Operación con tipo inadecuado, p. ej. `"AGCT" + 5` |
+| `ValueError` | Tipo correcto pero valor inválido, p. ej. `int("hola")` |
+| `ZeroDivisionError` | División por cero |
+| `IndexError` | Índice fuera de rango en una secuencia |
+| `KeyError` | Clave inexistente en un diccionario |
+| `FileNotFoundError` | `open()` de un archivo que no existe |
+| `AttributeError` | Acceso a un atributo/método inexistente |
+| `ImportError` | Fallo al importar un módulo |
+| `KeyboardInterrupt` | El usuario pulsó Ctrl+C |
+
+```python
+# TypeError: no se puede concatenar str con int
+"secuencia_" + 5
+
+# ValueError: int() no puede convertir "XYZ"
+int("XYZ")
+
+# IndexError: lista de 3 elementos, índice 10
+lista = [10, 20, 30]
+lista[10]
+
+# KeyError: la clave 'temperatura' no está
+datos = {"ph": 7.4}
+datos["temperatura"]
+```
+
+## Estructura `try/except/else/finally`
+
+La sintaxis completa para capturar y manejar excepciones es:
+
+```python
+try:
+    # Código que puede fallar
+    archivo = open("datos.csv")
+    contenido = archivo.read()
+except FileNotFoundError:
+    # Se ejecuta SOLO si ocurre esa excepción
+    print("El archivo no se encontró.")
+except Exception as exc:
+    # Cualquier otra excepción
+    print(f"Error inesperado: {exc}")
+else:
+    # Se ejecuta SOLO si NO hubo excepción
+    print(f"Leídas {len(contenido)} caracteres")
+finally:
+    # Se ejecuta SIEMPRE, haya o no excepción
+    print("Fin del bloque try")
+```
+
+::: callout-important
+## Orden de los bloques
+- `except` se evalúa de arriba abajo; **coloca primero las excepciones más específicas** y después las más generales.
+- `else` y `finally` son opcionales, pero `finally` es ideal para cerrar recursos.
+- `else` es útil para mantener separado el "código que puede fallar" del "código que procesa el resultado".
+:::
+
+## Capturar múltiples excepciones
+
+Puedes capturar varias excepciones en una sola tupla o con varios bloques `except`:
+
+```python
+try:
+    valor = float(input("Introduce una absorbancia: "))
+    resultado = 1.0 / valor
+except (ValueError, ZeroDivisionError) as exc:
+    print(f"Entrada inválida o cero: {exc}")
+```
+
+## Específica vs genérica
+
+::: callout-warning
+## No abuses de `except:` (sin tipo)
+Usar `except:` a secas (o `except Exception:` sin pensar) **oculta errores reales** y dificulta el debugging. Captura solo las excepciones que esperas y sabes cómo manejar.
+
+```python
+# ❌ Malo: traga cualquier error sin informar
+try:
+    procesar_datos()
+except:
+    pass
+
+# ✅ Bueno: específico e informativo
+try:
+    procesar_datos()
+except FileNotFoundError as e:
+    print(f"No encuentro el archivo de entrada: {e}")
+```
+:::
+
+## Lanzar excepciones con `raise`
+
+A veces tú detectas una situación inválida y quieres *lanzar* una excepción para que el llamador la maneje:
+
+```python
+def calcular_molaridad(moles, volumen_litros):
+    if volumen_litros <= 0:
+        raise ValueError("El volumen debe ser positivo.")
+    if moles < 0:
+        raise ValueError("Los moles no pueden ser negativos.")
+    return moles / volumen_litros
+```
+
+```python
+try:
+    m = calcular_molaridad(-0.5, 0.250)
+except ValueError as e:
+    print(f"No se pudo calcular: {e}")
+```
+
+## Excepciones personalizadas
+
+Cuando tu dominio (la biología) tiene tipos de error específicos, conviene definir **tus propias excepciones** heredando de `Exception`. Esto hace tu código más legible y permite capturar errores propios sin interferir con excepciones estándar.
+
+```python
+class InvalidSequenceError(Exception):
+    """Se lanza cuando una secuencia contiene caracteres no válidos."""
+    pass
+
+class ConcentracionInvalidaError(Exception):
+    """Se lanza cuando una concentración es negativa o cero."""
+    pass
+```
+
+```python
+BASES_VALIDAS = set("ACGT")
+
+def validar_secuencia_dna(secuencia):
+    secuencia = secuencia.upper().replace("\n", "").replace(" ", "")
+    for base in secuencia:
+        if base not in BASES_VALIDAS:
+            raise InvalidSequenceError(
+                f"Carácter inválido '{base}' en la secuencia."
+            )
+    return secuencia
+```
+
+## Debug con `traceback`
+
+Cuando una excepción no se captura, Python imprime un **traceback** con la pila de llamadas. Leerlo de abajo arriba te dice qué salió mal y dónde:
+
+```
+Traceback (most recent call last):
+  File "analisis.py", line 25, in <module>
+    resultado = calcular_molaridad(moles, vol)
+  File "analisis.py", line 12, in calcular_molaridad
+    raise ValueError("El volumen debe ser positivo.")
+ValueError: El volumen debe ser positivo.
+```
+
+Para registrar el traceback completo (por ejemplo, al usar `logging`), usa el módulo `traceback`:
+
+```python
+import traceback
+try:
+    algo_riesgoso()
+except Exception:
+    traceback.print_exc()   # imprime el traceback
+```
+
+## Logging básico (mención)
+
+Para análisis serios, `print()` no basta: conviene usar el módulo `logging`, que permite niveles (`DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL`) y salida a archivo. A diferencia de `print`, los logs llevan marca temporal, pueden filtrarse por nivel y persistirse en disco para auditar el análisis:
+
+```python
+import logging
+logging.basicConfig(
+    filename="analisis.log",
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logging.info("Inicio del análisis")
+logging.warning("Concentración baja: 0.01 µM")
+logging.error("No se encontró el archivo FASTA")
+```
+
+Los niveles siguen una jerarquía: `DEBUG < INFO < WARNING < ERROR < CRITICAL`. Si configuras `level=logging.WARNING`, solo se mostrarán warnings, errores y críticos (los `debug` e `info` se descartan), útil para reducir ruido en producción.
+
+::: callout-tip
+## Consejo
+Usa `logging.exception("mensaje")` dentro de un `except` para registrar el mensaje **y** el traceback completo automáticamente. Es la forma idiomática de registrar excepciones en pipelines de análisis.
+
+```python
+try:
+    procesar_lote()
+except Exception:
+    logging.exception("Fallo al procesar el lote")
+    # opcionalmente relanzar: raise
+```
+:::
+
+## Buenas prácticas en *pipelines* biológicos
+
+Cuando construyes un *pipeline* de análisis (varios pasos encadenados: leer → filtrar → normalizar → modelar → graficar), los errores en un paso intermedio pueden propagarse silenciosamente y arruinar todo el resultado. Algunas recomendaciones:
+
+1. **Valida entradas al inicio** del pipeline (existence de archivos, columnas esperadas, rangos plausibles). Fallar pronto evita trabajar con datos corruptos.
+2. **No atrapes excepciones en medio** del pipeline solo para "que no se caiga": un error a mitad de cálculo debe detener el flujo.
+3. **Registra progreso** con `logging.info(...)` en cada etapa para saber dónde se detuvo.
+4. **Aísla operaciones riesgosas** (lectura de un archivo entre muchos) en su propio `try/except` para que un archivo corrupto no aborte el análisis completo:
+
+```python
+resultados = {}
+for ruta in rutas_csv:
+    try:
+        resultados[ruta] = pd.read_csv(ruta)
+    except Exception as exc:
+        logging.error("No se pudo leer %s: %s", ruta, exc)
+        continue
+```
+
+## Aserciones con `assert`
+
+`assert condicion, "mensaje"` comprueba que `condicion` es verdadera; si no, lanza `AssertionError` con el mensaje. Es ideal para **invariantes** y depuración:
+
+```python
+def traducir(secuencia):
+    # Longitud de un ORF debe ser múltiplo de 3
+    assert len(secuencia) % 3 == 0, "La secuencia no es múltiplo de 3"
+    codones = [secuencia[i:i+3] for i in range(0, len(secuencia), 3)]
+    # ... traducción ...
+```
+
+::: callout-warning
+## `assert` NO para validación de usuario
+Las aserciones se pueden desactivar ejecutando Python con `-O` (optimizado). **Nunca** uses `assert` para validar entradas del usuario o datos externos: usa `if` + `raise` en su lugar. Reserva `assert` para comprobaciones internas durante el desarrollo.
+:::
+
+## Ejemplos biológicos
+
+### 1) Archivo FASTA inexistente
+
+```python
+ruta = "secuencia.fasta"
+try:
+    with open(ruta) as f:
+        fasta = f.read()
+except FileNotFoundError:
+    print(f"No se encontró {ruta}. Verifica la ruta.")
+    fasta = None
+```
+
+### 2) Validar secuencia de ADN con excepción personalizada
+
+```python
+class InvalidSequenceError(Exception):
+    pass
+
+def es_dna_valido(seq):
+    bases = set("ACGT")
+    return set(seq.upper()) <= bases
+
+def parse_fasta(seq):
+    if not es_dna_valido(seq):
+        raise InvalidSequenceError("Secuencia con caracteres no-ACGT")
+    return seq.upper()
+
+try:
+    parse_fasta("ATGCGTNNNXYZ")
+except InvalidSequenceError as e:
+    print(e)
+```
+
+### 3) División por cero al normalizar
+
+```python
+def normalizar(valores):
+    maximo = max(valores)
+    if maximo == 0:
+        raise ZeroDivisionError("No se puede normalizar: el máximo es 0")
+    return [v / maximo for v in valores]
+
+try:
+    normalizar([0, 0, 0])
+except ZeroDivisionError as e:
+    print(e)
+```
+
+### 4) Validar concentración negativa
+
+```python
+def preparar_dilucion(stock_mM, factor):
+    if stock_mM <= 0:
+        raise ValueError("La concentración stock debe ser positiva")
+    return stock_mM / factor
+```
+
+### 5) String a float en CSV con valores faltantes
+
+```python
+def parse_float(valor):
+    try:
+        return float(valor)
+    except (ValueError, TypeError):
+        return None   # tratamos como dato faltante
+
+print(parse_float("0.45"))   # 0.45
+print(parse_float("NA"))     # None
+print(parse_float(""))       # None
+```
+
+### 6) `assert` para longitud múltiplo de 3
+
+```python
+def traducir_orf(seq):
+    assert len(seq) % 3 == 0, f"ORF de longitud {len(seq)} no múltiplo de 3"
+    return [seq[i:i+3] for i in range(0, len(seq), 3)]
+```
+
+## Ejercicios
+
+### Ejercicio 1
+
+Escribe una función `validar_secuencia_dna(sec)` que **lance** `ValueError` si la secuencia contiene caracteres distintos de A, C, G o T (mayúsculas o minúsculas). Pruébala con una secuencia válida (`"ATGCGT"`) y una inválida (`"ATGXGT"`), capturando el error y mostrando un mensaje.
+
+### Ejercicio 2
+
+Escribe un bloque `try/except` que intente abrir el archivo `"datos_inexistentes.csv"` y maneje el `FileNotFoundError` mostrando un mensaje amigable al usuario.
+
+### Ejercicio 3
+
+Crea una clase de excepción personalizada `ConcentracionInvalidaError`. Úsala en una función `calcular_molaridad(moles, volumen)` que valide que **ambos** parámetros sean positivos; si no, lanza la excepción con un mensaje informativo.
+
+## Soluciones
+
+### Solución 1
+
+```python
+def validar_secuencia_dna(sec):
+    """Devuelve la secuencia en mayúsculas si es válida; lanza ValueError si no."""
+    bases_validas = set("ACGT")
+    sec_limpia = sec.upper().strip()
+    # Recorremos y comprobamos carácter por carácter
+    for i, base in enumerate(sec_limpia):
+        if base not in bases_validas:
+            # Mensaje útil: incluye posición y carácter problemático
+            raise ValueError(
+                f"Carácter inválido '{base}' en posición {i}. "
+                f"Solo se permiten A, C, G, T."
+            )
+    return sec_limpia
+
+# Caso válido
+try:
+    s = validar_secuencia_dna("ATGCGT")
+    print(f"Secuencia válida: {s}")
+except ValueError as e:
+    print(f"Error: {e}")
+
+# Caso inválido
+try:
+    validar_secuencia_dna("ATGXGT")
+except ValueError as e:
+    print(f"Secuencia rechazada: {e}")
+```
+
+### Solución 2
+
+```python
+ruta = "datos_inexistentes.csv"
+try:
+    with open(ruta, "r", encoding="utf-8") as f:
+        contenido = f.read()
+    print(f"Archivo leído: {len(contenido)} caracteres")
+except FileNotFoundError:
+    # Mensaje amigable: explicar qué pasó y qué hacer
+    print(f"No se encontró el archivo '{ruta}'.")
+    print("Verifica que el nombre y la ruta sean correctos.")
+except PermissionError:
+    print(f"Sin permisos para leer '{ruta}'.")
+```
+
+### Solución 3
+
+```python
+class ConcentracionInvalidaError(Exception):
+    """Excepción para concentraciones o volúmenes inválidos."""
+    pass
+
+def calcular_molaridad(moles, volumen_litros):
+    # Validamos moles
+    if moles < 0:
+        raise ConcentracionInvalidaError(
+            f"moles={moles}: no puede ser negativo."
+        )
+    # Validamos volumen
+    if volumen_litros <= 0:
+        raise ConcentracionInvalidaError(
+            f"volumen={volumen_litros} L: debe ser positivo."
+        )
+    return moles / volumen_litros
+
+# Caso válido
+try:
+    m = calcular_molaridad(0.5, 0.250)
+    print(f"Molaridad: {m} M")
+except ConcentracionInvalidaError as e:
+    print(e)
+
+# Caso inválido: moles negativos
+try:
+    calcular_molaridad(-0.1, 0.250)
+except ConcentracionInvalidaError as e:
+    print(f"Parámetro rechazado → {e}")
+
+# Caso inválido: volumen cero
+try:
+    calcular_molaridad(0.5, 0.0)
+except ConcentracionInvalidaError as e:
+    print(f"Parámetro rechazado → {e}")
+```
+
+::: callout-tip
+## Buenas prácticas resumidas
+1. Captura **excepciones específicas**, no uses `except:` a secas.
+2. Usa `else` para el código que solo corre si todo fue bien.
+3. Usa `finally` para liberar recursos.
+4. Crea excepciones personalizadas para tu dominio biológico.
+5. `assert` solo para invariantes internos, nunca para validar entradas.
+6. Registra errores serios con `logging`, no con `print`.
+:::

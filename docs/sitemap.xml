@@ -6,7 +6,7 @@
   </url>
   <url>
     <loc>https://bioden.github.io/bioden_website/material_educativo.html</loc>
-    <lastmod>2026-11-06T07:29:49.756Z</lastmod>
+    <lastmod>2026-11-08T01:08:22.767Z</lastmod>
   </url>
   <url>
     <loc>https://bioden.github.io/bioden_website/material_educativo/rust_capitulos/14-crates-esenciales.html</loc>
@@ -41,8 +41,40 @@
     <lastmod>2026-11-06T07:29:46.197Z</lastmod>
   </url>
   <url>
-    <loc>https://bioden.github.io/bioden_website/material_educativo/curso_python.html</loc>
-    <lastmod>2026-11-06T06:17:57.778Z</lastmod>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/py_capitulos/15-biopython-secuencias.html</loc>
+    <lastmod>2026-11-07T23:40:05.342Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/py_capitulos/13-seaborn.html</loc>
+    <lastmod>2026-11-07T23:40:03.133Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/py_capitulos/11-pandas.html</loc>
+    <lastmod>2026-11-07T23:40:07.023Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/py_capitulos/09-excepciones.html</loc>
+    <lastmod>2026-11-07T23:40:12.618Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/py_capitulos/07-cadenas.html</loc>
+    <lastmod>2026-11-07T23:40:14.327Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/py_capitulos/05-diccionarios-conjuntos.html</loc>
+    <lastmod>2026-11-07T23:40:21.460Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/py_capitulos/03-control-flujo.html</loc>
+    <lastmod>2026-11-07T23:40:23.578Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/py_capitulos/01-introduccion.html</loc>
+    <lastmod>2026-11-08T01:11:25.506Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/curso_r.html</loc>
+    <lastmod>2026-11-06T06:15:16.925Z</lastmod>
   </url>
   <url>
     <loc>https://bioden.github.io/bioden_website/material_educativo/capitulos_r/Capitulo1.html</loc>
@@ -225,8 +257,40 @@
     <lastmod>2026-07-07T15:30:08.000Z</lastmod>
   </url>
   <url>
-    <loc>https://bioden.github.io/bioden_website/material_educativo/curso_r.html</loc>
-    <lastmod>2026-11-06T06:15:16.925Z</lastmod>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/python_bio.html</loc>
+    <lastmod>2026-11-08T01:25:42.831Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/py_capitulos/02-sintaxis-basica.html</loc>
+    <lastmod>2026-11-07T23:40:24.838Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/py_capitulos/04-listas-tuplas.html</loc>
+    <lastmod>2026-11-07T23:40:22.934Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/py_capitulos/06-funciones.html</loc>
+    <lastmod>2026-11-07T23:40:15.368Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/py_capitulos/08-archivos.html</loc>
+    <lastmod>2026-11-07T23:40:13.358Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/py_capitulos/10-numpy.html</loc>
+    <lastmod>2026-11-07T23:40:10.840Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/py_capitulos/12-matplotlib.html</loc>
+    <lastmod>2026-11-07T23:40:06.158Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/py_capitulos/14-scipy.html</loc>
+    <lastmod>2026-11-07T23:39:59.458Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/py_capitulos/16-biopython-archivos.html</loc>
+    <lastmod>2026-11-07T23:40:04.480Z</lastmod>
   </url>
   <url>
     <loc>https://bioden.github.io/bioden_website/material_educativo/rust_capitulos/01-introduccion.html</loc>

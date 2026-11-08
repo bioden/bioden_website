@@ -1,0 +1,115 @@
+---
+title: "Python para Dummies orientado a Ciencias Biológicas: curso básico & intermedio"
+subtitle: "Un curso completo para biólogos, bioinformáticos y investigadores de la vida que quieren llevar sus datos al siguiente nivel."
+image: multimedia/album2.png
+format:
+  html:
+    toc: true
+    css: py_capitulos/card.css
+margin-header: |
+  ![Xavier Clemente García Cevallos](multimedia/album2.png)
+---
+
+## Bienvenida
+
+Bienvenido a este curso de **Python orientado a Ciencias Biológicas**. A lo largo de 16 capítulos aprenderás desde los fundamentos del lenguaje hasta herramientas avanzadas para análisis bioinformático, estadística y visualización científica.
+
+Este material está pensado para estudiantes e investigadores de biología, biotecnología, ecología, genética y áreas afines que **no tienen experiencia previa programando** pero necesitan procesar datos, automatizar tareas de laboratorio o analizar secuencias biológicas.
+
+## ¿Por qué Python en biología?
+
+Python se ha convertido en el lenguaje de referencia en ciencias biológicas por tres razones:
+
+1.  **Sintaxis legible**: parecido al inglés, lo que permite centrarse en el problema biológico y no en la sintaxis.
+2.  **Ecosistema científico**: NumPy, Pandas, SciPy, Matplotlib, Seaborn y BioPython cubren casi cualquier necesidad.
+3.  **Comunidad activa**: millones de usuarios y documentación abundante en bioinformática.
+
+## Estructura del curso
+
+El curso está dividido en cuatro bloques temáticos:
+
+### Bloque I — Fundamentos del lenguaje (Capítulos 1 al 9)
+
+Aprenderás sintaxis, tipos de datos, control de flujo, estructuras de datos, funciones, manejo de cadenas, archivos y errores. Al finalizar serás capaz de escribir programas básicos que resuelvan tareas de laboratorio.
+
+### Bloque II — Análisis numérico y datos (Capítulos 10 al 11)
+
+Con NumPy y Pandas aprenderás a manipular arreglos numéricos y tablas de experimentos, ideal para datos de campo, lecturas de placas o resultados de PCR.
+
+### Bloque III — Visualización científica (Capítulos 12 al 13)
+
+Matplotlib y Seaborn te permitirán generar gráficos listos para publicar: dispersión, histogramas, boxplots, heatmaps y pairplots.
+
+### Bloque IV — Estadística y Bioinformática (Capítulos 14 al 16)
+
+Cierras con pruebas estadísticas con SciPy y el manejo de secuencias y archivos biológicos con BioPython, herramientas clave en genómica y biología molecular.
+
+## Requisitos
+
+- Computadora con Windows, macOS o Linux.
+- Python 3.10 o superior instalado.
+- Editor de código recomendado: VS Code o Jupyter Lab.
+- Conexión a internet para instalar paquetes.
+
+> **Tip:** Si nunca has programado, no te saltes los capítulos fundamentales aunque parezcan sencillos. Cada concepto se construye sobre el anterior.
+
+## Contenido del curso
+
+A continuación encontrarás el índice de capítulos. Cada uno contiene teoría, ejemplos en código con contexto biológico, ejercicios propuestos y sus soluciones.
+
+### Bloque I — Fundamentos
+
+1.  [Capítulo 1: Introducción a Python para biólogos](py_capitulos/01-introduccion.qmd) — Instalación, entornos y primer programa.
+2.  [Capítulo 2: Sintaxis básica: variables y tipos de datos](py_capitulos/02-sintaxis-basica.qmd) — La base de todo lo que sigue.
+3.  [Capítulo 3: Estructuras de control](py_capitulos/03-control-flujo.qmd) — Condicionales y bucles para tomar decisiones.
+4.  [Capítulo 4: Listas y tuplas](py_capitulos/04-listas-tuplas.qmd) — Colecciones ordenadas de datos.
+5.  [Capítulo 5: Diccionarios y conjuntos](py_capitulos/05-diccionarios-conjuntos.qmd) — Estructuras basadas en claves.
+6.  [Capítulo 6: Funciones y modulariz](py_capitulos/06-funciones.qmd)[ación](rust_capitulos/06-funciones.qmd) — Reutiliza tu código.
+7.  [Capítulo 7: Manipulación de cadenas](py_capitulos/07-cadenas.qmd) — Esencial para secuencias biológicas.
+8.  [Capítulo 8: Lectura y escritura de archivos](py_capitulos/08-archivos.qmd) — Trabaja con tus datos experimentales.
+9.  [Capítulo 9: Manejo de errores y excepciones](py_capitulos/09-excepciones.qmd) — Programa robusto para producción.
+
+### Bloque II — Análisis numérico y datos
+
+10. [Capítulo 10: NumPy para ciencias biológicas](py_capitulos/10-numpy.qmd) — Arrays y operaciones vectorizadas.
+11. [Capítulo 11: Pandas para datos experimentales](py_capitulos/11-pandas.qmd) — Tablas y estadísticas básicas.
+
+### Bloque III — Visualización científica
+
+12. [Capítulo 12: Visualización con Matplotlib](py_capitulos/12-matplotlib.qmd) — Gráficos básicos para papers.
+13. [Capítulo 13: Visualización avanzada con Seaborn](py_capitulos/13-seaborn.qmd) — Gráficos estadísticos elegantes.
+
+### Bloque IV — Estadística y Bioinformática
+
+14. [Capítulo 14: Estadística con SciPy](py_capitulos/14-scipy.qmd) — Pruebas t, ANOVA, correlaciones.
+15. [Capítulo 15: BioPython I — Secuencias biológicas](py_capitulos/15-biopython-secuencias.qmd) — ADN, ARN y proteínas.
+16. [Capítulo 16: BioPython II — Archivos biológicos](py_capitulos/16-biopython-archivos.qmd) — FASTA, GenBank y Entrez.
+
+## Convenciones del curso
+
+A lo largo de los capítulos encontrarás los siguientes bloques:
+
+::: callout-note
+**Nota:** Información complementaria o aclaratoria.
+:::
+
+::: callout-tip
+**Tip:** Atajos, buenas prácticas o recomendaciones útiles.
+:::
+
+::: callout-warning
+**Advertencia:** Errores comunes o precauciones importantes.
+:::
+
+::: callout-important
+**Importante:** Conceptos clave que debes recordar.
+:::
+
+## Cómo aprovechar el curso
+
+1.  **Lee y ejecuta**: cada bloque de código puede copiarse y ejecutarse en tu editor.
+2.  **Modifica los ejemplos**: cambia parámetros y observa qué sucede.
+3.  **Resuelve los ejercicios**: antes de mirar la solución, inténtalo tú mismo.
+4.  **Aplica a tus datos**: cuando termines un capítulo, intenta replicar lo aprendido con datos de tu laboratorio o investigación.
+
+¡Manos a la obra!

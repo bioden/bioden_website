@@ -2,12 +2,12 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.19">
+<meta name="generator" content="quarto-1.10.18">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>¿Cómo programar en Python sin morir en el intento? – BIODEN</title>
+<title>Python para Dummies orientado a Ciencias Biológicas: curso básico &amp; intermedio – BIODEN</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -44,9 +44,9 @@ ul.task-list li input[type="checkbox"] {
 <script src="../site_libs/quarto-html/popper.min.js"></script>
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="../site_libs/bootstrap/bootstrap-70f92796293836dceea0045bd755b5b1.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
@@ -101,7 +101,7 @@ cookieconsent.run({
 
 
 <link rel="stylesheet" href="../styles.css">
-<link rel="stylesheet" href="card.css">
+<link rel="stylesheet" href="py_capitulos/card.css">
 </head>
 
 <body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
@@ -359,7 +359,31 @@ cookieconsent.run({
 </figure>
 </div>
 </div></div>
-        
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#bienvenida" id="toc-bienvenida" class="nav-link active" data-scroll-target="#bienvenida">Bienvenida</a></li>
+  <li><a href="#por-qué-python-en-biología" id="toc-por-qué-python-en-biología" class="nav-link" data-scroll-target="#por-qué-python-en-biología">¿Por qué Python en biología?</a></li>
+  <li><a href="#estructura-del-curso" id="toc-estructura-del-curso" class="nav-link" data-scroll-target="#estructura-del-curso">Estructura del curso</a>
+  <ul class="collapse">
+  <li><a href="#bloque-i-fundamentos-del-lenguaje-capítulos-1-al-9" id="toc-bloque-i-fundamentos-del-lenguaje-capítulos-1-al-9" class="nav-link" data-scroll-target="#bloque-i-fundamentos-del-lenguaje-capítulos-1-al-9">Bloque I — Fundamentos del lenguaje (Capítulos 1 al 9)</a></li>
+  <li><a href="#bloque-ii-análisis-numérico-y-datos-capítulos-10-al-11" id="toc-bloque-ii-análisis-numérico-y-datos-capítulos-10-al-11" class="nav-link" data-scroll-target="#bloque-ii-análisis-numérico-y-datos-capítulos-10-al-11">Bloque II — Análisis numérico y datos (Capítulos 10 al 11)</a></li>
+  <li><a href="#bloque-iii-visualización-científica-capítulos-12-al-13" id="toc-bloque-iii-visualización-científica-capítulos-12-al-13" class="nav-link" data-scroll-target="#bloque-iii-visualización-científica-capítulos-12-al-13">Bloque III — Visualización científica (Capítulos 12 al 13)</a></li>
+  <li><a href="#bloque-iv-estadística-y-bioinformática-capítulos-14-al-16" id="toc-bloque-iv-estadística-y-bioinformática-capítulos-14-al-16" class="nav-link" data-scroll-target="#bloque-iv-estadística-y-bioinformática-capítulos-14-al-16">Bloque IV — Estadística y Bioinformática (Capítulos 14 al 16)</a></li>
+  </ul></li>
+  <li><a href="#requisitos" id="toc-requisitos" class="nav-link" data-scroll-target="#requisitos">Requisitos</a></li>
+  <li><a href="#contenido-del-curso" id="toc-contenido-del-curso" class="nav-link" data-scroll-target="#contenido-del-curso">Contenido del curso</a>
+  <ul class="collapse">
+  <li><a href="#bloque-i-fundamentos" id="toc-bloque-i-fundamentos" class="nav-link" data-scroll-target="#bloque-i-fundamentos">Bloque I — Fundamentos</a></li>
+  <li><a href="#bloque-ii-análisis-numérico-y-datos" id="toc-bloque-ii-análisis-numérico-y-datos" class="nav-link" data-scroll-target="#bloque-ii-análisis-numérico-y-datos">Bloque II — Análisis numérico y datos</a></li>
+  <li><a href="#bloque-iii-visualización-científica" id="toc-bloque-iii-visualización-científica" class="nav-link" data-scroll-target="#bloque-iii-visualización-científica">Bloque III — Visualización científica</a></li>
+  <li><a href="#bloque-iv-estadística-y-bioinformática" id="toc-bloque-iv-estadística-y-bioinformática" class="nav-link" data-scroll-target="#bloque-iv-estadística-y-bioinformática">Bloque IV — Estadística y Bioinformática</a></li>
+  </ul></li>
+  <li><a href="#convenciones-del-curso" id="toc-convenciones-del-curso" class="nav-link" data-scroll-target="#convenciones-del-curso">Convenciones del curso</a></li>
+  <li><a href="#cómo-aprovechar-el-curso" id="toc-cómo-aprovechar-el-curso" class="nav-link" data-scroll-target="#cómo-aprovechar-el-curso">Cómo aprovechar el curso</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -367,8 +391,8 @@ cookieconsent.run({
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">¿Cómo programar en Python sin morir en el intento?</h1>
-<p class="subtitle lead">En este curso abordará conceptos básicos de bioinformática en Python.</p>
+<h1 class="title">Python para Dummies orientado a Ciencias Biológicas: curso básico &amp; intermedio</h1>
+<p class="subtitle lead">Un curso completo para biólogos, bioinformáticos y investigadores de la vida que quieren llevar sus datos al siguiente nivel.</p>
 </div>
 
 
@@ -385,8 +409,160 @@ cookieconsent.run({
 </header>
 
 
+<section id="bienvenida" class="level2">
+<h2 data-anchor-id="bienvenida">Bienvenida</h2>
+<p>Bienvenido a este curso de <strong>Python orientado a Ciencias Biológicas</strong>. A lo largo de 16 capítulos aprenderás desde los fundamentos del lenguaje hasta herramientas avanzadas para análisis bioinformático, estadística y visualización científica.</p>
+<p>Este material está pensado para estudiantes e investigadores de biología, biotecnología, ecología, genética y áreas afines que <strong>no tienen experiencia previa programando</strong> pero necesitan procesar datos, automatizar tareas de laboratorio o analizar secuencias biológicas.</p>
+</section>
+<section id="por-qué-python-en-biología" class="level2">
+<h2 data-anchor-id="por-qué-python-en-biología">¿Por qué Python en biología?</h2>
+<p>Python se ha convertido en el lenguaje de referencia en ciencias biológicas por tres razones:</p>
+<ol type="1">
+<li><strong>Sintaxis legible</strong>: parecido al inglés, lo que permite centrarse en el problema biológico y no en la sintaxis.</li>
+<li><strong>Ecosistema científico</strong>: NumPy, Pandas, SciPy, Matplotlib, Seaborn y BioPython cubren casi cualquier necesidad.</li>
+<li><strong>Comunidad activa</strong>: millones de usuarios y documentación abundante en bioinformática.</li>
+</ol>
+</section>
+<section id="estructura-del-curso" class="level2">
+<h2 data-anchor-id="estructura-del-curso">Estructura del curso</h2>
+<p>El curso está dividido en cuatro bloques temáticos:</p>
+<section id="bloque-i-fundamentos-del-lenguaje-capítulos-1-al-9" class="level3">
+<h3 data-anchor-id="bloque-i-fundamentos-del-lenguaje-capítulos-1-al-9">Bloque I — Fundamentos del lenguaje (Capítulos 1 al 9)</h3>
+<p>Aprenderás sintaxis, tipos de datos, control de flujo, estructuras de datos, funciones, manejo de cadenas, archivos y errores. Al finalizar serás capaz de escribir programas básicos que resuelvan tareas de laboratorio.</p>
+</section>
+<section id="bloque-ii-análisis-numérico-y-datos-capítulos-10-al-11" class="level3">
+<h3 data-anchor-id="bloque-ii-análisis-numérico-y-datos-capítulos-10-al-11">Bloque II — Análisis numérico y datos (Capítulos 10 al 11)</h3>
+<p>Con NumPy y Pandas aprenderás a manipular arreglos numéricos y tablas de experimentos, ideal para datos de campo, lecturas de placas o resultados de PCR.</p>
+</section>
+<section id="bloque-iii-visualización-científica-capítulos-12-al-13" class="level3">
+<h3 data-anchor-id="bloque-iii-visualización-científica-capítulos-12-al-13">Bloque III — Visualización científica (Capítulos 12 al 13)</h3>
+<p>Matplotlib y Seaborn te permitirán generar gráficos listos para publicar: dispersión, histogramas, boxplots, heatmaps y pairplots.</p>
+</section>
+<section id="bloque-iv-estadística-y-bioinformática-capítulos-14-al-16" class="level3">
+<h3 data-anchor-id="bloque-iv-estadística-y-bioinformática-capítulos-14-al-16">Bloque IV — Estadística y Bioinformática (Capítulos 14 al 16)</h3>
+<p>Cierras con pruebas estadísticas con SciPy y el manejo de secuencias y archivos biológicos con BioPython, herramientas clave en genómica y biología molecular.</p>
+</section>
+</section>
+<section id="requisitos" class="level2">
+<h2 data-anchor-id="requisitos">Requisitos</h2>
+<ul>
+<li>Computadora con Windows, macOS o Linux.</li>
+<li>Python 3.10 o superior instalado.</li>
+<li>Editor de código recomendado: VS Code o Jupyter Lab.</li>
+<li>Conexión a internet para instalar paquetes.</li>
+</ul>
+<blockquote class="blockquote">
+<p><strong>Tip:</strong> Si nunca has programado, no te saltes los capítulos fundamentales aunque parezcan sencillos. Cada concepto se construye sobre el anterior.</p>
+</blockquote>
+</section>
+<section id="contenido-del-curso" class="level2">
+<h2 data-anchor-id="contenido-del-curso">Contenido del curso</h2>
+<p>A continuación encontrarás el índice de capítulos. Cada uno contiene teoría, ejemplos en código con contexto biológico, ejercicios propuestos y sus soluciones.</p>
+<section id="bloque-i-fundamentos" class="level3">
+<h3 data-anchor-id="bloque-i-fundamentos">Bloque I — Fundamentos</h3>
+<ol type="1">
+<li><a href="../material_educativo/py_capitulos/01-introduccion.html">Capítulo 1: Introducción a Python para biólogos</a> — Instalación, entornos y primer programa.</li>
+<li><a href="../material_educativo/py_capitulos/02-sintaxis-basica.html">Capítulo 2: Sintaxis básica: variables y tipos de datos</a> — La base de todo lo que sigue.</li>
+<li><a href="../material_educativo/py_capitulos/03-control-flujo.html">Capítulo 3: Estructuras de control</a> — Condicionales y bucles para tomar decisiones.</li>
+<li><a href="../material_educativo/py_capitulos/04-listas-tuplas.html">Capítulo 4: Listas y tuplas</a> — Colecciones ordenadas de datos.</li>
+<li><a href="../material_educativo/py_capitulos/05-diccionarios-conjuntos.html">Capítulo 5: Diccionarios y conjuntos</a> — Estructuras basadas en claves.</li>
+<li><a href="../material_educativo/py_capitulos/06-funciones.html">Capítulo 6: Funciones y modulariz</a><a href="rust_capitulos/06-funciones.qmd">ación</a> — Reutiliza tu código.</li>
+<li><a href="../material_educativo/py_capitulos/07-cadenas.html">Capítulo 7: Manipulación de cadenas</a> — Esencial para secuencias biológicas.</li>
+<li><a href="../material_educativo/py_capitulos/08-archivos.html">Capítulo 8: Lectura y escritura de archivos</a> — Trabaja con tus datos experimentales.</li>
+<li><a href="../material_educativo/py_capitulos/09-excepciones.html">Capítulo 9: Manejo de errores y excepciones</a> — Programa robusto para producción.</li>
+</ol>
+</section>
+<section id="bloque-ii-análisis-numérico-y-datos" class="level3">
+<h3 data-anchor-id="bloque-ii-análisis-numérico-y-datos">Bloque II — Análisis numérico y datos</h3>
+<ol start="10" type="1">
+<li><a href="../material_educativo/py_capitulos/10-numpy.html">Capítulo 10: NumPy para ciencias biológicas</a> — Arrays y operaciones vectorizadas.</li>
+<li><a href="../material_educativo/py_capitulos/11-pandas.html">Capítulo 11: Pandas para datos experimentales</a> — Tablas y estadísticas básicas.</li>
+</ol>
+</section>
+<section id="bloque-iii-visualización-científica" class="level3">
+<h3 data-anchor-id="bloque-iii-visualización-científica">Bloque III — Visualización científica</h3>
+<ol start="12" type="1">
+<li><a href="../material_educativo/py_capitulos/12-matplotlib.html">Capítulo 12: Visualización con Matplotlib</a> — Gráficos básicos para papers.</li>
+<li><a href="../material_educativo/py_capitulos/13-seaborn.html">Capítulo 13: Visualización avanzada con Seaborn</a> — Gráficos estadísticos elegantes.</li>
+</ol>
+</section>
+<section id="bloque-iv-estadística-y-bioinformática" class="level3">
+<h3 data-anchor-id="bloque-iv-estadística-y-bioinformática">Bloque IV — Estadística y Bioinformática</h3>
+<ol start="14" type="1">
+<li><a href="../material_educativo/py_capitulos/14-scipy.html">Capítulo 14: Estadística con SciPy</a> — Pruebas t, ANOVA, correlaciones.</li>
+<li><a href="../material_educativo/py_capitulos/15-biopython-secuencias.html">Capítulo 15: BioPython I — Secuencias biológicas</a> — ADN, ARN y proteínas.</li>
+<li><a href="../material_educativo/py_capitulos/16-biopython-archivos.html">Capítulo 16: BioPython II — Archivos biológicos</a> — FASTA, GenBank y Entrez.</li>
+</ol>
+</section>
+</section>
+<section id="convenciones-del-curso" class="level2">
+<h2 data-anchor-id="convenciones-del-curso">Convenciones del curso</h2>
+<p>A lo largo de los capítulos encontrarás los siguientes bloques:</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Nota:</strong> Información complementaria o aclaratoria.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Tip:</strong> Atajos, buenas prácticas o recomendaciones útiles.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Warning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Advertencia:</strong> Errores comunes o precauciones importantes.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Important
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Importante:</strong> Conceptos clave que debes recordar.</p>
+</div>
+</div>
+</section>
+<section id="cómo-aprovechar-el-curso" class="level2">
+<h2 data-anchor-id="cómo-aprovechar-el-curso">Cómo aprovechar el curso</h2>
+<ol type="1">
+<li><strong>Lee y ejecuta</strong>: cada bloque de código puede copiarse y ejecutarse en tu editor.</li>
+<li><strong>Modifica los ejemplos</strong>: cambia parámetros y observa qué sucede.</li>
+<li><strong>Resuelve los ejercicios</strong>: antes de mirar la solución, inténtalo tú mismo.</li>
+<li><strong>Aplica a tus datos</strong>: cuando termines un capítulo, intenta replicar lo aprendido con datos de tu laboratorio o investigación.</li>
+</ol>
+<p>¡Manos a la obra!</p>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

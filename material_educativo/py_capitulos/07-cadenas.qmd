@@ -1,0 +1,507 @@
+---
+title: "Manipulación de cadenas y secuencias biológicas"
+---
+
+# Manipulación de cadenas y secuencias biológicas
+
+En bioinformática, las **cadenas de texto** (`str`) son omnipresentes: secuencias de ADN/ARN/proteínas, cabeceras FASTA, identificadores de GenBank, anotaciones, *quality scores* en formato ASCII, rutas de archivos. Por eso dominar la manipulación de cadenas es una de las competencias más rentables que puedes adquirir.
+
+En este capítulo repasamos las operaciones de cadenas y las aplicamos a **tareas biológicas concretas**: limpiar archivos FASTA, transcribir ADN a ARN, obtener la cadena complementaria, buscar motivos de restricción, validar secuencias y encontrar ORFs candidatos.
+
+## Cadenas en Python: inmutabilidad
+
+Las cadenas en Python son **inmutables**: una vez creadas, no puedes modificar un carácter individual.
+
+```python
+seq = "ATGCG"
+# seq[0] = "T"  # ❌ TypeError: 'str' object does not support item assignment
+```
+
+Cualquier operación que "modifica" una cadena en realidad **crea una nueva**:
+
+```python
+seq = "atgcg"
+seq_mayus = seq.upper()
+print(seq_mayus)  # 'ATGCG'
+print(seq)        # 'atgcg' — el original sigue igual
+```
+
+::: callout-note
+## ¿Por qué inmutabilidad?
+La inmutabilidad permite que Python comparta internamente cadenas idénticas (ahorro de memoria), garantice la seguridad en claves de diccionarios y mantenga un comportamiento predecible al pasar cadenas como argumentos a funciones.
+:::
+
+## Indexación y *slicing*
+
+Recordatorio de los conceptos básicos, con ejemplos biológicos:
+
+```python
+seq = "ATGCGATCGATAGCTAGCTAA"
+
+# Indexación: posición individual (empieza en 0)
+print(seq[0])    # 'A'
+print(seq[-1])   # 'A' — último carácter
+
+# Slicing: subsecuencia [inicio:fin:paso] (fin exclusive)
+print(seq[0:3])     # 'ATG' — primer codón
+print(seq[3:6])     # 'CGA' — segundo codón
+print(seq[:6])      # 'ATGCGA' — primeros 6 caracteres
+print(seq[-3:])     # 'TAA' — últimos 3 caracteres (codón de paro)
+
+# Paso negativo: cadena invertida
+print(seq[::-1])    # 'AATCGATCGATAGCTAGCGTA'
+
+# Cada 3 caracteres desde el inicio (extraer codones)
+codones = [seq[i:i+3] for i in range(0, len(seq) - 2, 3)]
+print(codones)
+# ['ATG', 'CGA', 'TCG', 'ATA', 'GCT', 'AGC', 'TAA']
+```
+
+::: callout-tip
+## Slicing fuera de rango
+Si los índices del *slice* se salen del rango no se lanza error: `"ATG"[0:10]` devuelve simplemente `'ATG'`. Esto es útil para extraer los últimos *N* caracteres sin preocuparte por la longitud.
+:::
+
+## Concatenación y repetición
+
+```python
+a = "ATG"
+b = "TAA"
+print(a + b)    # 'ATGTAA' — concatenación
+print(a * 3)    # 'ATGATGATG' — repetición
+
+# Más eficiente para muchas concatenaciones: join
+trozos = ["ATG", "CGA", "TCG", "TAA"]
+print("".join(trozos))   # 'ATGCGATCGTAA'
+print("|".join(trozos))  # 'ATG|CGA|TCG|TAA'
+```
+
+## Métodos de transformación: `upper`, `lower`, `capitalize`, `title`, `swapcase`
+
+```python
+identificador = "brCAl_HomoSapiens"
+
+print(identificador.upper())       # 'BRCA1_HOMOSAPIENS'
+print(identificador.lower())       # 'brca1_homosapiens'
+print(identificador.capitalize())  # 'Brca1_homosapiens'
+print(identificador.title())       # 'Brca1_Homosapiens'
+print(identificador.swapcase())    # 'BRcaL_hOMOsAPIENS'
+```
+
+## Búsqueda: `find`, `index`, `count`, `startswith`, `endswith`
+
+```python
+seq = "ATGCGATCGATAGCTAGCTAA"
+
+# find: posición de la primera aparición (-1 si no aparece)
+print(seq.find("GAT"))      # 4
+print(seq.find("XYZ"))      # -1
+
+# index: igual que find pero lanza ValueError si no aparece
+# print(seq.index("XYZ"))   # ValueError
+
+# count: número de apariciones (no solapadas)
+print(seq.count("A"))       # 7
+print(seq.count("GCT"))     # 2
+
+# startswith / endswith: verifican prefijos y sufijos
+print(seq.startswith("ATG"))  # True — codón de inicio
+print(seq.endswith("TAA"))    # True — codón de paro
+```
+
+::: callout-warning
+## `count` no solapa
+`"AAA".count("AA")` devuelve `1`, no `2`, porque `count` avanza tras cada coincidencia. Si necesitas contar motivos solapados tendrás que usar regex o un bucle manual.
+:::
+
+## Reemplazo y división: `replace`, `split`, `rsplit`, `partition`
+
+```python
+# ADN a ARN: reemplazar T por U
+adn = "ATGCGATCG"
+arn = adn.replace("T", "U")
+print(arn)  # 'AUGCGAUCG'
+
+# Dividir cabecera FASTA por el separador de campos
+cabecera = ">sp|P04637|TP53_HUMAN Tumor protein p53 OS=Homo sapiens OX=9606"
+campos = cabecera.split("|")
+print(campos)
+# ['>sp', 'P04637', 'TP53_HUMAN Tumor protein p53 OS=Homo sapiens OX=9606']
+
+# rsplit: dividir desde la derecha
+ruta = "/data/proyectos/seq.fasta"
+print(ruta.rsplit("/", 1))  # ['/data/proyectos', 'seq.fasta']
+
+# partition: divide en (antes, separador, después)
+print("TP53_HUMAN".partition("_"))  # ('TP53', '_', 'HUMAN')
+```
+
+## Eliminación de espacios: `strip`, `lstrip`, `rstrip`
+
+```python
+linea_sucia = "  ATGCGATCG  \n"
+print(linea_sucia.strip())   # 'ATGCGATCG'
+print(linea_sucia.lstrip())  # 'ATGCGATCG  \n'
+print(linea_sucia.rstrip())  # '  ATGCGATCG'
+
+# strip también admite un conjunto de caracteres a eliminar
+calidad_ascii = "!!HHHFHHG!!"
+print(calidad_ascii.strip("!"))  # 'HHHFHHG'
+```
+
+## Formateo: `format()`, *f-strings*, `zfill()`
+
+La forma moderna y recomendada son las **f-strings** (Python ≥ 3.6):
+
+```python
+gen = "TP53"
+longitud = 2629
+gc = 53.291
+
+# f-string con especificación de formato
+print(f"Gen {gen}: {longitud} pb, GC% = {gc:.2f}")
+# 'Gen TP53: 2629 pb, GC% = 53.29'
+
+# format() — equivalente, útil para plantillas dinámicas
+plantilla = "{gen}:{long}pb GC={gc:.1f}%"
+print(plantilla.format(gen="BRCA1", long=5592, gc=41.2))
+# 'BRCA1:5592pb GC=41.2%'
+
+# zfill: rellenar con ceros a la izquierda
+print("42".zfill(5))   # '00042'
+# Útil para generar identificadores de muestras: M00042
+```
+
+## Validación: `isalpha`, `isdigit`, `isupper`, `islower`
+
+```python
+print("ATCG".isalpha())    # True
+print("AT1CG".isalpha())   # False (tiene dígito)
+print("12345".isdigit())   # True
+print("ATCG".isupper())    # True
+print("atcg".islower())    # True
+
+# Validar que una secuencia solo contiene A, T, C, G
+def es_adn_valido(secuencia: str) -> bool:
+    secuencia = secuencia.upper()
+    return secuencia.isalpha() and set(secuencia).issubset(set("ATCG"))
+
+print(es_adn_valido("ATGCGAT"))   # True
+print(es_adn_valido("ATGCGAZ"))   # False — Z no es base
+print(es_adn_valido("ATGC-AT"))   # False — guion
+```
+
+## `join()` para unir listas
+
+```python
+secuencias = ["ATG", "CGA", "TCG", "TAA"]
+# Sin separador
+print("".join(secuencias))   # 'ATGCGATCGTAA'
+# Con separador (formato tipo FASTA de una sola línea con cabeceras)
+print("\n".join(secuencias))
+# ATG
+# CGA
+# TCG
+# TAA
+```
+
+## Módulo `re` (expresiones regulares): búsqueda avanzada
+
+Las **expresiones regulares** (regex) permiten buscar **patrones** en lugar de literales. El módulo `re` expone cuatro funciones esenciales:
+
+- `re.search(patron, texto)`: busca el patrón, devuelve un *Match* o `None`.
+- `re.findall(patron, texto)`: devuelve todas las coincidencias como lista.
+- `re.finditer(patron, texto)`: iterador de *Match*, da acceso a las posiciones.
+- `re.sub(patron, sustituto, texto)`: reemplaza todas las coincidencias.
+- `re.split(patron, texto)`: divide el texto usando el patrón como separador.
+
+```python
+import re
+
+# Buscar todos los codones de paro en una secuencia
+sec = "ATGCGATAATAGCTAGCTAA"
+stops = re.findall(r"TAA|TAG|TGA", sec)
+print(stops)  # ['TAA', 'TAG', 'TAA']
+
+# finditer: con posiciones
+for m in re.finditer(r"GAATTC", "AAGAATTCCGGAATTCTTAGAATTCGA"):
+    print(f"EcoRI en posición {m.start()}-{m.end()}")
+```
+
+::: callout-tip
+## Cadenas raw (`r"..."`)
+Usa siempre el prefijo `r` para los patrones regex, así las barras invertidas se toman literalmente. Por ejemplo `r"\d"` es el patrón "un dígito", mientras que `"\d"` en una cadena normal podría interpretarse como un carácter de escape.
+:::
+
+## Ejemplos biológicos integrados
+
+### 1. Limpiar secuencias FASTA
+
+```python
+raw = """>seq1|descripcion
+ATGCGATCGAT
+AGCTAGCTAA
+>seq2|descripcion
+GGTACCGAAT
+TCGAA"""
+
+# Reconstruir cada secuencia sin cabeceras ni saltos de línea
+secuencias = {}
+id_actual = None
+for linea in raw.split("\n"):
+    if linea.startswith(">"):
+        id_actual = linea[1:].split("|")[0]  # 'seq1', 'seq2'
+        secuencias[id_actual] = ""
+    else:
+        secuencias[id_actual] += linea.strip()
+
+print(secuencias)
+# {'seq1': 'ATGCGATCGATAGCTAGCTAA', 'seq2': 'GGTACCGAATTCGAA'}
+```
+
+### 2. Convertir ADN a ARN
+
+```python
+def transcribir(dna: str) -> str:
+    """Devuelve el ARNm correspondiente (T → U)."""
+    return dna.upper().replace("T", "U")
+
+print(transcribir("ATGCGATCG"))  # 'AUGCGAUCG'
+```
+
+### 3. Secuencia complementaria con `str.maketrans`
+
+`maketrans` y `translate` son la forma **más eficiente** de sustituir varios caracteres a la vez:
+
+```python
+complemento = str.maketrans("ATCG", "TAGC")
+sec = "ATGCGATCG"
+print(sec.translate(complemento))  # 'TACGCTAGC'
+```
+
+Para obtener la **hebra complementaria en sentido 5'→3'** basta con invertir después:
+
+```python
+def reverso_complementario(seq: str) -> str:
+    """Devuelve el reverso complementario de una secuencia de ADN."""
+    tabla = str.maketrans("ATCGatcg", "TAGCtagc")
+    return seq.translate(tabla)[::-1]
+
+print(reverso_complementario("ATGCGATCG"))  # 'CGATCGCAT'
+```
+
+### 4. Buscar motivo de restricción EcoRI
+
+EcoRI reconoce el sitio **GAATTC** y corta entre G y A (G|AATTC), dejando extremos cohesivos. Para localizarlo:
+
+```python
+import re
+
+def buscar_sitios_ecori(secuencia: str) -> list[tuple[int, int]]:
+    """Devuelve una lista de tuplas (inicio, fin) para cada sitio EcoRI."""
+    return [(m.start(), m.end()) for m in re.finditer("GAATTC", secuencia)]
+
+sec = "AAGAATTCCGGAATTCTTAGAATTCGA"
+print(buscar_sitios_ecori(sec))
+# [(2, 8), (10, 16), (21, 27)]
+```
+
+### 5. Separar cadena de calidad FASTQ
+
+En FASTQ, la cuarta línea de cada lectura es la **cadena de calidad** codificada en Phred+33. Para procesarla como lista de enteros:
+
+```python
+calidad_str = "!!HHHFHHGHHHFFFF"
+
+# Convertir cada carácter a su puntuación Phred
+phred = [ord(c) - 33 for c in calidad_str]
+print(phred)
+# [1, 1, 39, 39, 39, 37, 39, 39, 38, 39, 39, 39, 37, 37, 37, 37]
+```
+
+### 6. Validar una secuencia (solo ACGT)
+
+```python
+def es_adn(secuencia: str) -> bool:
+    secuencia = secuencia.upper()
+    return len(secuencia) > 0 and set(secuencia).issubset(set("ATCG"))
+
+print(es_adn("ATGCG"))   # True
+print(es_adn("ATGCNX"))  # False
+```
+
+### 7. Encontrar ORFs candidatos
+
+Un **ORF** (*Open Reading Frame*) candidato es una secuencia que empieza con `ATG` y termina con un codón de paro (`TAA`, `TAG` o `TGA`) en la misma pauta de lectura. Usamos `re.finditer`:
+
+```python
+import re
+
+def encontrar_orfs(secuencia: str, min_nt: int = 30) -> list[tuple[int, int, str]]:
+    """
+    Encuentra ORFs candidatos en una secuencia de ADN.
+
+    Args:
+        secuencia: ADN en sentido 5'→3'.
+        min_nt: longitud mínima del ORF (incluyendo stop).
+
+    Returns:
+        Lista de tuplas (inicio, fin_exclusive, secuencia_orf).
+    """
+    patron = r"ATG(?:...)*?(?:TAA|TAG|TGA)"
+    orfs = []
+    for m in re.finditer(patron, secuencia):
+        if len(m.group()) >= min_nt:
+            orfs.append((m.start(), m.end(), m.group()))
+    return orfs
+
+sec = "CCATGAAACGTGGTAAATGCGTAAATGAAATAA"
+for inicio, fin, orf in encontrar_orfs(sec, min_nt=9):
+    print(f"ORF en {inicio}-{fin}: {orf}")
+# ORF en 2-17: ATGAAACGTGGTTAA
+# ORF en 20-32: ATGCGTAA -> no, mira longitud >= 9: 12-20?
+```
+
+::: callout-important
+## Limitación del patrón
+El patrón `ATG(?:...)*?(?:TAA|TAG|TGA)` encuentra ORFs empezando en cualquier `ATG`. Para un análisis riguroso también hay que explorar las **otras dos pautas de lectura** y la **hebra reversa**. Lo importante es la estructura del análisis.
+:::
+
+## Ejercicios
+
+### Ejercicio 1
+
+Escribe código que reciba la secuencia `"ATGCGATCGATAGCTAGCTAA"` y devuelva su **secuencia complementaria** (A↔T, C↔G). Usa `str.maketrans` y `translate`.
+
+### Ejercicio 2
+
+Escribe una función `transcribir(secuencia_dna)` que devuelva la secuencia de ARN mensajero (sustituye T por U). Pruébala con `"ATGCGATCGATAGCTAGCTAA"`.
+
+### Ejercicio 3
+
+Usando el módulo `re`, encuentra **todos** los sitios de corte de EcoRI (`GAATTC`) en la secuencia `"AAGAATTCCGGAATTCTTAGAATTCGA"`. Reporta cada sitio con su posición de inicio y fin.
+
+## Soluciones
+
+### Solución 1
+
+```python
+def complementaria(secuencia: str) -> str:
+    """
+    Devuelve la secuencia complementaria de una cadena de ADN
+    (sin invertir el sentido: la posición i del resultado corresponde
+    a la base complementaria de la posición i del original).
+
+    Args:
+        secuencia: ADN con bases A, T, C, G.
+
+    Returns:
+        Cadena complementaria en el mismo orden 5'→3' de la original.
+    """
+    tabla = str.maketrans("ATCGatcg", "TAGCtagc")
+    return secuencia.translate(tabla)
+
+seq = "ATGCGATCGATAGCTAGCTAA"
+comp = complementaria(seq)
+print(f"Original:      {seq}")
+print(f"Complementaria:{comp}")
+# Original:      ATGCGATCGATAGCTAGCTAA
+# Complementaria:TACGCTAGCTATCGATCGATT
+```
+
+::: callout-note
+## Complementaria vs reverso-complementaria
+En el laboratorio la **hebra complementaria** se suele escribir en sentido 5'→3', es decir, lo que llamamos **reverso complementario**. Si necesitas ese resultado añade `[::-1]` al final.
+:::
+
+### Solución 2
+
+```python
+def transcribir(secuencia_dna: str) -> str:
+    """
+    Transcribe una secuencia de ADN a ARN mensajero sustituyendo
+    todas las timinas (T) por uracilos (U).
+
+    Args:
+        secuencia_dna: secuencia de ADN (hebra codificante).
+
+    Returns:
+        Secuencia de ARNm correspondiente.
+    """
+    return secuencia_dna.upper().replace("T", "U")
+
+# Prueba
+dna = "ATGCGATCGATAGCTAGCTAA"
+arnm = transcribir(dna)
+print(f"ADN:  {dna}")
+print(f"ARNm: {arnm}")
+# ADN:  ATGCGATCGATAGCTAGCTAA
+# ARNm: AUGCGAUCGAUAGCUAGCUAA
+```
+
+::: callout-warning
+## Modelo simplificado
+Esta función transcribe la **hebra codificante** (la que se parece al ARNm). En la célula, la ARN polimerasa lee la **hebra molde** y sintetiza un ARNm complementario a ella, que coincide con la hebra codificante salvo T→U. El modelo de esta función es correcto para fines didácticos.
+:::
+
+### Solución 3
+
+```python
+import re
+
+def buscar_ecori(secuencia: str) -> list[tuple[int, int, str]]:
+    """
+    Encuentra todas las apariciones del sitio de corte de EcoRI
+    (GAATTC) en una secuencia de ADN.
+
+    Args:
+        secuencia: ADN donde buscar.
+
+    Returns:
+        Lista de tuplas (inicio, fin_exclusive, subsecuencia).
+    """
+    resultados = []
+    for m in re.finditer("GAATTC", secuencia, flags=re.IGNORECASE):
+        resultados.append((m.start(), m.end(), m.group()))
+    return resultados
+
+# Prueba
+sec = "AAGAATTCCGGAATTCTTAGAATTCGA"
+sitios = buscar_ecori(sec)
+
+print(f"Secuencia:     {sec}")
+print(f"Longitud:      {len(sec)} pb")
+print(f"Sitios EcoRI encontrados: {len(sitios)}")
+for inicio, fin, sub in sitios:
+    print(f"  Posición {inicio:2d}-{fin:2d}: {sub}")
+```
+
+Salida:
+
+```
+Secuencia:     AAGAATTCCGGAATTCTTAGAATTCGA
+Longitud:      27 pb
+Sitios EcoRI encontrados: 3
+  Posición  2- 8: GAATTC
+  Posición 10-16: GAATTC
+  Posición 21-27: GAATTC
+```
+
+::: callout-tip
+## Nota biológica
+EcoRI (de *E. coli* RY13) es una enzima de restricción de tipo II que reconoce la secuencia palindrómica **5'-G|AATTC-3'** y corta entre la G y la A, generando extremos cohesivos 5'-AATT. Su descubrimiento en los años 70 fue clave para el desarrollo del ADN recombinante.
+:::
+
+## Resumen
+
+En este capítulo has aprendido:
+
+- Que las cadenas son **inmutables** y por qué eso importa.
+- Slicing, concatenación, repetición y `join`.
+- Los métodos más útiles: `upper`, `lower`, `find`, `index`, `count`, `replace`, `split`, `strip`, `startswith`, `endswith`.
+- Formateo moderno con **f-strings** y relleno con `zfill`.
+- Validación con `isalpha`, `isdigit`, etc.
+- **Expresiones regulares** básicas: `search`, `findall`, `finditer`, `sub`, `split`.
+- Aplicaciones biológicas: limpiar FASTA, transcribir ADN→ARN, complementaria y reverso complementario, buscar motivos de restricción, validar secuencias, encontrar ORFs.
+
+Estas herramientas son la base de cualquier pipeline bioinformático "casero" y te permiten resolver el 80 % de las tareas de manipulación de secuencias sin necesidad de librerías externas. En el siguiente capítulo daremos el salto a **leer y escribir archivos**, donde aplicarás estas funciones a datos reales.

@@ -1,0 +1,482 @@
+---
+title: "Visualización con Matplotlib"
+---
+
+# Visualización con Matplotlib
+
+Un análisis biológico sin gráficos es invisible: nadie entiende 20 000 genes leyendo una tabla, pero un *volcano plot* o un boxplot por grupo comunican el resultado en segundos. **Matplotlib** es la librería fundamental de visualización en Python; sobre ella se construyen seaborn, pandas plotting y muchas otras. Aprender matplotlib te da control total sobre cada elemento del gráfico.
+
+En este capítulo aprenderás la estructura de figura y *axes*, los tipos de gráficos principales, la personalización, los subplots, el guardado en distintos formatos y las configuraciones para obtener figuras listas para un *paper*.
+
+## ¿Qué es Matplotlib?
+
+Matplotlib es una librería de visualización 2D para Python, inspirada en MATLAB. Permite generar gráficos de líneas, dispersión, barras, histogramas, boxplots, contornos, imágenes y mucho más, con control a nivel de pixel.
+
+## Interfaz `pyplot` vs orientada a objetos
+
+Matplotlib ofrece dos formas de usarlo:
+
+1. **`pyplot` (estado global)**: estilo MATLAB, sencillo, rápido. Funciona con `plt.plot()`, `plt.title()`, etc. Mantiene una "figura actual" implícita.
+2. **Orientada a objetos**: creas explícitamente `fig, ax = plt.subplots()` y llamas métodos sobre `ax`. Más potente y recomendable para figuras complejas.
+
+```python
+# Estilo pyplot
+import matplotlib.pyplot as plt
+plt.plot([1, 2, 3], [1, 4, 9])
+plt.title("Cuadrados")
+plt.show()
+
+# Estilo orientado a objetos (recomendado)
+fig, ax = plt.subplots()
+ax.plot([1, 2, 3], [1, 4, 9])
+ax.set_title("Cuadrados")
+ax.set_xlabel("x")
+ax.set_ylabel("y")
+plt.show()
+```
+
+::: callout-important
+## Recomendación
+Para figuras con un solo *axes* y sin requisitos exigentes, `plt` es suficiente. Para figuras con **subplots**, anotaciones complejas o exportación reproducible, usa la interfaz orientada a objetos (`fig, ax`).
+:::
+
+## Importación
+
+```python
+import matplotlib.pyplot as plt   # convención universal
+```
+
+## Estructura básica
+
+- **Figure**: el contenedor completo (la "hoja"). Puede contener varios *axes*.
+- **Axes**: una gráfica individual con sus ejes, título, etiquetas, etc.
+- **plot / scatter / bar ...**: métodos que dibujan datos sobre el *axes*.
+- **show()**: renderiza la figura en pantalla.
+
+```python
+fig, ax = plt.subplots()      # figura con un axes
+ax.plot([0, 1, 2, 3], [0.1, 0.3, 0.6, 0.9], marker='o')
+ax.set_xlabel("Tiempo (h)")
+ax.set_ylabel("OD600")
+ax.set_title("Crecimiento bacteriano")
+plt.show()
+```
+
+## Tipos de gráficos
+
+### Línea: `plot`
+
+```python
+plt.plot(tiempo, od600, marker='o', linestyle='-', color='steelblue')
+```
+
+### Dispersión: `scatter`
+
+```python
+plt.scatter(concentracion, absorbancia, c='darkgreen', alpha=0.7)
+```
+
+### Barras: `bar`
+
+```python
+plt.bar(especies, conteos, color='salmon')
+```
+
+### Histograma: `hist`
+
+```python
+plt.hist(pesos, bins=20, color='gray', edgecolor='black')
+```
+
+### Boxplot: `boxplot`
+
+```python
+plt.boxplot([grupo_ctrl, grupo_trat], labels=["Control", "Tratamiento"])
+```
+
+## Personalización
+
+| Elemento | Método |
+|----------|--------|
+| Título | `plt.title("...")` o `ax.set_title(...)` |
+| Etiqueta X | `plt.xlabel(...)` / `ax.set_xlabel(...)` |
+| Etiqueta Y | `plt.ylabel(...)` / `ax.set_ylabel(...)` |
+| Leyenda | `plt.legend(["ctrl","trat"])` o `label=` + `ax.legend()` |
+| Límites | `plt.xlim(0, 10)` / `ax.set_xlim(0, 10)` |
+| Ticks | `plt.xticks([0,1,2], ["t0","t1","t2"])` |
+| Rejilla | `plt.grid(True)` |
+
+## Múltiples curvas en un mismo *axes*
+
+```python
+plt.plot(tiempo, ctrl, label="Control", color="blue")
+plt.plot(tiempo, trat, label="Tratamiento", color="red")
+plt.xlabel("Tiempo (h)")
+plt.ylabel("OD600")
+plt.legend()
+plt.title("Crecimiento por grupo")
+plt.show()
+```
+
+## Subplots con `plt.subplots`
+
+```python
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+axes[0, 0].plot(tiempo, ctrl)
+axes[0, 0].set_title("Control")
+axes[0, 1].plot(tiempo, trat)
+axes[0, 1].set_title("Tratamiento")
+axes[1, 0].hist(pesos_ctrl)
+axes[1, 0].set_title("Pesos control")
+axes[1, 1].boxplot([ctrl, trat])
+axes[1, 1].set_title("Comparación")
+
+plt.tight_layout()   # evita solapamiento
+plt.show()
+```
+
+## Guardar figura: `savefig`
+
+```python
+plt.savefig("figura.png", dpi=300, bbox_inches='tight')
+plt.savefig("figura.pdf")             # vectorial, ideal para papers
+plt.savefig("figura.svg")             # editable en Inkscape/Illustrator
+```
+
+::: callout-tip
+## Formato para *papers*
+Usa **PDF o SVG** (vectorial) para figuras de publicación: escalan sin pérdida de calidad. **PNG** con `dpi=300` es adecuado para slides y web.
+:::
+
+## Estilos
+
+```python
+print(plt.style.available)   # lista de estilos
+plt.style.use("seaborn-v0_8")  # o "ggplot", "bmh", "fivethirtyeight"
+```
+
+::: callout-note
+## Estilos recomendados para principiantes
+`'seaborn-v0_8'` y `'ggplot'` son agradables y profesionales. Evita el estilo por defecto si quieres que tus figuras parezcan publicables. Una vez aplicado un estilo, todos los gráficos del *script* lo heredan.
+:::
+
+## Configuración global con `rcParams`
+
+Para configuraciones que afectan a todas las figuras de un *script* (tamaño de fuente, tipo de letra, DPI por defecto, colores), modifica el diccionario `plt.rcParams`:
+
+```python
+plt.rcParams.update({
+    "font.size": 11,
+    "font.family": "DejaVu Sans",
+    "axes.titlesize": 12,
+    "axes.labelsize": 11,
+    "figure.dpi": 100,
+    "savefig.dpi": 300,
+    "axes.grid": True,
+    "grid.alpha": 0.3,
+})
+```
+
+Esto es útil para mantener consistencia entre todas las figuras de un manuscrito o informe.
+
+## Colores y marcadores
+
+- Colores: `'blue'`, `'red'`, `'#1f77b4'` (hex), nombres CSS como `'steelblue'`, `'salmon'`.
+- Marcadores: `'o'` (círculo), `'s'` (cuadrado), `'^'` (triángulo), `'D'` (diamante), `'+'`.
+- Líneas: `'-'` (sólida), `'--'` (discontinua), `':'` (punteada), `'-.'` (guión-punto).
+
+```python
+plt.plot(x, y, color='darkred', marker='s', linestyle='--', linewidth=2)
+```
+
+::: callout-warning
+## Paletas accesibles (daltonismo)
+Evita combinar rojo y verde para diferenciar grupos: ~8 % de los varones tienen daltonismo y no distinguirán tus categorías. Usa paletas como **viridis**, **cividis** o **colorbrewer** (`'Set2'`, `'Dark2'`), accesibles y perceptualmente uniformes:
+
+```python
+import matplotlib.cm as cm
+colores = plt.get_cmap("viridis")(np.linspace(0, 1, 4))   # 4 colores
+plt.scatter(x, y, c=colores[i])
+```
+
+Para gráficos categóricos, una regla práctica: usa `tab10` o `Set2` para ≤ 8 categorías y reservar `viridis` para variables continuas.
+:::
+
+## Anotaciones: `text` y `annotate`
+
+```python
+ax.text(2, 0.5, "fase exponencial", fontsize=10)
+ax.annotate("máximo", xy=(5, 1.2), xytext=(3, 1.4),
+            arrowprops=dict(arrowstyle="->"))
+```
+
+## Configuración para *papers*
+
+```python
+fig, ax = plt.subplots(figsize=(5, 3.5), dpi=120)
+ax.plot(x, y, color='black', linewidth=1.5)
+ax.set_xlabel("Tiempo (h)", fontsize=11)
+ax.set_ylabel("OD600", fontsize=11)
+ax.set_title("Crecimiento", fontsize=12)
+ax.tick_params(labelsize=10)
+plt.tight_layout()
+plt.savefig("fig1.pdf", dpi=300, bbox_inches='tight')
+```
+
+::: callout-important
+## `tight_layout()` y `bbox_inches='tight'`
+Llama siempre a `plt.tight_layout()` antes de `show()`/`savefig()` para que las etiquetas no se solapen. Añade `bbox_inches='tight'` en `savefig` para que el archivo no quede con márgenes excesivos.
+:::
+
+## Ejemplos biológicos
+
+### 1) Curva de crecimiento bacteriano
+
+```python
+tiempo = [0, 1, 2, 3, 4, 5, 6, 7]
+od600  = [0.05, 0.08, 0.15, 0.30, 0.55, 0.90, 1.10, 1.15]
+plt.plot(tiempo, od600, marker='o', color='darkgreen')
+plt.xlabel("Tiempo (h)")
+plt.ylabel("OD600")
+plt.title("Crecimiento bacteriano")
+plt.grid(True)
+plt.show()
+```
+
+### 2) Dispersión absorbancia vs concentración (curva estándar)
+
+```python
+conc = [0, 10, 20, 40, 80, 160]
+abs_ = [0.02, 0.10, 0.20, 0.42, 0.81, 1.55]
+plt.scatter(conc, abs_, color='darkblue')
+plt.xlabel("Concentración (µg/mL)")
+plt.ylabel("Absorbancia (595 nm)")
+plt.title("Curva estándar BSA")
+plt.show()
+```
+
+### 3) Barras: conteos de especies por sitio
+
+```python
+especies = ["Q. robur", "P. pinea", "P. sylvestris"]
+conteos  = [12, 8, 15]
+plt.bar(especies, conteos, color=['#4daf4a','#377eb8','#984ea3'])
+plt.ylabel("Número de individuos")
+plt.title("Abundancia por especie")
+plt.xticks(rotation=15)
+plt.tight_layout()
+plt.show()
+```
+
+### 4) Histograma de pesos
+
+```python
+import numpy as np
+np.random.seed(0)
+pesos = np.random.normal(50, 8, 200)
+plt.hist(pesos, bins=20, color='lightgray', edgecolor='black')
+plt.xlabel("Peso (g)")
+plt.ylabel("Frecuencia")
+plt.title("Distribución de pesos")
+plt.show()
+```
+
+### 5) Boxplot por tratamiento
+
+```python
+ctrl = np.random.normal(0.3, 0.05, 30)
+trat = np.random.normal(0.6, 0.07, 30)
+plt.boxplot([ctrl, trat], labels=["Control", "Tratamiento"])
+plt.ylabel("Absorbancia")
+plt.title("Comparación de grupos")
+plt.show()
+```
+
+### 6) Subplot 2×2 comparando grupos
+
+```python
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+axes[0,0].hist(ctrl); axes[0,0].set_title("Control")
+axes[0,1].hist(trat); axes[0,1].set_title("Tratamiento")
+axes[1,0].boxplot([ctrl, trat]); axes[1,0].set_title("Boxplot")
+axes[1,1].plot(tiempo, od600); axes[1,1].set_title("Crecimiento")
+plt.tight_layout()
+plt.show()
+```
+
+### 7) Curva estándar con línea de regresión
+
+```python
+coef = np.polyfit(conc, abs_, 1)        # regresión lineal
+x_lin = np.linspace(0, 160, 100)
+y_lin = np.polyval(coef, x_lin)
+plt.scatter(conc, abs_, label="datos")
+plt.plot(x_lin, y_lin, 'r--', label="ajuste")
+plt.legend(); plt.xlabel("Concentración"); plt.ylabel("Absorbancia")
+plt.show()
+```
+
+## Ejercicios
+
+### Ejercicio 1
+
+Crea un gráfico de dispersión con datos simulados de absorbancia vs concentración para una curva estándar (p. ej. concentraciones 0, 10, 20, 40, 80, 160 µg/mL). Etiqueta los ejes, pon un título y guarda la figura como `"curva_estandar.png"` con `dpi=300`.
+
+### Ejercicio 2
+
+Crea un *subplot* 1×2 con: (a) un **histograma** de 1000 números aleatorios normales (`np.random.normal(60, 10, 1000)`) simulando pesos de individuos; (b) un **boxplot** comparando dos grupos (control y tratamiento) generados aleatoriamente. Etiqueta cada subgráfico.
+
+### Ejercicio 3
+
+Simula datos de crecimiento bacteriano (OD600) en 8 tiempos (0, 1, 2, ..., 7 horas) que sigan aproximadamente una curva sigmoidal (fase lag → exponencial → estacionaria). Grafica la curva, etiqueta ejes, agrega título y guarda como **PDF** llamado `"crecimiento.pdf"`.
+
+## Soluciones
+
+### Solución 1
+
+```python
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Datos de la curva estándar (concentración conocida vs absorbancia medida)
+concentracion = np.array([0, 10, 20, 40, 80, 160])  # µg/mL de BSA
+# Simulamos absorbancia con una relación lineal + ruido
+np.random.seed(1)
+absorbancia = 0.01 * concentracion + 0.05 + np.random.normal(0, 0.02, size=len(concentracion))
+
+# Creamos figura y axes (estilo orientado a objetos)
+fig, ax = plt.subplots(figsize=(6, 4))
+
+# Scatter: cada punto es un estándar medido
+ax.scatter(concentracion, absorbancia,
+           color='darkblue', s=60, alpha=0.8, edgecolor='black')
+
+# Etiquetas y título: fundamentales para interpretación
+ax.set_xlabel("Concentración (µg/mL)", fontsize=11)
+ax.set_ylabel("Absorbancia (595 nm)", fontsize=11)
+ax.set_title("Curva estándar BSA (Bradford)", fontsize=12)
+
+# Rejilla suave para leer valores
+ax.grid(True, linestyle=':', alpha=0.6)
+
+# Ajuste de layout y guardado a 300 dpi (calidad publicación)
+plt.tight_layout()
+plt.savefig("curva_estandar.png", dpi=300, bbox_inches='tight')
+plt.show()
+```
+
+### Solución 2
+
+```python
+import matplotlib.pyplot as plt
+import numpy as np
+
+np.random.seed(42)
+
+# (a) Simulación de 1000 pesos de individuos
+pesos = np.random.normal(loc=60, scale=10, size=1000)
+
+# (b) Dos grupos: control y tratamiento, con distribuciones distintas
+control     = np.random.normal(loc=60, scale=10, size=50)
+tratamiento = np.random.normal(loc=68, scale=9,  size=50)
+
+# Subplot 1x2: 1 fila, 2 columnas, figsize ancho
+fig, axes = plt.subplots(1, 2, figsize=(11, 4))
+
+# --- Panel izquierdo: histograma ---
+axes[0].hist(pesos, bins=30, color='steelblue',
+             edgecolor='black', alpha=0.85)
+axes[0].set_xlabel("Peso (kg)")
+axes[0].set_ylabel("Frecuencia")
+axes[0].set_title("Distribución de pesos (n=1000)")
+axes[0].grid(True, linestyle=':', alpha=0.5)
+
+# --- Panel derecho: boxplot comparativo ---
+# boxplot recibe una lista de arrays; cada uno es una caja
+axes[1].boxplot([control, tratamiento],
+                labels=["Control", "Tratamiento"],
+                patch_artist=True,
+                boxprops=dict(facecolor='lightblue'))
+axes[1].set_ylabel("Peso (kg)")
+axes[1].set_title("Comparación de grupos")
+axes[1].grid(True, axis='y', linestyle=':', alpha=0.5)
+
+# tight_layout para evitar solapamientos
+plt.tight_layout()
+plt.show()
+```
+
+### Solución 3
+
+```python
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Simulamos crecimiento bacteriano con curva logística (sigmoidal)
+# La función logística L / (1 + exp(-k*(t - t0))) modela:
+#   - fase lag al inicio (crecimiento lento)
+#   - fase exponencial (crecimiento rápido)
+#   - fase estacionaria (asíntota en L)
+tiempo = np.arange(0, 8, 1)   # 0, 1, ..., 7 horas
+L = 1.20      # OD600 máximo (fase estacionaria)
+k = 1.0       # velocidad de crecimiento
+t0 = 3.0      # tiempo de inflexión
+
+od600_teorico = L / (1 + np.exp(-k * (tiempo - t0)))
+
+# Añadimos ruido de medición realista
+np.random.seed(3)
+od600 = od600_teorico + np.random.normal(0, 0.03, size=len(tiempo))
+
+# Dibujamos
+fig, ax = plt.subplots(figsize=(6, 4))
+ax.plot(tiempo, od600, marker='o', linestyle='-',
+        color='darkgreen', linewidth=2, markersize=7,
+        label="OD600 medido")
+
+# Anotamos las fases del crecimiento
+ax.axvspan(0, 2, alpha=0.10, color='gray')
+ax.text(1, 0.10, "lag", ha='center', fontsize=10)
+ax.axvspan(2, 5, alpha=0.10, color='green')
+ax.text(3.5, 0.10, "exponencial", ha='center', fontsize=10)
+ax.axvspan(5, 7, alpha=0.10, color='blue')
+ax.text(6, 0.10, "estacionaria", ha='center', fontsize=10)
+
+ax.set_xlabel("Tiempo (h)", fontsize=11)
+ax.set_ylabel("OD600", fontsize=11)
+ax.set_title("Curva de crecimiento bacteriano", fontsize=12)
+ax.set_ylim(0, 1.4)
+ax.legend(loc='lower right')
+ax.grid(True, linestyle=':', alpha=0.5)
+
+plt.tight_layout()
+
+# Guardamos como PDF (vectorial, ideal para papers)
+plt.savefig("crecimiento.pdf", bbox_inches='tight')
+plt.show()
+```
+
+::: callout-important
+## Comentarios sobre los parámetros visuales usados
+- **`figsize=(6, 4)`**: proporción 3:2, adecuada para una columna de *paper*.
+- **`marker='o'` y `linestyle='-'`**: la línea conecta los puntos para sugerir la tendencia; el marcador destaca cada medida individual (8 puntos = 8 mediciones).
+- **`color='darkgreen'`**: evoca bacterias/crecimiento sin saturar la vista.
+- **`alpha=0.10` en `axvspan`**: sombrea suavemente las fases sin tapar la curva.
+- **`ha='center'`**: centra el texto sobre su coordenada x, evita desplazamientos feos.
+- **`ax.legend(loc='lower right')`**: la leyenda no se solapa con la curva (que sube hacia la izquierda).
+- **`plt.tight_layout()`** y **`bbox_inches='tight'`**: eliminan márgenes excesivos al renderizar.
+- **PDF** (no PNG): formato vectorial que escala sin pérdida para imprimir o insertar en LaTeX/Word.
+:::
+
+::: callout-tip
+## Resumen
+- Importa como `import matplotlib.pyplot as plt`.
+- Usa interfaz orientada a objetos (`fig, ax`) para figuras serias.
+- Tipos básicos: `plot`, `scatter`, `bar`, `hist`, `boxplot`.
+- Personaliza con `set_xlabel`, `set_ylabel`, `set_title`, `legend`, `grid`.
+- Subplots con `plt.subplots(nrows, ncols)`.
+- Guarda con `savefig` en PNG (`dpi=300`) o PDF (vectorial).
+- Usa `plt.style.use("seaborn-v0_8")` o `"ggplot"` para un look pulido.
+- Llama siempre `plt.tight_layout()` antes de mostrar/guardar.
+:::

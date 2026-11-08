@@ -1,0 +1,496 @@
+---
+title: "Funciones y modularización"
+---
+
+# Funciones y modularización
+
+Hasta ahora hemos escrito scripts donde todo el código se ejecuta secuencialmente. Conforme los programas crecen, esta estrategia deja de ser viable: el código se vuelve difícil de leer, de mantener y de probar. La solución es **modularizar**: dividir el programa en piezas pequeñas y reutilizables llamadas **funciones**.
+
+En este capítulo aprenderás a definir funciones, a usar parámetros con valores por defecto, a aceptar un número variable de argumentos, a documentar tu código con *docstrings* y a anotar los tipos para hacerlo más legible y robusto.
+
+## Qué es una función y por qué modularizar
+
+Una **función** es un bloque de código con un nombre, que recibe datos de entrada (**parámetros**), ejecuta una tarea y, opcionalmente, devuelve un resultado (`return`). Sus ventajas:
+
+- **Reutilización**: escribes el código una vez y lo invocas cuantas veces quieras.
+- **Legibilidad**: un buen nombre de función documenta lo que hace el bloque.
+- **Mantenibilidad**: si hay un error, lo corriges en un solo sitio.
+- **Verificabilidad**: puedes probar una función aislada sin necesidad de ejecutar todo el programa.
+- **Abstracción**: quien usa la función no necesita saber cómo está implementada, solo qué hace.
+
+En biología molecular, por ejemplo, puedes escribir una función `gc_content(seq)` que calcule el porcentaje G+C de una secuencia. Luego, donde quieras usarla (en un script de control de calidad de lecturas, en un pipeline de anotación, en un análisis estadístico), basta con llamarla.
+
+## Definición con `def`
+
+La sintaxis básica es:
+
+```python
+def nombre(parametro1, parametro2):
+    """Descripción breve de lo que hace la función."""
+    # cuerpo de la función
+    resultado = parametro1 + parametro2
+    return resultado
+```
+
+Una función **sin `return`** (o con `return` vacío) devuelve `None`. Una función **con `return`** devuelve el valor indicado y termina su ejecución.
+
+Ejemplo biológico: cálculo de concentración molar a partir de masa y volumen.
+
+```python
+def concentracion_molar(masa_mg, peso_molecular_g_mol, volumen_ml):
+    """
+    Calcula la concentración molar (M) de una solución.
+    masa_mg: masa del soluto en miligramos.
+    peso_molecular_g_mol: peso molecular en g/mol.
+    volumen_ml: volumen de disolución en mL.
+    """
+    masa_g = masa_mg / 1000.0           # convertir mg -> g
+    moles = masa_g / peso_molecular_g_mol
+    litros = volumen_ml / 1000.0        # convertir mL -> L
+    return moles / litros
+
+# Calcular concentración de una solución de 50 mg de ATP
+# (PM 507.18 g/mol) en 25 mL
+c = concentracion_molar(50, 507.18, 25)
+print(f"Concentración: {c:.6f} M")  # 0.003948 M ≈ 3.95 mM
+```
+
+## Parámetros por defecto
+
+Puedes asignar valores por defecto a los parámetros. Si al llamar a la función no se pasa ese argumento, se usa el valor por defecto:
+
+```python
+def temperatura_optima(organismo="E. coli", ph_opt=7.0):
+    return f"{organismo}: {37 if organismo == 'E. coli' else 30}°C, pH {ph_opt}"
+
+print(temperatura_optima())                  # E. coli: 37°C, pH 7.0
+print(temperatura_optima("Saccharomyces"))   # Saccharomyces: 30°C, pH 7.0
+print(temperatura_optima(ph_opt=6.5))        # E. coli: 37°C, pH 6.5
+```
+
+::: callout-warning
+## Regla importante
+Los parámetros con valor por defecto **deben ir después** de los parámetros sin valor por defecto. `def f(a, b=2)` es válido; `def f(a=2, b)` es un error de sintaxis.
+:::
+
+## Parámetros por nombre (keyword arguments)
+
+Al llamar a una función puedes indicar el nombre del parámetro, lo que permite cambiar el orden y hace el código más explícito:
+
+```python
+def clasificar_individuo(peso, especie="rata"):
+    if peso < 50:
+        categoria = "cría"
+    elif peso < 200:
+        categoria = "juvenil"
+    else:
+        categoria = "adulto"
+    return f"{especie} ({peso} g) → {categoria}"
+
+print(clasificar_individuo(peso=180, especie="Mus musculus"))
+# Mus musculus (180 g) → juvenil
+```
+
+## `*args` y `**kwargs`
+
+A veces no sabes de antemano cuántos argumentos recibirá la función. Python permite:
+
+- `*args`: empaqueta los argumentos **posicionales** adicionales en una tupla.
+- `**kwargs`: empaqueta los argumentos **por nombre** adicionales en un diccionario.
+
+```python
+def estadisticas(*valores):
+    """Devuelve mínimo, máximo y media de los valores recibidos."""
+    if not valores:
+        return None
+    return min(valores), max(valores), sum(valores) / len(valores)
+
+print(estadisticas(0.12, 0.45, 0.78, 0.23, 0.91))
+# (0.12, 0.91, 0.498)
+```
+
+```python
+def configurar_analisis(**kwargs):
+    """Imprime las opciones de configuración pasadas como keyword arguments."""
+    for opcion, valor in kwargs.items():
+        print(f"  {opcion}: {valor}")
+
+configurar_analisis(genoma="hg38", umbral=0.05, hilos=8, verbose=True)
+```
+
+## Múltiples valores de retorno (tuplas)
+
+Una función puede devolver varios valores separados por comas; Python los empaqueta en una tupla:
+
+```python
+def estadisticas_muestra(datos):
+    """Devuelve media, mediana y desviación estándar (muestral)."""
+    n = len(datos)
+    if n == 0:
+        return None
+    media = sum(datos) / n
+    ordenados = sorted(datos)
+    if n % 2 == 1:
+        mediana = ordenados[n // 2]
+    else:
+        mediana = (ordenados[n//2 - 1] + ordenados[n//2]) / 2
+    varianza = sum((x - media) ** 2 for x in datos) / (n - 1)
+    std = varianza ** 0.5
+    return media, mediana, std
+
+absorbancias = [0.12, 0.45, 0.78, 0.23, 0.91]
+media, mediana, std = estadisticas_muestra(absorbancias)
+print(f"media={media:.3f}, mediana={mediana:.3f}, std={std:.3f}")
+```
+
+::: callout-note
+## Convención de orden
+Los estadísticos suelen pedirse en este orden: media, mediana, std. Sigue siempre el mismo orden dentro de tu proyecto para no confundirte al desempaquetar.
+:::
+
+## Ámbito de variables: local vs global
+
+Las variables definidas **dentro** de una función son **locales**: solo existen mientras la función se ejecuta. Las definidas **fuera** son **globales** y pueden leerse desde dentro, pero **no modificarse** salvo que se declaran explícitamente con `global`.
+
+```python
+contador_global = 0
+
+def incrementar():
+    contador_local = 10
+    return contador_local + 1
+
+print(incrementar())  # 11
+print(contador_global)  # 0 — no se modificó
+
+# Si quieres modificar una global (rara vez recomendado):
+def incrementar_global():
+    global contador_global
+    contador_global += 1
+
+incrementar_global()
+print(contador_global)  # 1
+```
+
+::: callout-warning
+## Evita abusar de `global`
+Usar `global` dificulta razonar sobre el código y rompe la modularidad. Es casi siempre mejor pasar la variable como parámetro y devolver su nuevo valor con `return`.
+:::
+
+## Funciones `lambda` (anónimas)
+
+Las funciones `lambda` son funciones pequeñas, de una sola expresión, sin nombre. Se usan típicamente como argumentos de funciones como `sorted`, `map`, `filter`.
+
+```python
+# Ordenar una lista de genes por longitud de su nombre
+genes = ["BRCA1", "TP53", "EGFR", "MYC", "CDK2"]
+genes_ordenados = sorted(genes, key=lambda g: len(g))
+print(genes_ordenados)  # ['MYC', 'TP53', 'EGFR', 'CDK2', 'BRCA1']
+
+# Por longitud descendente
+genes_desc = sorted(genes, key=lambda g: -len(g))
+print(genes_desc)  # ['BRCA1', 'EGFR', 'CDK2', 'TP53', 'MYC']
+```
+
+::: callout-tip
+## Cuándo usar `lambda`
+Cuando la función es tan corta que darle un nombre sería redundante. Si necesitas más de una línea o la vas a reutilizar, define una función con `def`: el código queda más legible.
+:::
+
+## *Type hints* (anotaciones de tipo)
+
+Python es de tipado dinámico, pero puedes **anotar** los tipos esperados para hacer el código más legible y permitir que herramientas como `mypy` o el IDE detecten errores antes de ejecutar:
+
+```python
+def gc_content(secuencia: str) -> float:
+    """Devuelve el porcentaje de G+C de una secuencia de ADN."""
+    secuencia = secuencia.upper()
+    g = secuencia.count("G")
+    c = secuencia.count("C")
+    if not secuencia:
+        return 0.0
+    return 100.0 * (g + c) / len(secuencia)
+```
+
+Las anotaciones **no** imponen el tipo en tiempo de ejecución (Python seguirá permitiendo pasar cualquier objeto), pero son una excelente forma de documentar tu API.
+
+## Documentación con *docstrings*
+
+Un *docstring* es una cadena triple que aparece justo después de la definición de la función. Existen varios estilos; uno muy extendido es el estilo **Google**:
+
+```python
+def tm_oligo(sec: str) -> float:
+    """
+    Calcula la temperatura de melting (Tm) de un oligonucleótido corto
+    usando la fórmula empírica de Wallace: Tm = 2*(A+T) + 4*(G+C).
+
+    Args:
+        sec: secuencia de ADN del oligo (solo A, T, C, G).
+
+    Returns:
+        Temperatura estimada en °C.
+
+    Raises:
+        ValueError: si la secuencia contiene caracteres no válidos.
+    """
+    sec = sec.upper()
+    valid = set("ATCG")
+    if not set(sec).issubset(valid):
+        raise ValueError(f"Caracteres no válidos en: {sec}")
+    at = sec.count("A") + sec.count("T")
+    gc = sec.count("G") + sec.count("C")
+    return 2 * at + 4 * gc
+```
+
+El docstring es accesible en tiempo de ejecución como `tm_oligo.__doc__`, y herramientas como `help()` o los IDE lo muestran automáticamente.
+
+## Importar funciones desde otro archivo
+
+Cuando tienes varias funciones útiles, conviene agruparlas en un **módulo** (un archivo `.py`) e importarlas. Por ejemplo, crea un archivo `bio_utils.py` con varias funciones y luego, en tu script:
+
+```python
+# Opción 1: importar el módulo completo
+import bio_utils
+print(bio_utils.gc_content("ATGCGAT"))
+
+# Opción 2: importar solo lo necesario
+from bio_utils import gc_content, tm_oligo
+print(gc_content("ATGCGAT"))
+
+# Opción 3: renombrar
+import bio_utils as bu
+print(bu.gc_content("ATGCGAT"))
+```
+
+::: callout-important
+## Organización del proyecto
+Crear tus propios módulos evita copiar y pegar código entre scripts. Si una función como `leer_fasta(ruta)` la usas en varios proyectos, ponla en `bio_utils.py` y simplifica tu vida.
+:::
+
+## Recursividad: factorial y combinatoria poblacional
+
+Una función puede llamarse a sí misma: es la **recursión**. El ejemplo clásico es el factorial:
+
+$$
+n! = n \cdot (n-1)! \quad \text{con} \quad 0! = 1
+$$
+
+En genética de poblaciones el factorial aparece en fórmulas combinatorias, por ejemplo en el número de parejas posibles:
+
+$$
+\binom{n}{2} = \frac{n!}{2!(n-2)!}
+$$
+
+```python
+def factorial(n: int) -> int:
+    """Calcula n! recursivamente."""
+    if n < 0:
+        raise ValueError("El factorial no está definido para negativos.")
+    if n in (0, 1):
+        return 1
+    return n * factorial(n - 1)
+
+def parejas_posibles(n: int) -> int:
+    """Número de parejas distintas entre n individuos: C(n, 2)."""
+    if n < 2:
+        return 0
+    return n * (n - 1) // 2  # más eficiente que usar factorial
+
+print(factorial(5))         # 120
+print(parejas_posibles(10)) # 45
+```
+
+::: callout-warning
+## Límite de recursión
+Python tiene un límite por defecto (~1000 llamadas) para protegerse de recursiones infinitas. Para factorial de números grandes es mejor usar `math.factorial`, que está optimizado.
+:::
+
+## Ejemplos biológicos adicionales
+
+### Normalización de absorbancias
+
+```python
+def normalizar_max(absorbancias: list[float]) -> list[float]:
+    """Normaliza una lista de absorbancias dividiendo por el máximo."""
+    max_abs = max(absorbancias)
+    if max_abs == 0:
+        return [0.0] * len(absorbancias)
+    return [a / max_abs for a in absorbancias]
+
+print(normalizar_max([0.12, 0.45, 0.78, 0.23, 0.91]))
+# [0.132, 0.495, 0.857, 0.253, 1.0]
+```
+
+### Clasificación por peso
+
+```python
+def clasificar_individuo(peso_g: float) -> str:
+    """Clasifica un individuo en cría/juvenil/adulto según su peso."""
+    if peso_g < 50:
+        return "cría"
+    elif peso_g < 200:
+        return "juvenil"
+    return "adulto"
+```
+
+## Ejercicios
+
+### Ejercicio 1
+
+Escribe una función `gc_content(secuencia)` que reciba una secuencia de ADN y devuelva el porcentaje de G+C (con un decimal). Pruébala con `"ATGCGATCGATAGCTAGCTAA"`.
+
+### Ejercicio 2
+
+Escribe una función `tm_oligo(sec)` que calcule la temperatura de melting de un oligo corto usando la fórmula básica `Tm = 2*(A+T) + 4*(G+C)`. Pruébala con varias secuencias y documenta con docstring y type hints.
+
+### Ejercicio 3
+
+Escribe una función `estadisticas_muestra(datos)` que reciba una lista de valores numéricos y devuelva **tres valores**: media, mediana y desviación estándar muestral. Pruébala con las absorbancias `[0.12, 0.45, 0.78, 0.23, 0.91]`.
+
+## Soluciones
+
+### Solución 1
+
+```python
+def gc_content(secuencia: str) -> float:
+    """
+    Calcula el porcentaje de G+C de una secuencia de ADN.
+
+    Args:
+        secuencia: cadena con los caracteres A, T, C, G.
+
+    Returns:
+        Porcentaje de G+C (0–100). Si la secuencia está vacía, 0.0.
+    """
+    secuencia = secuencia.upper()
+    if not secuencia:
+        return 0.0
+    g = secuencia.count("G")
+    c = secuencia.count("C")
+    return round(100.0 * (g + c) / len(secuencia), 1)
+
+# Prueba
+seq = "ATGCGATCGATAGCTAGCTAA"
+print(f"Secuencia: {seq}")
+print(f"Longitud: {len(seq)} pb")
+print(f"GC%: {gc_content(seq)}")  # 40.0
+```
+
+Salida:
+
+```
+Secuencia: ATGCGATCGATAGCTAGCTAA
+Longitud: 20 pb
+GC%: 40.0
+```
+
+### Solución 2
+
+```python
+def tm_oligo(sec: str) -> float:
+    """
+    Calcula la temperatura de melting (Tm) de un oligonucleótido
+    corto (< 14 nt) usando la fórmula empírica de Wallace:
+        Tm = 2*(A+T) + 4*(G+C)
+
+    Args:
+        sec: secuencia de ADN (solo A, T, C, G).
+
+    Returns:
+        Tm estimada en °C.
+
+    Raises:
+        ValueError: si la secuencia contiene caracteres no válidos.
+    """
+    sec = sec.upper()
+    valid = set("ATCG")
+    if not set(sec).issubset(valid):
+        raise ValueError(f"Secuencia inválida: {sec}")
+    at = sec.count("A") + sec.count("T")
+    gc = sec.count("G") + sec.count("C")
+    return 2 * at + 4 * gc
+
+# Pruebas
+oligos = ["GCGC", "ATAT", "ATGCGA", "GGAATTCC"]
+for o in oligos:
+    print(f"{o:10s}  Tm = {tm_oligo(o)}°C")
+```
+
+Salida:
+
+```
+GCGC        Tm = 16°C
+ATAT        Tm = 8°C
+ATGCGA      Tm = 20°C
+GGAATTCC    Tm = 24°C
+```
+
+::: callout-note
+## Limitación de la fórmula
+La regla de Wallace solo es válida para oligos muy cortos (≤ 13–14 nt). Para oligos más largos se suelen usar fórmulas basadas en la termodinámica de nearest-neighbor (SantaLucia, 1998). Lo importante aquí es la **estructura** de la función, no la precisión del modelo.
+:::
+
+### Solución 3
+
+```python
+def estadisticas_muestra(datos: list[float]) -> tuple[float, float, float]:
+    """
+    Calcula estadísticas descriptivas básicas de una muestra.
+
+    Args:
+        datos: lista de valores numéricos.
+
+    Returns:
+        Tupla (media, mediana, desviación estándar muestral).
+        Si la lista está vacía, devuelve (0.0, 0.0, 0.0).
+
+    Raises:
+        ValueError: si la lista tiene un solo elemento (std indefinido).
+    """
+    n = len(datos)
+    if n == 0:
+        return 0.0, 0.0, 0.0
+    if n == 1:
+        raise ValueError("Se necesitan al menos 2 valores para std.")
+
+    media = sum(datos) / n
+    ordenados = sorted(datos)
+    if n % 2 == 1:
+        mediana = ordenados[n // 2]
+    else:
+        mediana = (ordenados[n // 2 - 1] + ordenados[n // 2]) / 2
+    varianza = sum((x - media) ** 2 for x in datos) / (n - 1)
+    std = varianza ** 0.5
+    return media, mediana, std
+
+# Prueba con absorbancias
+absorbancias = [0.12, 0.45, 0.78, 0.23, 0.91]
+media, mediana, std = estadisticas_muestra(absorbancias)
+print(f"Absorbancias: {absorbancias}")
+print(f"  Media:   {media:.4f}")
+print(f"  Mediana: {mediana:.4f}")
+print(f"  Std:     {std:.4f}")
+```
+
+Salida:
+
+```
+Absorbancias: [0.12, 0.45, 0.78, 0.23, 0.91]
+  Media:   0.4980
+  Mediana: 0.4500
+  Std:     0.3220
+```
+
+## Resumen
+
+En este capítulo has aprendido:
+
+- Por qué **modularizar** tu código en funciones.
+- La sintaxis de `def`, los parámetros por defecto y por nombre.
+- `*args` y `**kwargs` para aceptar argumentos variables.
+- Cómo devolver **múltiples valores** empaquetados en tuplas.
+- Las diferencias entre **ámbito local y global**.
+- Cuándo usar funciones `lambda`.
+- Cómo añadir **type hints** y **docstrings** para hacer tu código profesional.
+- Cómo organizar tus funciones en **módulos** importables.
+
+Con esto ya puedes escribir programas de cierta complejidad, donde la lógica de negocio está en funciones bien documentadas y reutilizables. En los siguientes capítulos aplicaremos estas funciones a tareas concretas: manipulación de cadenas (capítulo 7) y lectura/escritura de archivos (capítulo 8).

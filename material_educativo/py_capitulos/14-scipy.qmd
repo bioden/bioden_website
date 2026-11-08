@@ -1,0 +1,452 @@
+---
+title: "Estadística con SciPy"
+---
+
+# Estadística con SciPy
+
+Casi toda decisión biológica se apoya en estadística: ¿la absorbancia del tratamiento es distinta del control? ¿la longitud predice el peso de los peces? ¿las proporciones genotípicas siguen Hardy–Weinberg? Python resuelve estas preguntas con **SciPy**, una librería científica que incluye (entre muchas otras cosas) el módulo `scipy.stats` con pruebas de hipótesis, distribuciones y ajustes listos para usar.
+
+En este capítulo aprenderás a importar `scipy.stats`, a obtener estadística descriptiva, a trabajar con distribuciones teóricas, a aplicar las pruebas de hipótesis más usadas (t-tests, Mann–Whitney, Wilcoxon, ANOVA, Kruskal–Wallis, chi-cuadrado), a calcular correlaciones y regresión lineal, y a verificar los supuestos de cada prueba (normalidad, homocedasticidad).
+
+## ¿Qué es SciPy y qué submódulos son relevantes para biólogos?
+
+SciPy es una colección de algoritmos numéricos construidos sobre NumPy. Sus submódulos son:
+
+| Submódulo            | Uso típico en biología                                  |
+|----------------------|---------------------------------------------------------|
+| `scipy.stats`        | Estadística, distribuciones, tests de hipótesis         |
+| `scipy.optimize`     | Ajuste de curvas, minimización                          |
+| `scipy.integrate`    | Integración numérica (ODE, cuadraturas)                 |
+| `scipy.interpolate`  | Interpolación, splines                                  |
+| `scipy.signal`       | Filtrado, picos (electrofisiología, cromatografía)      |
+| `scipy.cluster`      | Clustering jerárquico (filogenia, expresión)            |
+| `scipy.ndimage`      | Imágenes (microscopía)                                  |
+
+En este capítulo nos centraremos en **`scipy.stats`**.
+
+## Importación
+
+```python
+from scipy import stats
+import numpy as np
+import pandas as pd
+```
+
+::: callout-tip
+## Estilo recomendado
+Usa `from scipy import stats` y accede a las funciones como `stats.ttest_ind(...)`. También puedes importar funciones sueltas: `from scipy.stats import ttest_ind, shapiro, pearsonr`. Las dos conviven bien.
+:::
+
+## Estadística descriptiva
+
+SciPy ofrece funciones para describir una muestra:
+
+```python
+x = np.array([12.1, 11.8, 12.3, 12.0, 11.9, 12.5, 12.2, 12.4, 12.0, 11.7])
+
+stats.describe(x)
+# DescribeResult(nobs=10, minmax=(11.7, 12.5), mean=12.09, variance=0.0677, skewness=..., kurtosis=...)
+
+# Funciones específicas
+stats.tmean(x)          # media truncada (por defecto sin truncar)
+stats.tvar(x)           # varianza
+stats.tstd(x)           # desviación estándar
+stats.tsem(x)           # error estándar de la media
+stats.median_abs_deviation(x)   # MAD (robusta)
+stats.iqr(x)            # rango intercuartílico
+stats.sem(x)            # error estándar
+```
+
+::: callout-note
+## Pandas vs SciPy
+Para describir un DataFrame, `df.describe()` es suficiente. SciPy brilla cuando quieres un único número (sem, iqr, MAD) o cuando vas a hacer tests.
+:::
+
+## Distribuciones de probabilidad
+
+SciPy implementa cientos de distribuciones continuas y discretas con una interfaz uniforme: `pdf` (densidad), `cdf` (acumulada), `ppf` (cuantil inverso), `rvs` (muestra aleatoria).
+
+```python
+# Distribución normal N(mu=10, sigma=2)
+mu, sigma = 10, 2
+stats.norm.pdf(12, loc=mu, scale=sigma)   # densidad en x=12
+stats.norm.cdf(12, loc=mu, scale=sigma)   # P(X<=12)
+stats.norm.ppf(0.975, loc=mu, scale=sigma)  # cuantil 97.5%
+
+# Distribución t de Student (df=18)
+stats.t.ppf(0.975, df=18)   # ~2.101 → valor crítico para IC 95% bilateral
+
+# Chi-cuadrado con df=5
+stats.chi2.ppf(0.95, df=5)  # ~11.07
+
+# Poisson (lambda=4)
+stats.poisson.pmf(2, mu=4)  # P(X=2)
+
+# Binomial (n=10, p=0.3)
+stats.binom.pmf(3, n=10, p=0.3)
+
+# Uniforme en [0, 1]
+stats.uniform.rvs(size=5)
+```
+
+```python
+# Muestra aleatoria de una distribución
+muestra = stats.norm.rvs(loc=10, scale=2, size=50, random_state=42)
+```
+
+## Pruebas de hipótesis
+
+### T-test de una muestra
+
+Compara la media de una muestra con un valor teórico $\mu_0$.
+
+```python
+# ¿La absorbancia media difiere de 0.1?
+absorb = np.array([0.118, 0.121, 0.125, 0.108, 0.115,
+                   0.122, 0.119, 0.117, 0.124, 0.116])
+res = stats.ttest_1samp(absorb, popmean=0.1)
+print(res)        # TtestResult(statistic=..., pvalue=...)
+print(f"t = {res.statistic:.3f}, p = {res.pvalue:.4f}")
+```
+
+### T-test independiente (dos grupos)
+
+```python
+ctrl  = np.array([0.12, 0.11, 0.13, 0.10, 0.12, 0.11, 0.13, 0.12])
+trat  = np.array([0.28, 0.30, 0.27, 0.29, 0.31, 0.28, 0.30, 0.29])
+
+# t-test de Student (asume varianzas iguales)
+res = stats.ttest_ind(ctrl, trat, equal_var=True)
+
+# t-test de Welch (no asume varianzas iguales — recomendado por defecto)
+res_w = stats.ttest_ind(ctrl, trat, equal_var=False)
+print(res_w)
+```
+
+::: callout-important
+## Welch por defecto
+En la práctica, **Welch** (`equal_var=False`) es la opción más segura: no asume homocedasticidad y casi nunca equivoca. Solo usa `equal_var=True` si verificaste varianzas iguales con `levene`.
+:::
+
+### T-test pareada (medidas repetidas)
+
+```python
+antes  = np.array([78, 82, 75, 90, 88, 76, 85, 81])
+despues = np.array([85, 88, 80, 95, 92, 82, 90, 86])
+stats.ttest_rel(antes, despues)
+```
+
+### Mann–Whitney U (no paramétrica, independiente)
+
+Alternativa al t-test independiente cuando los datos no son normales o son ordinales.
+
+```python
+stats.mannwhitneyu(ctrl, trat, alternative="two-sided")
+```
+
+### Wilcoxon (pareada no paramétrica)
+
+```python
+stats.wilcoxon(antes, despues)
+```
+
+### ANOVA de un factor
+
+Compara las medias de tres o más grupos independientes.
+
+```python
+g1 = np.array([10.1, 10.3, 9.8, 10.0, 10.2])
+g2 = np.array([12.0, 12.4, 11.8, 12.1, 12.3])
+g3 = np.array([14.5, 15.0, 14.8, 14.2, 14.9])
+
+res = stats.f_oneway(g1, g2, g3)
+print(f"F = {res.statistic:.2f}, p = {res.pvalue:.3e}")
+```
+
+::: callout-warning
+## Supuestos de ANOVA
+ANOVA asume **normalidad** dentro de cada grupo y **homocedasticidad**. Si no se cumplen, usa **Kruskal–Wallis**. ANOVA no te dice qué grupos difieren entre sí: tras un p<0.05 necesitas tests *post-hoc* (Tukey, Dunn).
+:::
+
+### Kruskal–Wallis (alternativa no paramétrica a ANOVA)
+
+```python
+stats.kruskal(g1, g2, g3)
+```
+
+### Chi-cuadrado
+
+**Bondad de ajuste** (una muestra, frecuencias esperadas):
+
+```python
+# Proporción alélica esperada 1:2:1 (Mendel)
+observadas = np.array([180, 360, 140])
+esperadas  = np.array([170, 340, 170])
+stats.chisquare(observadas, esperadas)
+```
+
+**Independencia / contingencia** (tabla 2D):
+
+```python
+# Frecuencias de fenotipo en dos poblaciones
+tabla = np.array([[45, 30, 25],
+                  [20, 35, 45]])
+chi2, p, dof, esperadas = stats.chi2_contingency(tabla)
+print(f"chi2 = {chi2:.2f}, p = {p:.4f}, dof = {dof}")
+```
+
+## Correlaciones
+
+```python
+x = np.array([10, 12, 15, 18, 20, 22, 25, 28, 30, 32])
+y = np.array([ 8, 11, 14, 17, 19, 21, 26, 29, 31, 35])
+
+# Pearson (lineal)
+r_p, p_p = stats.pearsonr(x, y)
+
+# Spearman (monótona, no paramétrica)
+r_s, p_s = stats.spearmanr(x, y)
+
+# Kendall (ordinal, robusta a outliers)
+r_k, p_k = stats.kendalltau(x, y)
+
+print(f"Pearson:  r={r_p:.3f}, p={p_p:.4f}")
+print(f"Spearman: r={r_s:.3f}, p={p_s:.4f}")
+print(f"Kendall:  r={r_k:.3f}, p={p_k:.4f}")
+```
+
+::: callout-note
+## ¿Cuál correlación usar?
+- **Pearson** si relación lineal y datos normales.
+- **Spearman** si monótona (no necesariamente lineal) o con outliers.
+- **Kendall** si pocos datos o variables ordinales.
+:::
+
+## Transformaciones y ajustes
+
+### Regresión lineal simple
+
+```python
+# Curva estándar Bradford: concentración (µg/mL) vs absorbancia
+concentracion = np.array([0, 1, 2, 5, 10, 15, 20])
+absorbancia   = np.array([0.05, 0.12, 0.20, 0.42, 0.85, 1.20, 1.62])
+
+res = stats.linregress(concentracion, absorbancia)
+print(f"pendiente     = {res.slope:.4f}")
+print(f"intercepto    = {res.intercept:.4f}")
+print(f"R²            = {res.rvalue**2:.4f}")
+print(f"p-value       = {res.pvalue:.3e}")
+print(f"error pendiente = {res.stderr:.4f}")
+```
+
+`linregress` es ideal para una regresión lineal simple con su R² y p-value. Para regresión múltiple usa `statsmodels` o `scikit-learn`.
+
+### Normalidad
+
+```python
+stats.shapiro(absorbancia)      # Shapiro–Wilk (recomendado, n<5000)
+stats.normaltest(absorbancia)   # D'Agostino K² (n>=20)
+stats.anderson(absorbancia)     # Anderson–Darling (con varios alfas)
+```
+
+::: callout-important
+## El mito del p<0.05 en normalidad
+Con n grande, **Shapiro** detecta desviaciones triviales como "significativas". La prueba de normalidad no sustituye al **QQ-plot** ni al sentido común. Para ANOVA con n moderado por grupo (>=15), la prueba es robusta a ligeras desviaciones.
+:::
+
+### Homocedasticidad
+
+```python
+stats.levene(g1, g2, g3)        # recomendada, robusta a no normalidad
+stats.bartlett(g1, g2, g3)      # más potente si los datos son normales
+stats.fligner(g1, g2, g3)       # alternativa no paramétrica
+```
+
+## Interpretación de resultados
+
+Para cada prueba SciPy devuelve un objeto (o tupla) con:
+
+- **estadístico**: t, F, U, W, χ², r…; depende de la prueba.
+- **p-value**: probabilidad de observar un valor tan o más extremo bajo H0.
+
+Reglas prácticas:
+
+- **p < 0.05**: se rechaza H0 (efecto "estadísticamente significativo").
+- **p >= 0.05**: no se rechaza H0. **No es prueba de H0 verdadera**: puede faltar potencia.
+- Reporta siempre: estadístico, grados de libertad (si aplica), p-value y tamaño del efecto o intervalo de confianza.
+
+```python
+# Intervalo de confianza para la media (t de Student)
+media = np.mean(absorbancia)
+sem = stats.sem(absorbancia)
+n = len(absorbancia)
+ic = stats.t.interval(0.95, df=n-1, loc=media, scale=sem)
+print(f"Media = {media:.3f}, IC 95% = [{ic[0]:.3f}, {ic[1]:.3f}]")
+```
+
+::: callout-important
+## Errores comunes con p-values
+1. **"p grande ⇒ H0 verdadera"**. No: solo significa que tus datos no la contradicen; puede faltar tamaño muestral.
+2. **Múltiples comparaciones sin corrección**: si haces 20 t-tests, esperas ~1 falso positivo "significativo" por azar. Aplica Bonferroni (×n) o FDR (Benjamini–Hochberg).
+3. **Confundir significancia con relevancia**: un efecto puede ser estadísticamente significativo y biológicamente trivial si n es enorme. Reporta siempre el tamaño del efecto (d de Cohen, R², diferencia de medias).
+:::
+
+### Tamaño del efecto: d de Cohen
+
+```python
+def cohen_d(a, b):
+    """d de Cohen para dos muestras independientes."""
+    a, b = np.asarray(a), np.asarray(b)
+    na, nb = len(a), len(b)
+    s_pooled = np.sqrt(((na-1)*a.var(ddof=1) + (nb-1)*b.var(ddof=1)) / (na+nb-2))
+    return (a.mean() - b.mean()) / s_pooled
+
+d = cohen_d(ctrl, trat)
+print(f"d de Cohen = {d:.2f}")
+# Interpretación: ~0.2 pequeño, ~0.5 mediano, ~0.8 grande
+```
+
+### Reporte estándar
+
+Una forma adecuada de reportar un t-test en un *paper* sería:
+
+> "El tratamiento incrementó la absorbancia respecto al control (media ± DE: 0.29 ± 0.01 vs 0.12 ± 0.01; t-test de Welch: t(11.4)=26.2, p<0.001, d de Cohen=14.3)."
+
+Donde se indica: estadístico, grados de libertad, p-value y tamaño del efecto.
+
+## Otros módulos útiles
+
+```python
+# Clustering jerárquico para heatmap de expresión
+from scipy.cluster import hierarchy
+Z = hierarchy.linkage(np.random.rand(8, 6), method="average")
+# hierarchy.dendrogram(Z)   # ver capítulo anterior para integrarlo
+```
+
+## Ejemplos biológicos resumen
+
+- **Absorbancia control vs tratamiento** → `ttest_ind` (Welch).
+- **Peso de individuos en 3 sitios** → `f_oneway`.
+- **Longitud vs peso de peces** → `pearsonr`.
+- **Proporciones alélicas** → `chisquare` o `chi2_contingency`.
+- **Curva estándar** → `linregress`.
+- **Verificar normalidad antes del test** → `shapiro`.
+
+---
+
+## Ejercicios
+
+### Ejercicio 1
+Simula dos grupos (`control` y `tratamiento`) con distribuciones normales: control con media 10 y desviación 2 (n=20), tratamiento con media 12 y desviación 2 (n=20). Verifica normalidad con Shapiro y aplica un t-test independiente (Welch). Reporta el estadístico y el p-value.
+
+### Ejercicio 2
+Simula tres grupos de pesos con medias 10, 12 y 15 (todos con desviación 2 y n=15). Aplica una ANOVA de un factor. Si p<0.05, concluye que hay diferencias.
+
+### Ejercicio 3
+Simula datos de concentración `[0, 1, 2, 5, 10]` µg/mL y una absorbancia con relación lineal más ruido gaussiano. Aplica `stats.linregress` y reporta pendiente, intercepto, R² y p-value.
+
+---
+
+## Soluciones
+
+### Solución 1
+
+```python
+import numpy as np
+from scipy import stats
+
+np.random.seed(1)
+control     = np.random.normal(loc=10, scale=2, size=20)
+tratamiento = np.random.normal(loc=12, scale=2, size=20)
+
+# 1) Verificar normalidad en cada grupo
+sw_ctrl = stats.shapiro(control)
+sw_trat = stats.shapiro(tratamiento)
+print(f"Shapiro control:     W={sw_ctrl.statistic:.4f}, p={sw_ctrl.pvalue:.4f}")
+print(f"Shapiro tratamiento: W={sw_trat.statistic:.4f}, p={sw_trat.pvalue:.4f}")
+
+# 2) Si ambos p>0.05 (no se rechaza normalidad), aplicamos t-test
+# Usamos Welch por defecto (equal_var=False)
+res = stats.ttest_ind(control, tratamiento, equal_var=False)
+print(f"\nt-test (Welch): t = {res.statistic:.3f}, df = {res.df:.2f}, p = {res.pvalue:.3e}")
+
+# 3) Interpretación
+if res.pvalue < 0.05:
+    print("→ Se rechaza H0: las medias difieren significativamente.")
+else:
+    print("→ No se rechaza H0: no hay evidencia de diferencia significativa.")
+```
+
+**Comentario**: con `seed=1` y medias 10 vs 12 esperamos un p-value claramente menor que 0.05. El `df` no es necesariamente entero en Welch (corrección de Satterthwaite). Si alguno de los Shapiro diera p<0.05, deberías usar `mannwhitneyu` en lugar del t-test.
+
+### Solución 2
+
+```python
+import numpy as np
+from scipy import stats
+
+np.random.seed(2)
+g1 = np.random.normal(loc=10, scale=2, size=15)
+g2 = np.random.normal(loc=12, scale=2, size=15)
+g3 = np.random.normal(loc=15, scale=2, size=15)
+
+# Verificar supuestos
+print("Normalidad (Shapiro):",
+      [round(stats.shapiro(g).pvalue, 3) for g in (g1, g2, g3)])
+print("Homocedasticidad (Levene):",
+      stats.levene(g1, g2, g3).pvalue)
+
+# ANOVA de un factor
+res = stats.f_oneway(g1, g2, g3)
+print(f"\nANOVA: F = {res.statistic:.3f}, p = {res.pvalue:.3e}")
+
+if res.pvalue < 0.05:
+    print("→ Existen diferencias significativas entre al menos dos grupos (p<0.05).")
+    print("  (Recuerda: ANOVA no indica cuáles grupos. Usa un post-hoc como Tukey.)")
+else:
+    print("→ No hay diferencias significativas.")
+```
+
+**Comentario**: con medias 10/12/15 y desviación común 2 la potencia es altísima y el p-value será minúsculo. Tras la ANOVA, el siguiente paso sería un test post-hoc, por ejemplo con `scikit-posthocs` o una secuencia de t-tests con corrección de Bonferroni:
+
+```python
+from itertools import combinations
+grupos = {"g1": g1, "g2": g2, "g3": g3}
+p_vals = []
+for a, b in combinations(grupos, 2):
+    p = stats.ttest_ind(grupos[a], grupos[b], equal_var=False).pvalue
+    p_vals.append((a, b, p))
+# Corrección de Bonferroni: multiplicar p por el número de comparaciones (3)
+for a, b, p in p_vals:
+    print(f"{a} vs {b}: p_corr = {min(p*3, 1):.4f}")
+```
+
+### Solución 3
+
+```python
+import numpy as np
+from scipy import stats
+
+np.random.seed(3)
+conc = np.array([0, 1, 2, 5, 10], dtype=float)
+# Modelo lineal: absorbancia = 0.05 + 0.16*conc + ruido
+absorb = 0.05 + 0.16*conc + np.random.normal(0, 0.02, size=conc.size)
+
+res = stats.linregress(conc, absorb)
+print(f"Pendiente      = {res.slope:.4f}  (esperada ~0.16)")
+print(f"Intercepto     = {res.intercept:.4f}  (esperado ~0.05)")
+print(f"R²             = {res.rvalue**2:.4f}")
+print(f"p-value        = {res.pvalue:.3e}")
+print(f"Std error (m)  = {res.stderr:.4f}")
+
+# Calcular concentración desconocida por inversa de la recta
+abs_inc = 0.85
+conc_estimada = (abs_inc - res.intercept) / res.slope
+print(f"\nAbsorbancia {abs_inc} → concentración estimada ≈ {conc_estimada:.2f} µg/mL")
+```
+
+**Comentario**: `linregress` devuelve un objeto con `slope`, `intercept`, `rvalue`, `pvalue`, `stderr` y `intercept_stderr`. El R² se calcula como `rvalue**2`. La pendiente estimada debe quedar muy cerca de 0.16 con un p-value minúsculo (relación lineal fuerte), demostrando que el modelo explica los datos. Para la concentración incógnita usamos la fórmula inversa `x = (y - b)/m`, que es exactamente cómo se cuantifica una muestra problema a partir de una curva estándar.
+
+---
+
+Con SciPy tienes el andamiaje estadístico completo. En los próximos dos capítulos dejaremos los números y entraremos de lleno en la **biología molecular**: con **BioPython** manipularemos secuencias de ADN/ARN/proteínas y trabajaremos con archivos FASTA/GenBank y la base de datos NCBI.

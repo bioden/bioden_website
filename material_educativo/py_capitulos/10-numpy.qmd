@@ -1,0 +1,433 @@
+---
+title: "NumPy para ciencias biológicas"
+---
+
+# NumPy para ciencias biológicas
+
+Cuando tus datos biológicos crecen —una placa de 96 pocillos, una tabla de expresión de 20 000 genes, una matriz de distancias genéticas entre 100 individuos— las listas de Python se vuelven lentas e incómodas. **NumPy** ofrece una estructura de datos —el `ndarray`— y operaciones vectorizadas implementadas en C que son órdenes de magnitud más rápidas. Es la base sobre la que se construyen Pandas, SciPy, scikit-learn y la mayoría del ecosistema científico de Python.
+
+En este capítulo aprenderás a crear arrays, indexarlos, realizar operaciones vectorizadas y por ejes, usar funciones universales y de agregación, hacer broadcasting y generar números aleatorios. Todos los ejemplos están basados en problemas reales del laboratorio.
+
+## ¿Qué es NumPy y por qué es fundamental?
+
+NumPy (Numerical Python) es la librería estándar para cálculo numérico en Python. Sus dos pilares son:
+
+1. **`ndarray`**: un array n-dimensional, homogéneo (todos los elementos del mismo tipo) y de tamaño fijo, almacenado en memoria contigua.
+2. **Vectorización**: operaciones que se aplican elemento a elemento sin bucles explícitos de Python, ejecutándose en código C optimizado.
+
+```python
+# Sin NumPy: bucle explícito (lento en listas grandes)
+lista = [1, 2, 3, 4, 5]
+cuadrados = [x**2 for x in lista]
+
+# Con NumPy: vectorizado
+import numpy as np
+arr = np.array([1, 2, 3, 4, 5])
+cuadrados = arr ** 2
+```
+
+::: callout-note
+## ¿Por qué es fundamental en ciencia?
+Prácticamente todas las librerías científicas de Python (Pandas, SciPy, scikit-learn, statsmodels, seaborn, matplotlib) aceptan o devuelven arrays de NumPy. Aprender NumPy es aprender el "idioma común" del ecosistema científico de Python.
+:::
+
+## Instalación e importación
+
+```bash
+pip install numpy
+```
+
+```python
+import numpy as np   # convención universal: SIEMPRE como np
+```
+
+## Creación de `ndarray`
+
+```python
+import numpy as np
+
+# Desde una lista
+a = np.array([1, 2, 3, 4])
+b = np.array([[1, 2, 3], [4, 5, 6]])   # 2D
+
+# Arrays constantes
+ceros = np.zeros(5)              # [0. 0. 0. 0. 0.]
+unos = np.ones((3, 4))           # matriz 3x4 de unos
+full = np.full((2, 2), 7.0)      # matriz 2x2 con valor 7.0
+
+# Rangos
+rango = np.arange(0, 10, 2)      # [0 2 4 6 8]
+lineal = np.linspace(0, 1, 5)    # [0.   0.25 0.5  0.75 1.  ]
+
+# Aleatorios
+ale = np.random.rand(3)                   # uniforme [0,1)
+norm = np.random.normal(0.5, 0.1, 10)     # normal media 0.5, sd 0.1
+enteros = np.random.randint(0, 100, size=8)
+```
+
+## Atributos principales
+
+```python
+b = np.array([[1, 2, 3], [4, 5, 6]])
+print(b.shape)   # (2, 3) — filas x columnas
+print(b.ndim)    # 2 — número de dimensiones
+print(b.size)    # 6 — número total de elementos
+print(b.dtype)   # int64 — tipo de dato
+print(b.nbytes)  # 48 — bytes ocupados en memoria
+```
+
+::: callout-tip
+## Inspección rápida
+Para entender un array desconocido, imprime `shape`, `dtype` y los primeros valores con `arr[:5]` o `arr.flatten()[:5]`.
+:::
+
+### Tipos de dato (`dtype`)
+
+NumPy es **tipado estáticamente** en cada array: todos los elementos comparten `dtype`. Esto permite eficiencia pero exige atención. Los tipos más comunes son:
+
+| `dtype` | Significado | Ejemplo típico |
+|---------|-------------|----------------|
+| `int8/16/32/64` | Enteros con tamaño | Conteos, índices |
+| `uint8` | Entero sin signo (0–255) | Imágenes, secuencias codificadas |
+| `float32/64` | Flotantes | Absorbancias, concentraciones |
+| `bool` | Booleano | Máscaras |
+| `str_` o `U<n>` | Cadenas de longitud fija | Etiquetas |
+
+Puedes especificar el tipo al crear el array o convertirlo con `astype`:
+
+```python
+a = np.array([1, 2, 3], dtype=np.float64)   # crear con tipo
+b = np.array(["1.5", "2.0"]).astype(float)  # convertir strings a float
+```
+
+::: callout-warning
+## Cuidado con los enteros al dividir
+Dividir dos arrays enteros en NumPy **no** da `float` automáticamente en versiones antiguas; usa `.astype(float)` antes de dividir si esperas decimales (p. ej. al calcular proporciones de conteos).
+:::
+
+## Indexación booleana (máscaras)
+
+Una de las características más potentes de NumPy es filtrar elementos con **arrays booleanos**:
+
+```python
+a = np.array([0.2, 1.5, -0.3, 4.1, 0.8])
+mascara = a > 0.5       # [False, True, False, True, True]
+a[mascara]              # [1.5, 4.1, 0.8]
+a[a > 0]                # solo los positivos
+a[(a > 0) & (a < 2)]    # entre 0 y 2 (exclusivo)
+```
+
+Esta capacidad se usa constantemente para filtrar genes, *reads*, individuos o características que cumplen un criterio.
+
+## Indexación y *slicing*
+
+### En 1D
+
+```python
+a = np.array([10, 20, 30, 40, 50])
+a[0]       # 10
+a[-1]      # 50
+a[1:4]     # [20 30 40]
+a[::-1]    # invertido
+```
+
+### En 2D
+
+```python
+b = np.array([[1, 2, 3],
+              [4, 5, 6],
+              [7, 8, 9]])
+
+b[0, 0]     # 1 (fila 0, columna 0)
+b[1, 2]     # 6
+b[0, :]     # [1 2 3] — fila 0 completa
+b[:, 1]     # [2 5 8] — columna 1 completa
+b[0:2, 1:3] # submatriz 2x2: [[2,3],[5,6]]
+```
+
+## Operaciones vectorizadas
+
+Las operaciones aritméticas se aplican **elemento a elemento**, sin bucles:
+
+```python
+a = np.array([1, 2, 3])
+b = np.array([4, 5, 6])
+
+a + b      # [5 7 9]
+a * b      # [4 10 18]
+a ** 2     # [1 4 9]
+2 * a + 1  # [3 5 7]
+```
+
+::: callout-important
+## Ojo: no confundir con listas
+`[1,2,3] * 2` en listas da `[1,2,3,1,2,3]` (repetición); `np.array([1,2,3]) * 2` da `[2,4,6]` (multiplicación elemento a elemento). Este es el cambio de mentalidad clave al pasar de listas a arrays.
+:::
+
+## Broadcasting
+
+El *broadcasting* permite operar arrays de formas distintas "estirando" la más pequeña:
+
+```python
+# Array 1D + escalar
+np.array([1, 2, 3]) + 10   # [11 12 13]
+
+# Matriz 3x3 + vector 1D (se suma a cada fila)
+m = np.ones((3, 3))
+v = np.array([1, 2, 3])
+m + v   # suma v a cada fila
+```
+
+NumPy compara las dimensiones de derecha a izquierda: dos dimensiones son compatibles si son iguales o si una de ellas es 1.
+
+## Funciones universales (*ufuncs*)
+
+Operaciones matemáticas elemento a elemento, rápidas y vectorizadas:
+
+```python
+a = np.array([1, 4, 9, 16, 25])
+np.sqrt(a)     # [1. 2. 3. 4. 5.]
+np.exp(a)      # e^a
+np.log(a)      # logaritmo natural
+np.log2(a)     # logaritmo base 2 (muy usado en expression génica)
+np.abs(a)      # valor absoluto
+np.sin(a)      # seno
+np.cos(a)      # coseno
+```
+
+## Funciones de agregación
+
+```python
+a = np.array([3, 1, 4, 1, 5, 9, 2, 6])
+
+a.sum()        # 31
+a.mean()       # 3.875
+a.std()        # desviación típica
+a.var()        # varianza
+a.min()        # 1
+a.max()        # 9
+a.argmin()     # 1 (índice del mínimo)
+a.argmax()     # 5 (índice del máximo)
+```
+
+## Operaciones por ejes (`axis`)
+
+En un array 2D, `axis=0` opera **a lo largo de las filas** (devuelve un valor por columna); `axis=1` opera **a lo largo de las columnas** (devuelve un valor por fila).
+
+```python
+b = np.array([[1, 2, 3],
+              [4, 5, 6]])
+
+b.sum(axis=0)   # [5 7 9]  — suma por columna
+b.sum(axis=1)   # [6 15]   — suma por fila
+b.mean(axis=1)  # [2. 5.]  — media por fila
+```
+
+::: callout-note
+## Truco mnemotécnico
+`axis=0` "comprime" filas → resultado por columnas. `axis=1` "comprime" columnas → resultado por filas.
+:::
+
+## Álgebra lineal básica
+
+```python
+A = np.array([[1, 2], [3, 4]])
+B = np.array([[5, 6], [7, 8]])
+
+np.dot(A, B)             # producto matricial
+A @ B                    # equivalente, sintaxis moderna
+np.linalg.inv(A)         # inversa
+np.linalg.det(A)         # determinante
+np.linalg.eig(A)         # autovalores y autovectores
+```
+
+## Números aleatorios
+
+```python
+np.random.seed(42)                       # reproducibilidad
+np.random.normal(loc=0, scale=1, size=5) # distribución normal
+np.random.uniform(low=0, high=10, size=3)
+np.random.choice(["A", "C", "G", "T"], size=10)  # muestreo
+```
+
+::: callout-warning
+## Reproducibilidad
+**Siempre** llama a `np.random.seed(...)` al inicio de un análisis que use aleatoriedad. Sin semilla, cada ejecución dará resultados distintos y tu análisis no será reproducible.
+:::
+
+## Ejemplos biológicos
+
+### 1) Absorbancias de placa 96 *wells* (matriz 8×12)
+
+```python
+np.random.seed(0)
+placa = np.random.normal(loc=0.5, scale=0.1, size=(8, 12))
+print(placa.shape)   # (8, 12)
+print(placa.mean())  # promedio global
+```
+
+### 2) Concentraciones por vectorización
+
+```python
+# Curva estándar: absorbancia -> concentración (µg/mL)
+absorbancias = np.array([0.05, 0.12, 0.25, 0.50, 0.95])
+concentraciones = (absorbancias - 0.02) / 0.05   # vectorizado
+```
+
+### 3) Normalización de expresión génica
+
+```python
+expresion = np.random.normal(10, 2, size=(5, 3))  # 5 genes × 3 muestras
+minimo = expresion.min(axis=1, keepdims=True)
+maximo = expresion.max(axis=1, keepdims=True)
+norm = (expresion - minimo) / (maximo - minimo)
+```
+
+### 4) Simulación de conteos Poisson de *reads*
+
+```python
+np.random.seed(7)
+conteos = np.random.poisson(lam=50, size=(100, 4))  # 100 genes × 4 muestras
+```
+
+### 5) Matriz de distancias genéticas
+
+```python
+n = 5
+np.random.seed(1)
+dist = np.random.randint(0, 100, size=(n, n))
+dist = (dist + dist.T) / 2        # simétrica
+np.fill_diagonal(dist, 0)         # distancia a sí mismo = 0
+```
+
+### 6) Promedio de replicados técnicos (`axis=1`)
+
+```python
+# 4 muestras, cada una con 3 replicados técnicos
+datos = np.random.normal(0.6, 0.05, size=(4, 3))
+promedio_muestras = datos.mean(axis=1)
+```
+
+### 7) log2 *fold change* en expresión
+
+```python
+control = np.array([10, 20, 15, 30, 25])
+tratamiento = np.array([20, 40, 60, 30, 100])
+lfc = np.log2(tratamiento / control)
+```
+
+## Ejercicios
+
+### Ejercicio 1
+
+Crea una matriz 8×12 con valores de absorbancia simulados con `np.random.normal(0.5, 0.1, (8,12))`. Calcula el promedio **por fila** y el promedio **por columna**. Imprime ambos resultados.
+
+### Ejercicio 2
+
+Dados los arrays
+
+```python
+control = np.array([1.2, 1.5, 1.8, 2.1, 1.9])
+tratamiento = np.array([2.1, 2.4, 2.8, 3.2, 3.0])
+```
+
+calcula el **log2 fold change** definido como `log2(tratamiento / control)`. Devuelve el array resultante y el promedio del LFC.
+
+### Ejercicio 3
+
+Crea una matriz 5×5 de distancias genéticas entre individuos (simuladas con `np.random.randint`). Hazla simétrica y con ceros en la diagonal. Calcula el promedio de distancia **total** (excluyendo la diagonal) y encuentra el par de individuos con la **distancia máxima** (usando `argmax` y dividiendo entre el tamaño para obtener índices).
+
+## Soluciones
+
+### Solución 1
+
+```python
+import numpy as np
+
+# Semilla para reproducibilidad
+np.random.seed(0)
+
+# Matriz 8x12 (placa de 96 pocillos)
+placa = np.random.normal(loc=0.5, scale=0.1, size=(8, 12))
+
+# Promedio por fila (cada fila es una "letra" A-H de la placa)
+promedio_fila = placa.mean(axis=1)   # axis=1 comprime columnas -> resultado por fila
+print("Promedio por fila (A-H):")
+print(promedio_fila)
+
+# Promedio por columna (cada columna es un número 1-12)
+promedio_col = placa.mean(axis=0)    # axis=0 comprime filas -> resultado por columna
+print("Promedio por columna (1-12):")
+print(promedio_col)
+
+# Promedio global
+print(f"Promedio global de la placa: {placa.mean():.4f}")
+```
+
+### Solución 2
+
+```python
+import numpy as np
+
+control = np.array([1.2, 1.5, 1.8, 2.1, 1.9])
+tratamiento = np.array([2.1, 2.4, 2.8, 3.2, 3.0])
+
+# La división es elemento a elemento (vectorizada)
+razon = tratamiento / control
+
+# log2 disponible como np.log2 (función universal)
+lfc = np.log2(razon)
+
+print("Razón tratamiento/control:", razon)
+print("log2 fold change:", np.round(lfc, 3))
+print(f"LFC promedio: {lfc.mean():.3f}")
+
+# Interpretación biológica: LFC > 0 indica sobreexpresión en tratamiento
+sobreexpresados = np.sum(lfc > 0)
+print(f"Genes sobreexpresados (LFC>0): {sobreexpresados} de {len(lfc)}")
+```
+
+### Solución 3
+
+```python
+import numpy as np
+
+np.random.seed(42)
+n = 5
+
+# Generamos matriz 5x5 de enteros entre 0 y 100
+dist = np.random.randint(0, 100, size=(n, n))
+
+# La matriz de distancias debe ser simétrica: d(i,j) = d(j,i)
+dist = (dist + dist.T) / 2
+
+# La diagonal (distancia a sí mismo) debe ser 0
+np.fill_diagonal(dist, 0)
+
+print("Matriz de distancias:")
+print(dist)
+
+# Promedio total excluyendo la diagonal
+# Creamos una máscara que excluye la diagonal
+mascara = ~np.eye(n, dtype=bool)
+promedio_total = dist[mascara].mean()
+print(f"Distancia media total (sin diagonal): {promedio_total:.2f}")
+
+# Encontrar el par con distancia máxima
+# Aplanamos y buscamos el índice del máximo
+indice_max = dist.argmax()
+i, j = indice_max // n, indice_max % n   # conversión índice lineal -> 2D
+
+print(f"Distancia máxima: {dist[i, j]}")
+print(f"Par de individuos: ({i}, {j})")
+```
+
+::: callout-tip
+## Resumen
+- Crea arrays con `np.array`, `np.zeros`, `np.ones`, `np.arange`, `np.linspace`, `np.random.*`.
+- Indexa con `[fila, col]` y *slicing* como en listas.
+- Opera **vectorizado**: más rápido y más legible que un bucle.
+- `axis=0` opera por columnas, `axis=1` por filas.
+- Usa `np.random.seed` para reproducibilidad.
+- `argmin`/`argmax` devuelven **índices**, no valores.
+:::

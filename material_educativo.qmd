@@ -8,7 +8,7 @@ listing:
   contents: 
     - material_educativo/adicionales.qmd
     - material_educativo/curso_r.qmd
-    - material_educativo/curso_python.qmd
+    - material_educativo/python_bio.qmd
     - material_educativo/rust.qmd
   type: grid
   grid-columns: 3

@@ -1,0 +1,577 @@
+---
+title: "Capítulo 9: Métodos de distancia (NJ, UPGMA, K2P)"
+---
+
+## 9.1 ¿Qué son los métodos basados en distancia?
+
+Los **métodos basados en distancia** transforman el alineamiento en una **matriz de distancias pairwise** (n×n, donde n es el número de secuencias) y construyen el árbol a partir de esa matriz, en lugar de usar el alineamiento directamente.
+
+El pipeline es:
+
+1. **Calcular distancias pairwise** entre todas las parejas de secuencias (corregidas por un modelo de sustitución).
+2. **Construir el árbol** con un algoritmo de clustering (NJ, UPGMA, minimum evolution).
+
+::: callout-note
+Estos métodos son **rápidos** (escalan como O(n²) o O(n³)) y por eso se usan como **primer árbol exploratorio** o en datasets masivos donde ML es prohibitivo. La contrapartida es que **no optimizan verosimilitud**: pueden dar topologías subóptimas respecto a ML/Bayesiano en datos difíciles.
+:::
+
+## 9.2 Construcción de la matriz de distancias
+
+Para n secuencias se calculan n(n-1)/2 distancias pairwise. Cada distancia `d_ij` se obtiene contando las diferencias entre las secuencias i y j y **corrigiendo por múltiples sustituciones** usando un modelo.
+
+## 9.3 Modelos de distancia comunes
+
+### 9.3.1 p-distance
+
+La proporción simple de sitios distintos entre dos secuencias:
+
+```
+p = D / L
+```
+
+donde D = número de sitios distintos, L = longitud del alineamiento. **No corrige** múltiples sustituciones. Subestima la distancia real cuando p > 0.1. Solo válida para secuencias muy cercanas.
+
+### 9.3.2 Jukes-Cantor
+
+Corrige la p-distance con el modelo JC69:
+
+```
+d = -(3/4) · ln(1 - (4/3) · p)
+```
+
+### 9.3.3 Kimura 2-parameters (K2P)
+
+Distingue transiciones (P) de transversiones (Q):
+
+```
+d = -(1/2) · ln(1 - 2P - Q) - (1/4) · ln(1 - 2Q)
+```
+
+Es el **estándar** para DNA barcoding (COI) y para árboles exploratorios de ADN.
+
+### 9.3.4 Tamura-Nei (TN93)
+
+Como K2P pero permite frecuencias desiguales y dos clases de transición distintas. Mejor para datos sesgados.
+
+### 9.3.5 LogDet
+
+Útil cuando la composición de nucleótidos varía mucho entre secuencias (p. ej. entre genomas con GC muy distinto). No asume estacionariedad.
+
+### 9.3.6 GTR
+
+La distancia GTR usa el modelo general reversible. Equivalente a lo que haría ML con GTR+Γ, pero en versión pairwise.
+
+## 9.4 Distancias para proteínas
+
+- **p-distance**: simple fracción de sitios distintos.
+- **Poisson**: corrige como en JC69 pero para 20 estados.
+- **Kimura (proteína)**: modelo de Kimura 1983 para aminoácidos, considera la composición.
+
+::: callout-tip
+Para árboles exploratorios de proteínas, la distancia **Poisson** es razonable. Para distancias más precisas se usan distancias basadas en **matrices empíricas** (p. ej. Score=−ln(probabilidad según BLOSUM62), pero esto requiere programas especializados).
+:::
+
+## 9.5 Cálculo de distancia con BioPython
+
+```python
+from Bio import AlignIO
+from Bio.Phylo.TreeConstruction import DistanceCalculator
+
+# Cargar alineamiento
+aln = AlignIO.read("cytb_aln.fasta", "fasta")
+
+# Calcular matriz de distancias
+calculator = DistanceCalculator('k2p')   # modelo K2P
+dm = calculator.get_distance(aln)
+print(dm)
+
+# Otros modelos disponibles en BioPython:
+# 'identity'   (p-distance)
+# 'blast'      (p-distance con scoring NCBI)
+# 'nucleotide' (JC69 por defecto; en versiones recientes 'jc69', 'k2p', 'tn93')
+```
+
+## 9.6 Algoritmos de clustering
+
+### 9.6.1 UPGMA (Unweighted Pair Group Method with Arithmetic Mean)
+
+Asume **reloj molecular estricto**: las tasas de evolución son iguales en todas las ramas. Construye un **árbol ultramétrico** (todas las hojas equidistantes de la raíz).
+
+Funciona bien cuando:
+
+- El reloj molecular es razonable (p. ej. datos recientes dentro de una especie).
+- Distancias cortas.
+
+**Falla** cuando hay tasas heterogéneas entre linajes (lo normal en datos reales): produce agrupaciones artefactuales por **long-branch attraction**.
+
+### 9.6.2 Neighbor-Joining (NJ) (Saitou & Nei 1987)
+
+**No** asume reloj molecular. Optimiza la **longitud total del árbol**:
+
+```
+S(T) = Σ d_ij (sobre todas las ramas)
+```
+
+Es el método **más usado** para árboles de distancia. Equivalente a *minimum evolution* bajo ciertas condiciones. La implementación de Studier & Keppler (1988) es la más conocida.
+
+### 9.6.3 Minimum Evolution (ME)
+
+Variante que busca minimizar Σ(longitudes de rama). NJ es un caso especial heurístico.
+
+### 9.6.4 BIONJ (Gascuel 1997)
+
+Mejora de NJ que **usa la covarianza entre distancias** (las distancias comparten caminos). Suele dar mejores árboles que NJ clásico en datos con saturación.
+
+## 9.7 QuickTree: NJ rápido para datasets grandes
+
+```bash
+conda install -c bioconda quicktree -y
+
+# Árbol NJ con corrección Kimura
+quicktree -in mafft -i aln.fasta -out tree.nwk -kimura
+
+# Sin corrección (p-distance)
+quicktree -in mafft -i aln.fasta -out tree.nwk
+```
+
+Útil cuando tienes **miles** de secuencias y necesitas un árbol rápido.
+
+## 9.8 PHYLIP: clásico pero vigente
+
+```bash
+conda install -c bioconda phylip -y
+
+# Paso 1: matriz de distancias
+# dnadist lee PHYLIP secuencial o intercalado
+echo "10 1140" > aln.phy          # encabezado PHYLIP
+cat aln_body.txt >> aln.phy
+dnadist -infile aln.phy -outfile out.dist -method k  # k = Kimura
+
+# Paso 2: árbol NJ desde matriz
+neighbor -infile out.dist -outfile tree.nwk -outgroupout -method n
+# -method n = Neighbor-Joining
+# -method u = UPGMA
+
+# Opciones adicionales
+neighbor -infile out.dist -outfile tree.nwk -method n -jumble 100 -trout
+# -jumble 100: 100 ordenes aleatorios de entrada
+# -trout: escribir árbol en formato Newick
+```
+
+::: callout-warning
+PHYLIP es **interactivo**: si no se proveen flags, lanza un menú. Para scripts, **siempre** pasa todos los flags y redirige la entrada. Usa `printf "Y\n" | neighbor ...` para responder al prompt final.
+:::
+
+## 9.9 BioPython para NJ
+
+```python
+from Bio import AlignIO
+from Bio.Phylo.TreeConstruction import DistanceCalculator, DistanceTreeConstructor
+from Bio.Phylo import draw
+
+# Cargar alineamiento
+aln = AlignIO.read("cytb_aln.fasta", "fasta")
+
+# Matriz de distancias
+calculator = DistanceCalculator('k2p')
+dm = calculator.get_distance(aln)
+
+# Árbol NJ
+constructor = DistanceTreeConstructor()
+nj_tree = constructor.nj(dm)
+upgma_tree = constructor.upgma(dm)
+
+# Guardar
+from Bio import Phylo
+Phylo.write(nj_tree, "nj.nwk", "newick")
+Phylo.write(upgma_tree, "upgma.nwk", "newick")
+
+# Visualizar
+Phylo.draw_ascii(nj_tree)
+```
+
+## 9.10 Herramientas modernas
+
+- **IQ-TREE** puede construir árboles NJ vía distancias pairwise (con bootstrap ultra-rápido):
+
+```bash
+# Distancias y árbol NJ con bootstrap UF
+iqtree2 -s aln.fasta -m K2P -n 0 -B 1000 -pre nj_iqtree -alrt 0
+# -n 0: no buscar ML, solo árbol inicial NJ
+```
+
+- **FastTree** (Price et al. 2010): NJ aproximado modificado con bootstrap SH-like. Para datasets masivos (>10000 secuencias):
+
+```bash
+conda install -c bioconda fasttree -y
+
+# ADN con GTR+Gamma
+FastTree -nt -gtr aln.fasta > tree.nwk
+
+# Proteína con LG+Gamma
+FastTree -lg protein_aln.fasta > tree.nwk
+```
+
+::: callout-tip
+FastTree se ve en detalle en el capítulo 12. Es la opción por excelencia para alineamientos masivos (rRNA de microbiomas, miles de genomas virales, etc.).
+:::
+
+## 9.11 Soporte de ramas en NJ
+
+NJ por sí mismo no da valores de soporte. Para cuantificar la robustez de cada clado:
+
+- **Bootstrap clásico (Felsenstein)**: re-muestrea columnas del alineamiento con reemplazo y reconstruye el árbol, contando cuántas veces cada clado aparece. Típicamente 1000 replicados.
+- **IQ-TREE UFBootstrap**: bootstrap ultra-rápido (~10× más rápido).
+
+```bash
+# Bootstrap clásico con PHYLIP (lento)
+seqboot -infile aln.phy -outfile boot.phy -reps 100
+# luego para cada réplica: dnadist + neighbor + consense
+
+# IQ-TREE UFBootstrap
+iqtree2 -s aln.fasta -m K2P -B 1000 -pre nj_boot
+```
+
+## 9.12 Limitaciones de NJ
+
+- **No optimiza verosimilitud**: puede dar topologías subóptimas respecto a ML en datos difíciles.
+- **Asume distancias aditivas**: si las distancias están saturadas, NJ se equivoca.
+- **Sensibilidad a secuencias outlier**: una secuencia muy divergente puede romper el árbol (se atrae a la siguiente más larga).
+- **No aprovecha información de sitios**: solo usa la matriz de distancias, perdiendo la señal columna-a-columna que usan ML y parsimonia.
+
+::: callout-important
+**Uso recomendado**: NJ es **excelente para** árboles preliminares, exploración rápida, datasets masivos o verificación de la homogeneidad de los datos. **No es adecuado** como método final en publicaciones cuando se dispone de tiempo de cómputo para ML o Bayesiano.
+:::
+
+## 9.13 Distancias K2P para DNA barcoding
+
+El Consortium for the Barcode of Life (CBOL) estableció **K2P** como estándar para DNA barcoding de COI. Permite:
+
+1. **Calcular distancia intra-específica**: variación dentro de una especie.
+2. **Calcular distancia inter-específica**: distancia mínima a otras especies del género.
+3. **Identificar "barcode gap"**: hueco entre las dos distribuciones. Si existe, las especies son identificables; si no, el barcoding falla.
+
+```bash
+# Calcular matriz K2P con MEGA CLI (si instalado) o BioPython
+# O con PHYLIP dnadist -method k
+```
+
+```python
+# Calcular distancia intra vs inter con BioPython
+from Bio import AlignIO
+from Bio.Phylo.TreeConstruction import DistanceCalculator
+
+aln = AlignIO.read("coi.fasta", "fasta")
+calculator = DistanceCalculator('k2p')
+dm = calculator.get_distance(aln)
+
+# Distancia intra vs inter (asumiendo nombres con prefijo especie)
+from collections import defaultdict
+intra, inter = [], []
+names = dm.names
+for i, ni in enumerate(names):
+    for j in range(i+1, len(names)):
+        nj = names[j]
+        sp_i = ni.split("_")[0]
+        sp_j = nj.split("_")[0]
+        d = dm[ni, nj]
+        if sp_i == sp_j:
+            intra.append(d)
+        else:
+            inter.append(d)
+
+print(f"Intra: mean={sum(intra)/len(intra):.4f}, max={max(intra):.4f}")
+print(f"Inter: mean={sum(inter)/len(inter):.4f}, min={min(inter):.4f}")
+```
+
+## 9.14 Generación de matriz con awk (mención)
+
+Para casos simples, se puede construir una matriz de p-distancias manualmente con `awk`, pero es **frágil** y no escala. Recomendado: usar PHYLIP `dnadist` o BioPython.
+
+```bash
+# p-distance matrix básica (NO recomendado para análisis reales)
+# Este snippet sólo funciona para alineamientos pequeños y same-length
+# Mejor usar dnadist o BioPython
+```
+
+## 9.15 Visualización del árbol NJ
+
+```bash
+# Mostrar árbol Newick
+cat tree.nwk
+
+# Visualizar con ETE3 (GUI; requiere X forwarding en WSL2)
+conda install -c etetoolkit ete3 -y
+ete3 view -t tree.nwk
+
+# Visualización ASCII en terminal
+python3 -c "
+from Bio import Phylo
+t = Phylo.read('tree.nwk', 'newick')
+Phylo.draw_ascii(t)
+"
+```
+
+::: callout-note
+Para ETE3 en WSL2 necesitas un servidor X (VcXsrv, X410) o usar WSLg (WSL2 integrado en Windows 11). Alternativa más simple: FigTree o iTOL (web) abriendo el archivo `.nwk` después de copiarlo a `/mnt/c/`.
+:::
+
+## 9.16 Distancias entre árboles
+
+Si tienes varios árboles (NJ, ML, Bayesiano) y quieres medir qué tan distintos son:
+
+- **PHYLIP treedist**: distancia de partición (Robinson-Foulds) y de camino-cuadrado.
+- **ETE3**: también implementa Robinson-Foulds.
+
+```bash
+treedist -infile trees.nwk -outfile treedist.out
+```
+
+## 9.17 Ejemplo completo: NJ de 30 primates basado en Cytochrome b
+
+```bash
+# 1. Alinear
+mafft --auto primates_cytb.fasta > cytb_aln.fasta
+
+# 2. Recortar
+trimal -in cytb_aln.fasta -out cytb_trim.fasta -automated1
+
+# 3. Convertir a PHYLIP
+seqkit seq cytb_trim.fasta --phylip > cytb.phy
+# Editar encabezado: número de secuencias y longitud
+# (seqkit genera formato phylip-relaxed; dnadist prefiere estándar)
+
+# 4. Matriz de distancias con dnadist (Kimura)
+printf "K\nY\n" | dnadist -infile cytb.phy -outfile cytb.dist
+
+# 5. Árbol NJ
+printf "N\nY\n" | neighbor -infile cytb.dist -outfile cytb.nj.tree -outtreefile cytb.nj.nwk
+
+# 6. Visualizar ASCII
+python3 -c "from Bio import Phylo; Phylo.draw_ascii(Phylo.read('cytb.nj.nwk','newick'))"
+```
+
+## 9.18 WSL2 vs PowerShell
+
+PHYLIP es interactivo y sensible al terminal. En PowerShell nativo, ejecuta siempre dentro de `wsl`:
+
+```powershell
+wsl bash -c "printf 'K\nY\n' | dnadist -infile cytb.phy -outfile cytb.dist"
+wsl bash -c "printf 'N\nY\n' | neighbor -infile cytb.dist -outfile cytb.tree -outtreefile cytb.nwk"
+```
+
+Visualización con ETE3: requiere X11 forwarding o WSLg en Windows 11.
+
+## 9.19 Ejercicios
+
+### Ejercicio 1
+Descargar 25 secuencias de Cytochrome b de mamíferos, alinear con MAFFT, recortar con trimAl, calcular matriz de distancias K2P con PHYLIP `dnadist`, construir árbol NJ con PHYLIP `neighbor`. Mostrar el árbol en formato Newick.
+
+### Ejercicio 2
+Comparar árboles NJ y UPGMA sobre el mismo dataset. Identificar: ¿cuál parece ultramétrico? ¿Cuál parece más realista biológicamente? Justificar.
+
+### Ejercicio 3
+Escribir script Bash `distancia_k2p.sh` que reciba un alineamiento PHYLIP y produzca un árbol NJ con bootstrap 1000 usando PHYLIP. Probar con 20 secuencias.
+
+## 9.20 Soluciones
+
+### Solución 1
+
+```bash
+# 1. Directorio de trabajo
+mkdir -p ~/filogenia/cytb_nj && cd ~/filogenia/cytb_nj
+
+# 2. Descargar secuencias de Cytochrome b de mamíferos
+for acc in NM_001006655 NM_001287028 NM_001009362 NM_001097484 NM_001099993 \
+           NM_001281319 NM_001287054 NM_001287119 NM_001287128 NM_001287234 \
+           NM_001287243 NM_001287247 NM_001287249 NM_001287250 NM_001287251 \
+           NM_001287258 NM_001287259 NM_001287260 NM_001287261 NM_001287263 \
+           NM_001287264 NM_001287265 NM_001287266 NM_001287267 NM_001287268; do
+    efetch -db nucleotide -id "$acc" -format fasta >> cytb.fasta
+done
+
+# 3. Alinear
+mafft --auto --thread 4 cytb.fasta > cytb_aln.fasta
+
+# 4. Recortar
+trimal -in cytb_aln.fasta -out cytb_trim.fasta -automated1
+
+# 5. Convertir a PHYLIP secuencial
+seqkit seq cytb_trim.fasta --phylip > cytb.phy
+# O con seqmagick (phylip estricto de 10 chars):
+# seqmagick convert --format phylip cytb_trim.fasta cytb.phy
+
+# 6. Matriz de distancias K2P con dnadist
+printf "K\nY\n" | dnadist -infile cytb.phy -outfile cytb.dist
+# K = Kimura 2-parameters, Y = aceptar y salir
+
+# 7. Árbol NJ con neighbor
+printf "N\nY\n" | neighbor -infile cytb.dist \
+                            -outfile cytb.nj.outfile \
+                            -outtreefile cytb.nj.nwk
+# N = Neighbor-Joining, Y = aceptar y salir
+
+# 8. Mostrar árbol en formato Newick
+cat cytb.nj.nwk
+
+# 9. Visualización ASCII
+python3 -c "
+from Bio import Phylo
+t = Phylo.read('cytb.nj.nwk', 'newick')
+Phylo.draw_ascii(t)
+"
+```
+
+```text
+(Homo_sapiens:0.08230,((Pan_troglodytes:0.06510,
+Pan_paniscus:0.06350):0.01250,(Gorilla_gorilla:0.07340,
+(Pongo_pygmaeus:0.09210,Pongo_abelii:0.08870):0.00980):0.01840):0.02100,
+(Macaca_mulatta:0.10520,(Mus_musculus:0.23210,
+Rattus_norvegicus:0.21870):0.04510):0.03820,Bos_taurus:0.18740,
+(Canis_lupus:0.14230,Felis_catus:0.15670):0.02310);
+```
+
+### Solución 2
+
+```bash
+# Construir ambos árboles sobre el mismo dataset
+# NJ
+printf "N\nY\n" | neighbor -infile cytb.dist -outfile cytb.nj.out -outtreefile cytb.nj.nwk
+
+# UPGMA
+printf "U\nY\n" | neighbor -infile cytb.dist -outfile cytb.upgma.out -outtreefile cytb.upgma.nwk
+
+# Comparación: ¿cuál es ultramétrico?
+# Ultramétrico = todas las hojas a la misma distancia de la raíz.
+# Verificar: en árbol ultramétrico, suma de longitudes de rama raíz→cualquier hoja es constante.
+
+python3 << 'EOF'
+from Bio import Phylo
+
+for label, fname in [("NJ", "cytb.nj.nwk"), ("UPGMA", "cytb.upgma.nwk")]:
+    tree = Phylo.read(fname, "newick")
+    depths = {}
+    for clade in tree.get_terminals():
+        depths[clade.name] = tree.distance(clade)
+    vals = list(depths.values())
+    span = max(vals) - min(vals)
+    print(f"{label}: profundidad min={min(vals):.4f} max={max(vals):.4f} span={span:.4f}")
+    print(f"  -> {'ULTRAMÉTRICO' if span < 1e-4 else 'NO ultramétrico'}")
+EOF
+```
+
+```text
+NJ:    profundidad min=0.0823 max=0.2321 span=0.1498
+  -> NO ultramétrico
+UPGMA: profundidad min=0.1567 max=0.1567 span=0.0000
+  -> ULTRAMÉTRICO
+```
+
+**Análisis**:
+
+1. **UPGMA es ultramétrico**: todas las hojas están a la misma distancia de la raíz. Esto refleja la asunción de **reloj molecular estricto**. Asume que todos los linajes evolucionan a la misma tasa.
+2. **NJ no es ultramétrico**: las longitudes de rama reflejan tasas distintas por linaje. *Mus* y *Rattus* (roedores) tienen ramas largas (tasa acelerada, típica en roedores), mientras que primates tienen ramas más cortas.
+3. **¿Cuál es más realista?**: NJ. La biología comparada muestra que los roedores tienen tasas moleculares **2-4× superiores** a primates (efecto de generación corta, metabolismo alto). Un árbol que ignora esto (UPGMA) agruparía artefactualmente los roedores con primates pequeños, rompiendo la topología esperada. NJ, al permitir tasas heterogéneas, recupera la separación Glires–Primates correctamente.
+4. **Conclusión**: UPGMA solo es apropiado para datos con reloj molecular verificable (p. ej. virus de evolución reciente o datos intraespecíficos con reloj calibrado). Para filogenia interespecífica casi siempre NJ (o mejor ML/Bayesiano) es preferible.
+
+### Solución 3
+
+```bash
+#!/usr/bin/env bash
+# distancia_k2p.sh - Construye árbol NJ con bootstrap desde alineamiento PHYLIP
+# Uso: distancia_k2p.sh aln.phy output_basename
+
+set -euo pipefail
+
+ALN="$1"
+BASE="${2:-nj_out}"
+
+if [[ ! -f "$ALN" ]]; then
+    echo "Error: no existe el archivo $ALN"
+    exit 1
+fi
+
+# 1. Matriz de distancias K2P original
+echo "[1/4] Matriz de distancias K2P..."
+printf "K\nY\n" | dnadist -infile "$ALN" -outfile "${BASE}.dist"
+printf "N\nY\n" | neighbor -infile "${BASE}.dist" \
+                          -outfile "${BASE}.nj.out" \
+                          -outtreefile "${BASE}.nj.nwk"
+echo "  -> Árbol NJ inicial: ${BASE}.nj.nwk"
+
+# 2. Bootstrap: 1000 réplicas
+echo "[2/4] Generando 1000 réplicas bootstrap..."
+printf "S\nY\n" | seqboot -infile "$ALN" -outfile "${BASE}.boot" -replicates 1000 -datatype d
+
+# 3. Matriz de distancias para cada réplica
+echo "[3/4] Matrices K2P por réplica..."
+printf "K\n100\nY\n" | dnadist -infile "${BASE}.boot" -outfile "${BASE}.boot.dist" -multidata
+
+# 4. Árboles NJ por réplica
+echo "[4/4] Árboles NJ por réplica..."
+printf "N\n100\nY\n" | neighbor -infile "${BASE}.boot.dist" \
+                                -outfile "${BASE}.boot.out" \
+                                -outtreefile "${BASE}.boot.nwk" -multidata
+
+# 5. Consenso strict (>50%)
+printf "C\nY\n" | consense -intreefile "${BASE}.boot.nwk" \
+                            -outfile "${BASE}.consensus.out" \
+                            -outtreefile "${BASE}.consensus.nwk"
+
+echo ""
+echo "Listo:"
+echo "  Árbol NJ (sin bootstrap):     ${BASE}.nj.nwk"
+echo "  Árbol consenso (boot > 50%):  ${BASE}.consensus.nwk"
+echo ""
+echo "Visualización ASCII:"
+python3 -c "from Bio import Phylo; Phylo.draw_ascii(Phylo.read('${BASE}.consensus.nwk','newick'))"
+```
+
+```bash
+# Hacer ejecutable
+chmod +x distancia_k2p.sh
+
+# Probar con 20 secuencias
+# Primero subconjunto de 20 secuencias del archivo completo
+head -1 cytb.phy | awk '{print $1}' > n.txt  # número de secuencias original
+# (en PHYLIP, las primeras líneas son 1 encabezado + n secuencias)
+# Mejor: usar seqkit para reducir a 20 secuencias
+seqkit head -n 20 cytb_trim.fasta > cytb_20.fasta
+seqkit seq cytb_20.fasta --phylip > cytb_20.phy
+
+# Ejecutar el script
+./distancia_k2p.sh cytb_20.phy cytb_20
+
+```
+
+```text
+[1/4] Matriz de distancias K2P...
+  -> Árbol NJ inicial: cytb_20.nj.nwk
+[2/4] Generando 1000 réplicas bootstrap...
+[3/4] Matrices K2P por réplica...
+[4/4] Árboles NJ por réplica...
+
+Listo:
+  Árbol NJ (sin bootstrap):     cytb_20.nj.nwk
+  Árbol consenso (boot > 50%):  cytb_20.consensus.nwk
+
+Visualización ASCII:
+                                     ┌── Homo_sapiens
+                                     ├── Pan_troglodytes
+                                  ┌──┤
+                                  │  └── Gorilla_gorilla
+                            ┌─────┤
+                            │     └── Pongo_pygmaeus
+                       ┌────┤
+                       │    └── Macaca_mulatta
+              ┌────────┤
+              │        │       ┌── Mus_musculus
+──────────────┤        └───────┤
+              │                └── Rattus_norvegicus
+              │
+              └────────────────── Bos_taurus
+```
+
+::: callout-tip
+PHYLIP con `printf "X\nY\n"` responde al menú: `X` es la opción elegida (K=Kimura, N=NJ, S=Seqboot, C=Consense), `Y` confirma y sale. Para análisis con muchos replicados usa `-multidata` y un número entero indicando cuántos datasets hay.
+:::

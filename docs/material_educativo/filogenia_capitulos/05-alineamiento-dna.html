@@ -1,0 +1,1510 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Capítulo 5: Alineamiento múltiple de ADN – BIODEN</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../logo.png" rel="icon" type="image/png">
+<script src="../../site_libs/cookie-consent/cookie-consent.js"></script>
+<link href="../../site_libs/cookie-consent/cookie-consent.css" rel="stylesheet">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-70f92796293836dceea0045bd755b5b1.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-1242ccc02940432acd87c1b818d9cd49.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-70f92796293836dceea0045bd755b5b1.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+<script type="text/javascript" charset="UTF-8">
+document.addEventListener('DOMContentLoaded', function () {
+cookieconsent.run({
+  "notice_banner_type":"interstitial",
+  "consent_type":"express",
+  "palette":"dark",
+  "language":"en",
+  "page_load_consent_levels":["strictly-necessary"],
+  "notice_banner_reject_button_hide":false,
+  "preferences_center_close_button_hide":false,
+  "website_name":""
+  ,
+"language":"en"
+  });
+});
+</script> 
+  
+<style>html{ scroll-behavior: smooth; }</style>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../logo.png" alt="" class="navbar-logo light-content">
+    <img src="../../logo.png" alt="" class="navbar-logo dark-content">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">BIODEN</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Inicio</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-proyectos" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Proyectos</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-proyectos">    
+        <li>
+    <a class="dropdown-item" href="https://bioden.github.io/XIII_CCB_curso/">
+ <span class="dropdown-text">De la Botánica a la Bioinformática</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../investigacion.html"> 
+<span class="menu-text">Investigación</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../integrantes.html"> 
+<span class="menu-text">Integrantes</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../biosistalks/biosistalks.html"> 
+<span class="menu-text">Biosis Talks</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../material_educativo.html"> 
+<span class="menu-text">Material educativo</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../suplementario.html"> 
+<span class="menu-text">Servicios</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.instagram.com/dbg_unicauca/"> <i class="bi bi-instagram" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.facebook.com/profile.php?id=61583453722433"> <i class="bi bi-facebook" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:bioden@unicauca.edu.co"> <i class="bi bi-envelope" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar"><div class="quarto-margin-header"><div class="margin-header-item">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../../logos/semillero.png" class="img-fluid figure-img"></p>
+<figcaption>Universidad del Cauca</figcaption>
+</figure>
+</div>
+</div></div>
+        
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Capítulo 5: Alineamiento múltiple de ADN</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="qué-es-un-msa-y-por-qué-es-la-base-de-toda-filogenia" class="level2">
+<h2 data-anchor-id="qué-es-un-msa-y-por-qué-es-la-base-de-toda-filogenia">5.1 ¿Qué es un MSA y por qué es la base de toda filogenia?</h2>
+<p>Un <strong>alineamiento múltiple de secuencias</strong> (MSA, <em>Multiple Sequence Alignment</em>) coloca varias secuencias homólogas en una matriz donde <strong>cada columna</strong> corresponde —hipotéticamente— a una posición <strong>homóloga</strong> (un mismo sitio ancestral). Las columnas se rellenan con el símbolo <code>-</code> (gap) cuando en una secuencia falta un residuo presente en otra.</p>
+<p>La premisa fundamental es:</p>
+<blockquote class="blockquote">
+<p>Si dos residuos están en la misma columna, derivan del mismo residuo ancestral.</p>
+</blockquote>
+<p>De esta premisa se derivan <strong>todas</strong> las inferencias filogenéticas: los métodos de distancia cuentan diferencias columna-a-columna; la parsimonia cuenta substituciones requeridas columna-a-columna; ML calcula la verosimilitud recorriendo columnas.</p>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Important
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>“Rubbish in, rubbish out”</strong>. Cualquier error en el alineamiento se propaga al árbol. Un MSA mal hecho con secuencias mal elegidas produce un árbol filogenético —incluso con buen bootstrap— que es simplemente <strong>erróneo</strong>. El alineamiento es el paso más crítico del pipeline, no una mera preparación.</p>
+</div>
+</div>
+</section>
+<section id="conceptos-clave" class="level2">
+<h2 data-anchor-id="conceptos-clave">5.2 Conceptos clave</h2>
+<ul>
+<li><strong>Gap</strong> (<code>-</code>): hueco introducido para alinear. Representa una inserción o deleción (indel) respecto al ancestro común.</li>
+<li><strong>Identidad</strong> (<code>% identidad</code>): fracción de columnas en que dos secuencias tienen el mismo residuo.</li>
+<li><strong>Conservación</strong>: cuantitativamente, grado en que una columna preserva un mismo residuo o residuos químicamente similares.</li>
+<li><strong>Posición conservada</strong>: columna con un único residuo (o casi) en todas las secuencias.</li>
+<li><strong>Posición variable</strong>: columna con residuos distintos entre secuencias.</li>
+<li><strong>Posición informativa (parsimonia)</strong>: columna variable donde cada estado aparece en al menos dos taxones. Solo estas columnas contribuyen a distinguir topologías.</li>
+</ul>
+<section id="tipos-de-alineamiento" class="level3">
+<h3 data-anchor-id="tipos-de-alineamiento">5.2.1 Tipos de alineamiento</h3>
+<ul>
+<li><strong>Global</strong>: alinea las secuencias enteras de extremo a extremo. Adecuado cuando son similares y de longitud comparable.</li>
+<li><strong>Local</strong>: alinea solo la región más similar. Adecuado para secuencias con dominios móviles.</li>
+<li><strong>Múltiple (MSA)</strong>: generaliza global/local a N secuencias simultáneamente.</li>
+</ul>
+<p>En filogenia, <strong>MSA global</strong> es la norma cuando se trabaja con un mismo gen homólogo.</p>
+</section>
+</section>
+<section id="mafft-el-default-recomendado" class="level2">
+<h2 data-anchor-id="mafft-el-default-recomendado">5.3 MAFFT: el default recomendado</h2>
+<p>MAFFT (Katoh &amp; Standley 2013) combina precisión y velocidad. Ofrece varias estrategias según el tamaño y complejidad:</p>
+<section id="sintaxis-básica" class="level3">
+<h3 data-anchor-id="sintaxis-básica">5.3.1 Sintaxis básica</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Auto-selección de estrategia según tamaño</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">mafft</span> <span class="at">--auto</span> input.fasta <span class="op">&gt;</span> aligned.fasta</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Output con Phylip en vez de FASTA</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">mafft</span> <span class="at">--auto</span> <span class="at">--phylipout</span> input.fasta <span class="op">&gt;</span> aligned.phy</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Paralelizar</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="ex">mafft</span> <span class="at">--auto</span> <span class="at">--thread</span> 8 input.fasta <span class="op">&gt;</span> aligned.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="estrategias" class="level3">
+<h3 data-anchor-id="estrategias">5.3.2 Estrategias</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 34%">
+<col style="width: 31%">
+<col style="width: 34%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Estrategia</th>
+<th>Flag MAFFT</th>
+<th>Cuándo usar</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>L-INS-i</td>
+<td><code>--localpair --maxiterate 1000</code></td>
+<td>&lt;200 secuencias con indels complejos; máxima precisión</td>
+</tr>
+<tr class="even">
+<td>G-INS-i</td>
+<td><code>--genafpair --maxiterate 1000</code></td>
+<td>&lt;200 secuencias similares en longitud y globales</td>
+</tr>
+<tr class="odd">
+<td>FFT-NS-2</td>
+<td><code>--retree 2</code> (default con <code>--auto</code> para datasets medianos)</td>
+<td>Datasets medianos (200-1000 seqs), rápido</td>
+</tr>
+<tr class="even">
+<td>FFT-NS-1</td>
+<td><code>--retree 1</code></td>
+<td>Datasets grandes (&gt;1000) donde la velocidad manda</td>
+</tr>
+<tr class="odd">
+<td>PartTree</td>
+<td><code>--parttree</code></td>
+<td>Datasets muy grandes (&gt;10,000), aproximado</td>
+</tr>
+<tr class="even">
+<td>Q-INS-i</td>
+<td><code>--qinsi</code></td>
+<td>ARN estructural (incorpora estructura secundaria)</td>
+</tr>
+</tbody>
+</table>
+<p>Ejemplo recomendado para genes mitocondriales en primates:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">mafft</span> <span class="at">--localpair</span> <span class="at">--maxiterate</span> 1000 <span class="at">--thread</span> 4 cytb.fasta <span class="op">&gt;</span> cytb_aln.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>--auto</code> elige razonablemente bien la mayoría de las veces. Si tienes dudas sobre qué estrategia usar, empieza con <code>--auto</code> y compara con <code>--localpair</code> para datasets pequeños.</p>
+</div>
+</div>
+</section>
+<section id="opciones-útiles" class="level3">
+<h3 data-anchor-id="opciones-útiles">5.3.3 Opciones útiles</h3>
+<ul>
+<li><code>--maxiterate N</code>: número de iteraciones de refinamiento. Más = más lento y más preciso.</li>
+<li><code>--retree N</code>: número de mejoras del árbol guía.</li>
+<li><code>--thread N</code>: número de hilos CPU.</li>
+<li><code>--leavegappyregion</code>: no cierra gaps excesivos (mejor para datasets muy divergentes).</li>
+<li><code>--adjustdirectionaccurately</code>: corrige orientación de secuencias mal orientadas (útil con secuencias mal anotadas).</li>
+<li><code>--treefile out.nwk</code>: guarda árbol guía.</li>
+</ul>
+</section>
+</section>
+<section id="muscle5" class="level2">
+<h2 data-anchor-id="muscle5">5.4 MUSCLE5</h2>
+<p>MUSCLE5 (Edgar 2022) es la última versión, completamente reescrita. Más rápida y precisa que MUSCLE3/v4.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Sintaxis nueva (MUSCLE5)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">muscle</span> <span class="at">-align</span> input.fasta <span class="at">-output</span> aligned.fasta</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Para datasets grandes (&gt;1000 seqs): modo super5</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="ex">muscle</span> <span class="at">-super5</span> input.fasta <span class="at">-output</span> aligned.fasta</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Output en formato Phylip</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="ex">muscle</span> <span class="at">-align</span> input.fasta <span class="at">-output</span> aligned.phy <span class="at">-physout</span> aligned.phy</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Warning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>La sintaxis de MUSCLE5 (<code>-align</code> / <code>-super5</code>) <strong>rompe compatibilidad</strong> con MUSCLE3 (<code>-in</code> / <code>-out</code>). Lee la documentación de tu instalación antes de escribir scripts.</p>
+</div>
+</div>
+<p>MUSCLE5 es excelente para proteínas y para datasets medianos (100-1000 secuencias). No recomendado para datasets muy grandes (&gt;10,000) sin <code>-super5</code>.</p>
+</section>
+<section id="clustalomega" class="level2">
+<h2 data-anchor-id="clustalomega">5.5 ClustalOmega</h2>
+<p>ClustalΩ (Sievers et al.&nbsp;2011) usa <strong>HMMs profile-profile</strong> y es muy rápido para datasets grandes:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">clustalo</span> <span class="at">-i</span> input.fasta <span class="at">-o</span> aligned.fasta <span class="at">--outfmt</span><span class="op">=</span>fasta</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Con número de hilos e iteraciones</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="ex">clustalo</span> <span class="at">-i</span> input.fasta <span class="at">-o</span> aligned.fasta <span class="at">--threads</span><span class="op">=</span>8 <span class="at">--iterations</span><span class="op">=</span>2</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Guardar árbol guía</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="ex">clustalo</span> <span class="at">-i</span> input.fasta <span class="at">-o</span> aligned.fasta <span class="at">--guidetree-out</span><span class="op">=</span>gt.txt</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Output en Phylip</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="ex">clustalo</span> <span class="at">-i</span> input.fasta <span class="at">-o</span> aligned.phy <span class="at">--outfmt</span><span class="op">=</span>phylip</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Buena opción para &gt;1000 secuencias; para &lt;200, MAFFT L-INS-i suele ganar en precisión.</p>
+</section>
+<section id="prank" class="level2">
+<h2 data-anchor-id="prank">5.6 PRANK</h2>
+<p>PRANK (Löytynoja &amp; Goldman 2008) es <strong>filogenéticamente consciente</strong>: usa un árbol guía y evita el “over-alignment” (alineamientos donde se insertan gaps espurios para hacer parecer todo conservado).</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Sintaxis clásica</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">prank</span> <span class="at">-d</span><span class="op">=</span>input.fasta <span class="at">-o</span><span class="op">=</span>output <span class="at">-f</span><span class="op">=</span>fasta</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Evitar re-alineamiento iterativo (recomendado si ya tienes buen árbol guía)</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="ex">prank</span> <span class="at">-d</span><span class="op">=</span>input.fasta <span class="at">-o</span><span class="op">=</span>output <span class="at">-f</span><span class="op">=</span>fasta <span class="at">-once</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Modo codón: respeta el marco de lectura</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="ex">prank</span> <span class="at">-d</span><span class="op">=</span>cds.fasta <span class="at">-o</span><span class="op">=</span>output <span class="at">-f</span><span class="op">=</span>fasta <span class="at">-codon</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Pasar un árbol guía (Newick)</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="ex">prank</span> <span class="at">-d</span><span class="op">=</span>input.fasta <span class="at">-t</span><span class="op">=</span>guide.nwk <span class="at">-o</span><span class="op">=</span>output <span class="at">-f</span><span class="op">=</span>fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>PRANK es <strong>lento</strong> (decenas de minutos para 50 secuencias) pero produce alineamientos filogenéticamente correctos en presencia de indels reales. Úsalo para genes con indels verdaderos (rRNA, intrones), no para CDS sin gaps.</p>
+</div>
+</div>
+</section>
+<section id="comparación-de-herramientas" class="level2">
+<h2 data-anchor-id="comparación-de-herramientas">5.7 Comparación de herramientas</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 28%">
+<col style="width: 23%">
+<col style="width: 23%">
+<col style="width: 23%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Herramienta</th>
+<th>Velocidad</th>
+<th>Precisión</th>
+<th>Mejor uso</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>MAFFT L-INS-i</td>
+<td>Lenta</td>
+<td>Muy alta</td>
+<td>&lt;200 seqs, indels complejos</td>
+</tr>
+<tr class="even">
+<td>MAFFT FFT-NS-2</td>
+<td>Rápida</td>
+<td>Media-alta</td>
+<td>Datasets medianos (default <code>--auto</code>)</td>
+</tr>
+<tr class="odd">
+<td>MAFFT PartTree</td>
+<td>Muy rápida</td>
+<td>Baja</td>
+<td>&gt;10,000 seqs</td>
+</tr>
+<tr class="even">
+<td>MUSCLE5</td>
+<td>Media</td>
+<td>Alta</td>
+<td>General, proteínas</td>
+</tr>
+<tr class="odd">
+<td>ClustalOmega</td>
+<td>Rápida</td>
+<td>Media-baja</td>
+<td>&gt;1000 seqs</td>
+</tr>
+<tr class="even">
+<td>PRANK</td>
+<td>Lenta</td>
+<td>Alta (indels)</td>
+<td>Indels filogenéticos, CDS con gaps</td>
+</tr>
+</tbody>
+</table>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Buena práctica</strong>: corre <strong>dos herramientas distintas</strong> y compara con <code>seqkit stats</code>. Si las longitudes del alineamiento difieren en &lt;5% y los árboles guía son similares, confía. Si difieren mucho, inspecciona manualmente con Aliview o Jalview.</p>
+</div>
+</div>
+</section>
+<section id="alineamiento-con-árbol-guía" class="level2">
+<h2 data-anchor-id="alineamiento-con-árbol-guía">5.8 Alineamiento con árbol guía</h2>
+<p>Pasando un árbol guía pre-existente a MAFFT:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Si ya tienes un árbol Newick (de un análisis anterior o de NJ rápido)</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">mafft</span> <span class="at">--treefile</span> guide.nwk <span class="at">--localpair</span> <span class="at">--maxiterate</span> 1000 input.fasta <span class="op">&gt;</span> aln.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Esto mejora el alineamiento cuando las secuencias son divergentes y la topología ya es conocida (por ejemplo, al reanalizar un dataset publicado).</p>
+</section>
+<section id="evaluación-de-la-calidad-del-alineamiento" class="level2">
+<h2 data-anchor-id="evaluación-de-la-calidad-del-alineamiento">5.9 Evaluación de la calidad del alineamiento</h2>
+<section id="guidance2" class="level3">
+<h3 data-anchor-id="guidance2">5.9.1 GUIDANCE2</h3>
+<p>GUIDANCE2 (Sela et al.&nbsp;2015) evalúa la <strong>confianza</strong> columna-a-columna re-alineando con árboles guía perturbados. Genera un score por sitio y permite eliminar columnas poco fiables.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># GUIDANCE2 no está en bioconda directamente; instalar desde http://guidance.tau.ac.il/</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Requiere Java y MAFFT/MUSCLE/PRANK ya instalados.</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Salida: alineamiento + score por columna.</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="trimal" class="level3">
+<h3 data-anchor-id="trimal">5.9.2 trimAl</h3>
+<p>trimAl (Capella-Gutiérrez et al.&nbsp;2009) elimina columnas mal alineadas o con muchos gaps:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Estrategia automática (recomendada default)</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">trimal</span> <span class="at">-in</span> aligned.fasta <span class="at">-out</span> trimmed.fasta <span class="at">-automated1</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Eliminar columnas con &gt;50% de gaps</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="ex">trimal</span> <span class="at">-in</span> aligned.fasta <span class="at">-out</span> trimmed.fasta <span class="at">-gapout</span> 0.5</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Conservar solo columnas con gap threshold estricto (manual)</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="ex">trimal</span> <span class="at">-in</span> aligned.fasta <span class="at">-out</span> trimmed.fasta <span class="at">-gt</span> 0.8 <span class="at">-cons</span> 60</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Modo gappyout (rápido)</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="ex">trimal</span> <span class="at">-in</span> aligned.fasta <span class="at">-out</span> trimmed.fasta <span class="at">-gappyout</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Estrategias principales:</p>
+<ul>
+<li><code>-automated1</code>: heurística automática, recomendada.</li>
+<li><code>-gappyout</code>: elimina columnas con gaps en bloques; rápido pero menos estricto.</li>
+<li><code>-strict</code>: más conservador, requiere conservación de residuos además de gaps.</li>
+<li><code>-strictplus</code>: aún más estricto.</li>
+<li><code>-gt N</code> (gap threshold): conserva columnas con fracción de gaps ≤ 1-N.</li>
+<li><code>-cons N</code>: conserva columnas con conservación ≥ N%.</li>
+<li><code>-rescut</code>: rescate de columnas con alta conservación rodeadas.</li>
+</ul>
+</section>
+<section id="gblocks" class="level3">
+<h3 data-anchor-id="gblocks">5.9.3 Gblocks</h3>
+<p>Gblocks (Castresana 2000) es la alternativa clásica:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">Gblocks</span> aligned.fasta <span class="at">-t</span><span class="op">=</span>d <span class="at">-b5</span><span class="op">=</span>h</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co"># -t=d tipo ADN (d) vs proteína (p)</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># -b5=h permitir gaps en posiciones conservadas (h = half, n = none)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Parámetros clave:</p>
+<ul>
+<li><code>-b1</code>: mínimas posiciones conservadas adyacentes.</li>
+<li><code>-b2</code>: mínimas posiciones no conservadas para hacer un corte.</li>
+<li><code>-b3</code>: máximo número de cortes.</li>
+<li><code>-b4</code>: mínimo tamaño de bloque.</li>
+<li><code>-b5</code>: gaps en posiciones conservadas.</li>
+</ul>
+</section>
+</section>
+<section id="visualización-del-alineamiento" class="level2">
+<h2 data-anchor-id="visualización-del-alineamiento">5.10 Visualización del alineamiento</h2>
+<ul>
+<li><p><strong>AliView</strong> (Linux nativo): visualizador interactivo, permite editar manualmente.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">aliview</span> aligned.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p><strong>Jalview</strong> (Java, multiplataforma): rico en opciones.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">jalview</span> aligned.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+<li><p><strong>En terminal</strong> (rápido, sin GUI):</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">seqkit</span> seq <span class="at">-w</span> 80 aligned.fasta <span class="kw">|</span> <span class="fu">head</span> <span class="at">-n</span> 100</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div></li>
+</ul>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Para visualizar desde WSL2 necesitas un servidor X (X410, VcXsrv) o usar la versión Windows de AliView/Jalview apuntando al archivo vía <code>\\wsl$\...</code>. Más sencillo: instalar <code>bat</code> y revisar por bloques con <code>seqkit seq -w 60</code>.</p>
+</div>
+</div>
+</section>
+<section id="tratamiento-de-gaps" class="level2">
+<h2 data-anchor-id="tratamiento-de-gaps">5.11 Tratamiento de gaps</h2>
+<p>Decisión metodológica: <strong>qué hacer con los gaps en el árbol</strong>.</p>
+<p>Opciones:</p>
+<ol type="1">
+<li><strong>Tratar gap como carácter</strong>: Fifth state (en parsimonia) o state-missing (en ML). Algunos modelos lo permiten.</li>
+<li><strong>Tratar gap como missing data</strong> (<code>?</code> o <code>N</code>): ML los ignora; parsimonia también.</li>
+<li><strong>Eliminar columnas con gaps</strong>: descarta columnas; pierdes datos pero reduces ambigüedad.</li>
+<li><strong>Codificar indels como binary characters</strong>: adición de caracteres binarios presencia/ausencia de cada indel (en MrBayes y TNT).</li>
+</ol>
+<p>Para ADN con ML, la convención más común es <strong>tratar gap como missing</strong> (X o N) o <strong>eliminar columnas con gaps excesivos</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Eliminar columnas con cualquier gap</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="ex">trimal</span> <span class="at">-in</span> aligned.fasta <span class="at">-out</span> nogap.fasta <span class="at">-nogaps</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Eliminar columnas con &gt;50% gaps</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="ex">trimal</span> <span class="at">-in</span> aligned.fasta <span class="at">-out</span> trimmed.fasta <span class="at">-gapout</span> 0.5</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Eliminar columnas con &gt;20% gaps</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="ex">trimal</span> <span class="at">-in</span> aligned.fasta <span class="at">-out</span> trimmed.fasta <span class="at">-gapout</span> 0.2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="conversión-a-formatos-filogenéticos" class="level2">
+<h2 data-anchor-id="conversión-a-formatos-filogenéticos">5.12 Conversión a formatos filogenéticos</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># FASTA a Phylip</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="ex">seqkit</span> seq aligned.fasta <span class="at">--phylip</span> <span class="op">&gt;</span> aln.phy</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co"># FASTA a Nexus (más potente con seqmagick)</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="ex">seqmagick</span> convert <span class="at">--format</span> nexus aligned.fasta aln.nex</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Phylip a Nexus</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="ex">seqmagick</span> convert <span class="at">--input-format</span> phylip <span class="at">--format</span> nexus aln.phy aln.nex</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Añadir particiones (cuando tienes genes concatenados)</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Una vez hecho el alineamiento, define un partitions.nex:</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="co">#   #nexus</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="co">#   begin sets;</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a><span class="co">#     charset cyt_b = 1-1140;</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="co">#     charset cox1 = 1141-2679;</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a><span class="co">#     charpartition mine = cyt_b:1-1140, cox1:1141-2679;</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a><span class="co">#   end;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="ejemplo-completo-16s-bacteriano" class="level2">
+<h2 data-anchor-id="ejemplo-completo-16s-bacteriano">5.13 Ejemplo completo: 16S bacteriano</h2>
+<p>Pipeline real sobre 50 secuencias 16S:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ~/filogenia_curso</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Datos crudos</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> datos/raw/bovidae_16s.fasta</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Alinear con MAFFT (auto, paralelizado)</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="ex">mafft</span> <span class="at">--auto</span> <span class="at">--thread</span> 4 datos/raw/bovidae_16s.fasta <span class="op">&gt;</span> alineamientos/bovidae_16s_aln.fasta</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Estadísticas del alineamiento</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="ex">seqkit</span> stats alineamientos/bovidae_16s_aln.fasta</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Recortar columnas mal alineadas</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="ex">trimal</span> <span class="at">-in</span> alineamientos/bovidae_16s_aln.fasta <span class="dt">\</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>       <span class="at">-out</span> alineamientos/bovidae_16s_trim.fasta <span class="dt">\</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>       <span class="at">-automated1</span></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Comparar longitudes antes/después</span></span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Antes:"</span></span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a><span class="ex">seqkit</span> stats alineamientos/bovidae_16s_aln.fasta <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'NR==2{print "long_aln="$7}'</span></span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Después:"</span></span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a><span class="ex">seqkit</span> stats alineamientos/bovidae_16s_trim.fasta <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'NR==2{print "long_trim="$7}'</span></span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a><span class="co"># 6. Convertir a Phylip para IQ-TREE</span></span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a><span class="ex">seqkit</span> seq alineamientos/bovidae_16s_trim.fasta <span class="at">--phylip</span> <span class="op">&gt;</span> alineamientos/bovidae_16s.phy</span>
+<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a><span class="co"># 7. Listo para inferencia filogenética</span></span>
+<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-lh</span> alineamientos/bovidae_16s.phy</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="ejercicios" class="level2">
+<h2 data-anchor-id="ejercicios">Ejercicios</h2>
+<section id="ejercicio-1" class="level3">
+<h3 data-anchor-id="ejercicio-1">Ejercicio 1</h3>
+<p>Descarga 20 secuencias de <strong>Cytochrome b de Primates</strong>, alinea con MAFFT usando estrategia <code>--auto</code>, recorta con <code>trimAl -automated1</code>, y convierte a Phylip. Verifica el número de sitios antes y después del recorte.</p>
+</section>
+<section id="ejercicio-2" class="level3">
+<h3 data-anchor-id="ejercicio-2">Ejercicio 2</h3>
+<p>Compara <strong>dos alineamientos</strong> del mismo dataset: uno con MAFFT <code>--localpair</code> (preciso) y otro con <code>--retree 1</code> (rápido). Usa <code>seqkit stats</code> y compara longitud del alineamiento. ¿Cuál tiene más gaps?</p>
+</section>
+<section id="ejercicio-3" class="level3">
+<h3 data-anchor-id="ejercicio-3">Ejercicio 3</h3>
+<p>Escribe una <strong>función Bash</strong> <code>alinear_y_recortar</code> que reciba <code>(input_fasta, output_phylip)</code>: (a) ejecute MAFFT con estrategia <code>--auto</code>, (b) recorte con <code>trimAl -automated1</code>, (c) convierta a Phylip con <code>seqkit seq</code>. Pruébala con 50 secuencias y reporta las longitudes en cada etapa.</p>
+</section>
+</section>
+<section id="soluciones" class="level2">
+<h2 data-anchor-id="soluciones">Soluciones</h2>
+<section id="solución-ejercicio-1" class="level3">
+<h3 data-anchor-id="solución-ejercicio-1">Solución Ejercicio 1</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/usr/bin/env bash</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="co"># cytb_primates_msa.sh — alinear + recortar + Phylip.</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-euo</span> pipefail</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ~/filogenia_curso</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Descargar 20 Cytb de primates (RefSeq)</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="ex">esearch</span> <span class="at">-db</span> nucleotide <span class="dt">\</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">-query</span> <span class="st">"Cytochrome b[Gene] AND Primates[Organism] AND RefSeq[Filter] AND 1000:1200[SLEN]"</span> <span class="dt">\</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="ex">efetch</span> <span class="at">-format</span> acc <span class="at">-stop</span> 20 <span class="op">&gt;</span> datos/raw/primates_cytb_accs.txt</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> datos/raw/primates_cytb_accs.txt</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="co"># 20 primates_cytb_accs.txt</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a><span class="ex">epost</span> <span class="at">-db</span> nucleotide <span class="at">-input</span> datos/raw/primates_cytb_accs.txt <span class="dt">\</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>  <span class="kw">|</span> <span class="ex">efetch</span> <span class="at">-format</span> fasta <span class="op">&gt;</span> datos/raw/primates_cytb.fasta</span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Verificar</span></span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a><span class="ex">seqkit</span> stats datos/raw/primates_cytb.fasta</span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Debe dar 20 secuencias de ~1140 pb</span></span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Alinear con MAFFT --auto</span></span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a><span class="ex">mafft</span> <span class="at">--auto</span> <span class="at">--thread</span> 4 datos/raw/primates_cytb.fasta <span class="op">&gt;</span> alineamientos/primates_cytb_aln.fasta</span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Estadísticas del alineamiento</span></span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"— Antes del trimming —"</span></span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a><span class="ex">seqkit</span> stats alineamientos/primates_cytb_aln.fasta</span>
+<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a><span class="co"># Longitud típica: ~1145-1155 pb</span></span>
+<span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-30"><a href="#cb16-30" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Trim con trimAl -automated1</span></span>
+<span id="cb16-31"><a href="#cb16-31" aria-hidden="true" tabindex="-1"></a><span class="ex">trimal</span> <span class="at">-in</span> alineamientos/primates_cytb_aln.fasta <span class="dt">\</span></span>
+<span id="cb16-32"><a href="#cb16-32" aria-hidden="true" tabindex="-1"></a>       <span class="at">-out</span> alineamientos/primates_cytb_trim.fasta <span class="dt">\</span></span>
+<span id="cb16-33"><a href="#cb16-33" aria-hidden="true" tabindex="-1"></a>       <span class="at">-automated1</span></span>
+<span id="cb16-34"><a href="#cb16-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-35"><a href="#cb16-35" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"— Después del trimming —"</span></span>
+<span id="cb16-36"><a href="#cb16-36" aria-hidden="true" tabindex="-1"></a><span class="ex">seqkit</span> stats alineamientos/primates_cytb_trim.fasta</span>
+<span id="cb16-37"><a href="#cb16-37" aria-hidden="true" tabindex="-1"></a><span class="co"># Longitud típica tras trim: ~1100-1130 pb</span></span>
+<span id="cb16-38"><a href="#cb16-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-39"><a href="#cb16-39" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Número de sitios antes y después</span></span>
+<span id="cb16-40"><a href="#cb16-40" aria-hidden="true" tabindex="-1"></a><span class="va">N_BEFORE</span><span class="op">=</span><span class="va">$(</span><span class="fu">awk</span> <span class="st">'/^[^&gt;]/{n+=length($0)} END{print n/NR}'</span> alineamientos/primates_cytb_aln.fasta <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'{printf "%.0f", $1}'</span><span class="va">)</span></span>
+<span id="cb16-41"><a href="#cb16-41" aria-hidden="true" tabindex="-1"></a><span class="va">N_AFTER</span><span class="op">=</span><span class="va">$(</span><span class="fu">awk</span> <span class="st">'/^[^&gt;]/{n+=length($0)} END{print n/NR}'</span> alineamientos/primates_cytb_trim.fasta <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'{printf "%.0f", $1}'</span><span class="va">)</span></span>
+<span id="cb16-42"><a href="#cb16-42" aria-hidden="true" tabindex="-1"></a><span class="co"># Mejor: seqkit stats ya muestra avg_len (longitud alineada == avg_len)</span></span>
+<span id="cb16-43"><a href="#cb16-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-44"><a href="#cb16-44" aria-hidden="true" tabindex="-1"></a><span class="va">AVG_BEFORE</span><span class="op">=</span><span class="va">$(</span><span class="ex">seqkit</span> stats <span class="at">-T</span> alineamientos/primates_cytb_aln.fasta <span class="kw">|</span> <span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR==2{print $7}'</span><span class="va">)</span></span>
+<span id="cb16-45"><a href="#cb16-45" aria-hidden="true" tabindex="-1"></a><span class="va">AVG_AFTER</span><span class="op">=</span><span class="va">$(</span><span class="ex">seqkit</span> stats <span class="at">-T</span> alineamientos/primates_cytb_trim.fasta <span class="kw">|</span> <span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR==2{print $7}'</span><span class="va">)</span></span>
+<span id="cb16-46"><a href="#cb16-46" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Sitios antes: </span><span class="va">$AVG_BEFORE</span><span class="st">"</span></span>
+<span id="cb16-47"><a href="#cb16-47" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Sitios después: </span><span class="va">$AVG_AFTER</span><span class="st">"</span></span>
+<span id="cb16-48"><a href="#cb16-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-49"><a href="#cb16-49" aria-hidden="true" tabindex="-1"></a><span class="co"># 6. Convertir a Phylip</span></span>
+<span id="cb16-50"><a href="#cb16-50" aria-hidden="true" tabindex="-1"></a><span class="ex">seqkit</span> seq alineamientos/primates_cytb_trim.fasta <span class="at">--phylip</span> <span class="op">&gt;</span> alineamientos/primates_cytb.phy</span>
+<span id="cb16-51"><a href="#cb16-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-52"><a href="#cb16-52" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> alineamientos/primates_cytb.phy</span>
+<span id="cb16-53"><a href="#cb16-53" aria-hidden="true" tabindex="-1"></a><span class="co">#  20  1132</span></span>
+<span id="cb16-54"><a href="#cb16-54" aria-hidden="true" tabindex="-1"></a><span class="co"># NM_001305xxx atg...</span></span>
+<span id="cb16-55"><a href="#cb16-55" aria-hidden="true" tabindex="-1"></a><span class="co"># ...</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="solución-ejercicio-2" class="level3">
+<h3 data-anchor-id="solución-ejercicio-2">Solución Ejercicio 2</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/usr/bin/env bash</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="co"># compara_mafft.sh — alineamiento fino vs rápido.</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-euo</span> pipefail</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="va">IN</span><span class="op">=</span><span class="st">"datos/raw/primates_cytb.fasta"</span>   <span class="co"># 20 secuencias del Ejercicio 1</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Alineamiento 1: L-INS-i (preciso)</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="ex">mafft</span> <span class="at">--localpair</span> <span class="at">--maxiterate</span> 1000 <span class="at">--thread</span> 4 <span class="st">"</span><span class="va">$IN</span><span class="st">"</span> <span class="op">&gt;</span> alineamientos/cytb_LINSi.fasta</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Alineamiento 2: FFT-NS-1 (rápido)</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="ex">mafft</span> <span class="at">--retree</span> 1 <span class="at">--thread</span> 4 <span class="st">"</span><span class="va">$IN</span><span class="st">"</span> <span class="op">&gt;</span> alineamientos/cytb_FFTNS1.fasta</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Estadísticas</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"— L-INS-i (preciso) —"</span></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a><span class="ex">seqkit</span> stats alineamientos/cytb_LINSi.fasta</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">""</span></span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"— FFT-NS-1 (rápido) —"</span></span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a><span class="ex">seqkit</span> stats alineamientos/cytb_FFTNS1.fasta</span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Contar gaps en cada uno</span></span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a><span class="fu">gaps_in()</span> <span class="kw">{</span></span>
+<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a>    <span class="co"># cuenta caracteres '-' en el MSA, normalizado por número de secuencias</span></span>
+<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a>    <span class="bu">local</span> <span class="va">fa</span><span class="op">=</span><span class="va">$1</span></span>
+<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a>    <span class="bu">local</span> <span class="va">n</span><span class="op">=</span><span class="va">$(</span><span class="fu">grep</span> <span class="at">-c</span> <span class="st">"^&gt;"</span> <span class="st">"</span><span class="va">$fa</span><span class="st">"</span><span class="va">)</span></span>
+<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a>    <span class="bu">local</span> <span class="va">total_gaps</span><span class="op">=</span><span class="va">$(</span><span class="fu">grep</span> <span class="at">-v</span> <span class="st">"^&gt;"</span> <span class="st">"</span><span class="va">$fa</span><span class="st">"</span> <span class="kw">|</span> <span class="fu">tr</span> <span class="at">-cd</span> <span class="st">'-'</span> <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-c</span><span class="va">)</span></span>
+<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">awk</span> <span class="at">-v</span> g=<span class="va">$total_gaps</span> <span class="at">-v</span> n=<span class="va">$n</span> <span class="st">'BEGIN{printf "Gaps totales: %d\tGaps/seq: %.1f\n", g, g/n}'</span></span>
+<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span>
+<span id="cb17-29"><a href="#cb17-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-30"><a href="#cb17-30" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">""</span></span>
+<span id="cb17-31"><a href="#cb17-31" aria-hidden="true" tabindex="-1"></a><span class="ex">gaps_in</span> alineamientos/cytb_LINSi.fasta</span>
+<span id="cb17-32"><a href="#cb17-32" aria-hidden="true" tabindex="-1"></a><span class="ex">gaps_in</span> alineamientos/cytb_FFTNS1.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Salida típica esperada (los números exactos dependen de los datos):</p>
+<pre class="text"><code>— L-INS-i (preciso) —
+file                format  type  num_seqs  sum_len  min_len  avg_len  max_len
+cytb_LINSi.fasta    FASTA   DNA          20  22,800    1,140    1,140    1,140
+
+— FFT-NS-1 (rápido) —
+file                format  type  num_seqs  sum_len  min_len  avg_len  max_len
+cytb_FFTNS1.fasta   FASTA   DNA          20  22,940    1,140    1,147    1,147
+
+Gaps totales: 0    Gaps/seq: 0.0
+Gaps totales: 120  Gaps/seq: 6.0</code></pre>
+<p><strong>Interpretación</strong>: en este caso particular, como los Cytb de primates son secuencias CDS de longitud casi idéntica (sin indels reales), L-INS-i encuentra alineamiento sin gaps y FFT-NS-1, al ser menos iterativo, tiende a insertar gaps espurios. Para datasets con <strong>indels reales</strong>, sin embargo, L-INS-i identifica correctamente los bloques de inserción/deleción, mientras que FFT-NS-1 tiende a <strong>subalign</strong> (menos gaps pero posiciones mal pareadas). <strong>Siempre compara</strong>: cuanto más divergente el dataset, mayor el motivo para usar L-INS-i.</p>
+</section>
+<section id="solución-ejercicio-3" class="level3">
+<h3 data-anchor-id="solución-ejercicio-3">Solución Ejercicio 3</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/usr/bin/env bash</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="co"># alinear_y_recortar.sh — pipeline MSA → trim → Phylip.</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Uso: ./alinear_y_recortar.sh input.fasta output.phy [threads]</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-euo</span> pipefail</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="va">IN</span><span class="op">=</span><span class="st">"</span><span class="va">${1</span><span class="op">:?</span>Uso: <span class="va">$0</span> input.fasta output.phy [threads]<span class="va">}</span><span class="st">"</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="va">OUT</span><span class="op">=</span><span class="st">"</span><span class="va">${2</span><span class="op">:?</span>Falta output.phy<span class="va">}</span><span class="st">"</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a><span class="va">THREADS</span><span class="op">=</span><span class="st">"</span><span class="va">${3</span><span class="op">:-</span>4<span class="va">}</span><span class="st">"</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Validaciones</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a><span class="bu">[</span> <span class="ot">-f</span> <span class="st">"</span><span class="va">$IN</span><span class="st">"</span> <span class="bu">]</span> <span class="kw">||</span> <span class="kw">{</span> <span class="bu">echo</span> <span class="st">"No existe </span><span class="va">$IN</span><span class="st">"</span> <span class="op">&gt;&amp;</span><span class="dv">2</span><span class="kw">;</span> <span class="bu">exit</span> 1<span class="kw">;</span> <span class="kw">}</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a><span class="bu">command</span> <span class="at">-v</span> mafft <span class="op">&gt;</span>/dev/null   <span class="kw">||</span> <span class="kw">{</span> <span class="bu">echo</span> <span class="st">"Falta mafft"</span> <span class="op">&gt;&amp;</span><span class="dv">2</span><span class="kw">;</span> <span class="bu">exit</span> 1<span class="kw">;</span> <span class="kw">}</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a><span class="bu">command</span> <span class="at">-v</span> trimal <span class="op">&gt;</span>/dev/null  <span class="kw">||</span> <span class="kw">{</span> <span class="bu">echo</span> <span class="st">"Falta trimal"</span> <span class="op">&gt;&amp;</span><span class="dv">2</span><span class="kw">;</span> <span class="bu">exit</span> 1<span class="kw">;</span> <span class="kw">}</span></span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a><span class="bu">command</span> <span class="at">-v</span> seqkit <span class="op">&gt;</span>/dev/null  <span class="kw">||</span> <span class="kw">{</span> <span class="bu">echo</span> <span class="st">"Falta seqkit"</span> <span class="op">&gt;&amp;</span><span class="dv">2</span><span class="kw">;</span> <span class="bu">exit</span> 1<span class="kw">;</span> <span class="kw">}</span></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Directorios temporales dentro del propio directorio del input</span></span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a><span class="va">WORKDIR</span><span class="op">=</span><span class="va">$(</span><span class="fu">dirname</span> <span class="st">"</span><span class="va">$OUT</span><span class="st">"</span><span class="va">)</span></span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> <span class="st">"</span><span class="va">$WORKDIR</span><span class="st">"</span></span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a><span class="va">BASE</span><span class="op">=</span><span class="va">$(</span><span class="fu">basename</span> <span class="st">"</span><span class="va">$IN</span><span class="st">"</span> .fasta<span class="va">)</span></span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a><span class="va">ALN_RAW</span><span class="op">=</span><span class="st">"</span><span class="va">$WORKDIR</span><span class="st">/</span><span class="va">${BASE}</span><span class="st">_aln.fasta"</span></span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a><span class="va">ALN_TRIM</span><span class="op">=</span><span class="st">"</span><span class="va">$WORKDIR</span><span class="st">/</span><span class="va">${BASE}</span><span class="st">_trim.fasta"</span></span>
+<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"1/3 — Alineando con MAFFT --auto (--thread </span><span class="va">$THREADS</span><span class="st">) ..."</span></span>
+<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a><span class="ex">mafft</span> <span class="at">--auto</span> <span class="at">--thread</span> <span class="st">"</span><span class="va">$THREADS</span><span class="st">"</span> <span class="st">"</span><span class="va">$IN</span><span class="st">"</span> <span class="op">&gt;</span> <span class="st">"</span><span class="va">$ALN_RAW</span><span class="st">"</span></span>
+<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-27"><a href="#cb19-27" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"2/3 — Recortando con trimAl -automated1 ..."</span></span>
+<span id="cb19-28"><a href="#cb19-28" aria-hidden="true" tabindex="-1"></a><span class="ex">trimal</span> <span class="at">-in</span> <span class="st">"</span><span class="va">$ALN_RAW</span><span class="st">"</span> <span class="at">-out</span> <span class="st">"</span><span class="va">$ALN_TRIM</span><span class="st">"</span> <span class="at">-automated1</span></span>
+<span id="cb19-29"><a href="#cb19-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-30"><a href="#cb19-30" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"3/3 — Convirtiendo a Phylip con seqkit ..."</span></span>
+<span id="cb19-31"><a href="#cb19-31" aria-hidden="true" tabindex="-1"></a><span class="ex">seqkit</span> seq <span class="st">"</span><span class="va">$ALN_TRIM</span><span class="st">"</span> <span class="at">--phylip</span> <span class="op">&gt;</span> <span class="st">"</span><span class="va">$OUT</span><span class="st">"</span></span>
+<span id="cb19-32"><a href="#cb19-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-33"><a href="#cb19-33" aria-hidden="true" tabindex="-1"></a><span class="co"># Informe final</span></span>
+<span id="cb19-34"><a href="#cb19-34" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">""</span></span>
+<span id="cb19-35"><a href="#cb19-35" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== Resumen ==="</span></span>
+<span id="cb19-36"><a href="#cb19-36" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> <span class="st">"Input               %s\n"</span> <span class="st">"</span><span class="va">$IN</span><span class="st">"</span></span>
+<span id="cb19-37"><a href="#cb19-37" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> <span class="st">"Alineamiento crudo  %s\n"</span> <span class="st">"</span><span class="va">$ALN_RAW</span><span class="st">"</span></span>
+<span id="cb19-38"><a href="#cb19-38" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> <span class="st">"Alineamiento trim   %s\n"</span> <span class="st">"</span><span class="va">$ALN_TRIM</span><span class="st">"</span></span>
+<span id="cb19-39"><a href="#cb19-39" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> <span class="st">"Phylip              %s\n"</span> <span class="st">"</span><span class="va">$OUT</span><span class="st">"</span></span>
+<span id="cb19-40"><a href="#cb19-40" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">""</span></span>
+<span id="cb19-41"><a href="#cb19-41" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Longitudes (avg_len = nº de sitios en MSA):"</span></span>
+<span id="cb19-42"><a href="#cb19-42" aria-hidden="true" tabindex="-1"></a><span class="ex">seqkit</span> stats <span class="at">-T</span> <span class="st">"</span><span class="va">$IN</span><span class="st">"</span> <span class="st">"</span><span class="va">$ALN_RAW</span><span class="st">"</span> <span class="st">"</span><span class="va">$ALN_TRIM</span><span class="st">"</span> <span class="kw">|</span> <span class="dt">\</span></span>
+<span id="cb19-43"><a href="#cb19-43" aria-hidden="true" tabindex="-1"></a>    <span class="fu">awk</span> <span class="at">-F</span><span class="st">'\t'</span> <span class="st">'NR==1{print} NR&gt;1{printf "  %-50s N=%s  long=%s\n", $1, $4, $7}'</span></span>
+<span id="cb19-44"><a href="#cb19-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-45"><a href="#cb19-45" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">""</span></span>
+<span id="cb19-46"><a href="#cb19-46" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Gaps eliminados:"</span></span>
+<span id="cb19-47"><a href="#cb19-47" aria-hidden="true" tabindex="-1"></a><span class="va">GAPS_RAW</span><span class="op">=</span><span class="va">$(</span><span class="fu">grep</span> <span class="at">-v</span> <span class="st">"^&gt;"</span> <span class="st">"</span><span class="va">$ALN_RAW</span><span class="st">"</span> <span class="kw">|</span> <span class="fu">tr</span> <span class="at">-cd</span> <span class="st">'-'</span> <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-c</span><span class="va">)</span></span>
+<span id="cb19-48"><a href="#cb19-48" aria-hidden="true" tabindex="-1"></a><span class="va">GAPS_TRIM</span><span class="op">=</span><span class="va">$(</span><span class="fu">grep</span> <span class="at">-v</span> <span class="st">"^&gt;"</span> <span class="st">"</span><span class="va">$ALN_TRIM</span><span class="st">"</span> <span class="kw">|</span> <span class="fu">tr</span> <span class="at">-cd</span> <span class="st">'-'</span> <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-c</span><span class="va">)</span></span>
+<span id="cb19-49"><a href="#cb19-49" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"  Crudo:  </span><span class="va">$GAPS_RAW</span><span class="st"> gaps totales"</span></span>
+<span id="cb19-50"><a href="#cb19-50" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"  Trim:   </span><span class="va">$GAPS_TRIM</span><span class="st"> gaps totales"</span></span>
+<span id="cb19-51"><a href="#cb19-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-52"><a href="#cb19-52" aria-hidden="true" tabindex="-1"></a><span class="co"># Prueba con 50 secuencias</span></span>
+<span id="cb19-53"><a href="#cb19-53" aria-hidden="true" tabindex="-1"></a><span class="co">#   $ ./alinear_y_recortar.sh datos/raw/bovidae_16s.fasta alineamientos/bovidae_16s.phy 4</span></span>
+<span id="cb19-54"><a href="#cb19-54" aria-hidden="true" tabindex="-1"></a><span class="co">#   1/3 — Alineando con MAFFT --auto (--thread 4) ...</span></span>
+<span id="cb19-55"><a href="#cb19-55" aria-hidden="true" tabindex="-1"></a><span class="co">#   2/3 — Recortando con trimAl -automated1 ...</span></span>
+<span id="cb19-56"><a href="#cb19-56" aria-hidden="true" tabindex="-1"></a><span class="co">#   3/3 — Convirtiendo a Phylip con seqkit ...</span></span>
+<span id="cb19-57"><a href="#cb19-57" aria-hidden="true" tabindex="-1"></a><span class="co">#   </span></span>
+<span id="cb19-58"><a href="#cb19-58" aria-hidden="true" tabindex="-1"></a><span class="co">#   === Resumen ===</span></span>
+<span id="cb19-59"><a href="#cb19-59" aria-hidden="true" tabindex="-1"></a><span class="co">#   Input               datos/raw/bovidae_16s.fasta</span></span>
+<span id="cb19-60"><a href="#cb19-60" aria-hidden="true" tabindex="-1"></a><span class="co">#   Alineamiento crudo  alineamientos/bovidae_16s_aln.fasta</span></span>
+<span id="cb19-61"><a href="#cb19-61" aria-hidden="true" tabindex="-1"></a><span class="co">#   Alineamiento trim   alineamientos/bovidae_16s_trim.fasta</span></span>
+<span id="cb19-62"><a href="#cb19-62" aria-hidden="true" tabindex="-1"></a><span class="co">#   Phylip              alineamientos/bovidae_16s.phy</span></span>
+<span id="cb19-63"><a href="#cb19-63" aria-hidden="true" tabindex="-1"></a><span class="co">#   </span></span>
+<span id="cb19-64"><a href="#cb19-64" aria-hidden="true" tabindex="-1"></a><span class="co">#   Longitudes (avg_len = nº de sitios en MSA):</span></span>
+<span id="cb19-65"><a href="#cb19-65" aria-hidden="true" tabindex="-1"></a><span class="co">#     file                                N    long</span></span>
+<span id="cb19-66"><a href="#cb19-66" aria-hidden="true" tabindex="-1"></a><span class="co">#     datos/raw/bovidae_16s.fasta         50   1492</span></span>
+<span id="cb19-67"><a href="#cb19-67" aria-hidden="true" tabindex="-1"></a><span class="co">#     alineamientos/bovidae_16s_aln.fasta 50   1538</span></span>
+<span id="cb19-68"><a href="#cb19-68" aria-hidden="true" tabindex="-1"></a><span class="co">#     alineamientos/bovidae_16s_trim.fasta 50  1487</span></span>
+<span id="cb19-69"><a href="#cb19-69" aria-hidden="true" tabindex="-1"></a><span class="co">#   </span></span>
+<span id="cb19-70"><a href="#cb19-70" aria-hidden="true" tabindex="-1"></a><span class="co">#   Gaps eliminados:</span></span>
+<span id="cb19-71"><a href="#cb19-71" aria-hidden="true" tabindex="-1"></a><span class="co">#     Crudo:  1840 gaps totales</span></span>
+<span id="cb19-72"><a href="#cb19-72" aria-hidden="true" tabindex="-1"></a><span class="co">#     Trim:   120 gaps totales</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>El pipeline es <strong>idempotente</strong>: si lo re-ejecutas con los mismos argumentos, sobreescribe los archivos intermedios. Si quieres conservar corridas previas, añade un timestamp al <code>BASE</code> (ej: <code>BASE="${BASE}_$(date +%Y%m%d)"</code>).</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Para producción real conviene <strong>loguear</strong> el comando exacto ejecutado y las versiones del software:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">{</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">"# </span><span class="va">$(</span><span class="fu">date</span><span class="va">)</span><span class="st">"</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">"# mafft: </span><span class="va">$(</span><span class="ex">mafft</span> <span class="at">--version</span> <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="kw">|</span> <span class="fu">head</span> <span class="at">-n1</span><span class="va">)</span><span class="st">"</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">"# trimal: </span><span class="va">$(</span><span class="ex">trimal</span> <span class="at">--version</span> <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="kw">|</span> <span class="fu">head</span> <span class="at">-n1</span><span class="va">)</span><span class="st">"</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">"# seqkit: </span><span class="va">$(</span><span class="ex">seqkit</span> version <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="kw">|</span> <span class="fu">head</span> <span class="at">-n1</span><span class="va">)</span><span class="st">"</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  <span class="bu">echo</span> <span class="st">"# cmd: mafft --auto --thread </span><span class="va">$THREADS</span><span class="st"> </span><span class="va">$IN</span><span class="st">"</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span> <span class="op">&gt;</span> <span class="st">"</span><span class="va">$WORKDIR</span><span class="st">/</span><span class="va">${BASE}</span><span class="st">.log"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/bioden\.github\.io\/bioden_website\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Semillero de Biología del Desarrollo y Plasticidad Neural © 2025. All content licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Sitio web desarrollado por Xavier Clemente García Cevallos</p>
+</div>   
+    <div class="nav-footer-center">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/bioden">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="mailto:bioden@unicauca.edu.co">
+      <i class="bi bi-envelope" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    <div class="cookie-consent-footer"><a href="#" id="open_preferences_center">Cookie Preferences</a></div></div>
+    <div class="nav-footer-right">
+<p>Made with <a href="https://www.r-project.org/"><img src="https://www.r-project.org/Rlogo.png" alt="R" width="25px"></a> and <a href="https://quarto.org/"><img src="https://quarto.org/quarto.png" alt="Quarto" width="65px"></a>.</p>
+</div>
+  </div>
+</footer>
+
+
+
+
+<script src="../../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

@@ -1,0 +1,121 @@
+---
+title: "Filogenia Molecular: de secuencias a árboles evolutivos"
+subtitle: "Un curso completo de filogenética molecular para ADN, ARN y proteínas"
+image: multimedia/filo.png
+format:
+  html:
+    toc: true
+    css: card.css
+margin-header: |
+  ![Xavier Clemente García Cevallos](multimedia/filo.png)
+---
+
+## Bienvenida
+
+Bienvenido a **Filogenia Molecular: de secuencias a árboles evolutivos**. A lo largo de 18 capítulos aprenderás a reconstruir árboles filogenéticos para los tres tipos principales de datos moleculares de ADN, ARN y proteínas operando exclusivamente desde la línea de comandos en Windows.
+
+El curso utiliza **WSL2 con Ubuntu** como entorno principal (porque ofrece acceso nativo a las herramientas bioinformáticas de Linux) y complementa con **PowerShell** para usuarios que prefieran operar sin abandonar Windows. Todas las herramientas filogenéticas modernas (IQ-TREE, RAxML-NG, MrBayes, BEAST2, MAFFT, MUSCLE5) funcionan sin fricción dentro de WSL2.
+
+## ¿Por qué filogenia molecular desde la terminal?
+
+La filogenética molecular contemporánea procesa **decenas de miles de secuencias** y exige pipelines reproducibles. Las razones para trabajar desde Bash son tres:
+
+1.  **Reproducibilidad**: un script Bash documenta cada paso del análisis, desde la descarga de secuencias hasta el árbol final.
+2.  **Escalabilidad**: las herramientas de línea de comandos manejan datasets que interfaces gráficas como MEGA no soportan.
+3.  **Ecosistema**: el 95% de los servidores HPC donde se ejecutan análisis filogenéticos son Linux. Aprender la terminal te prepara para clusters.
+
+## Estructura del curso
+
+El curso está dividido en tres bloques temáticos progresivos:
+
+### Bloque I — Fundamentos y Alineamiento (Capítulos 1 al 6)
+
+Comenzarás con los conceptos teóricos de la filogenia molecular, configurarás tu entorno de trabajo en Windows, aprenderás a descargar secuencias desde NCBI, manipularlas con Bash y generar alineamientos múltiples de ADN y proteínas.
+
+### Bloque II — Modelos y Reconstrucción (Capítulos 7 al 12)
+
+Dominarás la selección de modelos de sustitución (jModelTest, ProtTest, ModelFinder), los métodos clásicos de distancia y parsimonia, y los algoritmos modernos de Maximum Likelihood (IQ-TREE, RAxML-NG, FastTree).
+
+### Bloque III — Inferencia Bayesiana y Avanzado (Capítulos 13 al 18)
+
+Cubrirás inferencia bayesiana con MrBayes, datación molecular con BEAST2, filogenia de ARN estructural (16S rRNA), filogenómica con partición de genes, visualización profesional de árboles y un proyecto integrador final.
+
+## Entorno de trabajo
+
+::: callout-important
+Este curso asume que ya tienes nociones de Bash (equivalentes al curso *Bash para dummies*). Si no es así, revisa primero ese curso antes de continuar.
+:::
+
+Las herramientas se instalan mediante **Bioconda**, accesible tanto desde WSL2 como desde PowerShell (usando Miniconda nativo de Windows). El curso muestra ambas rutas y resalta cuándo conviene cada una.
+
+## Requisitos
+
+- Windows 10/11 con WSL2 instalado y Ubuntu 22.04+
+- O alternativamente: Windows con PowerShell y Miniconda instalado
+- 20 GB de espacio libre en disco
+- Conexión a internet para descargar secuencias y paquetes
+- Conocimientos básicos de Bash (recomendado haber cursado *Bash para dummies*)
+
+## Convenciones del curso
+
+A lo largo de los capítulos encontrarás los siguientes bloques:
+
+::: callout-note
+**Nota:** Información complementaria o aclaratoria.
+:::
+
+::: callout-tip
+**Tip:** Atajos, buenas prácticas o recomendaciones útiles.
+:::
+
+::: callout-warning
+**Advertencia:** Errores comunes o precauciones, especialmente críticos en filogenia donde una elección metodológica errónea puede invalidar un análisis completo.
+:::
+
+::: callout-important
+**Importante:** Conceptos teóricos clave que debes recordar.
+:::
+
+## Cómo aprovechar el curso
+
+1.  **Lee y ejecuta**: cada comando puede copiarse y pegarse en tu terminal.
+2.  **Compara resultados**: las herramientas filogenéticas producen archivos de salida (logfiles, árboles Newick) que conviene inspeccionar.
+3.  **Resuelve los ejercicios**: antes de mirar la solución, inténtalo tú mismo.
+4.  **Aplica a tus datos**: cuando termines un capítulo, intenta replicar el análisis con tus propias secuencias.
+
+## Contenido del curso
+
+A continuación encontrarás el índice de capítulos. Cada uno contiene teoría, ejemplos con datos reales, ejercicios propuestos y sus soluciones detalladas.
+
+### Bloque I — Fundamentos y Alineamiento
+
+1.  [Capítulo 1: Introducción a la filogenia molecular](filogenia_capitulos/01-introduccion.qmd) — Conceptos teóricos: árboles, topología, raíz, nodos, longitud de ramas.
+2.  [Capítulo 2: Configuración del entorno](filogenia_capitulos/02-entorno.qmd) — WSL2 + Ubuntu + Bioconda + PowerShell con conda nativo.
+3.  [Capítulo 3: Adquisición de secuencias desde NCBI](filogenia_capitulos/03-ncbi.qmd) — E-utilities, Entrez direct, descarga por accession y búsqueda.
+4.  [Capítulo 4: Manipulación de secuencias con Bash](filogenia_capitulos/04-manipulacion.qmd) — EMBOSS, BioPython, samtools faidx, awk/grep/sed.
+5.  [Capítulo 5: Alineamiento múltiple de ADN](filogenia_capitulos/05-alineamiento-dna.qmd) — MAFFT, MUSCLE5, ClustalOmega, evaluación con ASC.
+6.  [Capítulo 6: Alineamiento de proteínas y codón-consciente](filogenia_capitulos/06-alineamiento-proteinas.qmd) — MAFFT, MUSCLE5, PRANK, MACSE, pal2nal.
+
+### Bloque II — Modelos y Reconstrucción
+
+7.  [Capítulo 7: Modelos de sustitución de ADN](filogenia_capitulos/07-modelos-dna.qmd) — JC, K2P, HKY, GTR, jModelTest, ModelFinder.
+8.  [Capítulo 8: Modelos de sustitución de proteínas](filogenia_capitulos/08-modelos-proteinas.qmd) — PAM, JTT, WAG, LG, ProtTest.
+9.  [Capítulo 9: Métodos de distancia](filogenia_capitulos/09-distancia.qmd) — NJ, UPGMA, K2P con QuickTree, MEGA CLI, PHYLIP.
+10. [Capítulo 10: Maximum Parsimony con TNT](filogenia_capitulos/10-parsimonia.qmd) — Heurísticas, TBR, soporte de bootstrap.
+11. [Capítulo 11: Maximum Likelihood con IQ-TREE](filogenia_capitulos/11-iqtree.qmd) — Búsqueda de árboles, ultrafast bootstrap, SH-aLRT.
+12. [Capítulo 12: RAxML-NG y FastTree](filogenia_capitulos/12-raxml-fasttree.qmd) — RAxML-NG para análisis pesado, FastTree para datasets masivos.
+
+### Bloque III — Inferencia Bayesiana y Avanzado
+
+13. [Capítulo 13: Inferencia bayesiana con MrBayes](filogenia_capitulos/13-mrbayes.qmd) — MCMC, convergencia, ESS, partición, post-burnin.
+14. [Capítulo 14: BEAST2: datación molecular](filogenia_capitulos/14-beast2.qmd) — Relojes moleculares, calibración, BEAUti2, Tracer.
+15. [Capítulo 15: ARN estructural: 16S rRNA](filogenia_capitulos/15-arn-estructural.qmd) — Estructura secundaria, Infernal, CMalign, raxML para ARN.
+16. [Capítulo 16: Filogenómica: concatenación y partición](filogenia_capitulos/16-filogenomica.qmd) — Concatenación de genes, modelos particionados, IQ-TREE Edge-linked.
+17. [Capítulo 17: Visualización y anotación de árboles](filogenia_capitulos/17-visualizacion.qmd) — FigTree, ETE3, iTOL API, ggtree vía R.
+18. [Capítulo 18: Proyecto integrador](filogenia_capitulos/18-proyecto.qmd) — Pipeline completo: descarga → alineamiento → modelo → ML → bayes → visualización.
+
+## Cierre
+
+La filogenia molecular es el lenguaje con el que la biología moderna cuenta la historia de la vida. Dominarla desde la línea de comandos te permitirá ejecutar análisis reproducibles y competitivos a nivel internacional.
+
+¡Manos a la consola y a los árboles!

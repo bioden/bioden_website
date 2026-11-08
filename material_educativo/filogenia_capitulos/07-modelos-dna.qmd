@@ -1,0 +1,396 @@
+---
+title: "Capítulo 7: Modelos de sustitución de ADN"
+---
+
+## 7.1 ¿Por qué necesitamos modelos de sustitución?
+
+Cuando observamos dos secuencias homólogas y contamos sus diferencias (p-distance), **estamos subestimando el número real de sustituciones** que han ocurrido. La razón es la **saturación**: si en un mismo sitio ocurren dos sustituciones (A→G→A), el resultado observable es cero diferencias, pero el proceso real involucró dos eventos.
+
+Un **modelo de sustitución** es una descripción matemática del proceso evolutivo a nivel de nucleótidos. Sus objetivos son:
+
+1. **Corregir múltiples sustituciones** y estimar distancias evolutivas reales.
+2. **Ponderar distintas clases de cambios** (transiciones vs transversiones).
+3. **Reflejar la composición de nucleótidos** observada (no siempre 25% cada uno).
+4. **Modelar heterogeneidad entre sitios** (algunos sitios son invariables, otros evolucionan rápido).
+
+::: callout-important
+Todo método filogenético basado en verosimilitud (ML) o Bayesiano **requiere** un modelo de sustitución. La elección del modelo afecta directamente el árbol inferido. Usar un modelo demasiado simple produce árboles con **artefactos sistemáticos** (long-branch attraction).
+:::
+
+## 7.2 Suposiciones de los modelos reversibles
+
+Los modelos más usados asumen:
+
+- **Estacionariedad**: las frecuencias de los nucleótidos en equilibrio son constantes en el tiempo y en todas las ramas.
+- **Reversibilidad detallada** (*detailed balance*): la tasa de cambio A→B es igual a B→A ponderada por las frecuencias. Esto implica que el proceso no tiene direccionalidad.
+- **Homogeneidad entre ramas**: las mismas tasas aplican a todas las ramas del árbol (simplificación; relajada en modelos "relaxed-clock" y "non-stationary").
+
+::: callout-warning
+Estas suposiciones **se violan a menudo** en datos reales: composición de nucleótidos variable entre linajes (típico en mitocondriales), presiones selectivas que rompen reversibilidad, etc. Para esos casos existen modelos más complejos (no reversibles, heterogéneos).
+:::
+
+## 7.3 Modelos clásicos: del simple al complejo
+
+Presentamos los modelos en orden creciente de complejidad. Todos son casos especiales del modelo general **GTR**.
+
+### 7.3.1 JC69 (Jukes-Cantor 1969)
+
+El modelo más simple:
+
+- Frecuencias iguales: π_A = π_C = π_G = π_T = 0.25
+- Misma tasa de sustitución entre cualquier par de nucleótidos.
+
+Solo tiene un parámetro: la tasa global μ. Útil solo como referencia.
+
+### 7.3.2 K2P (Kimura 2-parameters 1980)
+
+Distingue:
+
+- **Transiciones** (purina↔purina: A↔G, o pirimidina↔pirimidina: C↔T): tasa α.
+- **Transversiones** (purina↔pirimidina): tasa β.
+
+Sigue asumiendo frecuencias iguales (0.25 cada uno). Dos parámetros. Mejor que JC69 porque las transiciones son típicamente 2–10× más frecuentes que las transversiones.
+
+### 7.3.3 HKY85 (Hasegawa-Kishino-Yano 1985)
+
+Añade a K2P **frecuencias de nucleótidos desiguales** (π_A, π_C, π_G, π_T estimadas). Sigue distinguiendo transiciones/transversiones. Es uno de los modelos más usados para datos nucleotídicos reales.
+
+### 7.3.4 TNequal + I
+
+Igual frecuencia de los 4 nucleótidos, pero distintas tasas para transición y transversión, más proporción de sitios invariables (`+I`). Caso intermedio entre K2P y TN93.
+
+### 7.3.5 TN93 (Tamura-Nei 1993)
+
+Como HKY85 pero permite que las **dos clases de transiciones tengan tasas distintas**: A↔G ≠ C↔T. Útil cuando hay sesgo fuerte entre purinas y pirimidinas.
+
+### 7.3.6 GTR (General Time Reversible, Tavaré 1986)
+
+El modelo reversible más general:
+
+- 6 tasas de sustitución distintas (A↔C, A↔G, A↔T, C↔G, C↔T, G↔T).
+- 4 frecuencias de nucleótidos.
+
+Total: 9 parámetros libres. Es el estándar "completo" y la base de los modelos más usados hoy.
+
+### 7.3.7 Extensiones: +I, +G, +I+G
+
+Sobre cualquier modelo anterior se pueden añadir:
+
+- **+I**: proporción de sitios invariables (parámetro I entre 0 y 1).
+- **+G**: tasas distribuidas según una **Gamma** con parámetro α (4 categorías discretas por defecto).
+- **+I+G**: combinación de ambos.
+
+::: callout-note
+`GTR+I+G` es el modelo reversible **más completo** y es el default en muchos análisis filogenéticos modernos (IQ-TREE, RAxML-NG) si no se hace selección explícita.
+:::
+
+## 7.4 Modelos no reversibles
+
+Para datasets donde la composición de nucleótidos varía entre linajes o donde hay sesgos direccionales, los modelos reversibles son insuficientes:
+
+- **UNREST** (*unrestricted*): 12 tasas de sustitución independientes, sin restricción de reversibilidad.
+- Útiles en análisis que requieren modelar **direccionalidad evolutiva** (p. ej. sesgos de reparación del ADN en mitocondriales).
+
+::: callout-warning
+Los modelos no reversibles requieren **árbol enraizado** y son computacionalmente más costosos. Para la mayoría de análisis filogenéticos clásicos, los modelos reversibles son suficientes.
+:::
+
+## 7.5 Variación de tasas entre sitios
+
+Las posiciones de un alineamiento **no son equivalentes**:
+
+- Sitios conservados por función (codones de sitios activos, regiones regulatorias).
+- Sitios neutros que evolucionan rápido.
+- Sitios absolutamente invariables (restrictos estructuralmente).
+
+Tres formas de modelar esto:
+
+1. **+I (sitios invariables)**: fracción `I` de sitios que nunca cambian.
+2. **+G (Gamma)**: tasas continuas modeladas con distribución Gamma de parámetro α. α pequeño → gran heterogeneidad; α grande → tasas similares.
+3. **+I+G**: combina ambos. Estadísticamente debatido (los sitios invariables ya están parcialmente en la cola de Gamma), pero usado en la práctica.
+
+```text
+Ejemplo: si α = 0.2 → gran heterogeneidad (pocos sitios muy rápidos)
+         si α = 5   → casi homogéneo
+```
+
+## 7.6 Estimación de frecuencias de nucleótidos
+
+Tres estrategias:
+
+- **F (empíricas)**: calculadas directamente del alineamiento.
+- **FQ (iguales)**: todas = 0.25 (modelos JC69, K2P).
+- **ML (estimadas por maximum likelihood)**: optimizadas junto con el árbol.
+
+En IQ-TREE y RAxML-NG, `+F` indica frecuencias empíricas por defecto. `+FO` o `+FU` permiten optimizarlas o fijarlas en iguales.
+
+## 7.7 Selección de modelos con jModelTest
+
+`jModelTest` (Darriba et al. 2012) es el clásico, basado en PhyML:
+
+```bash
+conda install -c bioconda jmodeltest -y
+
+java -jar jmodeltest.jar -d aln.fasta \
+     -s 11          # 11 modelos base
+     -f             # incluir +F
+     -i             # incluir +I
+     -g 4           # 4 categorías Gamma
+     -tr 4          # 4 threads
+     -AIC           # Akaike Information Criterion
+     -o jmodeltest.out
+```
+
+::: callout-tip
+Para comparar todos los criterios a la vez, usa `-AIC -BIC -AICc -DT -hLRT`. El output final indica el mejor modelo según cada criterio.
+:::
+
+## 7.8 ModelTest-NG (versión moderna)
+
+Más rápida y con más modelos:
+
+```bash
+conda install -c bioconda modeltest-ng -y
+
+modeltest-ng -i aln.fasta -d nt -p 4 -o modeltest.out
+# -d nt: datos nucleotídicos
+# -p 4:  4 threads
+```
+
+Output: tabla con todos los modelos, sus logL, AIC, AICc, BIC, y el mejor según cada criterio.
+
+## 7.9 ModelFinder (IQ-TREE)
+
+Integrado en IQ-TREE, es la opción más rápida y con más modelos (incluye particionados y mezclas):
+
+```bash
+conda install -c bioconda iqtree -y
+
+# Solo selección de modelo
+iqtree2 -m TESTONLY -s aln.fasta -mset GTR -madd GTR+I+G
+
+# ModelFinder Plus (incluye mezclas, FreeRate, etc.)
+iqtree2 -m MFP -s aln.fasta
+
+# Solo selección, sin inferir árbol
+iqtree2 -m MF -s aln.fasta --prefix modeltest
+```
+
+## 7.10 Criterios de selección
+
+Criterios de información (penalizan la complejidad del modelo):
+
+- **AIC (Akaike)**: `2k - 2logL`. Recomendado para muestras grandes.
+- **AICc (AIC corregido)**: corrige AIC para muestras pequeñas (n/k < 40).
+- **BIC (Bayesian)**: `k·log(n) - 2logL`. Penaliza más la complejidad.
+- **DT (Decision Theoretic)**: basado en pesos de Akaike.
+
+::: callout-note
+**Cuándo usar cada uno**: BIC para muestras pequeñas o cuando se quiere modelo parsimonioso; AIC/AICc para muestras grandes. En la práctica, los tres suelen coincidir en el modelo óptimo.
+:::
+
+## 7.11 Interpretación del output
+
+```text
+Best model according to AIC:  GTR+I+G
+Best model according to AICc: GTR+I+G
+Best model according to BIC:  HKY+I+G
+Best model according to DT:   HKY+I+G
+```
+
+BIC a veces elige un modelo más simple (HKY en vez de GTR) porque penaliza más los parámetros extra. **Suele ser mejor seguir BIC** a menos que se justifique lo contrario.
+
+## 7.12 Aplicación del modelo en análisis posteriores
+
+Una vez elegido el modelo:
+
+```bash
+# IQ-TREE
+iqtree2 -s aln.fasta -m GTR+I+G -pre tree_ml
+
+# RAxML-NG
+raxml-ng --msa aln.fasta --model GTR+I+G --prefix raxml --threads 4
+
+# MrBayes (en bloque de comandos NEXUS)
+lset nst=6 rates=invgamma;   # GTR+I+G
+# Para HKY+G: lset nst=2 rates=gamma;
+# Para JC69:  lset nst=1 rates=equal;
+```
+
+## 7.13 Modelos para codones (mención)
+
+Cuando se trabaja con **alineamientos de CDS** y se quiere modelar a nivel de codón (no nucleótido):
+
+- **MG94 (Muse-Gaut 1994)**: codones, distingue sinónimas/no sinónimas.
+- **GY94 (Goldman-Yang 1994)**: el más usado, base de PAML `codeml`.
+- Modelos M0, M1, M2, M7, M8 en PAML: variantes que permiten heterogeneidad de ω = dN/dS entre sitios.
+
+::: callout-note
+Se profundiza en estos modelos en el módulo avanzado de PAML. Aquí sólo destacamos que **existen** y son la herramienta para análisis de selección.
+:::
+
+## 7.14 Modelos para regiones no codificantes
+
+- **Microsatélites**: SMM (*Stepwise Mutation Model*, Ohta & Kimura) — añade/borra una unidad cada vez. Modelo TPM (*Two Phase Model*) para mutaciones de varias unidades.
+- **ITS**: regiones con estructura secundaria. Modelos específicos que incorporan *stem-loop*, p. ej. con `RNAalifold` seguido de modelos de sustitución RNA-specific (ver capítulo ARN).
+- **Intrones**: modelos GTR estándar suelen ser suficientes.
+
+## 7.15 Ejemplos bioinformáticos
+
+### Ejemplo 1: Selección de modelo para 16S de primates
+
+```bash
+# Alinear 30 secuencias de 16S rRNA (mitocondrial) de primates
+mafft --auto primates_16s.fasta > aln.fasta
+trimal -in aln.fasta -out aln_trim.fasta -automated1
+
+# ModelTest-NG
+modeltest-ng -i aln_trim.fasta -d nt -p 4 -o 16s_modeltest.out
+
+# Ver resultado
+grep -E "Best model|Model:" 16s_modeltest.out | head -10
+```
+
+```text
+Model 102: GTR+I+G   logL: -7892.45  AIC: 15810.9  BIC: 15920.4
+Best model according to AIC:  GTR+I+G
+Best model according to BIC:  GTR+I+G
+```
+
+### Ejemplo 2: Comparar AIC vs BIC en dataset pequeño
+
+```bash
+# Con un alineamiento pequeño (15 secuencias, 500 bp)
+modeltest-ng -i small_aln.fasta -d nt -p 2 -o small.out
+
+# Extraer top-3 por cada criterio
+awk '/^Best model according to AIC/{print; next} /^Best model according to BIC/{print}' small.out
+```
+
+## 7.16 WSL2 vs PowerShell
+
+`jModelTest` y `ModelTest-NG` funcionan nativamente en WSL2. En PowerShell, invoca siempre dentro de una sesión WSL:
+
+```powershell
+# Powershell nativo
+wsl modeltest-ng -i aln.fasta -d nt -p 4 -o modeltest.out
+```
+
+`jModelTest` requiere Java; verifica la instalación:
+
+```bash
+java -version    # debe devolver 1.8 o superior
+```
+
+## 7.17 Ejercicios
+
+### Ejercicio 1
+Descargar 30 secuencias de **Citocromo b** de mamíferos, alinear con MAFFT, recortar con trimAl. Correr ModelTest-NG con todos los modelos nucleotídicos. Reportar el mejor modelo según AIC y BIC.
+
+### Ejercicio 2
+Dado el output de jModelTest (archivo `.out`), parsear con `awk` o `grep` para extraer: (a) mejor modelo según AIC, (b) mejor modelo según BIC, (c) longitud del árbol ML para ese modelo.
+
+### Ejercicio 3
+Comparar la verosimilitud (logL) de tres modelos —JC, HKY+G, GTR+I+G— sobre el mismo dataset. ¿Cuánto mejora la logL al usar un modelo más complejo? Justificar si la complejidad añadida está justificada.
+
+## 7.18 Soluciones
+
+### Solución 1
+
+```bash
+# 1. Descargar secuencias de Cytochrome b desde NCBI
+mkdir -p ~/filogenia/cytb && cd ~/filogenia/cytb
+
+# IDs de ejemplo (RefSeq mitochondrial cytb)
+for acc in NC_001807 NC_002083 NC_001640 NC_001643 NC_001316 NC_002008 \
+           NC_005043 NC_000950 NC_006853 NC_004025 NC_006919 NC_007896; do
+    efetch -db nucleotide -id "$acc" -db nuccore -format fasta | \
+        awk -v acc="$acc" 'BEGIN{RS=">"} NR>1{print ">"$0}' | \
+        awk '/cytb|CYTB/{print}' 
+done > cytb.fasta
+
+# En la práctica: descargar el gen cytb por separado usando `efetch`
+# con el rango de coordenadas correspondiente.
+
+# 2. Alinear
+mafft --auto --thread 4 cytb.fasta > cytb_aln.fasta
+
+# 3. Recortar
+trimal -in cytb_aln.fasta -out cytb_trim.fasta -automated1
+
+# 4. ModelTest-NG
+modeltest-ng -i cytb_trim.fasta -d nt -p 4 -o cytb_modeltest.out
+
+# 5. Reportar el mejor modelo
+grep -E "^Best model" cytb_modeltest.out
+```
+
+```text
+Best model according to AIC:  GTR+I+G
+Best model according to AICc: GTR+I+G
+Best model according to BIC:  GTR+I+G
+Best model according to DT:   GTR+I+G
+```
+
+### Solución 2
+
+```bash
+# Parsear el archivo de salida de jModelTest
+# (a) mejor modelo según AIC
+grep -E "^Model|^best|^Best" jmodeltest.out | grep -i "AIC" | head -1
+
+# Alternativa robusta con awk
+awk '/Best AIC model/{print "Mejor AIC: " $NF}' jmodeltest.out
+awk '/Best BIC model/{print "Mejor BIC: " $NF}' jmodeltest.out
+
+# (c) Longitud del árbol ML para el mejor modelo (AIC)
+# El output contiene un bloque con parámetros del mejor modelo
+awk '/Model selected:/{mod=$NF}
+     /tree length/{if (selected) print "Tree length (" mod "): " $NF}
+     /Best AIC model:/{selected=1; mod=$NF}' jmodeltest.out
+
+# Versión compacta
+echo "Mejor AIC: $(grep -oP 'AIC:\s+\K\S+' jmodeltest.out | head -1)"
+echo "Mejor BIC: $(grep -oP 'BIC:\s+\K\S+' jmodeltest.out | head -1)"
+echo "Tree length: $(grep -oP 'tree length\s+=\s+\K[0-9.]+' jmodeltest.out | head -1)"
+```
+
+```text
+Mejor AIC: GTR+I+G
+Mejor BIC: HKY+I+G
+Tree length: 2.34791
+```
+
+### Solución 3
+
+```bash
+# Inferir árboles ML con tres modelos sobre el mismo dataset
+# JC: nucleótidos iguales, 1 parámetro
+iqtree2 -s cytb_trim.fasta -m JC+G -pre jc_tree --quiet
+# HKY+G: transiciones/transversiones + frecuencias empíricas + Gamma
+iqtree2 -s cytb_trim.fasta -m HKY+G -pre hky_tree --quiet
+# GTR+I+G: el más completo reversible
+iqtree2 -s cytb_trim.fasta -m GTR+I+G -pre gtr_tree --quiet
+
+# Extraer logL de cada uno (en el archivo .log o .iqtree)
+echo "=== Log-likelihoods ==="
+echo "JC+G:        $(grep -oP 'Log-likelihood of tree:\s+\K[-0-9.]+' jc_tree.iqtree)"
+echo "HKY+G:       $(grep -oP 'Log-likelihood of tree:\s+\K[-0-9.]+' hky_tree.iqtree)"
+echo "GTR+I+G:     $(grep -oP 'Log-likelihood of tree:\s+\K[-0-9.]+' gtr_tree.iqtree)"
+```
+
+```text
+=== Log-likelihoods ===
+JC+G:        -9823.41
+HKY+G:       -8110.22
+GTR+I+G:     -7956.18
+```
+
+**Análisis**:
+
+- De JC+G a HKY+G: ΔlogL = -9823 - (-8110) = -1713. Mejora enorme al introducir frecuencias empíricas y transición/transversión distintas. Justificado.
+- De HKY+G a GTR+I+G: ΔlogL = -8110 - (-7956) = -154. Mejora más modesta. Test de razón de verosimilitudes: `2 × 154 = 308`. Con `df = 7 - 2 = 5` parámetros extra (4 tasas adicionales + I), el χ² crítico a p=0.001 con 5 df ≈ 20.5. Como 308 >> 20.5, **la mejora es altamente significativa**. Usar GTR+I+G está justificado.
+
+::: callout-note
+La mejora de JC a HKY es enorme porque JC69 ignora el sesgo transición/transversión, que en mitocondriales es ≈ 10:1. La mejora de HKY a GTR refleja heterogeneidad entre las distintas tasas de transversión y transición, también real en estos datos.
+:::

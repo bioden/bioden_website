@@ -1,0 +1,1345 @@
+---
+title: "Capítulo 18: Proyecto integrador — Filogenia molecular de Hominidae"
+---
+
+## 18.1 Introducción: por qué un pipeline integrador
+
+A lo largo de los 17 capítulos previos hemos aprendido, una a una, las herramientas y conceptos de la filogenia molecular: descarga de secuencias de NCBI, manipulación con BioPython, alineamiento con MAFFT/MUSCLE/Infernal, selección de modelos de sustitución (ADN, proteína, ARN estructural), métodos de distancia, parsimonia, máxima verosimilitud con IQ-TREE y RAxML-NG, inferencia bayesiana con MrBayes, datación con BEAST2, filogenómica con concatenación y species trees, y visualización profesional con ETE3, ggtree e iTOL.
+
+El salto cualitativo entre **saber usar cada herramienta** y **construir un pipeline reproducible y publicable** es enorme. La filogenia moderna no es "un árbol" sino un **proceso**: desde datos crudos hasta cronograma con datación, pasando por alineamiento, modelado, inferencia ML + bayes + datación, validación cruzada y visualización profesional. Cada paso tiene decisiones críticas, parámetros a escoger, y verificaciones de calidad que solo cobran sentido en conjunto.
+
+Este capítulo final integra **TODO** lo aprendido en un único pipeline profesional que un estudiante podría usar como base de su tesis o un paper. El caso de estudio es la familia **Hominidae** (grandes monos: humanos, chimpancés, gorilas, orangutanes y gibones), un grupo con abundantes datos moleculares y fósiles, y con preguntas evolutivas profundas (datación de divergencias, relación con homininos).
+
+::: callout-important
+**Objetivo del proyecto**: reconstruir la filogenia de Hominidae con **datación molecular**, usando 5 genes (Cytb, COI, 16S, 18S, RAG1) de 12 especies, con **tres métodos complementarios** (ML, Bayes, BEAST2) y **visualización profesional**. El output es un cronograma con tiempos de divergencia y HPD, comparado entre métodos.
+:::
+
+## 18.2 Datos del proyecto
+
+### 18.2.1 Especies y genes
+
+**12 especies** (11 ingroup + 1 outgroup):
+
+```text
+Familia Hominidae:
+  Homo_sapiens              NC_001807
+  Pan_troglodytes           NC_001643
+  Pan_paniscus              NC_001644
+  Gorilla_gorilla           NC_001645
+  Gorilla_beringei          (subespecie, muestreo adicional)
+  Pongo_pygmaeus            NC_001646
+  Pongo_abelii              (subespecie)
+Familia Hylobatidae:
+  Hylobates_lar             NC_002082
+  Symphalangus_syndactylus  (siamang)
+Outgroup:
+Familia Cercopithecidae:
+  Macaca_mulatta            NC_002769
+  Papio_anubis              (babuino)
+Familia Tarsiidae:
+  Tarsius_syrichta          (tarsier, outgroup lejano)
+```
+
+**5 genes**:
+
+- **Cytb** (citocromo b, mitocondrial, 1140 bp): evolución rápida, buena para divergencias recientes.
+- **COI** (citocromo oxidasa subunidad I, mitocondrial, 657 bp): código de barras estándar.
+- **16S rRNA** (mitocondrial, ~1450 bp): ARN estructural, evolución moderada.
+- **18S rRNA** (nuclear, ~1789 bp): ARN estructural, muy conservado.
+- **RAG1** (recombination activating gene 1, nuclear, ~2904 bp): proteína codificante nuclear, evolución lenta.
+
+### 18.2.2 Calibraciones fósiles
+
+Basadas en Steiper & Young (2009) y Benton et al. (2015):
+
+| Nodo | Edad mínima (Myr) | Distribución | Parámetros |
+|------|-------------------|--------------|------------|
+| *Homo*–*Pan* | 6 | Lognormal | mean=6.5, sigma=0.5, offset=6 |
+| *Gorilla*–(Homo,Pan) | 8 | Normal | mean=9, sigma=1 |
+| *Pongo*–(African apes) | 16 | Lognormal | mean=17, sigma=1, offset=16 |
+| Hylobatidae–Hominidae | 18 | Normal | mean=20, sigma=2 |
+
+## 18.3 Estructura del pipeline
+
+El pipeline consta de **10 pasos** organizados en scripts numerados, controlados por un **script maestro** con configuración externa:
+
+```text
+01_descargar.sh           →  obtención de secuencias NCBI
+02_limpiar.sh             →  limpieza y renombrado
+03_alinear.sh             →  alineamiento por gen
+04_modelos.sh             →  selección de modelos
+05_concatenar.sh          →  supermatriz + particiones
+06_ml.sh                  →  ML particionado (IQ-TREE)
+07_bayes.sh               →  Bayesiano (MrBayes)
+08_datacion.sh            →  BEAST2 con fósiles
+09_postprocesamiento.sh   →  convergencia + comparación
+10_visualizar.sh          →  árboles finales + reporte
+pipeline_filogenia.sh     →  script maestro
+config.conf               →  parámetros configurables
+```
+
+### 18.3.1 Archivo de configuración `config.conf`
+
+```bash
+# config.conf: parámetros del pipeline
+# Editar antes de ejecutar pipeline_filogenia.sh
+
+# === Rutas ===
+WORKDIR="$HOME/filogenia_curso/proyecto_hominidae"
+DATADIR="${WORKDIR}/data"
+RESULTSDIR="${WORKDIR}/results"
+
+# === Parámetros de cómputo ===
+THREADS=8
+BOOTSTRAP=1000
+MBAYES_NGEN=5000000
+MBAYES_SAMPLEFREQ=1000
+BEAST_NGEN=50000000
+BEAST_SAMPLEFREQ=5000
+
+# === Outgroup ===
+OUTGROUP="Tarsius_syrichta"
+
+# === Calibraciones (millones de años) ===
+HOMO_PAN_MEAN=6.5
+HOMO_PAN_SIGMA=0.5
+GORILLA_SPLIT_MEAN=9.0
+GORILLA_SPLIT_SIGMA=1.0
+PONGO_SPLIT_MEAN=17.0
+PONGO_SPLIT_SIGMA=1.0
+HYLOBATIDAE_SPLIT_MEAN=20.0
+HYLOBATIDAE_SPLIT_SIGMA=2.0
+
+# === Genes ===
+GENES="cytb coi 16s 18s rag1"
+
+# === iTOL (opcional) ===
+ITOL_PROJECT="curso_filogenia_hominidae"
+```
+
+## 18.4 Script maestro `pipeline_filogenia.sh`
+
+```bash
+#!/usr/bin/env bash
+# pipeline_filogenia.sh: pipeline integrador de filogenia molecular
+# Proyecto: Análisis filogenético completo de Hominidae
+# Integra: NCBI → alineamiento → modelos → ML + Bayes + BEAST2 → visualización
+set -euo pipefail
+IFS=$'\n\t'
+
+# === Cargar configuración ===
+CONFIG="${1:-config.conf}"
+if [ ! -f "$CONFIG" ]; then
+    echo "ERROR: archivo de configuración $CONFIG no encontrado"
+    echo "Uso: $0 <config.conf>"
+    exit 1
+fi
+# shellcheck disable=SC1090
+source "$CONFIG"
+
+# === Logging con timestamps ===
+LOGFILE="${WORKDIR}/pipeline_$(date +%Y%m%d_%H%M%S).log"
+mkdir -p "$WORKDIR"
+log() {
+    echo "[$(date '+Y-%m-%d %H:%M:%S')] $*" | tee -a "$LOGFILE"
+}
+
+# === Manejo de errores ===
+cleanup() {
+    EXIT_CODE=$?
+    if [ $EXIT_CODE -ne 0 ]; then
+        log "ERROR CRÍTICO: pipeline abortado con código $EXIT_CODE"
+        log "Revisa $LOGFILE para detalles."
+    else
+        log "Pipeline completado exitosamente."
+    fi
+    # Limpieza de archivos temporales
+    rm -f "${WORKDIR}"/tmp_* 2>/dev/null || true
+}
+trap cleanup EXIT
+
+# === Verificación de dependencias ===
+verify_dependencies() {
+    log "Verificando dependencias..."
+    local required=(efetch seqmagick mafft trimal iqtree2 mb beast treeannotator nw_rename ete3)
+    local missing=()
+    for cmd in "${required[@]}"; do
+        if ! command -v "$cmd" >/dev/null 2>&1; then
+            missing+=("$cmd")
+        fi
+    done
+    if [ ${#missing[@]} -gt 0 ]; then
+        log "DEPENDENCIAS FALTANTES: ${missing[*]}"
+        log "Instalar con: conda install -c bioconda ${missing[*]}"
+        exit 1
+    fi
+    log "Todas las dependencias OK."
+}
+
+# === Crear estructura de directorios ===
+setup_dirs() {
+    log "Creando estructura de directorios..."
+    mkdir -p "$DATADIR/raw" "$DATADIR/clean" "$DATADIR/aligned" "$DATADIR/trimmed"
+    mkdir -p "$RESULTSDIR/models" "$RESULTSDIR/ml" "$RESULTSDIR/bayes" "$RESULTSDIR/beast" "$RESULTSDIR/trees"
+}
+
+# === Pipeline pasos ===
+run_step() {
+    local step_num="$1"
+    local script="$2"
+    local description="$3"
+    log "=== Paso ${step_num}: ${description} ==="
+    local start=$(date +%s)
+    if ! bash "$script" "$CONFIG" 2>&1 | tee -a "$LOGFILE"; then
+        log "ERROR en paso $step_num"
+        exit 1
+    fi
+    local end=$(date +%s)
+    log "Paso $step_num completado en $((end - start)) segundos."
+}
+
+# === Pipeline principal ===
+main() {
+    log "===================="
+    log "PIPELINE FILOGENIA HOMINIDAE"
+    log "===================="
+    log "Workdir: $WORKDIR"
+    log "Threads: $THREADS"
+    log "Outgroup: $OUTGROUP"
+    log "Genes: $GENES"
+
+    verify_dependencies
+    setup_dirs
+
+    SCRIPTS_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+    run_step 1  "${SCRIPTS_DIR}/01_descargar.sh"           "Descarga de secuencias NCBI"
+    run_step 2  "${SCRIPTS_DIR}/02_limpiar.sh"             "Limpieza y renombrado"
+    run_step 3  "${SCRIPTS_DIR}/03_alinear.sh"             "Alineamiento por gen"
+    run_step 4  "${SCRIPTS_DIR}/04_modelos.sh"             "Selección de modelos"
+    run_step 5  "${SCRIPTS_DIR}/05_concatenar.sh"          "Concatenación y partición"
+    run_step 6  "${SCRIPTS_DIR}/06_ml.sh"                  "ML particionado (IQ-TREE)"
+    run_step 7  "${SCRIPTS_DIR}/07_bayes.sh"               "Bayesiano (MrBayes)"
+    run_step 8  "${SCRIPTS_DIR}/08_datacion.sh"            "Datación BEAST2"
+    run_step 9  "${SCRIPTS_DIR}/09_postprocesamiento.sh"   "Post-procesamiento y comparación"
+    run_step 10 "${SCRIPTS_DIR}/10_visualizar.sh"          "Visualización y reporte"
+
+    log "===================="
+    log "PIPELINE COMPLETADO"
+    log "===================="
+    log "Resultados en: $RESULTSDIR"
+    log "Log completo: $LOGFILE"
+    log "Árbol final: $RESULTSDIR/trees/hominidae_final.nwk"
+}
+
+main "$@"
+```
+
+## 18.5 Paso 1: Descarga de secuencias
+
+```bash
+#!/usr/bin/env bash
+# 01_descargar.sh: descarga secuencias desde NCBI
+set -euo pipefail
+source "$1"
+
+log() { echo "[$(date '+%H:%M:%S')] $*"; }
+
+log "Descargando secuencias de NCBI..."
+
+# Tabla de accessions por gen y especie
+declare -A ACCESSIONS=(
+    # Gen_NCBI_accession → nombre_especie
+    ["cytb_Homo_sapiens"]="NC_001807"
+    ["cytb_Pan_troglodytes"]="NC_001643"
+    ["cytb_Pan_paniscus"]="NC_001644"
+    ["cytb_Gorilla_gorilla"]="NC_001645"
+    ["cytb_Pongo_pygmaeus"]="NC_001646"
+    ["cytb_Hylobates_lar"]="NC_002082"
+    ["cytb_Macaca_mulatta"]="NC_002769"
+    # ... completar para todas las combinaciones
+)
+
+# Descargar genomas mitocondriales completos (cytb, coi, 16s incluidos)
+for key in "${!ACCESSIONS[@]}"; do
+    gene="${key%%_*}"
+    species="${key#*_}"
+    acc="${ACCESSIONS[$key]}"
+    outfile="${DATADIR}/raw/${species}_${gene}.gb"
+
+    if [ -f "$outfile" ]; then
+        log "SKIP: $outfile ya existe"
+        continue
+    fi
+
+    log "Descargando $species / $gene / $acc"
+    # Rate limiting: sleep 1s entre requests
+    sleep 1
+    efetch -db nucleotide -id "$acc" -format gene_bank > "$outfile" 2>/dev/null || {
+        log "WARN: no se pudo descargar $acc"
+        continue
+    }
+done
+
+# Para genes nucleares (RAG1, 18S): acceso desde NCBI Nucleotide
+# accession list por separado
+log "Descarga completada. Total: $(ls "$DATADIR"/raw/ | wc -l) archivos."
+```
+
+::: callout-warning
+**Rate limiting en NCBI**: si haces muchas requests sin `sleep`, NCBI puede bloquear tu IP. Reglas:
+1. **Máximo 3 requests por segundo** (sleep 0.34s).
+2. **Identificarse con email**: añade `-email tu@correo.com` si usas Biopython's Entrez.
+3. Para descargas masivas: usar **datasets** CLI de NCBI (más eficiente que efetch).
+:::
+
+## 18.6 Paso 2: Limpieza
+
+```bash
+#!/usr/bin/env bash
+# 02_limpiar.sh: limpieza de secuencias y renombrado
+set -euo pipefail
+source "$1"
+
+log() { echo "[$(date '+%H:%M:%S')] $*"; }
+
+log "Limpiando secuencias..."
+
+mkdir -p "$DATADIR/clean"
+
+# Convertir multi-línea a una línea por secuencia, renombrar IDs
+python3 <<EOF
+import os
+import glob
+from Bio import SeqIO
+
+raw_dir = "${DATADIR}/raw"
+clean_dir = "${DATADIR}/clean"
+
+for gb_file in glob.glob(os.path.join(raw_dir, "*.gb")):
+    # Extraer gene features (CDS, rRNA) del GenBank
+    base = os.path.basename(gb_file).replace('.gb', '')
+    for rec in SeqIO.parse(gb_file, "genbank"):
+        for feature in rec.features:
+            if feature.type in ("CDS", "rRNA", "tRNA"):
+                gene_name = feature.qualifiers.get('gene', ['unknown'])[0].lower()
+                if gene_name not in ["cytb", "coi", "co1", "16s", "18s", "rag1"]:
+                    continue
+                # Normalizar nombres de genes
+                if gene_name == "co1": gene_name = "coi"
+                gene_seq = feature.extract(rec.seq)
+                species = base.replace('_', ' ')
+                seq_id = base.replace(' ', '_') + '_' + gene_name
+                # Guardar como FASTA
+                out_file = os.path.join(clean_dir, f"{seq_id}.fasta")
+                with open(out_file, "w") as f:
+                    f.write(f">{seq_id}\n{str(gene_seq).upper()}\n")
+                print(f"  {seq_id}: {len(gene_seq)} bp")
+
+print("\nLimpieza completada.")
+EOF
+
+# Estadísticas
+log "Estadísticas post-limpieza:"
+echo "Total secuencias: $(find "$DATADIR"/clean -name '*.fasta' | wc -l)"
+echo "Por gene:"
+for gene in $GENES; do
+    n=$(find "$DATADIR"/clean -name "*_${gene}.fasta" | wc -l)
+    echo "  $gene: $n secuencias"
+done
+```
+
+## 18.7 Paso 3: Alineamiento
+
+```bash
+#!/usr/bin/env bash
+# 03_alinear.sh: alineamiento por gen
+set -euo pipefail
+source "$1"
+
+log() { echo "[$(date '+%H:%M:%S')] $*"; }
+
+mkdir -p "$DATADIR/aligned" "$DATADIR/trimmed"
+
+log "Alineando genes..."
+
+for gene in $GENES; do
+    log "=== Gene: $gene ==="
+
+    # Concatenar todas las secuencias del gen en un solo archivo
+    input_file="${DATADIR}/aligned/${gene}_raw.fasta"
+    cat "${DATADIR}/clean"/*_${gene}.fasta > "$input_file"
+
+    # Elegir algoritmo según tipo de gen
+    case $gene in
+        16s|18s)
+            # ARN estructural: MAFFT G-INS-i (alternativa a Infernal)
+            log "  Alineando $gene con MAFFT G-INS-i (ARN estructural)"
+            mafft --genafpair --maxiterate 1000 "$input_file" > "${DATADIR}/aligned/${gene}_aln.fasta" 2>/dev/null
+            ;;
+        rag1)
+            # Proteína: alinear proteína primero, retrotraducir
+            log "  Alineando $gene (proteína-first con pal2nal)"
+            # Transcribir a proteína
+            python3 -c "
+from Bio import SeqIO
+from Bio.Seq import Seq
+import sys
+for rec in SeqIO.parse('${input_file}', 'fasta'):
+    prot = rec.translate(cds=False, to_stop=True)
+    print(f'>{rec.id}')
+    print(str(prot.seq))
+" > "${DATADIR}/aligned/${gene}_prot.fasta"
+            # Alinear proteína con MUSCLE
+            muscle5 -super5 "${DATADIR}/aligned/${gene}_prot.fasta" -output "${DATADIR}/aligned/${gene}_prot_aln.fasta" 2>/dev/null
+            # Retrotraducir a codones con pal2nal
+            pal2nal.pl "${DATADIR}/aligned/${gene}_prot_aln.fasta" "$input_file" -output fasta -nomismatches > "${DATADIR}/aligned/${gene}_aln.fasta"
+            ;;
+        cytb|coi)
+            # ADN codificante: MAFFT auto
+            log "  Alineando $gene con MAFFT"
+            mafft --auto "$input_file" > "${DATADIR}/aligned/${gene}_aln.fasta" 2>/dev/null
+            ;;
+    esac
+
+    # Recortar con trimAl
+    log "  Recortando $gene con trimAl"
+    trimal -in "${DATADIR}/aligned/${gene}_aln.fasta" \
+           -out "${DATADIR}/trimmed/${gene}_trim.fasta" \
+           -automated1 2>/dev/null
+
+    # Estadísticas
+    n_seqs=$(grep -c '>' "${DATADIR}/trimmed/${gene}_trim.fasta")
+    length=$(seqmagick info "${DATADIR}/trimmed/${gene}_trim.fasta" | awk '/length/{print $3}' | head -1)
+    log "  $gene: ${n_seqs} secuencias, ${length} bp tras recorte"
+done
+
+log "Alineamiento completado."
+```
+
+## 18.8 Paso 4: Selección de modelos
+
+```bash
+#!/usr/bin/env bash
+# 04_modelos.sh: selección de modelos por gen
+set -euo pipefail
+source "$1"
+
+log() { echo "[$(date '+%H:%M:%S')] $*"; }
+
+mkdir -p "$RESULTSDIR/models"
+
+log "Seleccionando modelos óptimos por gen..."
+
+# Modelos permitidos según tipo de gen
+declare -A MSET=(
+    ["cytb"]="GTR,HKY,TIM,TVM"
+    ["coi"]="GTR,HKY,TIM,TVM"
+    ["16s"]="GTR,RNA16A,RNA16B,RNA16D"
+    ["18s"]="GTR,RNA16A,RNA16B,RNA16D"
+    ["rag1"]="GTR,HKY,TIM,TVM"
+)
+
+for gene in $GENES; do
+    log "=== ModelFinder para $gene ==="
+    iqtree2 -s "${DATADIR}/trimmed/${gene}_trim.fasta" \
+            -m MFP -mset "${MSET[$gene]}" \
+            -pre "${RESULTSDIR}/models/${gene}" \
+            -T "$THREADS" 2>&1 | grep -E "(Best-fit|LogL|AIC)" || true
+done
+
+# Resumen de modelos
+log "=== Resumen de modelos por gen ==="
+{
+    echo "Gene,BestModel,LogL,AIC"
+    for gene in $GENES; do
+        model=$(grep -m1 "Best-fit model" "${RESULTSDIR}/models/${gene}.iqtree" | awk -F: '{print $2}' | tr -d ' ')
+        logl=$(grep "Log-likelihood" "${RESULTSDIR}/models/${gene}.iqtree" | awk '{print $NF}')
+        aic=$(grep -m1 "AIC" "${RESULTSDIR}/models/${gene}.iqtree" | awk '{print $NF}')
+        echo "${gene},${model},${logl},${aic}"
+    done
+} | column -t -s,
+```
+
+Salida típica:
+
+```text
+=== Resumen de modelos por gen ===
+Gene  BestModel      LogL       AIC
+cytb  GTR+I+G4       -5234.18   10510.36
+coi   HKY+I+G4       -3012.45    6056.90
+16s   RNA16D+G4      -4892.11    9820.22
+18s   GTR+I+G4       -3102.87    6265.74
+rag1  GTR+G4         -8456.33   17000.66
+```
+
+## 18.9 Paso 5: Concatenación y partición
+
+```bash
+#!/usr/bin/env bash
+# 05_concatenar.sh: concatenar alineamientos y crear archivo de partición
+set -euo pipefail
+source "$1"
+
+log() { echo "[$(date '+%H:%M:%S')] $*"; }
+
+log "Concatenando genes en supermatriz..."
+
+# Usar AMAS para concatenar
+ALIGNMENTS=""
+for gene in $GENES; do
+    ALIGNMENTS+="${DATADIR}/trimmed/${gene}_trim.fasta "
+done
+
+AMAS.py concat -f fasta -d dna \
+    -i $ALIGNMENTS \
+    -o "${DATADIR}/concatenated.fasta" \
+    -p "${DATADIR}/partitions.txt"
+
+# Añadir modelos óptimos a las particiones (formato IQ-TREE)
+log "Añadiendo modelos óptimos a particiones..."
+{
+    while IFS='= ' read -r _ gene _ positions; do
+        gene_clean=$(echo "$gene" | tr -d ' ,')
+        positions_clean=$(echo "$positions" | tr -d ' \n')
+        model=$(grep -m1 "Best-fit model" "${RESULTSDIR}/models/${gene_clean}.iqtree" | awk -F: '{print $2}' | tr -d ' ')
+        echo "${model}, ${gene_clean} = ${positions_clean}"
+    done < <(cat "${DATADIR}/partitions.txt")
+} > "${DATADIR}/partitions_models.txt"
+
+# Estadísticas de la supermatriz
+python3 <<EOF
+from Bio import AlignIO
+from collections import Counter
+
+aln = AlignIO.read("${DATADIR}/concatenated.fasta", "fasta")
+n_taxa = len(aln)
+n_sites = aln.get_alignment_length()
+
+informative = 0
+for i in range(n_sites):
+    col = str(aln[:, i]).upper()
+    cnt = Counter(c for c in col if c not in '-?N')
+    if sum(1 for c, n in cnt.items() if n >= 2) >= 2:
+        informative += 1
+
+print(f"\n=== ESTADÍSTICAS SUPERMATRIZ ===")
+print(f"Taxones:              {n_taxa}")
+print(f"Sites totales:        {n_sites}")
+print(f"Sitios informativos:  {informative} ({informative/n_sites*100:.1f}%)")
+print(f"Particiones:          $(grep -c '=' ${DATADIR}/partitions.txt)")
+EOF
+
+log "Concatenación completada: ${DATADIR}/concatenated.fasta"
+log "Particiones: ${DATADIR}/partitions_models.txt"
+```
+
+## 18.10 Paso 6: ML con IQ-TREE
+
+```bash
+#!/usr/bin/env bash
+# 06_ml.sh: ML particionado con IQ-TREE
+set -euo pipefail
+source "$1"
+
+log() { echo "[$(date '+%H:%M:%S')] $*"; }
+
+mkdir -p "$RESULTSDIR/ml"
+
+log "Análisis ML particionado con IQ-TREE..."
+
+# Análisis edge-linked proportional (-spp) con modelos pre-asignados
+iqtree2 -s "${DATADIR}/concatenated.fasta" \
+        -spp "${DATADIR}/partitions_models.txt" \
+        -B "$BOOTSTRAP" -alrt 1000 \
+        -T "$THREADS" \
+        -pre "${RESULTSDIR}/ml/hominidae_ml" \
+        2>&1 | tee -a "${RESULTSDIR}/ml/ml.log"
+
+# Copiar árbol final
+cp "${RESULTSDIR}/ml/hominidae_ml.treefile" "${RESULTSDIR}/trees/hominidae_ml.nwk"
+
+log "ML completado. Árbol: ${RESULTSDIR}/trees/hominidae_ml.nwk"
+log "Modelo y estadísticas:"
+grep -E "Log-likelihood|AIC|CPU time" "${RESULTSDIR}/ml/hominidae_ml.iqtree" | head -5
+```
+
+## 18.11 Paso 7: Bayesiano con MrBayes
+
+```bash
+#!/usr/bin/env bash
+# 07_bayes.sh: análisis bayesiano con MrBayes
+set -euo pipefail
+source "$1"
+
+log() { echo "[$(date '+%H:%M:%S')] $*"; }
+
+mkdir -p "$RESULTSDIR/bayes"
+
+log "Preparando NEXUS para MrBayes..."
+
+# Convertir a NEXUS
+seqmagick convert --format nexus "${DATADIR}/concatenated.fasta" "${RESULTSDIR}/bayes/hominidae.nex"
+
+# Añadir bloque MrBayes con particiones
+cat >> "${RESULTSDIR}/bayes/hominidae.nex" <<'EOF'
+
+BEGIN MRBAYES;
+    charset cytb  = 1-1140;
+    charset coi   = 1141-1797;
+    charset 16s   = 1798-3247;
+    charset 18s   = 3248-5036;
+    charset rag1  = 5037-7940;
+    partition by_gene = 5: cytb, coi, 16s, 18s, rag1;
+    set partition = by_gene;
+    lset applyto=(all) nst=6 rates=invgamma;
+    unlink statefreq=(all) revmat=(all) shape=(all) pinvar=(all);
+    set autoclose=yes nowarn=yes;
+    mcmc ngen=5000000 samplefreq=1000 printfreq=1000 nchains=4 nruns=2 savebrlens=yes;
+    sumt burnin=1250;
+    sump burnin=1250;
+END;
+EOF
+
+# NOTA: las posiciones deben corresponder a partitions.txt generado en paso 5
+
+log "Ejecutando MrBayes..."
+cd "${RESULTSDIR}/bayes"
+mb -i hominidae.nex > mb.log 2>&1
+cd -
+
+# Verificar convergencia
+ASDSF=$(grep "Average standard deviation" "${RESULTSDIR}/bayes/mb.log" | tail -1 | awk '{print $NF}')
+log "ASDSF final: $ASDSF"
+
+# Verificar ESS con coda (R)
+Rscript -e '
+library(coda)
+post <- read.table("'"${RESULTSDIR}"'/bayes/hominidae.nex.p", header=TRUE, sep="\t", skip=1)
+ess <- effectiveSize(post)
+cat("ESS mínimo:", round(min(ess), 1), "\n")
+cat("Parámetros con ESS < 200:", sum(ess < 200), "\n")
+' 2>/dev/null || true
+
+# Convertir consenso a Newick
+python3 -c "
+from Bio import Phylo
+t = Phylo.read('${RESULTSDIR}/bayes/hominidae.nex.con.tre', 'nexus')
+Phylo.write(t, '${RESULTSDIR}/trees/hominidae_bayes.nwk', 'newick')
+print('Árbol consenso: ${RESULTSDIR}/trees/hominidae_bayes.nwk')
+"
+
+log "Bayesiano completado."
+```
+
+## 18.12 Paso 8: Datación con BEAST2
+
+```bash
+#!/usr/bin/env bash
+# 08_datacion.sh: datación molecular con BEAST2
+set -euo pipefail
+source "$1"
+
+log() { echo "[$(date '+%H:%M:%S')] $*"; }
+
+mkdir -p "$RESULTSDIR/beast"
+
+log "Generando XML de BEAST2..."
+
+# Plantilla XML con calibraciones (ver anexo B)
+TEMPLATE="${WORKDIR}/hominidae_beast_template.xml"
+
+# Sustituir placeholders en plantilla con valores de config.conf
+sed -e "s|@BEAST_NGEN@|${BEAST_NGEN}|g" \
+    -e "s|@BEAST_SAMPLEFREQ@|${BEAST_SAMPLEFREQ}|g" \
+    -e "s|@HOMO_PAN_MEAN@|${HOMO_PAN_MEAN}|g" \
+    -e "s|@HOMO_PAN_SIGMA@|${HOMO_PAN_SIGMA}|g" \
+    -e "s|@GORILLA_SPLIT_MEAN@|${GORILLA_SPLIT_MEAN}|g" \
+    -e "s|@GORILLA_SPLIT_SIGMA@|${GORILLA_SPLIT_SIGMA}|g" \
+    -e "s|@PONGO_SPLIT_MEAN@|${PONGO_SPLIT_MEAN}|g" \
+    -e "s|@PONGO_SPLIT_SIGMA@|${PONGO_SPLIT_SIGMA}|g" \
+    -e "s|@HYLOBATIDAE_SPLIT_MEAN@|${HYLOBATIDAE_SPLIT_MEAN}|g" \
+    -e "s|@HYLOBATIDAE_SPLIT_SIGMA@|${HYLOBATIDAE_SPLIT_SIGMA}|g" \
+    "$TEMPLATE" > "${RESULTSDIR}/beast/hominidae_beast.xml"
+
+# Insertar alineamiento en XML
+MATRIX=$(awk '/MATRIX/,/;/' "${DATADIR}/concatenated.nex")
+sed -i "s|<!--DATA_HERE-->|${MATRIX}|" "${RESULTSDIR}/beast/hominidae_beast.xml"
+
+log "Ejecutando BEAST2 (esto puede tardar varias horas)..."
+START=$(date +%s)
+beast -threads "$THREADS" -beagle_off -seed 42 \
+      "${RESULTSDIR}/beast/hominidae_beast.xml" \
+      > "${RESULTSDIR}/beast/beast.log" 2>&1
+END=$(date +%s)
+log "BEAST2 completado en $((END - START)) segundos."
+
+# TreeAnnotator
+log "Generando árbol consenso con TreeAnnotator..."
+BURNIN_PCT=$((BEAST_NGEN / BEAST_SAMPLEFREQ / 10))  # 10% burn-in
+treeannotator -burnin "$BURNIN_PCT" -heights mean \
+              "${RESULTSDIR}/beast/hominidae.trees" \
+              "${RESULTSDIR}/trees/hominidae_beast.tree"
+
+log "Datación completada. Cronograma: ${RESULTSDIR}/trees/hominidae_beast.tree"
+```
+
+::: callout-warning
+**BEAST2 con 50M generaciones**: este paso tarda típicamente **8-24 horas** en 4-8 cores. Para el curso, ejecutar con 5M generaciones para prueba rápida (1-2 h). Para análisis publicable, **50M generaciones** mínimo.
+:::
+
+## 18.13 Paso 9: Post-procesamiento
+
+```bash
+#!/usr/bin/env bash
+# 09_postprocesamiento.sh: verificación de convergencia y comparación
+set -euo pipefail
+source "$1"
+
+log() { echo "[$(date '+%H:%M:%S')] $*"; }
+
+log "Verificando convergencia de BEAST2..."
+Rscript -e '
+library(coda)
+post <- read.table("'"${RESULTSDIR}"'/beast/hominidae.log", header=TRUE, sep="\t")
+ess <- effectiveSize(post)
+cat("=== ESS por parámetro (top 5 más bajos) ===\n")
+print(round(sort(ess)[1:5], 1))
+cat("\nESS mínimo:", round(min(ess), 1), "\n")
+if (min(ess) < 200) {
+    cat("ADVERTENCIA: ESS bajo. Relanzar con más generaciones.\n")
+} else {
+    cat("OK: ESS >= 200 para todos los parámetros.\n")
+}
+'
+
+log "Comparando topologías (RF distances)..."
+cd "${RESULTSDIR}/trees"
+
+# Enraizar todos los árboles con outgroup
+for tree in hominidae_ml.nwk hominidae_bayes.nwk hominidae_beast.tree; do
+    nw_rename -r "$OUTGROUP" "$tree" > "rooted_${tree}"
+done
+
+# Comparar topologías
+echo "=== Distancias Robinson-Foulds ==="
+echo -n "ML vs Bayes: "; nw_distance -m rf rooted_hominidae_ml.nwk rooted_hominidae_bayes.nwk
+echo -n "ML vs BEAST: "; nw_distance -m rf rooted_hominidae_ml.nwk rooted_hominidae_beast.tree
+echo -n "Bayes vs BEAST: "; nw_distance -m rf rooted_hominidae_bayes.nwk rooted_hominidae_beast.tree
+
+# Extraer fechas estimadas de BEAST2
+python3 <<EOF
+from ete3 import Tree
+t = Tree("rooted_hominidae_beast.tree", format=1)
+# Encontrar nodo Homo-Pan y mostrar edad
+for node in t.traverse():
+    if not node.is_leaf():
+        leaves = [l.name for l in node.get_leaves()]
+        if "Homo_sapiens" in leaves and "Pan_troglodytes" in leaves and len(leaves) <= 3:
+            print(f"Homo-Pan age: {node.dist:.2f} Myr (height)")
+            break
+EOF
+
+log "Post-procesamiento completado."
+```
+
+## 18.14 Paso 10: Visualización y reporte
+
+```bash
+#!/usr/bin/env bash
+# 10_visualizar.sh: visualización final y reporte
+set -euo pipefail
+source "$1"
+
+log() { echo "[$(date '+%H:%M:%S')] $*"; }
+
+mkdir -p "${RESULTSDIR}/figures"
+
+log "Preparando visualización final..."
+
+# Renombrar etiquetas (accession → nombre científico)
+cat > "${RESULTSDIR}/trees/names.tsv" <<'EOF'
+Tarsius_syrichta	Tarsius syrichta
+Macaca_mulatta	Macaca mulatta
+Papio_anubis	Papio anubis
+Hylobates_lar	Hylobates lar
+Symphalangus_syndactylus	Symphalangus syndactylus
+Pongo_pygmaeus	Pongo pygmaeus
+Pongo_abelii	Pongo abelii
+Gorilla_gorilla	Gorilla gorilla
+Gorilla_beringei	Gorilla beringei
+Homo_sapiens	Homo sapiens
+Pan_troglodytes	Pan troglodytes
+Pan_paniscus	Pan paniscus
+EOF
+
+# Renombrar árbol final (BEAST2 cronograma)
+nw_rename -i "${RESULTSDIR}/trees/names.tsv" \
+          "${RESULTSDIR}/trees/rooted_hominidae_beast.tree" \
+          > "${RESULTSDIR}/trees/hominidae_final.nwk"
+
+# Renderizar cronograma con ETE3
+python3 <<EOF
+from ete3 import Tree, TreeStyle, NodeStyle, faces, AttrFace
+
+t = Tree("${RESULTSDIR}/trees/hominidae_final.nwk", format=1)
+ts = TreeStyle()
+ts.show_leaf_name = True
+ts.mode = "r"
+ts.scale = 50
+ts.show_scale = True
+ts.title.add_face(AttrFace("name", text="Hominidae Phylogeny (BEAST2)"), column=0)
+
+# Estilo: colores por familia
+colors = {
+    "Homo": "#d62728", "Pan": "#d62728", "Gorilla": "#d62728", "Pongo": "#d62728",
+    "Hylobates": "#ff7f0e", "Symphalangus": "#ff7f0e",
+    "Macaca": "#1f77b4", "Papio": "#1f77b4",
+    "Tarsius": "#2ca02c"
+}
+
+for leaf in t.iter_leaves():
+    nstyle = NodeStyle()
+    nstyle["size"] = 8
+    for genus, color in colors.items():
+        if genus in leaf.name:
+            nstyle["fgcolor"] = color
+            break
+    leaf.set_style(nstyle)
+
+for node in t.traverse():
+    if not node.is_leaf():
+        nstyle = NodeStyle()
+        nstyle["size"] = 4
+        nstyle["fgcolor"] = "black"
+        node.set_style(nstyle)
+
+t.render("${RESULTSDIR}/figures/hominidae_cronograma.png", tree_style=ts, w=1400, units="px", dpi=300)
+t.render("${RESULTSDIR}/figures/hominidae_cronograma.pdf", tree_style=ts, w=10, units="in")
+print("Cronograma renderizado.")
+EOF
+
+# Subir a iTOL
+log "Subiendo a iTOL..."
+RESPONSE=$(curl -s -F "treeFile=@${RESULTSDIR}/trees/hominidae_final.nwk" \
+    -F "projectName=${ITOL_PROJECT}" \
+    -F "treeName=hominidae_final" \
+    https://itol.embl.de/batch_uploader.cgi)
+URL=$(echo "$RESPONSE" | grep -oP '(?<=<url>)[^<]+')
+log "URL pública iTOL: $URL"
+
+# Generar reporte HTML
+log "Generando reporte HTML..."
+cat > "${RESULTSDIR}/reporte.html" <<HTMLEOF
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reporte Filogenia Hominidae</title>
+</head>
+<body>
+    <h1>Reporte Filogenia Hominidae</h1>
+    <h2>1. Datos</h2>
+    <p>12 especies, 5 genes (Cytb, COI, 16S, 18S, RAG1).</p>
+
+    <h2>2. Análisis</h2>
+    <ul>
+        <li><strong>ML (IQ-TREE)</strong>: particionado con -spp, ultrafast bootstrap 1000 + SH-aLRT 1000</li>
+        <li><strong>Bayes (MrBayes)</strong>: 5M generaciones, 4 cadenas, 2 runs, burn-in 25%</li>
+        <li><strong>Datación (BEAST2)</strong>: 50M generaciones, reloj lognormal relajado, Yule, 4 calibraciones fósiles</li>
+    </ul>
+
+    <h2>3. Cronograma final</h2>
+    <img src="figures/hominidae_cronograma.png" width="800">
+
+    <h2>4. URL pública</h2>
+    <p><a href="${URL}">${URL}</a></p>
+
+    <h2>5. Calibraciones</h2>
+    <ul>
+        <li>Homo-Pan: ${HOMO_PAN_MEAN} ± ${HOMO_PAN_SIGMA} Myr</li>
+        <li>Gorilla split: ${GORILLA_SPLIT_MEAN} ± ${GORILLA_SPLIT_SIGMA} Myr</li>
+        <li>Pongo split: ${PONGO_SPLIT_MEAN} ± ${PONGO_SPLIT_SIGMA} Myr</li>
+        <li>Hylobatidae split: ${HYLOBATIDAE_SPLIT_MEAN} ± ${HYLOBATIDAE_SPLIT_SIGMA} Myr</li>
+    </ul>
+</body>
+</html>
+HTMLEOF
+
+log "Reporte HTML: ${RESULTSDIR}/reporte.html"
+log "Visualización completada."
+```
+
+## 18.15 Análisis de resultados
+
+Tras ejecutar el pipeline completo, analizar:
+
+```text
+1. CONGRUENCIA TOPOLOGICA:
+   - ML, Bayes y BEAST2 ¿coinciden en clados principales?
+   - RF distance entre topologías (idealmente < 10)
+
+2. SOPORTE:
+   - Bootstrap ML ≥ 95 para clados principales
+   - Posterior prob Bayes ≥ 0.95
+   - Nodos problemáticos (soporte bajo) → identificar y discutir
+
+3. DATACIÓN:
+   - Edades estimadas vs calibraciones (¿coinciden?)
+   - HPD 95% estrechos para nodos bien soportados
+   - Comparar con literatura (Steiper & Young 2009)
+
+4. ESS y CONVERGENCIA:
+   - ESS ≥ 200 en todos los parámetros BEAST2
+   - ASDSF < 0.01 en MrBayes
+   - Si no se cumple, relanzar con más generaciones
+```
+
+Ejemplo de resultados esperados:
+
+```text
+=== Distancias RF ===
+ML vs Bayes:    0 (topologías idénticas)
+ML vs BEAST:    0 (topologías idénticas)
+Bayes vs BEAST: 0
+
+=== Edades estimadas ===
+Homo-Pan:        6.45 Myr (95% HPD: 5.85-7.10)
+Gorilla split:   9.12 Myr (95% HPD: 8.30-10.05)
+Pongo split:    17.84 Myr (95% HPD: 16.20-19.50)
+Hylobatidae:    20.32 Myr (95% HPD: 18.50-22.10)
+
+=== ESS BEAST2 ===
+ESS mínimo: 245.3 (posterior)
+OK: ESS ≥ 200 para todos los parámetros.
+
+=== ASDSF MrBayes ===
+Average standard deviation: 0.004812
+```
+
+::: callout-tip
+**Interpretación biológica**:
+- Topologías congruentes → la filogenia es robusta a método de inferencia.
+- Edades dentro de rangos fósiles → las calibraciones son coherentes.
+- *Homo*–*Pan* ~6.4 Myr consistente con fósiles como *Sahelanthropus* (7 Myr) y *Orrorin* (6 Myr).
+- *Pongo* split ~18 Myr coincide con *Sivapithecus* (12.5 Myr, mínimo).
+:::
+
+## 18.16 Mejoras y extensiones
+
+### 18.16.1 Añadir más especies o genes
+
+```bash
+# Añadir genoma mitocondrial completo (13 genes + 2 rRNA)
+# Modificar config.conf:
+GENES="cytb coi co2 co3 atp6 atp8 nd1 nd2 nd3 nd4 nd4l nd5 nd6 16s 12s"
+# Esto produce matriz ~15k bp con 15 particiones
+
+# Añadir más especies: edit accessions en 01_descargar.sh
+```
+
+### 18.16.2 Filogenómica con ASTRAL
+
+```bash
+# Para cada gen individual, construir gene tree
+for gene in $GENES; do
+    fasttree -nt -gtr "${DATADIR}/trimmed/${gene}_trim.fasta" > "${RESULTSDIR}/trees/${gene}.nwk"
+done
+
+# Combinar
+cat "${RESULTSDIR}/trees"/*.nwk > "${RESULTSDIR}/trees/genetrees.nwk"
+
+# ASTRAL
+astral -i "${RESULTSDIR}/trees/genetrees.nwk" -o "${RESULTSDIR}/trees/species_tree.nwk"
+```
+
+### 18.16.3 Análisis de selección con PAML
+
+```bash
+# Calcular dN/dS para detectar selección positiva en RAG1
+# Usar codeml con modelo M7 vs M8
+conda install -c bioconda paml -y
+
+cat > codeml.ctl <<'EOF'
+seqfile = rag1_codon.aln
+treefile = hominidae.nwk
+outfile = codeml_out.txt
+noisy = 9
+verbose = 1
+runmode = 0
+seqtype = 1
+CodonFreq = 2
+model = 0
+NSsites = 7 8
+EOF
+
+codeml codeml.ctl
+```
+
+### 18.16.4 Reconstrucción de caracteres ancestrales
+
+```r
+# En R con ape/phytools
+library(phytools)
+tree <- read.tree("hominidae_final.nwk")
+character <- setNames(c(2,1,1,2,2,1,1,1,1,0,0,0), tree$tip.label)
+# 0 = pequeño, 1 = mediano, 2 = grande (tamaño corporal)
+er <- ace(character, tree, type="discrete", method="ML")
+plot(tree, type="phylogram")
+plot(tree, type="fan", show.tip.label=FALSE)
+nodelabels(pie=er$lik.anc, piecol=c("blue","orange","red"))
+```
+
+## 18.17 Anexos
+
+### Anexo A: Script de instalación
+
+```bash
+#!/usr/bin/env bash
+# setup_pipeline.sh: instalar todas las dependencias
+set -euo pipefail
+
+echo "Instalando dependencias del pipeline filogenia..."
+
+# Crear entorno conda
+conda create -n filogenia -c bioconda -y \
+    python=3.10 \
+    biopython \
+    mafft \
+    muscle5 \
+    trimal \
+    seqmagick \
+    iqtree2 \
+    raxml-ng \
+    mrbayes \
+    beast2 \
+    fasttree \
+    infernal \
+    amas \
+    orthofinder \
+    astral \
+    newick_utils \
+    ete3 \
+    figtree \
+    t-coffee \
+    paml
+
+conda activate filogenia
+
+# Paquetes R
+Rscript -e '
+install.packages("BiocManager", repos="https://cloud.r-project.org")
+BiocManager::install(c("ape", "ggtree", "treeio", "coda"), ask=FALSE)
+'
+
+echo "Instalación completada. Activar con: conda activate filogenia"
+```
+
+### Anexo B: Plantilla XML de BEAST2
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Plantilla BEAST2 para Hominidae con 4 calibraciones fósiles -->
+<beast version="2.6">
+    <data id="alignment" dataType="nucleotide">
+        <!--DATA_HERE-->
+    </data>
+
+    <run id="mcmc" chainLength="@BEAST_NGEN@" spec="MCMC">
+        <state id="state">
+            <tree id="Tree.t:alignment" name="stateNode">
+                <taxonset id="TaxonSet.all">
+                    <taxon id="Homo_sapiens"/>
+                    <taxon id="Pan_troglodytes"/>
+                    <taxon id="Pan_paniscus"/>
+                    <taxon id="Gorilla_gorilla"/>
+                    <taxon id="Pongo_pygmaeus"/>
+                    <taxon id="Hylobates_lar"/>
+                </taxonset>
+            </tree>
+            <parameter id="birthRate" name="stateNode" value="1.0"/>
+        </state>
+
+        <distribution id="posterior" spec="util.CompoundDistribution">
+            <distribution id="likelihood" spec="util.CompoundDistribution">
+                <distribution id="treeLikelihood.alignment"
+                              spec="ThreadedTreeLikelihood"
+                              data="@alignment"
+                              tree="@Tree.t:alignment">
+                    <siteModel id="siteModel.alignment" spec="SiteModel">
+                        <parameter id="mutationRate" name="mutationRate" value="1.0"/>
+                        <substModel id="gtr" spec="GTR">
+                            <parameter name="rates" dimension="6" value="1.0 1.0 1.0 1.0 1.0 1.0"/>
+                            <parameter name="frequencies" dimension="4" value="0.25"/>
+                        </substModel>
+                    </siteModel>
+                    <branchRateModel id="StrictClock"
+                                     spec="beast.base.evolution.branchratemodel.StrictClockModel">
+                        <parameter name="clock.rate" value="0.001"/>
+                    </branchRateModel>
+                </distribution>
+            </distribution>
+
+            <distribution id="prior" spec="util.CompoundDistribution">
+                <!-- Yule model -->
+                <distribution id="YuleModel.t:alignment"
+                              spec="beast.base.evolution.speciation.YuleModel"
+                              tree="@Tree.t:alignment"
+                              birthRateInterval="@birthRate"/>
+
+                <!-- Calibración 1: Homo-Pan -->
+                <distribution id="HomoPanCalibration"
+                              spec="beast.base.evolution.tree.distributions.LogNormal">
+                    <parameter name="M" value="1.87"/>
+                    <parameter name="S" value="0.5"/>
+                    <parameter name="offset" value="6.0"/>
+                    <x id="HomoPanHeight"
+                       spec="beast.base.evolution.tree.TreeHeight"
+                       tree="@Tree.t:alignment"
+                       taxonset="@HomoPan"/>
+                    <taxonset id="HomoPan">
+                        <taxon idref="Homo_sapiens"/>
+                        <taxon idref="Pan_troglodytes"/>
+                    </taxonset>
+                </distribution>
+
+                <!-- Calibración 2: Gorilla split -->
+                <distribution id="GorillaCalibration"
+                              spec="beast.base.evolution.tree.distributions.Normal">
+                    <parameter name="mean" value="9.0"/>
+                    <parameter name="sigma" value="1.0"/>
+                </distribution>
+
+                <!-- Calibración 3: Pongo split -->
+                <distribution id="PongoCalibration"
+                              spec="beast.base.evolution.tree.distributions.LogNormal">
+                    <parameter name="M" value="2.83"/>
+                    <parameter name="S" value="1.0"/>
+                    <parameter name="offset" value="16.0"/>
+                </distribution>
+
+                <!-- Calibración 4: Hylobatidae-Hominidae -->
+                <distribution id="HylobatidaeCalibration"
+                              spec="beast.base.evolution.tree.distributions.Normal">
+                    <parameter name="mean" value="20.0"/>
+                    <parameter name="sigma" value="2.0"/>
+                </distribution>
+            </distribution>
+        </distribution>
+
+        <logger id="screenlog" logEvery="10000">
+            <log idref="posterior"/>
+            <log idref="likelihood"/>
+        </logger>
+
+        <logger id="filelog"
+                fileName="hominidae.log"
+                logEvery="@BEAST_SAMPLEFREQ@">
+            <log idref="posterior"/>
+            <log idref="likelihood"/>
+            <log idref="birthRate"/>
+        </logger>
+
+        <logger id="treelog"
+                fileName="hominidae.trees"
+                logEvery="@BEAST_SAMPLEFREQ@"
+                mode="tree">
+            <log idref="Tree.t:alignment"/>
+        </logger>
+    </run>
+</beast>
+```
+
+## 18.18 Ejercicios
+
+### Ejercicio 1: Modificar el pipeline para otro grupo
+
+Modificar el pipeline para usar otro conjunto de especies (Carnivora, Bovidae, o tu grupo de interés). Re-definir calibraciones fósiles apropiadas. Ejecutar pipeline completo.
+
+### Ejercicio 2: Añadir ASTRAL
+
+Añadir al pipeline un paso 6b: análisis separado por gen con IQ-TREE, y un paso 6c: ASTRAL para species tree. Comparar topología concatenada vs ASTRAL.
+
+### Ejercicio 3: Paralelización
+
+Pipeline paralelo: ejecutar pasos independientes en paralelo con `&` y `wait` (descarga, alineamiento por gen, modelos por gen). Medir tiempo de ejecución secuencial vs paralelo.
+
+## 18.19 Soluciones
+
+### Solución ejercicio 1
+
+```bash
+#!/usr/bin/env bash
+# Adaptación del pipeline a Carnivora (familia Felidae)
+# 1. Crear nuevo config.conf
+cat > config_felidae.conf <<'EOF'
+WORKDIR="$HOME/filogenia_curso/proyecto_felidae"
+DATADIR="${WORKDIR}/data"
+RESULTSDIR="${WORKDIR}/results"
+THREADS=8
+BOOTSTRAP=1000
+MBAYES_NGEN=5000000
+BEAST_NGEN=50000000
+BEAST_SAMPLEFREQ=5000
+OUTGROUP="Canis_lupus"
+# Calibraciones para Felidae (Johnson et al. 2006):
+HOMO_PAN_MEAN=10.8        # Panthera-Felis split
+HOMO_PAN_SIGMA=1.0
+GORILLA_SPLIT_MEAN=11.5   # Pantherinae-Felinae split
+GORILLA_SPLIT_SIGMA=1.0
+PONGO_SPLIT_MEAN=14.0     # Panthera split
+PONGO_SPLIT_SIGMA=1.5
+HYLOBATIDAE_SPLIT_MEAN=20.0  # Felidae-Herpestidae split
+HYLOBATIDAE_SPLIT_SIGMA=2.0
+GENES="cytb coi 12s 16s rag1"
+ITOL_PROJECT="curso_filogenia_felidae"
+EOF
+
+# 2. Modificar 01_descargar.sh con accessions de Felidae:
+# - Panthera leo (NC_006829)
+# - Panthera tigris (NC_010634)
+# - Panthera pardus (NC_011026)
+# - Panthera onca (NC_011027)
+# - Felis catus (NC_001700)
+# - Acinonyx jubatus (NC_005212)
+# - Canis lupus (outgroup)
+
+# 3. Ejecutar
+./pipeline_filogenia.sh config_felidae.conf
+```
+
+### Solución ejercicio 2
+
+```bash
+#!/usr/bin/env bash
+# 06b_genetrees.sh y 06c_astral.sh
+set -euo pipefail
+source "$1"
+
+log() { echo "[$(date '+%H:%M:%S')] $*"; }
+
+# === 6b: Gene trees con IQ-TREE ===
+mkdir -p "${RESULTSDIR}/genetrees"
+
+for gene in $GENES; do
+    log "Gene tree para $gene..."
+    iqtree2 -s "${DATADIR}/trimmed/${gene}_trim.fasta" \
+            -m MFP -B 1000 -T "$THREADS" \
+            -pre "${RESULTSDIR}/genetrees/${gene}" \
+            2>/dev/null
+done
+
+# === 6c: ASTRAL ===
+log "Combinando gene trees y ejecutando ASTRAL..."
+cat "${RESULTSDIR}/genetrees"/*.treefile > "${RESULTSDIR}/trees/genetrees.nwk"
+
+astral -i "${RESULTSDIR}/trees/genetrees.nwk" \
+       -o "${RESULTSDIR}/trees/hominidae_astral.nwk" \
+       2>&1 | tee "${RESULTSDIR}/trees/astral.log"
+
+# === Comparar con concatenado ===
+log "Comparando topologías..."
+nw_rename -r "$OUTGROUP" "${RESULTSDIR}/trees/hominidae_astral.nwk" > "${RESULTSDIR}/trees/rooted_astral.nwk"
+nw_rename -r "$OUTGROUP" "${RESULTSDIR}/trees/hominidae_ml.nwk" > "${RESULTSDIR}/trees/rooted_ml.nwk"
+
+echo "Distancia RF (concat vs ASTRAL):"
+nw_distance -m rf "${RESULTSDIR}/trees/rooted_ml.nwk" "${RESULTSDIR}/trees/rooted_astral.nwk"
+
+# Quartet score ASTRAL
+grep "Quartet score" "${RESULTSDIR}/trees/astral.log"
+```
+
+### Solución ejercicio 3
+
+```bash
+#!/usr/bin/env bash
+# pipeline_paralelo.sh: versión paralela del pipeline
+set -euo pipefail
+source "$1"
+
+log() { echo "[$(date '+%H:%M:%S')] $*"; }
+
+# === Medir tiempo secuencial ===
+log "=== Versión SECUENCIAL ==="
+START_SEQ=$(date +%s)
+
+for gene in $GENES; do
+    log "Procesando $gene (secuencial)..."
+    mafft --auto "${DATADIR}/clean/${gene}.fasta" > "${DATADIR}/aligned/${gene}_aln.fasta" 2>/dev/null
+    trimal -in "${DATADIR}/aligned/${gene}_aln.fasta" -out "${DATADIR}/trimmed/${gene}_trim.fasta" -automated1
+    iqtree2 -s "${DATADIR}/trimmed/${gene}_trim.fasta" -m MFP -T 1 -pre "${RESULTSDIR}/models/${gene}" 2>/dev/null
+done
+
+END_SEQ=$(date +%s)
+TIME_SEQ=$((END_SEQ - START_SEQ))
+log "Tiempo secuencial: ${TIME_SEQ}s"
+
+# === Versión paralela ===
+log "=== Versión PARALELA ==="
+START_PAR=$(date +%s)
+
+PIDS=()
+for gene in $GENES; do
+    (
+        log "Procesando $gene (paralelo)..."
+        mafft --auto "${DATADIR}/clean/${gene}.fasta" > "${DATADIR}/aligned/${gene}_aln.fasta" 2>/dev/null
+        trimal -in "${DATADIR}/aligned/${gene}_aln.fasta" -out "${DATADIR}/trimmed/${gene}_trim.fasta" -automated1
+        iqtree2 -s "${DATADIR}/trimmed/${gene}_trim.fasta" -m MFP -T 1 -pre "${RESULTSDIR}/models/${gene}" 2>/dev/null
+    ) &
+    PIDS+=($!)
+done
+
+# Esperar a que todos terminen
+for pid in "${PIDS[@]}"; do
+    wait "$pid" || {
+        log "ERROR: proceso $pid falló"
+        exit 1
+    }
+done
+
+END_PAR=$(date +%s)
+TIME_PAR=$((END_PAR - START_PAR))
+log "Tiempo paralelo: ${TIME_PAR}s"
+
+# === Reporte ===
+log "=== COMPARACIÓN DE TIEMPOS ==="
+echo "Secuencial: ${TIME_SEQ}s"
+echo "Paralelo:   ${TIME_PAR}s"
+echo "Speedup:    $(echo "scale=2; ${TIME_SEQ}/${TIME_PAR}" | bc)x"
+```
+
+Resultado típico para 5 genes con THREADS=8:
+
+```text
+=== COMPARACIÓN DE TIEMPOS ===
+Secuencial: 345s
+Paralelo:   82s
+Speedup:    4.21x
+```
+
+::: callout-important
+**Buenas prácticas aplicadas en el pipeline** (todas las aprendidas en el curso):
+- `set -euo pipefail`: aborta ante errores.
+- Shebang `#!/usr/bin/env bash`: portable.
+- Logging con timestamps en cada paso.
+- Validación de argumentos y dependencias.
+- Funciones modulares con `local`.
+- Exit codes significativos.
+- `trap` para limpieza en salida/error.
+- Configuración externa (`config.conf`) para reproducibilidad.
+- Verificación de ESS/ASDSF antes de aceptar resultados.
+- Comparación cruzada de métodos (ML/Bayes/BEAST2).
+:::
+
+::: callout-tip
+**Cierre del curso**:
+Este pipeline es la **integración de 17 capítulos** de aprendizaje. Cada paso (descarga, alineamiento, modelos, ML, bayes, datación, visualización) merecería su propio curso, pero juntos forman un **proceso profesional** que puedes usar en investigación real. Las próximas ampliaciones serían:
+- **Filogenómica con genoma completo** (1000+ genes).
+- **Análisis de selección** (PAML, dN/dS).
+- **Filogeografía** (estructuración poblacional, BEAST2 con tips datados).
+- **Redes filogenéticas** (PhyloNetworks para hibridación).
+- **Análisis de biogeografía** (BioGeoBEARS).
+:::
+
+::: callout-note
+**Felicidades por completar el curso "Filogenia Molecular: de secuencias a árboles evolutivos"**. Tienes ahora un stack completo de herramientas bioinformáticas para inferir filogenias con datos moleculares de ADN, ARN y proteínas. El siguiente paso es **aplicarlo a tus propios datos** y mantener una actitud crítica: cada decisión (modelo, método, calibración) debe justificarse y verificarse. La filogenia es una ciencia empírica: el árbol es una hipótesis, y la hipótesis se somete a prueba con más datos, más métodos y más escrutinio.
+:::

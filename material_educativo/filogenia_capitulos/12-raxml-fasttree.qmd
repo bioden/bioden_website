@@ -1,0 +1,504 @@
+---
+title: "Capítulo 12: RAxML-NG y FastTree"
+---
+
+## 12.1 Dos herramientas para ML a gran escala
+
+En el capítulo anterior presentamos **IQ-TREE** como la herramienta ML de referencia para análisis general. Sin embargo, hay dos escenarios en los que conviene recurrir a otras herramientas:
+
+1. **Datasets grandes (1000-10000 taxones)**: IQ-TREE puede tardar horas o días. **RAxML-NG** está optimizado para este rango.
+2. **Datasets masivos (>10000 taxones)**: ningún ML clásico escala. **FastTree** usa heurísticas agresivas para construir árboles en minutos.
+
+Estas herramientas son complementarias, no excluyentes. Un pipeline típico en filogenómica a gran escala es: FastTree → starting tree para IQ-TREE o RAxML-NG.
+
+## 12.2 RAxML-NG
+
+**RAxML-NG** (Kozlov et al. 2019) es la reescritura moderna de RAxML (Stamatakis 2014). Mejoras respecto a RAxML clásico:
+
+- Reescrito en C++ modular (más mantenible y testeable).
+- **Particiones gap-aware**: maneja correctamente columnas con gaps.
+- **Bootstopping** automático (criterio MRE).
+- Soporte parsimonia + ML unificado.
+- Soporte MPI + OpenMP híbrido para clusters.
+
+### 12.2.1 Instalación
+
+```bash
+conda install -c bioconda raxml-ng -y
+```
+
+::: callout-note
+En bioconda el binario es `raxml-ng` (no `raxmlHPC`). RAxML clásico se instala por separado (`conda install -c bioconda raxml -y`), pero ya **no se recomienda** para nuevos análisis. RAxML-NG es el sucesor oficial.
+:::
+
+### 12.2.2 Sintaxis básica
+
+```bash
+# Análisis básico: 10 árboles parsimonia + 10 aleatorios como starting trees
+raxml-ng --msa aln.fasta --model GTR+I+G \
+         --tree pars{10},rand{10} --threads 4 --prefix result
+
+# Análisis all-in-one: ML + bootstrap
+raxml-ng --all --msa aln.fasta --model GTR+I+G \
+         --bs-trees 1000 --threads 4 --prefix result
+
+# Solo bootstrap (para análisis detallado posterior)
+raxml-ng --bootstrap --msa aln.fasta --model GTR+I+G \
+         --bs-trees 1000 --prefix bs_only
+
+# Calcular árbol consenso desde bootstraps
+raxml-ng --consensus --bs-trees bs_trees.nwk --prefix consensus
+```
+
+Flags principales:
+
+- `--msa`: alineamiento (FASTA o PHYLIP).
+- `--model`: modelo de sustitución. **Manual**: RAxML-NG no selecciona.
+- `--tree`: starting trees. `pars{N}` = N árboles parsimonia; `rand{N}` = N aleatorios.
+- `--threads`: número de cores.
+- `--prefix`: prefijo de archivos de salida.
+- `--all`: análisis completo (ML + bootstrap + consenso).
+- `--bs-trees N`: número de replicados bootstrap.
+
+::: callout-important
+RAxML-NG **no selecciona modelo automáticamente**: hay que pasarle un modelo explícito (`--model GTR+I+G` etc.). Si no estás seguro del modelo, ejecuta antes IQ-TREE con `-m MFP -m TESTONLY` y usa el modelo seleccionado. La sintaxis de RAxML-NG acepta `GTR{1/2/3/4/5/6}/+I/+G4`, donde los números indican tasas libres.
+:::
+
+## 12.3 Análisis particionado en RAxML-NG
+
+```text
+# partition.txt
+DNA, gene1 = 1-100
+DNA, gene1_pos1 = 1-100\3
+DNA, gene1_pos2 = 2-100\3
+DNA, gene1_pos3 = 3-100\3
+DNA, gene2 = 101-300
+```
+
+Sintaxis `inicio-fin\paso`: seleccione cada `paso`-ésima columna desde `inicio`. Permite partición por codón (1ª, 2ª, 3ª posición) fácilmente.
+
+```bash
+raxml-ng --all --msa concatenated.fasta --model partition.txt \
+         --bs-trees 1000 --threads 8 --prefix partitioned
+```
+
+::: callout-tip
+Para partición por codón, las 3 particiones (pos1, pos2, pos3) suelen requerir modelos distintos. Si se deja solo un modelo `GTR+I+G` por gen, se **subestima** la heterogeneidad entre posiciones (la 3ª posición es muy variable; la 2ª es muy conservada). Las topologías son a menudo parecidas, pero los soportes pueden variar.
+:::
+
+## 12.4 Output de RAxML-NG
+
+| Archivo | Contenido |
+|---------|-----------|
+| `.raxml.bestTree` | Mejor árbol ML (sin soportes) |
+| `.raxml.support` | Mejor árbol con soportes bootstrap en etiquetas internas |
+| `.raxml.log` | Log completo |
+| `.raxml.startTree` | Árbol(s) de partida |
+| `.raxml.bsTrees` | Todos los árboles de bootstrap (Newick) |
+| `.raxml.bestModel` | Modelo(s) final(es) con parámetros optimizados |
+| `.raxml.rba` | Binary alignment (para reanálisis rápido) |
+
+## 12.5 Bootstopping: parar bootstrap automáticamente
+
+El bootstrap clásico es caro. El criterio **MRE (Majority Rule Extended)** auto-detecta cuando los soportes convergen y para antes de llegar al número máximo.
+
+```bash
+raxml-ng --all --msa aln.fasta --model GTR+I+G \
+         --bs-trees autoMRE{1000} --threads 4 --prefix auto
+```
+
+`autoMRE{1000}`: para cuando el consenso MRE es estable o cuando alcanza 1000 réplicas. Típicamente converge en 200-400 réplicas.
+
+## 12.6 Modo `--parse`: verificar MSA
+
+Antes de ejecutar un análisis largo, conviene verificar que el alineamiento está bien:
+
+```bash
+raxml-ng --msa aln.fasta --model GTR+I+G --parse
+```
+
+Output:
+
+```text
+Alignment type: DNA
+Alignment size: 1000 sites, 30 taxa
+Fraction of gaps: 12.4%
+Invariant sites: 45.6%
+```
+
+Si hay errores (caracteres inválidos, taxones con longitudes distintas), el `--parse` los reporta antes de empezar el análisis.
+
+## 12.7 IQ-TREE vs RAxML-NG
+
+| Característica | IQ-TREE | RAxML-NG |
+|----------------|---------|----------|
+| Selección automática de modelo | Sí (ModelFinder) | No |
+| Ultrafast bootstrap | Sí (-B) | No (clásico) |
+| Bootstrap adaptativo (bootstopping) | No (UFBoot ya es adaptativo) | Sí (autoMRE) |
+| Análisis particionado edge-linked | Sí (-spp) | Sí (--model con archivo) |
+| Mezclas +C10/+C20/+C60 | Sí | Limitado |
+| Modelos de proteínas | Sí | Sí |
+| Velocidad en datasets pequeños | Rápido | Rápido |
+| Datasets masivos (>10000 taxones) | Lento | **Más rápido** |
+| Recomendado para | Análisis general | Datasets grandes |
+
+::: callout-note
+Para **datasets pequeños y medianos (<1000 taxones)**, IQ-TREE suele ser preferible por la combinación ModelFinder + UFBoot. Para **datasets grandes (1000-10000 taxones)**, RAxML-NG es la elección óptima. Para **>10000 taxones**, FastTree.
+:::
+
+## 12.8 FastTree
+
+**FastTree** (Price et al. 2010) usa aproximaciones agresivas: NJ inicial, NNI con perfiles CAT-like, y un SH-like test final para soporte. Es 100-1000× más rápido que RAxML/IQ-TREE en datasets grandes.
+
+### 12.8.1 Instalación
+
+```bash
+conda install -c bioconda fasttree -y
+```
+
+### 12.8.2 Sintaxis
+
+```bash
+# ADN, modelo GTR + corrección gamma post-hoc
+fasttree -nt -gtr -gamma aln.fasta > tree.nwk
+
+# Proteínas, modelo LG
+fasttree -lg protein_aln.fasta > tree.nwk
+
+# Proteínas, modelo WAG
+fasttree -wag protein_aln.fasta > tree.nwk
+```
+
+Flags:
+
+- `-nt`: nucleotide (obligatorio para ADN).
+- `-gtr`: modelo GTR (default: JC-like).
+- `-lg`/`-wag`/`-jtt`: matriz empírica para proteínas (default: WAG).
+- `-gamma`: recalcula longitudes de rama con Gamma post-hoc.
+- `-nometree`: desactivar "minimum evolution tree" inicial.
+- `-fastest`: heurística aún más agresiva (pérdida de precisión).
+
+::: callout-warning
+FastTree **no hace bootstrap**: solo un test **SH-like** para soporte de ramas, mucho menos robusto que UFBoot. Si necesitas soporte fiable, **re-corre con IQ-TREE o RAxML-NG** usando el árbol de FastTree como starting tree.
+:::
+
+## 12.9 Cuándo usar qué herramienta
+
+| Tamaño dataset | Herramienta | Tiempo esperado (4 cores) |
+|----------------|-------------|---------------------------|
+| <100 taxones | IQ-TREE | minutos |
+| 100-1000 | IQ-TREE o RAxML-NG | 10 min - 1 h |
+| 1000-10000 | RAxML-NG | 1 h - varios días |
+| >10000 | FastTree + IQ-TREE (refinamiento) | FastTree: min-h; IQ-TREE: horas-días |
+
+## 12.10 Pipeline híbrido
+
+```bash
+# Paso 1: árbol rápido con FastTree
+fasttree -nt -gtr -gamma aln.fasta > fast_tree.nwk
+
+# Paso 2: refinamiento con IQ-TREE usando árbol de partida
+iqtree2 -s aln.fasta -m MFP -t fast_tree.nwk -B 1000 -alrt 1000 -pre refined
+
+# Alternativa: refinamiento con RAxML-NG
+raxml-ng --all --msa aln.fasta --model GTR+I+G \
+         --tree fast_tree.nwk --bs-trees 1000 --threads 8 --prefix refined
+```
+
+::: callout-tip
+IQ-TREE acepta un árbol de partida con `-t starting_tree.nwk`. **No hace un NNI global desde cero**, sino que explora alrededor del starting tree. Si FastTree da un árbol ~80% correcto, IQ-TREE puede refinar en minutos lo que tardaría horas desde un random starting tree.
+:::
+
+## 12.11 Visualización
+
+```bash
+# Mostrar árbol en formato Newick
+cat result.raxml.support
+
+# Ver con nw_display (Bio++ tools)
+nw_display result.raxml.support
+
+# Ver con ETE3
+ete3 view -t result.raxml.support
+
+# Convertir a PDF
+ete3 view -t result.raxml.support --image tree.png
+```
+
+## 12.12 Polytomías y análisis específicos
+
+### 12.12.1 Polytomías explícitas
+
+```bash
+raxml-ng --all --msa aln.fasta --model GTR+I+G --bs-trees 1000 --prefix poly --poly
+```
+
+`--poly` mantiene politomías si el soporte es < umbral (por defecto 50%). Útil cuando un clado no se resuelve y no quieres un árbol binario artificial.
+
+### 12.12.2 Reproductibilidad
+
+```bash
+# Fijar seed
+raxml-ng --all --msa aln.fasta --model GTR+I+G --bs-trees 1000 \
+         --seed 12345 --prefix reproducible
+```
+
+Siempre fijar `--seed` para reproducibilidad. IQ-TREE usa un seed aleatorio por defecto (`-seed` para fijarlo).
+
+## 12.13 Comparación con parsimonia (TNT)
+
+| Aspecto | TNT (MP) | RAxML-NG (ML) |
+|---------|----------|----------------|
+| Criterio | Parsimonia | Verosimilitud |
+| Modelo | Implícito | Explícito (GTR, etc.) |
+| Sensibilidad a LBA | Alta | Baja |
+| Velocidad en pequeño | Rápido | Rápido |
+| Velocidad en grande | Lento | Más rápido |
+| Bootstrap | 1000 réplicas costosas | Bootstopping |
+| Mejor para | Morfología, comparación | Datos moleculares modernos |
+
+## 12.14 Ejemplo completo
+
+```bash
+# 50 secuencias 16S primates, ~1500 sitios
+mafft --auto primates.fasta > primates_aln.fasta 2> /dev/null
+trimal -in primates_aln.fasta -out primates_trim.fasta -automated1
+
+# 1. Modelo previo con IQ-TREE ModelFinder
+iqtree2 -s primates_trim.fasta -m TESTONLY -pre model_test
+grep "Best-fit" model_test.model
+# -> Best-fit model according to BIC: GTR+F+I+G4
+
+# 2. RAxML-NG con ese modelo
+raxml-ng --all --msa primates_trim.fasta --model GTR+I+G4 \
+         --bs-trees autoMRE{1000} --seed 42 --threads 8 --prefix primates_raxml
+
+# 3. Comparar con IQ-TREE UFBoot
+iqtree2 -s primates_trim.fasta -m GTR+I+G4 -B 1000 -alrt 1000 -T 8 -pre primates_iqtree
+```
+
+```text
+# primates_raxml.log (extracto)
+ML tree search #1, logL: -15248.34
+ML tree search #2, logL: -15248.30
+Final log-likelihood: -15248.30
+Bootstrap: converged after 280 replicates (MRE criterion)
+```
+
+## 12.15 Ejercicios
+
+### Ejercicio 1
+
+Descargar 50 secuencias de **16S de Primates**, alinear con MAFFT, recortar con trimAl. Ejecutar **RAxML-NG** con modelo `GTR+I+G` y 1000 bootstrap (`autoMRE`). Comparar el árbol resultante y los valores de soporte con un árbol de IQ-TREE equivalente.
+
+### Ejercicio 2
+
+Sobre el mismo dataset, ejecutar **FastTree** con `-gtr -gamma`. Comparar: (a) tiempo de ejecución, (b) topología del árbol, (c) valores de soporte (SH-like). ¿Cuán diferentes son los resultados?
+
+### Ejercicio 3
+
+**Pipeline híbrido**: (a) árbol rápido con FastTree, (b) refinamiento con IQ-TREE usando `-t` (starting tree), (c) bootstrap ultrafast. ¿Cuánto se ahorra en tiempo vs ejecutar IQ-TREE sin árbol de partida?
+
+## 12.16 Soluciones
+
+### Solución 1
+
+```bash
+#!/usr/bin/env bash
+# pipeline_raxml_vs_iqtree.sh
+
+set -euo pipefail
+mkdir -p raxml_vs_iqtree && cd raxml_vs_iqtree
+
+# Preparar datos (igual que capítulos anteriores)
+mafft --auto primates.fasta > primates_aln.fasta 2> /dev/null
+trimal -in primates_aln.fasta -out primates_trim.fasta -automated1
+
+# Modelo previo
+iqtree2 -s primates_trim.fasta -m TESTONLY -pre model_test -T 8
+MODEL=$(grep "Best-fit model" model_test.model | grep -oP 'according to \w+: \K\S+')
+# Quitar el +F (RAxML-NG no usa +F explícito)
+MODEL_RAXML=$(echo "$MODEL" | sed 's/+F//')
+echo "Modelo para RAxML-NG: $MODEL_RAXML"
+
+# --- RAxML-NG ---
+START=$(date +%s)
+raxml-ng --all --msa primates_trim.fasta --model "$MODEL_RAXML" \
+         --bs-trees autoMRE{1000} --seed 42 --threads 8 --prefix raxml
+END=$(date +%s)
+echo "RAxML-NG tiempo: $((END-START)) segundos"
+
+# --- IQ-TREE ---
+START=$(date +%s)
+iqtree2 -s primates_trim.fasta -m GTR+I+G4 -B 1000 -alrt 1000 -T 8 -seed 42 -pre iqtree
+END=$(date +%s)
+echo "IQ-TREE tiempo: $((END-START)) segundos"
+
+# Comparación
+python3 << 'EOF'
+from ete3 import Tree
+import re
+
+# Log-likelihoods
+with open("raxml.raxml.log") as f:
+    rax_log = f.read()
+rax_ll = re.search(r"Final log-likelihood:\s+(-?\d+\.\d+)", rax_log).group(1)
+
+with open("iqtree.iqtree") as f:
+    iq_log = f.read()
+iq_ll = re.search(r"Final log-likelihood:\s+(-?\d+\.\d+)", iq_log).group(1)
+
+print(f"logL RAxML-NG: {rax_ll}")
+print(f"logL IQ-TREE: {iq_ll}")
+
+# Topología
+rax_t = Tree("raxml.raxml.support", format=1)
+iq_t  = Tree("iqtree.treefile",     format=1)
+rf, max_rf = rax_t.robinson_foulds(iq_t, attr_t1="name", attr_t2="name")[:2]
+print(f"RF RAxML vs IQ-TREE: {rf}/{max_rf} = {100*rf/max_rf:.1f}%")
+
+# Soportes
+def supports(t):
+    return [n.support for n in t.traverse() if not n.is_leaf() and n.support]
+rax_s = supports(rax_t)
+iq_s  = supports(iq_t)
+print(f"RAxML soporte min/med/max: {min(rax_s)} / {sum(rax_s)/len(rax_s):.1f} / {max(rax_s)}")
+print(f"IQ-TREE soporte min/med/max: {min(iq_s)} / {sum(iq_s)/len(iq_s):.1f} / {max(iq_s)}")
+EOF
+```
+
+```text
+Modelo para RAxML-NG: GTR+I+G4
+RAxML-NG tiempo: 78 segundos
+IQ-TREE tiempo: 41 segundos
+logL RAxML-NG: -15248.30
+logL IQ-TREE: -15248.34
+RF RAxML vs IQ-TREE: 2/74 = 2.7%
+RAxML soporte min/med/max: 65 / 95.4 / 100
+IQ-TREE soporte min/med/max: 68 / 96.2 / 100
+```
+
+**Análisis**: Para un dataset pequeño (50 taxones), IQ-TREE es **más rápido** que RAxML-NG por UFBoot. Log-likelihoods prácticamente idénticos (diferencia < 0.05 logL = indistinguible). Topología muy estable (solo 2 splits difieren). Los soportes son comparables; IQ-TREE da valores ligeramente mayores por la corrección de UFBoot.
+
+::: callout-note
+Esta diferencia se invierte para datasets grandes: con 2000 taxones, RAxML-NG es típicamente 2-3× más rápido que IQ-TREE UFBoot. La elección depende del tamaño del problema.
+:::
+
+### Solución 2
+
+```bash
+# FastTree con GTR + gamma
+START=$(date +%s)
+fasttree -nt -gtr -gamma primates_trim.fasta > fasttree.nwk 2> fasttree.log
+END=$(date +%s)
+echo "FastTree tiempo: $((END-START)) segundos"
+
+# Reporte
+grep -E "(Reading|Likelihood|Time)" fasttree.log
+
+# Comparar topología con RAxML-NG
+python3 << 'EOF'
+from ete3 import Tree
+ft = Tree("fasttree.nwk", format=1)
+rt = Tree("raxml.raxml.support", format=1)
+rf, max_rf = ft.robinson_foulds(rt, attr_t1="name", attr_t2="name")[:2]
+print(f"RF FastTree vs RAxML-NG: {rf}/{max_rf} = {100*rf/max_rf:.1f}%")
+
+# Soportes SH-like de FastTree (en atributo support)
+ft_s = [n.support for n in ft.traverse() if not n.is_leaf() and n.support]
+print(f"FastTree SH-like soporte min/med/max: {min(ft_s)} / {sum(ft_s)/len(ft_s):.1f} / {max(ft_s)}")
+
+# Nota: FastTree usa escala distinta (1 = ~100% confiado, 0 = no confiado)
+# convertir a porcentaje aproximado:
+ft_s_pct = [s*100 for s in ft_s]
+print(f"  (convertido a %): min {min(ft_s_pct):.1f} med {sum(ft_s_pct)/len(ft_s_pct):.1f} max {max(ft_s_pct):.1f}")
+EOF
+```
+
+```text
+FastTree tiempo: 4 segundos
+Likelihood: -15342.10
+RF FastTree vs RAxML-NG: 8/74 = 10.8%
+FastTree SH-like soporte min/med/max: 0.0 / 0.92 / 1.0
+  (convertido a %): min 0.0 med 92.0 max 100.0
+```
+
+**Análisis**:
+
+1. **Tiempo**: FastTree (4 s) vs RAxML-NG (78 s) = ~20× más rápido. Para 50000 taxones, la diferencia puede ser de horas vs días.
+2. **Topología**: 10.8% de RF divergence. Las diferencias se concentran en clados con soporte bajo en RAxML-NG. FastTree tiende a **colapsar** clados con señal conflictiva (politomías implícitas) mientras que RAxML-NG produce árbol binario.
+3. **Soporte**: SH-like de FastTree es **menos discriminante**: muchos 1.0 (máximo) que en RAxML-NG serían 90-95. El SH-like no equivale a bootstrap; solo evalúa si una rama es significativamente peor que la alternativa.
+4. **Cuándo usar FastTree**: exploración rápida, árbol inicial para refinar, datasets masivos (>10K taxones) donde nada más corre.
+5. **Cuándo NO usar FastTree**: análisis final publicable, soporte de ramas precisos, datasets pequeños donde IQ-TREE/RAxML-NG tardan segundos.
+
+### Solución 3
+
+```bash
+#!/usr/bin/env bash
+# pipeline_hibrido.sh
+
+set -euo pipefail
+
+# Tiempo de IQ-TREE sin starting tree
+echo "=== IQ-TREE sin starting tree ==="
+START=$(date +%s)
+iqtree2 -s primates_trim.fasta -m GTR+I+G4 -B 1000 -alrt 1000 -T 8 -seed 42 -pre iqtree_cold
+END=$(date +%s)
+COLD=$((END-START))
+
+# Pipeline híbrido: FastTree + IQ-TREE con starting tree
+echo "=== Pipeline híbrido ==="
+START_FT=$(date +%s)
+fasttree -nt -gtr -gamma primates_trim.fasta > starting.nwk 2> /dev/null
+END_FT=$(date +%s)
+FT_TIME=$((END_FT-START_FT))
+
+START_IQ=$(date +%s)
+iqtree2 -s primates_trim.fasta -m GTR+I+G4 -t starting.nwk -B 1000 -alrt 1000 -T 8 -seed 42 -pre iqtree_hot
+END_IQ=$(date +%s)
+IQ_TIME=$((END_IQ-START_IQ))
+
+HOT=$((FT_TIME + IQ_TIME))
+
+echo "Sin starting tree: ${COLD}s"
+echo "FastTree: ${FT_TIME}s + IQ-TREE con starting: ${IQ_TIME}s = total ${HOT}s"
+echo "Ahorro: $((COLD-HOT))s ($((100*(COLD-HOT)/COLD))%)"
+
+# Verificar que el árbol final es equivalente
+python3 << 'EOF'
+from ete3 import Tree
+cold = Tree("iqtree_cold.treefile", format=1)
+hot  = Tree("iqtree_hot.treefile",  format=1)
+rf, max_rf = cold.robinson_foulds(hot, attr_t1="name", attr_t2="name")[:2]
+print(f"RF cold vs hot: {rf}/{max_rf} = {100*rf/max_rf:.1f}%")
+print("Si RF = 0%, los árboles son idénticos: el pipeline híbrido no pierde información.")
+EOF
+```
+
+```text
+=== IQ-TREE sin starting tree ===
+=== Pipeline híbrido ===
+Sin starting tree: 41s
+FastTree: 4s + IQ-TREE con starting: 18s = total 22s
+Ahorro: 19s (46%)
+RF cold vs hot: 0/74 = 0.0%
+```
+
+**Análisis**:
+
+1. **Ahorro**: ~46% (19 s de 41 s) en este dataset pequeño. En datasets grandes (>1000 taxones), el ahorro puede ser **70-90%** porque IQ-TREE sin starting tree pasa mucho tiempo en NNI desde un random tree.
+2. **Equivalencia topológica**: 0% RF → mismo árbol. El starting tree no introduce sesgo si IQ-TREE explora NNI/SPR alrededor con normalidad.
+3. **Recomendación**: para datasets medianos-grandes, **siempre** partir de un árbol FastTree/RAxML-NG parsimonia. Para datasets pequeños (<100 taxones), el overhead de FastTree es despreciable y ahorra 30-50%.
+
+::: callout-tip
+Para reproducibilidad, recuerda `--seed` en RAxML-NG y `-seed` en IQ-TREE. Sin seed, cada corrida da un árbol ligeramente distinto por la aleatoriedad de la búsqueda (diferencias menores en soportes, topología casi idéntica). Para publicaciones, **reporta el seed** junto al resto de parámetros.
+:::
+
+::: callout-important
+**Pipeline recomendado** para un análisis ML serio:
+1. trimAl para limpiar alineamiento.
+2. IQ-TREE ModelFinder (`-m TESTONLY`) para elegir modelo.
+3. FastTree (`-gtr -gamma` o `-lg -gamma`) para árbol inicial.
+4. IQ-TREE/RAxML-NG con `-t`/`--tree` + bootstrap UFBoot/bootstopping.
+5. Verificación con ETE3/FigTree.
+:::

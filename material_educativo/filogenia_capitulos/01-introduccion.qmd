@@ -1,0 +1,307 @@
+---
+title: "Capítulo 1: Introducción a la filogenia molecular"
+---
+
+## 1.1 ¿Qué es la filogenia molecular?
+
+La **filogenia molecular** es la disciplina que reconstruye las relaciones evolutivas entre organismos, genes o secuencias biológicas utilizando datos moleculares (ADN, ARN o proteínas) en lugar de —o junto con— caracteres morfológicos. A diferencia de la sistemática clásica, que se basa en rasgos observables (forma del cráneo, número de vértebras, pigmentación), la filogenia molecular trabaja con caracteres discretos heredados: nucleótidos en posiciones concretas de un gen, aminoácidos en una proteína, o patrones de presencia/ausencia de genes.
+
+El impacto de esta disciplina en la biología contemporánea es difícil de exagerar. La filogenia molecular ha resuelto debates centenarios sobre el **origen de los eucariotas**, ha permitido rastrear la **dispersión geográfica de pandemias** como el SARS-CoV-2 o el VIH, ha clarificado el **árbol genealógico humano** frente a los neandertales y denisovanos, y ha reformulado por completo la microbiología al revelar la enorme diversidad de procariotas no cultivables. Cada vez que se describe una nueva especie y se ubica en su contexto evolutivo, hay un árbol molecular detrás.
+
+::: callout-note
+El término **filogenia** fue acuñado por Ernst Haeckel en 1866, pero su formulación moderna basada en secuencias es obra de figuras como **Walter Fitch**, **Joseph Felsenstein** y **Masatoshi Nei** durante las décadas de 1970 y 1980.
+:::
+
+## 1.2 Conceptos básicos de árboles filogenéticos
+
+Un **árbol filogenético** es un grafo conexo acíclico que representa las relaciones de ancestry-descendencia entre un conjunto de unidades taxonómicas operativas (OTUs, *operational taxonomic units*). En filogenia molecular, las OTUs son típicamente secuencias (un gen, un genoma, una proteína).
+
+### Topología, nodos y ramas
+
+- **Topología**: la forma del árbol, es decir, qué nodos están conectados con cuáles, sin importar (todavía) la longitud de las ramas ni la posición de la raíz.
+- **Nodos terminales** u **hojas** (*leaves/tips*): las secuencias actuales que tenemos en la mano. En un árbol de 5 primates, hay 5 hojas.
+- **Nodos internos**: puntos hipotéticos que representan ancestros comunes. Un árbol con $n$ hojas enraizado tiene $n-1$ nodos internos; uno no enraizado tiene $n-2$.
+- **Ramas** (*branches/edges*): conectan nodos. Las **ramas internas** conectan dos nodos internos o un nodo interno con una hoja; la **rama basal** conecta la raíz con el resto.
+
+### Árbol enraizado vs no enraizado
+
+Un **árbol enraizado** tiene un nodo especial —la **raíz**— que define la dirección del tiempo evolutivo. Permite hablar de ancestros y descendientes, de clados monofiléticos y de relaciones "hermano-de". Un **árbol no enraizado** solo especifica vecindades: quién está cerca de quién, pero no el sentido del flujo evolutivo.
+
+Para enraizar un árbol necesitamos información adicional, habitualmente:
+
+1. Un **outgroup** (grupo externo) cuya divergencia con el resto sea anterior a cualquier divergencia dentro del grupo de estudio.
+2. Un **reloj molecular** (cuando asumimos tasas constantes y usamos información temporal externa).
+3. Un punto medio entre las dos hojas más lejanas (método **midpoint rooting**, asume simetría de tasas).
+
+::: callout-warning
+Un árbol obtenido directamente por Maximum Likelihood o métodos de distancia es, por construcción, **no enraizado**. Cualquier enraizado posterior es una decisión del analista, no una consecuencia de los datos.
+:::
+
+### Longitudes de rama
+
+La longitud de una rama se mide típicamente en **substituciones por sitio** (no en años). Si una rama tiene longitud 0.1, eso significa que se espera que, en cada sitio de la secuencia, haya ocurrido en promedio 0.1 substituciones a lo largo de esa rama. Sumar las longitudes desde la raíz hasta una hoja da el **path length** total, que se correlaciona con la divergencia observada.
+
+### Cladograma vs filograma vs cronograma
+
+- **Cladograma**: muestra solo la topología, sin importar longitudes ni tiempos.
+- **Filograma** (o *phylogram*): muestra topología **y** longitudes de rama (substituciones por sitio).
+- **Cronograma**: muestra topología **y** tiempos (en millones de años o en absoluto). Requiere calibración con fósiles o reloj molecular.
+
+## 1.3 Tipos de datos moleculares
+
+### ADN
+
+Cuatro estados posibles por sitio: **A, C, G, T**. Las secuencias de ADN pueden ser:
+
+- **Codificantes**: agrupadas en codones de 3 nucleótidos. Cada 3 posiciones definen un aminoácido. La primera y segunda posición del codón están más conservadas que la tercera (debido a la redundancia del código genético).
+- **No codificantes**: intrones, regiones intergénicas, microsatélites. Típicamente más variables.
+- **ADN mitocondrial**: alto número de copias, herencia materna, tasa de mutación elevada. Clásico para estudios poblacionales y de especies cercanas (COI, citocromo b, D-loop).
+- **ADN cloroplástico** (en plantas): herencia normalmente materna, bajo ritmo de recombinación.
+
+### ARN
+
+El ARN usa **uracilo (U)** en lugar de timina (T). Aunque en la práctica bioinformática las secuencias de "ARN" se almacenan con frecuencia como ADN (T en lugar de U), hay casos donde importa distinguir:
+
+- **ARN mensajero (mRNA)**: secuencia codificante madura, sin intrones (ya spliced).
+- **ARN ribosómico (rRNA)**: 16S (bacterias), 18S (eucariotas), 23S/28S, 5S, 5.8S. Estructura secundaria conservada, esenciales para filogenias profundas.
+- **ARN de transferencia (tRNA)**: corto (~70-90 nt), estructura secundaria en hoja de trébol.
+
+::: callout-tip
+El gen **16S rRNA** es el estántum *gold* de la microbiología ambiental. Para filogenias profundas (entre dominios) se usan combinaciones de 16S + 23S, o el gen ARNasa P.
+:::
+
+Para ARN estructural, alinear solo la secuencia primaria pierde información. Herramientas como **RNAalifold**, **LocARNA** o **MAFFT --qinsi** incorporan estructura secundaria en el alineamiento.
+
+### Proteínas
+
+Las proteínas usan **20 aminoácidos** estándar. Tienen varias ventajas sobre el ADN para filogenias profundas:
+
+- Solo 20 estados (frente a 4) → más información por sitio.
+- Menos saturación (la sustitución de un aminoácido por otro suele ser más conservadora).
+- Modelos empíricos de sustitución muy refinados (PAM, BLOSUM, JTT, WAG, LG, mtZOA...).
+
+Típicamente se alinean proteínas para reconstruir relaciones evolutivas que superan los ~500 millones de años, mientras que el ADN se prefiere para divergencias recientes donde la información sinónima es informativa.
+
+## 1.4 Representación de árboles
+
+### Formato Newick
+
+Notación compacta basada en paréntesis anidados. Las hojas se nombran, los nodos internos se representan por paréntesis agrupando, y las longitudes de rama se indican con `:numero`.
+
+```text
+(A:0.1,(B:0.2,C:0.3):0.1);
+```
+
+Interpretación: hay un nodo raíz; A se separa primero con rama 0.1; luego un nodo interno con rama 0.1 del que salen B (0.2) y C (0.3).
+
+Algunas extensiones:
+
+- `)` seguido de `:longitud` indica longitud de rama interna.
+- `)` seguido de un nombre indica **label** de nodo interno (a veces el ancestro hipotético).
+- `[&label=valor]` para anotaciones en formato NHX (Newick eXtended).
+
+### Formato Nexus
+
+Más verboso, en bloques. Permite anotaciones ricas:
+
+```text
+#NEXUS
+BEGIN TREES;
+  tree tree1 = [&R] ((A:0.1,B:0.2):0.1,C:0.3);
+END;
+```
+
+Lo usan MrBayes, BEAST2, FigTree, PAUP* y Mesquite.
+
+### PhyloXML
+
+Formato XML que permite anotar eventos (duplicaciones, transferencias), tasas, intervalos de confianza, colores. Muy verboso pero muy expresivo:
+
+```xml
+<phyloxml xmlns="http://www.phyloxml.org">
+  <phylogeny rooted="true">
+    <clade>
+      <name>root</name>
+      <clade><name>A</name></clade>
+    </clade>
+  </phylogeny>
+</phyloxml>
+```
+
+## 1.5 Métodos de reconstrucción filogenética
+
+Existen cuatro familias principales. Cada una tiene supuestos distintos y costos computacionales distintos.
+
+### Métodos de distancia
+
+Calculan primero una **matriz de distancias** entre pares de secuencias (corrección de Kimura 2 parámetros, etc.) y luego agrupan. Los algoritmos clásicos son:
+
+- **UPGMA**: asume reloj molecular estricto. Produce árboles ultramétricos. Apenas se usa en la práctica moderna.
+- **Neighbor-Joining (NJ)**: no asume reloj. Muy rápido, razonablemente preciso. Útil como primer árbol guía.
+
+### Parsimonia
+
+Busca el árbol que requiere el **mínimo número de substituciones** para explicar los datos. Implementada por **Fitch**, **Wagner** y el programa **TNT** (con búsqueda mediante ratchet y drifting). La parsimonia es rápida y conceptualmente limpia, pero sufre de **atracción de ramas largas** cuando hay heterogeneidad de tasas.
+
+### Maximum Likelihood (ML)
+
+Busca el árbol $\tau$ y los parámetros del modelo $\theta$ que maximizan la probabilidad de los datos:
+
+$$
+\hat{\tau}, \hat{\theta} = \arg\max_{\tau, \theta} P(D \mid \tau, \theta)
+$$
+
+Software clave: **IQ-TREE** (ultra-rápido, con selección automática de modelo y bootstrap ultra-rápido UFboot2), **RAxML-NG** (sucesor de RAxML, robustez y escalabilidad), y el clásico **PHYML**.
+
+### Métodos Bayesianos
+
+Calculan la **distribución posterior** de árboles usando MCMC (Markov Chain Monte Carlo). El software principal es **MrBayes** (clásico, fácil de usar) y **BEAST2** (orientado a estimar tiempos divergentes y reloj molecular).
+
+La salida bayesiana no es un único árbol sino una **muestra de la distribución posterior**; el árbol consenso y las probabilidades posteriores se derivan de ella.
+
+## 1.6 Soporte de ramas
+
+Un árbol por sí solo es una estimación puntual. Necesitamos cuantificar la **incertidumbre**:
+
+- **Bootstrap Felsenstein (BP)**: remuestrea sitios con reemplazo $N$ veces (típicamente 100 o 1000), reconstruye el árbol y reporta la fracción de réplicas que contienen cada clado. >70% suele considerarse bueno, >95% excelente (con ML clásico).
+- **UFboot2 (IQ-TREE)**: bootstrap ultra-rápido basado en aproximaciones; se detiene automáticamente cuando las probabilidades se estabilizan. Recomendación: 1000 replicaciones, umbral de parada 0.5.
+- **SH-aLRT**: test de razón de verosimilitud aproximado por Shimodaira-Hasegawa. Rápido. Un valor ≥80% se considera evidencia fuerte.
+- **Posterior probability (PP)**: en bayesiano. Valores ≥0.95 se consideran fuertes.
+
+::: callout-tip
+IQ-TREE permite combinar **SH-aLRT + UFboot2**: `--alrt 1000 -B 1000`. Se suele aceptar como bien soportado un clado con SH-aLRT ≥ 80% **y** UFboot2 ≥ 95%.
+:::
+
+## 1.7 Homología: ortólogos, parólogos, xenólogos
+
+Dos secuencias son **homólogas** si derivan de un ancestro común. La homología es el requisito previo de cualquier filogenia: alinear secuencias que no son homólogas no tiene sentido biológico.
+
+Dentro de la homología hay tres subtipos:
+
+- **Ortólogos**: separados por **especiación**. Típicamente conservan la misma función. Ideales para construir árboles de especies.
+- **Parólogos**: separados por **duplicación** dentro del mismo genoma. Pueden diverger funcionalmente.
+- **Xenólogos**: separados por **transferencia horizontal** entre linajes distintos. Comunes en bacterias.
+
+::: callout-warning
+Mezclar ortólogos y parólogos en el mismo árbol produce un árbol que NO refleja la historia de las especies, sino una mezcla de duplicaciones y especiaciones. Por eso es imprescindible identificarlos antes de alinear.
+:::
+
+## 1.8 Monofilia, parafilia, polifilia
+
+- **Monofilético** (clado): un grupo que incluye un ancestro común y **todos** sus descendientes. Ejemplo: Mammalia.
+- **Parafilético**: incluye al ancestro común pero **no** a todos los descendientes. Ejemplo clásico: Reptilia, que excluye Aves.
+- **Polofilético**: incluye especies descendientes de **más de un ancestro común inmediato**. Ejemplo: "animales que vuelan" (incluye aves, murciélagos e insectos).
+
+La sistemática cladística moderna acepta solo **grupos monofiléticos** como taxones válidos.
+
+## 1.9 Árbol de especies vs árbol de genes
+
+- **Árbol de especies**: representa la historia de divergencia de linajes (especiación). Idealmente se obtiene de ortólogos uno-a-uno.
+- **Árbol de genes**: representa la historia de un locus concreto, que puede incluir duplicaciones, pérdidas y transferencias. Puede discordar con el árbol de especies.
+
+La **coalescencia incompleta** (*incomplete lineage sorting*) es una causa importante de discordancia entre árbol de genes y árbol de especies: si una población ancestral era polimórfica para un locus, las copias que se fijan en cada linaje hija pueden no reflejar la verdadera especiación.
+
+## 1.10 Limitaciones de la filogenia molecular
+
+- **Saturación**: en sitios muy variables, substituciones múltiples enmascaran las originales. Las distancias observadas subestiman las reales.
+- **Atracción de ramas largas (LBA)**: linajes con tasas altas parecen artificialmente cercanos por convergencia. Clásico problema de parsimonia, también presente en ML si el modelo es pobre.
+- **Transferencia horizontal de genes (HGT)**: rompe el supuesto de árbol vertical. Muy común en procariotas. Requiere representar relaciones como **redes**, no árboles.
+- **Heterogeneidad de tasas entre sitios**: ignorarla lleva a subestimar varianzas y a errores topológicos. Solución: modelo **Gamma** (+G) o partición por gen/codon.
+- **Selección de modelo**: usar un modelo demasiado simple (JC69 para proteínas remotas) introduce sesgo sistemático.
+
+## 1.11 Ejemplo conceptual: primates y citocromo b
+
+Imaginemos que queremos reconstruir la filogenia de cinco primates: *Homo sapiens*, *Pan troglodytes*, *Gorilla gorilla*, *Pongo pygmaeus* y *Macaca mulatta* (outgroup). El gen **citocromo b** (Cytb) del genoma mitocondrial tiene ~1140 pb, evoluciona a una tasa que discrimina bien entre estos taxones y apenas tiene indels. Procedimiento resumido:
+
+1. Descargar las cinco secuencias desde NCBI (capítulo 3).
+2. Alinearlas con MAFFT (capítulo 5).
+3. Seleccionar modelo de substitución (GTR+G probablemente) con ModelTest-ng.
+4. Reconstruir el árbol con IQ-TREE (`-m MFP -B 1000 -alrt 1000`).
+5. Enraizar con *Macaca* como outgroup.
+6. Visualizar con FigTree.
+
+El árbol esperado muestra que *Homo* y *Pan* son hermanos, que *Gorilla* es el grupo externo de ellos, y que *Pongo* se separó antes. Esto concuerda con evidencia morfológica, karyotípica y genómica.
+
+## 1.12 Software clave del curso
+
+- **MAFFT** y **MUSCLE5**: alineamiento múltiple.
+- **IQ-TREE**, **RAxML-NG**: Maximum Likelihood.
+- **MrBayes**, **BEAST2**: inferencia bayesiana y datado.
+- **ModelTest-ng**, **ProtTest**: selección de modelos.
+- **trimAl**, **Gblocks**: recorte de alineamientos.
+- **FigTree**, **ete3**: visualización.
+
+::: callout-important
+Todas estas herramientas se instalan vía Bioconda dentro de un único entorno `filogenia`, que configuraremos en el **Capítulo 2**.
+:::
+
+## Ejercicios
+
+### Ejercicio 1
+
+Dado el árbol Newick:
+
+```text
+(A:0.1,(B:0.2,(C:0.3,D:0.4):0.1):0.1);
+```
+
+Dibújalo a mano (o en papel cuadriculado) identificando: raíz, nodos internos, hojas y longitudes de rama. Indica si está enraizado o no, y por qué.
+
+### Ejercicio 2
+
+Investiga y lista **tres ejemplos biológicos** concretos donde la filogenia molecular haya sido clave. Para cada uno, menciona: (a) el problema biológico, (b) los datos moleculares utilizados, (c) la conclusión principal.
+
+### Ejercicio 3
+
+Explica con un ejemplo concreto la diferencia entre **ortólogos** y **parólogos**. ¿Por qué es importante distinguirlos antes de construir un árbol filogenético?
+
+## Soluciones
+
+### Solución Ejercicio 1
+
+```text
+                  raíz
+                  /   \
+            A:0.1/     \:0.1
+              A        nodo_i1
+                       /   \
+                 B:0.2/     \:0.1
+                   B        nodo_i2
+                            /   \
+                      C:0.3/     \:0.4
+                        C         D
+```
+
+**Análisis**:
+
+```bash
+# Podemos cargar el árbol en R (paquete ape) para inspeccionarlo:
+# R -e 'library(ape); t <- read.tree(text="(A:0.1,(B:0.2,(C:0.3,D:0.4):0.1):0.1);"); plot(t); str(t)'
+```
+
+- **Raíz**: el nodo inicial del cual se separa A (rama 0.1) del resto (rama 0.1). El árbol está escrito como enraizado: hay un punto claro de partida.
+- **Nodos internos**: dos: el nodo ancestral a B, C, D; y el nodo ancestral a C y D.
+- **Hojas**: A, B, C, D (cuatro).
+- **Longitudes**: A=0.1, B=0.2, C=0.3, D=0.4, rama interna hacia B/C/D=0.1, rama interna hacia C/D=0.1.
+- **¿Enraizado?** Sí, formalmente: la presencia de una rama externa (la que conduce a A) define la raíz. En la práctica Newick no especifica enraizado vs no enraizado explícitamente, pero la topología con un paréntesis que abre el árbol entero se interpreta como enraizada. Si el árbol fuese `((A,B),(C,D));` sería un cuarteto no enraizado.
+
+### Solución Ejercicio 2
+
+1. **Origen de los eucariotas**. Datos: ARN ribosómico pequeño (18S rRNA) y genes de ARNasa P y M (ARN) en los tres dominios. Conclusión (Guy & Field, 2018 y posteriores): los eucariotas surgieron dentro de un clado Archaea (Asgard archaea), confirmando el árbol "de dos dominios" frente al "de tres dominios".
+
+2. **Filogenia de SARS-CoV-2 durante la pandemia COVID-19**. Datos: genomas virales completos depositados en GISAID y NCBI (ADN copiado del ARN viral mediante RT-PCR; ~30 kb). Conclusión: identificación de variantes (Alpha, Delta, Ómicron), rastreo de rutas de introducción país-a-país, y detección de recombinación entre linajes.
+
+3. **Origen humano y mezcla con homininos arcaicos**. Datos: genomas nucleares de neandertales y denisovanos (ADN antiguo recuperado de huesos) comparados con humanos modernos. Conclusión: los eurasiáticos modernos llevan ~1-2% de ADN neandertal; poblaciones de Oceanía llevan hasta ~5% de ADN denisovano, evidencia de mestizaje inter-específico.
+
+### Solución Ejercicio 3
+
+**Ejemplo**: el gen de la **hemoglobina** en vertebrados existe en dos copias: **HBA** (alfa-hemoglobina) y **HBB** (beta-hemoglobina). Estas dos copias surgieron por una duplicación ancestral previa a la divergencia de todos los vertebrados actuales.
+
+- **HBA de humano** vs **HBA de chimpancé**: son **ortólogos** — se separaron por la especiación humano/chimpancé. Conservan la misma función (cadena alfa de la hemoglobina adulta).
+- **HBA de humano** vs **HBB de humano**: son **parólogos** — se separaron por duplicación dentro del genoma de un ancestro común.
+
+**Importancia de distinguirlos**:
+
+- Si quiero un **árbol de especies** que compare humano, chimpancé y perro, debo alinear **solo ortólogos** (HBA humano + HBA chimpancé + HBA perro). Mezclarlos con HBB generaría un árbol donde la duplicación ancestral aparecería mezclada con la especiación.
+- Si mezclo parólogos y ortólogos, obtendría un árbol como `((HBA_humano, HBB_humano), (HBA_chimp, HBB_chimp))`, lo cual **falsamente** sugiere que humano y chimpancé no son tan cercanos entre sí como las dos copias humanas lo son entre sí. Esto es un error de interpretación.
+- Distinguirlos requiere buscar primero el árbol de genes (con todos los parólogos) y reconstruir la historia de duplicaciones — habitualmente con herramientas como **OrthoFinder**, **GeneTree** o bases de datos como **OMA** y **InParanoid**.

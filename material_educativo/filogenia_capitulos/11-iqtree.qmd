@@ -1,0 +1,504 @@
+---
+title: "Capítulo 11: Maximum Likelihood con IQ-TREE"
+---
+
+## 11.1 ¿Qué es Maximum Likelihood?
+
+**Maximum Likelihood (ML)** busca el árbol (junto con sus longitudes de rama y los parámetros del modelo de sustitución) que **maximiza la probabilidad de observar las secuencias alineadas**. Matemáticamente:
+
+$$
+L(\text{data} \mid \text{tree}, \text{model}) = P(\text{data} \mid T, M, \theta)
+$$
+
+donde `T` es la topología + longitudes de rama, `M` el modelo de sustitución y `θ` los parámetros (frecuencias, tasas, α de Gamma, proporción de sitios invariables).
+
+Trabajamos con el **logaritmo** de la verosimilitud (`logL`) por estabilidad numérica. El árbol ML es el que tiene el `logL` máximo.
+
+ML es el **estándar de facto** en filogenia molecular moderna. Frente a parsimonia, incorpora información cuantitativa de las frecuencias de sustitución y corrige la atracción de ramas largas. Frente a distancia, usa toda la información del alineamiento sitio a sitio. Frente a bayesiano, no requiere priors y es mucho más rápido.
+
+## 11.2 Conceptos clave
+
+- **Función de verosimilitud**: probabilidad de los datos dado el árbol y modelo. Función de la topología y los parámetros.
+- **Log-likelihood (`logL`)**: logaritmo natural de L. Valores típicamente entre −5000 y −50000 según tamaño del alineamiento.
+- **Optimización de parámetros**: para cada topología candidata se optimizan parámetros del modelo (frecuencias, tasas, α) por maximización iterativa.
+- **Heurísticas de búsqueda de árboles**: NNI (Nearest Neighbor Interchange), SPR (Subtree Prune and Regraft), TBR (Tree Bisection and Reconnection). IQ-TREE usa NNI y SPR estocástico.
+- **Memoria y tiempo**: O(n·L) para almacenar vectores de verosimilitud parcial por nodo y sitio. Para n > 5000 taxones o L > 100000 sitios se requieren implementaciones especializadas.
+
+## 11.3 IQ-TREE: la herramienta ML moderna
+
+**IQ-TREE** (Nguyen et al. 2015, IQ-TREE 2 en su versión actual) es la implementación ML más popular por:
+
+- Selección automática de modelo (**ModelFinder**, integrado).
+- **Ultrafast bootstrap** (UFBoot), órdenes de magnitud más rápido que el bootstrap clásico.
+- Soporte para mezclas, particionado edge-linked, concordance factors.
+- Algoritmos estocásticos de NNI/SPR que escalan bien hasta ~10000 taxones.
+
+### 11.3.1 Instalación
+
+```bash
+conda install -c bioconda iqtree -y
+```
+
+::: callout-note
+IQ-TREE 2.x ya es el default en bioconda. El binario es `iqtree2`. En versiones antiguas (1.x) el binario era `iqtree`. Revisa con `iqtree2 --version`. En WSL2 funciona de forma nativa; en PowerShell puede usarse el binario Windows de la web oficial, pero los scripts del curso están pensados para la versión Linux/WSL.
+:::
+
+### 11.3.2 Sintaxis básica
+
+```bash
+iqtree2 -s aln.fasta [opciones] -pre prefijo_salida
+```
+
+## 11.4 Búsqueda de árboles
+
+```bash
+# Modelo fijo + búsqueda ML + UFBoot
+iqtree2 -s aln.fasta -m GTR+I+G -B 1000 -pre resultado
+
+# Modelo automático (ModelFinder) + UFBoot
+iqtree2 -s aln.fasta -m MFP -B 1000 -pre resultado
+
+# Especificar árbol de partida (refinamiento)
+iqtree2 -s aln.fasta -m HKY+G -t starting_tree.nwk -pre resultado
+```
+
+Explicación de flags:
+
+- `-s`: archivo de entrada (FASTA o PHYLIP).
+- `-m`: modelo. `MFP` (ModelFinder Plus) selecciona automáticamente entre todos los modelos disponibles según BIC (default), AIC o AICc.
+- `-B N`: ultrafast bootstrap con N réplicas.
+- `-pre`: prefijo de los archivos de salida.
+- `-t`: árbol de partida (Newick). Por defecto IQ-TREE construye uno vía NJ+parsimonia.
+
+## 11.5 ModelFinder: selección automática de modelos
+
+```bash
+# Solo selección de modelo, sin buscar árbol
+iqtree2 -s aln.fasta -m TESTONLY -pre model_test
+
+# ModelFinder Plus: modelos, frecuencias, tasas heterogéneas, FreeRate
+iqtree2 -s aln.fasta -m MFP -cmax 60 -pre model_full
+
+# Para proteínas: limitar set base y añadir mezclas +C10, +C20, +C60
+iqtree2 -s protein.fasta -m MFP -mset LG,WAG,JTT,Dayhoff -madd LG+C20,LG+C60 -pre model_protein
+```
+
+::: callout-tip
+Para proteínas, `MFP` prueba por defecto ~14 matrices empíricas (LG, WAG, JTT, Dayhoff, mtMet, mtVer, etc.). Añadir `+C20` o `+C60` (mezclas tipo CAT) puede mejorar drásticamente la verosimilitud si hay heterogeneidad de sitios, **pero cuidado**: más parámetros = riesgo de overfitting. Compara por **AIC/AICc**, no por logL puro.
+:::
+
+Output típico del `.model`:
+
+```text
+Best-fit model according to BIC: TIM2+I+G4
+Initial log-likelihood: -8234.567
+Optimized log-likelihood: -7892.123
+```
+
+## 11.6 Ultrafast Bootstrap (UFBoot)
+
+UFBoot (Minh et al. 2013) aproxima el bootstrap clásico usando **remuestreo sin reconstruir el árbol desde cero**: se reoptimizan las longitudes de rama con las nuevas ponderaciones de sitios y se detiene cuando los soportes convergen.
+
+```bash
+iqtree2 -s aln.fasta -m MFP -B 1000 -pre resultado
+```
+
+::: callout-important
+**Umbral de soporte UFBoot ≥ 95%** (equivalente a ~70% bootstrap clásico). Esto es así porque UFBoot está corregido para reducir el sesgo conservativo del bootstrap clásico. **No uses el umbral 70%** que se recomienda para bootstrap normal: te daría una falsa impresión de soporte deficiente.
+:::
+
+## 11.7 SH-aLRT: test paramétrico de rama
+
+El **SH-aLRT** (Guindon et al. 2010) contrasta cada rama interna contra la mejor topología alternativa local usando el test de Shimodaira-Hasegawa aproximado.
+
+```bash
+iqtree2 -s aln.fasta -m MFP -B 1000 -alrt 1000 -pre resultado
+```
+
+::: callout-note
+Combinación recomendada: `-B 1000 -alrt 1000`. Soporte se considera **fuerte** si **SH-aLRT ≥ 80% AND UFBoot ≥ 95%**. SH-aLRT solo detecta ramas inconsistentes; UFBoot mide estabilidad al remuestreo. Combinados, eliminan la mayoría de falsos positivos.
+:::
+
+## 11.8 Análisis particionado
+
+Para concatenaciones de varios genes, se define un archivo de partición:
+
+```text
+# partition.nex
+#nexus
+begin sets;
+  charset gene1 = 1-100;
+  charset gene2 = 101-200;
+  charset gene3 = 201-300;
+  charpartition mymodels =
+    DNA, gene1 = 1-100,
+    DNA, gene2 = 101-200,
+    DNA, gene3 = 201-300;
+end;
+```
+
+```bash
+# Edge-linked proportional: cada partición tiene su modelo + su propia tasa global
+iqtree2 -s concatenated.fasta -spp partition.nex -m MFP -B 1000 -pre partitioned
+
+# Edge-linked equal rate
+iqtree2 -s concatenated.fasta -sp partition.nex -m MFP -B 1000 -pre equal_rate
+
+# Topologías separadas por gen (-S)
+iqtree2 -s concatenated.fasta -S partition.nex -m MFP -pre per_gene
+```
+
+::: callout-warning
+**`-spp` (edge-linked proportional)** es la opción **recomendada** por defecto: asume que todas las particiones comparten el mismo árbol pero tienen tasas globales distintas. `-sp` fuerza la misma tasa global (poco realista). `-S` permite topologías distintas (para detectar discordancia genética, p. ej. ILS o introgresión).
+:::
+
+## 11.9 Variación de tasas entre sitios
+
+- `+I`: proporción de sitios invariables.
+- `+G4`: 4 categorías discretas Gamma (default).
+- `+I+G4`: ambos.
+- `+R2`, `+R4`, ...: FreeRate, más flexible que Gamma (no asume forma).
+
+```bash
+iqtree2 -s aln.fasta -m MFP+I+G4 -B 1000 -pre resultado_iv_g
+iqtree2 -s aln.fasta -m MFP+R2 -B 1000 -pre resultado_freeRate
+```
+
+::: callout-tip
+ModelFinder decide automáticamente entre +G y +R. `+R` tiende a ganar cuando la distribución de tasas es bimodal (muchos sitios invariantes de hecho + pocos variables muy rápidos).
+:::
+
+## 11.10 Tree rooting y topologías restringidas
+
+```bash
+# Raíz en outgroup
+iqtree2 -s aln.fasta -m MFP -B 1000 -o outgroup_taxon -pre rooted
+
+# Topología monofilética forzada
+iqtree2 -s aln.fasta -m MFP -g constraint.nwk -pre constrained
+```
+
+El archivo `constraint.nwk` contiene un árbol Newick con el clado que se quiere **forzar como monofilético**:
+
+```text
+((taxon1, taxon2), taxon3, taxon4, taxon5);
+```
+
+## 11.11 Outputs de IQ-TREE
+
+| Archivo | Contenido |
+|---------|-----------|
+| `.treefile` | Mejor árbol en Newick con soportes |
+| `.iqtree` | Reporte legible (modelo, logL, parámetros) |
+| `.log` | Log completo |
+| `.mldist` | Distancias ML pairwise |
+| `.best_scheme.nex` | Esquema de modelos particionados |
+| `.model` | Modelo(s) seleccionado(s) por ModelFinder |
+| `.ufboot` | Árboles de bootstrap (para otras herramientas) |
+| `.ckp` | Checkpoint (reanudar análisis) |
+
+```bash
+cat resultado.treefile
+ete3 view -t resultado.treefile
+```
+
+## 11.12 Paralelización
+
+```bash
+# Auto-detectar cores
+iqtree2 -s aln.fasta -m MFP -B 1000 -T AUTO -pre resultado
+
+# 8 threads
+iqtree2 -s aln.fasta -m MFP -B 1000 -T 8 -pre resultado
+```
+
+::: callout-note
+La paralelización de UFBoot con `-T` es casi lineal hasta ~16 cores. Para N cores > número de replicados bootstrap, el speedup se satura. Para datasets masivos con particiones, IQ-TREE 2.x usa paralelización MPI además de OpenMP: `mpirun -np 8 iqtree2 -s aln.fasta -m MFP -B 1000`.
+:::
+
+## 11.13 Concordance factors
+
+Los **quartet concordance factors** (Minh et al. 2020) miden qué proporción de cuartetos de genes son consistentes con cada rama del árbol de especies. Útil para detectar **discordancia genética** (ILS, introgresión).
+
+```bash
+iqtree2 -s aln.fasta -m MFP -B 1000 --cf-quartet 1000 -pre cf
+```
+
+## 11.14 Modelos para ARN 16S
+
+```bash
+# Modelos específicos para ARN ribosomal
+iqtree2 -s 16s_aln.fasta -m MFP -mset 16S -B 1000 -pre rn16s
+```
+
+IQ-TREE tiene modelos empíricos para ARN estructurados secundariamente (16S, 23S) que incorporan la estructura secundaria como pareo de posiciones. Para análisis fino usa `-mset 16S` y la alineación estructural de CRWstk o Rfam.
+
+## 11.15 Ejemplo completo
+
+```bash
+# 50 secuencias 16S primates, ~1500 sitios
+mafft --auto primates.fasta > primates_aln.fasta 2> /dev/null
+trimal -in primates_aln.fasta -out primates_trim.fasta -automated1
+
+iqtree2 -s primates_trim.fasta -m MFP -B 1000 -alrt 1000 -T AUTO -pre primates_ml
+```
+
+Output esperado (extracto de `primates_ml.iqtree`):
+
+```text
+Best-fit model according to BIC: GTR+F+I+G4
+Optimizer: Episode 4, logL improvement: 0.0001
+Akaike Information Criterion: 15732.456
+Bayesian Information Criterion: 16234.789
+Final log-likelihood: -7812.234
+Time: 00:12:34 (h:m:s)
+```
+
+## 11.16 Ejercicios
+
+### Ejercicio 1
+
+Descargar 40 secuencias de **16S rRNA** de Primates, alinear con MAFFT, recortar con trimAl. Ejecutar IQ-TREE con ModelFinder automático + UFBoot 1000 + SH-aLRT 1000. Reportar: (a) modelo seleccionado, (b) log-likelihood, (c) tiempo de ejecución, (d) valores de soporte de las ramas principales.
+
+### Ejercicio 2
+
+Sobre el mismo dataset, comparar 3 estrategias: (a) modelo fijo **GTR+I+G4**, (b) **ModelFinder MFP**, (c) ModelFinder con mezclas **+C60**. ¿Cuál tiene mejor logL? ¿Mejor AIC? ¿Las topologías son estables?
+
+### Ejercicio 3
+
+Construir árbol **filogenómico particionado**. Concatenar 3 genes (COI, Cytb, 16S) de 10 especies. Crear archivo de partición NEXUS. Ejecutar IQ-TREE con `-spp` (edge-linked proportional). Comparar con análisis separado por gen.
+
+## 11.17 Soluciones
+
+### Solución 1
+
+```bash
+#!/usr/bin/env bash
+# pipeline_ml_16s.sh
+
+set -euo pipefail
+mkdir -p 16s_ml && cd 16s_ml
+
+# 1. Descargar 40 16S de primates
+ACCESSIONS=$(echo "NC_012920 NC_002083 NC_001640 NC_006440 NC_005043 NC_011821 \
+NC_004025 NC_016868 NC_012801 NC_012781 NC_020630 NC_020638 NC_020078 \
+NC_020083 NC_020058 NC_020040 NC_012601 NC_011118 NC_011123 NC_006860 \
+NC_006380 NC_008070 NC_010427 NC_006499 NC_007350 NC_012919 NC_005091 \
+NC_005133 NC_002086 NC_016875 NC_020617 NC_012906 NC_020645 NC_020640 \
+NC_009932 NC_006305 NC_012903 NC_011138 NC_020632 NC_012883")
+
+for acc in $ACCESSIONS; do
+    # extraer región 16S: típico genBank completo, usar 5S..tRNA-Val..16S
+    efetch -db nucleotide -id "$acc" -format fasta > "${acc}.fasta" 2>/dev/null
+done
+cat *.fasta > 16s_raw.fasta
+
+# 2. Limpiar y alinear
+seqkit seq --name 16s_raw.fasta | head -3
+mafft --auto 16s_raw.fasta > 16s_aln.fasta 2> /dev/null
+trimal -in 16s_aln.fasta -out 16s_trim.fasta -automated1
+
+# 3. IQ-TREE con ModelFinder + UFBoot + SH-aLRT
+iqtree2 -s 16s_trim.fasta -m MFP -B 1000 -alrt 1000 -T AUTO -pre primates16s
+
+# 4. Reporte
+echo "=== Modelo seleccionado ==="
+grep "Best-fit" primates16s.iqtree
+echo ""
+echo "=== Log-likelihood ==="
+grep "Final log-likelihood" primates16s.iqtree
+echo ""
+echo "=== Tiempo ==="
+grep -E "Time:" primates16s.iqtree
+echo ""
+echo "=== Soporte de ramas ==="
+python3 << 'EOF'
+from ete3 import Tree
+t = Tree("primates16s.treefile", format=1)
+supp = [n.support for n in t.traverse() if not n.is_leaf() and n.support]
+print(f"Número de clados internos: {len(supp)}")
+print(f"Soporte min/med/max: {min(supp)} / {sum(supp)/len(supp):.1f} / {max(supp)}")
+print(f"Clados con UFBoot+aLRT fuerte (>=95): {sum(1 for s in supp if s>=95)} / {len(supp)}")
+EOF
+```
+
+Output esperado:
+
+```text
+=== Modelo seleccionado ===
+Best-fit model according to BIC: GTR+F+I+G4
+
+=== Log-likelihood ===
+Final log-likelihood: -15234.876
+
+=== Tiempo ===
+Time: 00:14:23 (h:m:s)
+
+=== Soporte de ramas ===
+Número de clados internos: 37
+Soporte min/med/max: 65.0 / 96.4 / 100.0
+Clados con UFBoot+aLRT fuerte (>=95): 31 / 37
+```
+
+### Solución 2
+
+```bash
+# (a) Modelo fijo GTR+I+G
+iqtree2 -s 16s_trim.fasta -m GTR+I+G4 -B 1000 -alrt 1000 -T AUTO -pre fixed_GTR
+
+# (b) ModelFinder automático
+iqtree2 -s 16s_trim.fasta -m MFP -B 1000 -alrt 1000 -T AUTO -pre mfp
+
+# (c) ModelFinder con mezclas +C60
+iqtree2 -s 16s_trim.fasta -m MFP -madd GTR+C20,GTR+C60 -B 1000 -alrt 1000 -T AUTO -pre c60
+
+# Comparación
+python3 << 'EOF'
+import re
+runs = {
+    "GTR+I+G (fijo)":   "fixed_GTR",
+    "MFP":              "mfp",
+    "MFP+C60":          "c60",
+}
+print(f"{'Estrategia':<20} {'logL':>12} {'AIC':>12} {'BIC':>12}")
+for label, pre in runs.items():
+    with open(f"{pre}.iqtree") as f:
+        txt = f.read()
+    logL = re.search(r"Final log-likelihood:\s+(-?\d+\.\d+)", txt)
+    aic  = re.search(r"Akaike.*:\s+(\d+\.\d+)", txt)
+    bic  = re.search(r"Bayesian.*:\s+(\d+\.\d+)", txt)
+    print(f"{label:<20} {logL.group(1):>12} {aic.group(1):>12} {bic.group(1):>12}")
+EOF
+
+# Comparar topologías con Robinson-Foulds
+python3 << 'EOF'
+from ete3 import Tree
+trees = {k: Tree(f"{v}.treefile", format=1) for k, v in
+         [("GTR+I+G", "fixed_GTR"), ("MFP", "mfp"), ("MFP+C60", "c60")]}
+import itertools
+for (n1, t1), (n2, t2) in itertools.combinations(trees.items(), 2):
+    rf, max_rf = t1.robinson_foulds(t2, attr_t1="name", attr_t2="name")[:2]
+    print(f"RF {n1} vs {n2}: {rf}/{max_rf} = {100*rf/max_rf:.1f}%")
+EOF
+```
+
+```text
+Estrategia            logL          AIC          BIC
+GTR+I+G (fijo)   -15288.34   30632.68   31012.34
+MFP              -15234.88   30526.76   30934.11
+MFP+C60          -15012.45   30100.90   30780.34
+```
+
+```text
+RF GTR+I+G vs MFP: 4/74 = 5.4%
+RF GTR+I+G vs MFP+C60: 8/74 = 10.8%
+RF MFP vs MFP+C60: 6/74 = 8.1%
+```
+
+**Análisis**:
+
+1. **logL**: MFP+C60 gana (logL menos negativo = mayor verosimilitud). Mejora ~276 logL sobre MFP y ~576 sobre GTR+I+G fijo.
+2. **AIC**: MFP+C60 también gana (AIC menor = mejor trade-off verosimilitud/complejidad). Mejora ~425 unidades: muy significativa (deltaAIC > 10 es decisivo).
+3. **BIC**: MFP+C60 sigue ganando. Penalización extra por parámetros no anula la mejora de verosimilitud.
+4. **Topologías**: estables para la mayoría de clados (RF < 11%). Las diferencias afectan a clados con soporte medio-bajo (ramas internas "difusas"). Si las topologías difieren en clados con soporte fuerte, sospecha de conflicto entre modelo y datos.
+
+::: callout-important
+Para datos con heterogeneidad de composición o tasas entre sitios (típico en 16S con regiones variables y conservadas alternadas), las mezclas `+C60` son **muy superiores**. Para datos homogéneos (p. ej. Cytb de mamíferos cercanos), `GTR+I+G` suele bastar.
+:::
+
+### Solución 3
+
+```bash
+#!/usr/bin/env bash
+# pipeline_filogenomica.sh
+
+set -euo pipefail
+mkdir -p phylogenomics && cd phylogenomics
+
+# 1. Concatenar 3 genes de 10 especies
+# Asumimos: coi.fasta, cytb.fasta, 16s.fasta (alineados individualmente)
+for g in coi cytb 16s; do
+    mafft --auto "${g}.fasta" > "${g}_aln.fasta" 2>/dev/null
+    trimal -in "${g}_aln.fasta" -out "${g}_trim.fasta" -automated1
+done
+
+# 2. Asegurar mismo set de taxones en los 3 genes
+#    (con seqkit: intersectar nombres)
+seqkit seq -n coi_trim.fasta  > names_coi.txt
+seqkit seq -n cytb_trim.fasta > names_cytb.txt
+seqkit seq -n 16s_trim.fasta  > names_16s.txt
+comm -12 <(sort names_coi.txt) <(sort names_cytb.txt) | comm -12 - <(sort names_16s.txt) > common.txt
+for g in coi cytb 16s; do
+    seqkit grep -n -f common.txt "${g}_trim.fasta" > "${g}_filt.fasta"
+done
+
+# 3. Concatenar con un script Python (alineamientos deben tener misma longitud por gen)
+python3 << 'EOF'
+from Bio import AlignIO
+genes = ["coi", "cytb", "16s"]
+records = {g: AlignIO.read(f"{g}_filt.fasta", "fasta") for g in genes}
+# Reordenar a mismo orden de taxones
+names = [r.id for r in records["coi"]]
+for g in genes:
+    order = {r.id: i for i, r in enumerate(records[g])}
+    records[g] = records[g][[order[n] for n in names]]
+# Concatenar
+lengths = {g: records[g].get_alignment_length() for g in genes}
+total = sum(lengths.values())
+with open("concat.fasta", "w") as f:
+    for i, n in enumerate(names):
+        seq = "".join(str(records[g][i].seq) for g in genes)
+        f.write(f">{n}\n{seq}\n")
+# Partition file NEXUS
+with open("partition.nex", "w") as f:
+    f.write("#nexus\nbegin sets;\n")
+    start = 1
+    for g in genes:
+        end = start + lengths[g] - 1
+        f.write(f"  charset {g} = {start}-{end};\n")
+        start = end + 1
+    f.write(f"  charpartition mymodels =\n")
+    parts = []
+    start = 1
+    for g in genes:
+        end = start + lengths[g] - 1
+        parts.append(f"    DNA:{g} = {start}-{end}")
+        start = end + 1
+    f.write(",\n".join(parts) + ";\nend;\n")
+print(f"Concatenado: {len(names)} taxones, {total} sitios")
+print(f"Particiones: {lengths}")
+EOF
+
+# 4. Análisis particionado edge-linked proportional
+iqtree2 -s concat.fasta -spp partition.nex -m MFP -B 1000 -alrt 1000 -T AUTO -pre partitioned
+
+# 5. Comparar con análisis separado por gen (-S)
+iqtree2 -s concat.fasta -S partition.nex -m MFP -B 1000 -pre per_gene
+
+# 6. Reporte
+echo "=== Análisis particionado (-spp) ==="
+grep -E "(Best-fit|Final log-likelihood|Time|Akaike|Bayesian)" partitioned.iqtree
+echo ""
+echo "=== Análisis por separado (-S) ==="
+grep -E "(Best-fit|Final log-likelihood)" per_gene.iqtree | head -10
+```
+
+```text
+Concatenado: 10 taxones, 3247 sitios
+Particiones: {'coi': 657, 'cytb': 1140, '16s': 1450}
+
+=== Análisis particionado (-spp) ===
+Best-fit model for gene coi:  GTR+F+I+G4
+Best-fit model for gene cytb: GTR+F+I+G4
+Best-fit model for gene 16s:  HKY+F+I+G4
+Final log-likelihood: -18745.322
+Akaike Information Criterion: 37640.645
+Bayesian Information Criterion: 37950.123
+Time: 00:09:11
+```
+
+**Análisis**: El análisis particionado permite que cada gen tenga su propio modelo (16S selecciona HKY más simple, mientras que COI y Cytb, con saturación transversal, requieren GTR). La topología combinada debería ser **consistente** con la topología de cada gen por separado; si no, hay **discordancia genética** que merece análisis posteriores (network, D-statistics, coalescente).
+
+::: callout-tip
+Para análisis finos con muchos genes, IQ-TREE 2 soporta **edge-unlinked** (`-S`), que construye un árbol distinto por partición. Comparar `-spp` vs `-S` revela si un gen "cuenta una historia distinta" (posible introgresión o sorting incompleto de linajes).
+:::

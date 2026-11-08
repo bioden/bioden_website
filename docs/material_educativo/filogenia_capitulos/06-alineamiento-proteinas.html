@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Capítulo 6: Alineamiento de proteínas y codón-consciente – BIODEN</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../logo.png" rel="icon" type="image/png">
+<script src="../../site_libs/cookie-consent/cookie-consent.js"></script>
+<link href="../../site_libs/cookie-consent/cookie-consent.css" rel="stylesheet">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-70f92796293836dceea0045bd755b5b1.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-1242ccc02940432acd87c1b818d9cd49.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-70f92796293836dceea0045bd755b5b1.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+<script type="text/javascript" charset="UTF-8">
+document.addEventListener('DOMContentLoaded', function () {
+cookieconsent.run({
+  "notice_banner_type":"interstitial",
+  "consent_type":"express",
+  "palette":"dark",
+  "language":"en",
+  "page_load_consent_levels":["strictly-necessary"],
+  "notice_banner_reject_button_hide":false,
+  "preferences_center_close_button_hide":false,
+  "website_name":""
+  ,
+"language":"en"
+  });
+});
+</script> 
+  
+<style>html{ scroll-behavior: smooth; }</style>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../logo.png" alt="" class="navbar-logo light-content">
+    <img src="../../logo.png" alt="" class="navbar-logo dark-content">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">BIODEN</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Inicio</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-proyectos" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Proyectos</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-proyectos">    
+        <li>
+    <a class="dropdown-item" href="https://bioden.github.io/XIII_CCB_curso/">
+ <span class="dropdown-text">De la Botánica a la Bioinformática</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../investigacion.html"> 
+<span class="menu-text">Investigación</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../integrantes.html"> 
+<span class="menu-text">Integrantes</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../biosistalks/biosistalks.html"> 
+<span class="menu-text">Biosis Talks</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../material_educativo.html"> 
+<span class="menu-text">Material educativo</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../suplementario.html"> 
+<span class="menu-text">Servicios</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.instagram.com/dbg_unicauca/"> <i class="bi bi-instagram" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.facebook.com/profile.php?id=61583453722433"> <i class="bi bi-facebook" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:bioden@unicauca.edu.co"> <i class="bi bi-envelope" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar"><div class="quarto-margin-header"><div class="margin-header-item">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../../logos/semillero.png" class="img-fluid figure-img"></p>
+<figcaption>Universidad del Cauca</figcaption>
+</figure>
+</div>
+</div></div>
+        
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Capítulo 6: Alineamiento de proteínas y codón-consciente</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="diferencias-entre-alinear-adn-y-proteínas" class="level2">
+<h2 data-anchor-id="diferencias-entre-alinear-adn-y-proteínas">6.1 Diferencias entre alinear ADN y proteínas</h2>
+<p>Alinear proteínas es <strong>cualitativamente distinto</strong> a alinear ADN. Las razones son tanto estadísticas como biológicas:</p>
+<ul>
+<li>El alfabeto es de <strong>20 símbolos</strong> (aminoácidos) en lugar de 4 (nucleótidos), lo que reduce el ruido de coincidencias aleatorias: dos aminoácidos idénticos alineados son mucho más informativos que dos nucleótidos idénticos.</li>
+<li>Las sustituciones entre aminoácidos <strong>no son equivalentes</strong>: un cambio Asp → Glu (ácidos, similares) es evolutivamente más probable que un Asp → Phe (ácido → aromático). Los algoritmos de alineamiento de proteínas usan <strong>matrices de sustitución</strong> (BLOSUM, PAM) que ponderan estos cambios.</li>
+<li>Las proteínas tienen <strong>estructura tridimensional</strong> que se conserva mejor que la secuencia primaria. Posiciones estructuralmente equivalentes suelen estar alineadas correctamente aunque la identidad sea baja.</li>
+<li>La conservación puede ser <strong>funcional</strong> (sitio activo) y no estrictamente de secuencia: un Ser → Thr en un sitio catalítico puede preservar la función.</li>
+</ul>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>La señal filogenética en proteínas es más <strong>persistente</strong> a grandes distancias evolutivas. Para divergencias &gt; 100 Ma, las proteínas siguen siendo informativas mientras que el ADN a menudo está saturado.</p>
+</div>
+</div>
+</section>
+<section id="por-qué-alinear-proteínas-primero-cuando-se-tienen-cds" class="level2">
+<h2 data-anchor-id="por-qué-alinear-proteínas-primero-cuando-se-tienen-cds">6.2 Por qué alinear proteínas primero cuando se tienen CDS</h2>
+<p>Cuando el dato original es una <strong>secuencia codificante (CDS)</strong> de ADN, una tentación ingenua es alinear directamente los nucleótidos. <strong>Eso suele ser un error</strong> por dos motivos:</p>
+<ol type="1">
+<li><strong>Ruido de sustitución sinónima</strong>: muchos cambios en tercera posición del codón son sinónimos y no aportan señal filogenética, pero introducen ruido que confunde al alineador.</li>
+<li><strong>Frameshifts artefactuales</strong>: al alinear ADN sin restricción de marco de lectura, un alineador puede introducir un gap de longitud no múltiplo de 3, rompiendo el marco de lectura y produciendo un “alineamiento” biológicamente imposible.</li>
+</ol>
+<p>El procedimiento correcto es:</p>
+<ol type="1">
+<li><strong>Traducir</strong> los CDS a proteínas (preservando el ID de cada secuencia).</li>
+<li><strong>Alinear las proteínas</strong>: la señal es más limpia y los alineadores aprovechan matrices de sustitución.</li>
+<li><strong>Trasladar</strong> los gaps del alineamiento de proteínas al alineamiento de nucleótidos, insertando gaps de 3 nucleótidos por cada gap de aminoácido.</li>
+</ol>
+<p>Esto preserva el marco de lectura y se llama <strong>alineamiento codón-consciente</strong> (<em>codon-aware alignment</em>).</p>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Important
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Para cualquier análisis posterior que use codones como unidad (modelos dN/dS, modelos de codón en PAML, selección sitio-a-sitio) <strong>el alineamiento codón-consciente es obligatorio</strong>. Alinear ADN directamente produce resultados inválidos en estos análisis.</p>
+</div>
+</div>
+</section>
+<section id="alineamiento-de-proteínas-con-mafft" class="level2">
+<h2 data-anchor-id="alineamiento-de-proteínas-con-mafft">6.3 Alineamiento de proteínas con MAFFT</h2>
+<p>MAFFT es la herramienta más versátil: sirve tanto para ADN como para proteínas, y detecta automáticamente el tipo de secuencia. Para proteínas, la estrategia L-INS-i es la más precisa para datasets pequeños con indels complejos:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Instalación (Bioconda)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> install <span class="at">-c</span> bioconda mafft <span class="at">-y</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># L-INS-i: máxima precisión para &lt;200 proteínas</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">mafft</span> <span class="at">--localpair</span> <span class="at">--maxiterate</span> 1000 protein.fasta <span class="op">&gt;</span> protein_aln.fasta</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Auto (recomendado si tienes dudas)</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="ex">mafft</span> <span class="at">--auto</span> protein.fasta <span class="op">&gt;</span> protein_aln.fasta</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Paralelizar</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="ex">mafft</span> <span class="at">--localpair</span> <span class="at">--maxiterate</span> 1000 <span class="at">--thread</span> 8 protein.fasta <span class="op">&gt;</span> protein_aln.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>MAFFT utiliza la matriz BLOSUM62 por defecto al alinear proteínas. Para proteínas muy divergentes puede cambiarse con <code>--matrix</code> (p.&nbsp;ej. <code>--matrix blastn</code> equivalente, aunque se recomienda usar BLOSUM45 manualmente solo en pipelines personalizados).</p>
+</section>
+<section id="alineamiento-con-muscle5" class="level2">
+<h2 data-anchor-id="alineamiento-con-muscle5">6.4 Alineamiento con MUSCLE5</h2>
+<p>MUSCLE5 (Edgar 2021) es una reescritura moderna de MUSCLE con algoritmo <code>super5</code> para datasets grandes y mayor precisión que MUSCLE3:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> install <span class="at">-c</span> bioconda muscle <span class="at">-y</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Uso estándar</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ex">muscle</span> <span class="at">-align</span> protein.fasta <span class="at">-output</span> protein_aln.fasta</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Para datasets grandes (&gt;1000 secuencias)</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="ex">muscle</span> <span class="at">-super5</span> large_protein.fasta <span class="at">-output</span> aln.fasta</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Convergencia estricta</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="ex">muscle</span> <span class="at">-align</span> protein.fasta <span class="at">-output</span> aln.fasta <span class="at">-consiters</span> 16 <span class="at">-refineiters</span> 16</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>muscle -super5</code> divide el dataset en clusters, alinea cada uno y los une. Es <strong>magnitudes de orden más rápido</strong> que MAFFT L-INS-i en datasets grandes, con calidad comparable. Útil cuando tienes &gt; 5000 proteínas.</p>
+</div>
+</div>
+</section>
+<section id="clustalomega" class="level2">
+<h2 data-anchor-id="clustalomega">6.5 ClustalOmega</h2>
+<p>ClustalOmega (Sievers et al.&nbsp;2011) usa <strong>HMMs profilados</strong> y guía con árboles:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> install <span class="at">-c</span> bioconda clustalo <span class="at">-y</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">clustalo</span> <span class="at">-i</span> protein.fasta <span class="at">-o</span> aln.fasta <span class="at">--outfmt</span><span class="op">=</span>fasta <span class="at">--iterations</span><span class="op">=</span>3</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Para datasets grandes con HMM guía</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="ex">clustalo</span> <span class="at">-i</span> protein.fasta <span class="at">-o</span> aln.fasta <span class="at">--threads</span><span class="op">=</span>8 <span class="at">--iterations</span><span class="op">=</span>5</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Output en formato PHYLIP</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="ex">clustalo</span> <span class="at">-i</span> protein.fasta <span class="at">-o</span> aln.phy <span class="at">--outfmt</span><span class="op">=</span>phylip</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Comparación práctica:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 15%">
+<col style="width: 50%">
+<col style="width: 13%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Herramienta</th>
+<th>Mejor para</th>
+<th>Velocidad</th>
+<th>Precisión típica</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>MAFFT L-INS-i</td>
+<td>&lt;200 seqs, indels complejos, máxima calidad</td>
+<td>Lento</td>
+<td>Muy alta</td>
+</tr>
+<tr class="even">
+<td>MUSCLE5</td>
+<td>Datasets medianos/grandes</td>
+<td>Rápido</td>
+<td>Alta</td>
+</tr>
+<tr class="odd">
+<td>ClustalOmega</td>
+<td>Datasets grandes, HMM perfilados</td>
+<td>Medio</td>
+<td>Alta</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="alineamiento-codón-consciente-con-pal2nal" class="level2">
+<h2 data-anchor-id="alineamiento-codón-consciente-con-pal2nal">6.6 Alineamiento codón-consciente con pal2nal</h2>
+<p><code>pal2nal.pl</code> (Suyama et al.&nbsp;2006) es el método <strong>de facto</strong>: toma un alineamiento de proteínas y los CDS originales y genera el alineamiento de nucleótidos “trasladando” los gaps como tripletes.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> install <span class="at">-c</span> bioconda pal2nal <span class="at">-y</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Formato FASTA (alineamiento de nucleótidos con gaps de 3)</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="ex">pal2nal.pl</span> protein_aln.fasta cds.fasta <span class="at">-output</span> fasta <span class="op">&gt;</span> cds_aln.fasta</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Formato PAML (para codeml)</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="ex">pal2nal.pl</span> protein_aln.fasta cds.fasta <span class="at">-output</span> paml <span class="op">&gt;</span> cds_aln.paml</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Formato codon (número de codón en cada sitio)</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="ex">pal2nal.pl</span> protein_aln.fasta cds.fasta <span class="at">-output</span> codon <span class="op">&gt;</span> cds_aln.codon</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Aviso de codones de paro internos (warn-only)</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="ex">pal2nal.pl</span> protein_aln.fasta cds.fasta <span class="at">-output</span> fasta <span class="at">-nogap</span> <span class="op">&gt;</span> cds_aln.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Warning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Si una secuencia CDS tiene longitud no múltiplo de 3, o contiene codones de paro internos, <code>pal2nal</code> aborta con error. Revisa siempre los CDS con <code>transeq</code> antes de pasar a <code>pal2nal</code>.</p>
+</div>
+</div>
+</section>
+<section id="macse-alineamiento-de-cds-con-conciencia-de-codones" class="level2">
+<h2 data-anchor-id="macse-alineamiento-de-cds-con-conciencia-de-codones">6.7 MACSE: alineamiento de CDS con conciencia de codones</h2>
+<p>MACSE (Ranwez et al.&nbsp;2011) <strong>alinea directamente los CDS</strong> teniendo en cuenta el marco de lectura. Es la opción adecuada cuando:</p>
+<ul>
+<li>Hay <strong>frameshifts reales</strong> (errores de secuenciación, pseudogenes).</li>
+<li>Hay <strong>codones de paro internos</strong> (pseudogenes en formación).</li>
+<li>No se quiere depender de un alineamiento de proteínas previo.</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> install <span class="at">-c</span> bioconda macse <span class="at">-y</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Alineamiento básico de CDS</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="ex">macse</span> align_sequences <span class="at">-seq</span> cds.fasta <span class="at">-out_CDS_ALN</span> cds_aln.fasta</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Genera también el alineamiento de aminoácidos</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="ex">macse</span> align_sequences <span class="at">-seq</span> cds.fasta <span class="at">-out_AA_ALN</span> protein_aln.fasta <span class="at">-out_CDS_ALN</span> cds_aln.fasta</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co"># ConFrameshift: penaliza menos los frameshifts (pseudogenes)</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="ex">macse</span> align_sequences <span class="at">-seq</span> cds.fasta <span class="at">-out_CDS_ALN</span> cds_aln.fasta <span class="dt">\</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">-fs</span> 20 <span class="at">-stop</span> 20</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>MACSE usa caracteres especiales en su salida: <code>!</code> y <code>*</code> marcan frameshifts y codones de paro internos, respectivamente. Estos pueden filtrarse después:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Limpiar frameshifts del alineamiento MACSE</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="st">'s/!//g'</span> cds_aln.fasta <span class="op">&gt;</span> cds_aln_clean.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="prank-alineamiento-filogenético-consciente" class="level2">
+<h2 data-anchor-id="prank-alineamiento-filogenético-consciente">6.8 PRANK: alineamiento filogenético consciente</h2>
+<p>PRANK (Löytynoja &amp; Goldman 2008) es único: <strong>usa un árbol guía filogenético</strong> para colocar los gaps según la historia evolutiva, evitando el sobre-alineamiento típico de otros métodos:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> install <span class="at">-c</span> bioconda prank <span class="at">-y</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Para proteínas</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="ex">prank</span> <span class="at">-d</span><span class="op">=</span>protein.fasta <span class="at">-o</span><span class="op">=</span>output <span class="at">-f</span><span class="op">=</span>fasta <span class="at">-protein</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Para CDS (codón-consciente)</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="ex">prank</span> <span class="at">-d</span><span class="op">=</span>cds.fasta <span class="at">-o</span><span class="op">=</span>output <span class="at">-f</span><span class="op">=</span>fasta <span class="at">-codon</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Con árbol guía previo (mejora precisión)</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="ex">prank</span> <span class="at">-d</span><span class="op">=</span>protein.fasta <span class="at">-o</span><span class="op">=</span>output <span class="at">-f</span><span class="op">=</span>fasta <span class="at">-protein</span> <span class="at">-t</span><span class="op">=</span>guide_tree.nwk</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>PRANK tiende a producir alineamientos <strong>más largos</strong> (con más gaps) que MAFFT o MUSCLE, pero teóricamente más realistas. Para análisis de selección dN/dS es una opción elegante.</p>
+</div>
+</div>
+</section>
+<section id="recorte-de-alineamientos-con-trimal" class="level2">
+<h2 data-anchor-id="recorte-de-alineamientos-con-trimal">6.9 Recorte de alineamientos con trimAl</h2>
+<p><code>trimAl</code> (Capella-Gutiérrez et al.&nbsp;2009) elimina columnas de baja calidad. Modos automáticos:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> install <span class="at">-c</span> bioconda trimal <span class="at">-y</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Modo automático (heurística recomendada)</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="ex">trimal</span> <span class="at">-in</span> protein_aln.fasta <span class="at">-out</span> trimmed.fasta <span class="at">-automated1</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Recorte por porcentaje de gaps</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="ex">trimal</span> <span class="at">-in</span> protein_aln.fasta <span class="at">-out</span> trimmed.fasta <span class="at">-gapthreshold</span> 0.5</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Conservar solo columnas con identidad mínima</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="ex">trimal</span> <span class="at">-in</span> protein_aln.fasta <span class="at">-out</span> trimmed.fasta <span class="at">-ct</span> 0.6 <span class="at">-cons</span> 60</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Output con reporte de columnas eliminadas</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="ex">trimal</span> <span class="at">-in</span> protein_aln.fasta <span class="at">-out</span> trimmed.fasta <span class="at">-automated1</span> <span class="at">-colnumbering</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Cuándo recortar:</p>
+<ul>
+<li>Columnas con <strong>&gt;50% de gaps</strong> (ruido estructural).</li>
+<li><strong>Regiones hipervariables</strong> (bucle flexible sin restricción funcional).</li>
+<li><strong>Extremos N/C terminales</strong> mal alineados (típico de proteínas con dominios variables).</li>
+</ul>
+<p>Cuándo <strong>no</strong> recortar:</p>
+<ul>
+<li>Análisis que requieren sitios saturados (estudios de dinámica evolutiva).</li>
+<li>Cuando el alineamiento ya es muy corto (recortar más lo empobrecería).</li>
+</ul>
+</section>
+<section id="identificar-dominios-conservados-con-hmmer" class="level2">
+<h2 data-anchor-id="identificar-dominios-conservados-con-hmmer">6.10 Identificar dominios conservados con HMMER</h2>
+<p>Para proteínas multidominio, antes de alinear conviene identificar dominios con <strong>HMMER</strong> y Pfam:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> install <span class="at">-c</span> bioconda hmmer <span class="at">-y</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Buscar dominios Pfam en una proteína</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="ex">hmmsearch</span> pfam.hmm protein.fasta <span class="op">&gt;</span> search.out</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Output tabular</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="ex">hmmsearch</span> <span class="at">--tblout</span> search.tbl pfam.hmm protein.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Si las proteínas tienen <strong>dominios múltiples en orden distinto</strong>, lo correcto es separar dominios y alinearlos independientemente. Esto evita forzar el alineamiento de regiones no homólogas.</p>
+</section>
+<section id="conversión-de-formatos" class="level2">
+<h2 data-anchor-id="conversión-de-formatos">6.11 Conversión de formatos</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># One-line FASTA</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">seqkit</span> seq <span class="at">-w</span> 0 protein_aln.fasta <span class="op">&gt;</span> one_line.fasta</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># FASTA a NEXUS</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="ex">seqmagick</span> convert <span class="at">--format</span> nexus protein_aln.fasta aln.nex</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co"># FASTA a PHYLIP</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="ex">seqkit</span> seq cds_aln.fasta <span class="at">--phylip</span> <span class="op">&gt;</span> cds_aln.phy</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co"># PHYLIP relajado (nombres largos)</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="ex">seqmagick</span> convert <span class="at">--format</span> phylip-relaxed protein_aln.fasta aln.phy</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="verificación-del-alineamiento" class="level2">
+<h2 data-anchor-id="verificación-del-alineamiento">6.12 Verificación del alineamiento</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Longitud de cada secuencia (infoseq viene con EMBOSS)</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">infoseq</span> <span class="at">-only</span> <span class="at">-name</span> <span class="at">-length</span> protein_aln.fasta</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Contar secuencias</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'/^&gt;/{n++} END{print n" secuencias"}'</span> protein_aln.fasta</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Verificar que todas tienen misma longitud</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'/^&gt;/{next}{print length($0)}'</span> protein_aln.fasta <span class="kw">|</span> <span class="fu">sort</span> <span class="at">-u</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Estadísticas con seqkit</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="ex">seqkit</span> stats protein_aln.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Warning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Si el comando <code>sort -u</code> devuelve <strong>más de un valor de longitud</strong>, tu “alineamiento” no es un MSA: faltan gaps. Revisa el archivo de salida del alineador.</p>
+</div>
+</div>
+</section>
+<section id="casos-especiales" class="level2">
+<h2 data-anchor-id="casos-especiales">6.13 Casos especiales</h2>
+<section id="secuencias-con-longitudes-muy-diferentes" class="level3">
+<h3 data-anchor-id="secuencias-con-longitudes-muy-diferentes">6.13.1 Secuencias con longitudes muy diferentes</h3>
+<p>Si las proteínas tienen dominios conservados pero extensiones terminales variables, usa <strong>L-INS-i de MAFFT</strong> (estrategia local) que es robusto a esto:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">mafft</span> <span class="at">--localpair</span> <span class="at">--maxiterate</span> 1000 variable_proteins.fasta <span class="op">&gt;</span> aln.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="proteínas-multidominio" class="level3">
+<h3 data-anchor-id="proteínas-multidominio">6.13.2 Proteínas multidominio</h3>
+<p>Separa los dominios con HMMER y alinea cada uno:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Para cada dominio identificado por hmmsearch</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="ex">hmmfetch</span> pfam.hmm PF00085 <span class="op">&gt;</span> kinase.hmm</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="ex">hmmalign</span> kinase.hmm proteins.fasta <span class="op">&gt;</span> kinase_aln.sto</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="isoformas" class="level3">
+<h3 data-anchor-id="isoformas">6.13.3 Isoformas</h3>
+<p>Si tu set incluye <strong>isoformas de splicing</strong> de un mismo gen, dos opciones:</p>
+<ol type="1">
+<li>Usar la <strong>isoforma canónica</strong> como referencia y alinear el resto contra ella.</li>
+<li>Quedarse solo con las isoformas canónicas (recomendado para filogenia).</li>
+</ol>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Filtrar isoformas canónicas desde UniProt</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'/^&gt;/ &amp;&amp; /canonical/{p=1} /^&gt;/ &amp;&amp; !/canonical/{p=0} p'</span> uniprot.fasta <span class="op">&gt;</span> canonical.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="pipeline-típico-cds-proteína-alineamiento-codón-consciente" class="level2">
+<h2 data-anchor-id="pipeline-típico-cds-proteína-alineamiento-codón-consciente">6.14 Pipeline típico CDS → proteína → alineamiento codón-consciente</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Traducir CDS a proteínas (EMBOSS transeq, formato FASTA)</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="ex">transeq</span> <span class="at">-sequence</span> cds.fasta <span class="at">-outseq</span> proteins.fasta</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Alinear proteínas con MAFFT L-INS-i</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="ex">mafft</span> <span class="at">--localpair</span> <span class="at">--maxiterate</span> 1000 proteins.fasta <span class="op">&gt;</span> proteins_aln.fasta</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Recortar regiones no informativas</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="ex">trimal</span> <span class="at">-in</span> proteins_aln.fasta <span class="at">-out</span> proteins_trim.fasta <span class="at">-automated1</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Trasladar gaps al CDS (alineamiento codón-consciente)</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="ex">pal2nal.pl</span> proteins_trim.fasta cds.fasta <span class="at">-output</span> fasta <span class="op">&gt;</span> cds_aln.fasta</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Convertir a PHYLIP para análisis posterior (IQ-TREE, RAxML-NG, PAML)</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a><span class="ex">seqkit</span> seq cds_aln.fasta <span class="at">--phylip</span> <span class="op">&gt;</span> cds_aln.phy</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a><span class="co"># 6. Verificar</span></span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'/^&gt;/{next}{print length($0)}'</span> cds_aln.fasta <span class="kw">|</span> <span class="fu">sort</span> <span class="at">-u</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Guarda los archivos intermedios (<code>proteins_aln.fasta</code>, <code>proteins_trim.fasta</code>) — son útiles para análisis paralelos basados en proteínas y para depurar errores.</p>
+</div>
+</div>
+</section>
+<section id="wsl2-vs-powershell" class="level2">
+<h2 data-anchor-id="wsl2-vs-powershell">6.15 WSL2 vs PowerShell</h2>
+<p>En WSL2/Ubuntu todos los comandos anteriores funcionan sin más. En PowerShell nativo, los binarios instalados vía Bioconda en el entorno WSL deben invocarse pasando por <code>wsl</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode powershell code-with-copy"><code class="sourceCode powershell"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Desde PowerShell nativo, llamando a herramientas WSL</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>wsl mafft <span class="op">--</span>localpair <span class="op">--</span>maxiterate <span class="dv">1000</span> protein<span class="op">.</span><span class="fu">fasta</span> <span class="ch">`&gt;</span> protein_aln<span class="op">.</span><span class="fu">fasta</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co"># O ejecutar todo dentro de una sesión wsl</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>wsl bash <span class="op">-</span>c <span class="st">"mafft --localpair --maxiterate 1000 protein.fasta &gt; protein_aln.fasta"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>El símbolo <code>&gt;</code> debe escaparse en PowerShell con <code>`</code> (backtick). Para pipelines largos, siempre es más simple usar <code>wsl bash -c "..."</code> con la cadena completa.</p>
+</section>
+<section id="ejercicios" class="level2">
+<h2 data-anchor-id="ejercicios">6.16 Ejercicios</h2>
+<section id="ejercicio-1" class="level3">
+<h3 data-anchor-id="ejercicio-1">Ejercicio 1</h3>
+<p>Descargar 10 CDS completos del gen <strong>BRCA1</strong> de mamíferos (<em>Homo, Pan, Gorilla, Pongo, Macaca, Mus, Rattus, Bos, Canis, Felis</em>). Traducir con <code>transeq</code>. Alinear las proteínas con MAFFT <code>--localpair</code>. Recortar con trimAl. Generar alineamiento codón-consciente con <code>pal2nal</code>. Mostrar el comando completo.</p>
+</section>
+<section id="ejercicio-2" class="level3">
+<h3 data-anchor-id="ejercicio-2">Ejercicio 2</h3>
+<p>Comparar dos estrategias de alineamiento de CDS: (a) alinear ADN directamente con MAFFT, (b) alinear proteínas y luego <code>pal2nal</code>. Comparar número de gaps y longitud final. ¿Cuál preserva mejor los codones?</p>
+</section>
+<section id="ejercicio-3" class="level3">
+<h3 data-anchor-id="ejercicio-3">Ejercicio 3</h3>
+<p>Escribir función Bash <code>alinear_cds(cds_fasta, output_basename)</code> que ejecute el pipeline completo: traducir, alinear proteínas, recortar, generar alineamiento codón-consciente, convertir a PHYLIP. Probar con un archivo de prueba.</p>
+</section>
+</section>
+<section id="soluciones" class="level2">
+<h2 data-anchor-id="soluciones">6.17 Soluciones</h2>
+<section id="solución-1" class="level3">
+<h3 data-anchor-id="solución-1">Solución 1</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Crear directorio de trabajo</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> ~/filogenia/brca1 <span class="kw">&amp;&amp;</span> <span class="bu">cd</span> ~/filogenia/brca1</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Descargar CDS de BRCA1 usando entrez-direct (NCBI)</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="co"># IDs de ejemplo (RefSeq mRNA); adaptar si cambian</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> acc <span class="kw">in</span> NM_007294 NM_001276703 NM_001276762 NM_001276717 NM_001276765 <span class="dt">\</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>           NM_001276705 NM_001276761 XM_054224335 NM_001006655 NM_001287028<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    <span class="ex">efetch</span> <span class="at">-db</span> nucleotide <span class="at">-id</span> <span class="st">"</span><span class="va">$acc</span><span class="st">"</span> <span class="at">-format</span> fasta <span class="op">&gt;&gt;</span> brca1_cds.fasta</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Traducir CDS → proteínas</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a><span class="ex">transeq</span> <span class="at">-sequence</span> brca1_cds.fasta <span class="at">-outseq</span> brca1_prot.fasta <span class="at">-trim</span>  <span class="co"># -trim quita el *</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Alinear proteínas con MAFFT L-INS-i</span></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a><span class="ex">mafft</span> <span class="at">--localpair</span> <span class="at">--maxiterate</span> 1000 <span class="at">--thread</span> 4 brca1_prot.fasta <span class="op">&gt;</span> brca1_prot_aln.fasta</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Recortar con trimAl</span></span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a><span class="ex">trimal</span> <span class="at">-in</span> brca1_prot_aln.fasta <span class="at">-out</span> brca1_prot_trim.fasta <span class="at">-automated1</span></span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a><span class="co"># 6. Alineamiento codón-consciente</span></span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a><span class="ex">pal2nal.pl</span> brca1_prot_trim.fasta brca1_cds.fasta <span class="at">-output</span> fasta <span class="op">&gt;</span> brca1_cds_aln.fasta</span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a><span class="co"># 7. Convertir a PHYLIP para análisis posterior</span></span>
+<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a><span class="ex">seqkit</span> seq brca1_cds_aln.fasta <span class="at">--phylip</span> <span class="op">&gt;</span> brca1_cds_aln.phy</span>
+<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a><span class="co"># 8. Verificar</span></span>
+<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'/^&gt;/{next}{print length($0)}'</span> brca1_cds_aln.fasta <span class="kw">|</span> <span class="fu">sort</span> <span class="at">-u</span></span>
+<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a><span class="ex">seqkit</span> stats brca1_cds_aln.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="solución-2" class="level3">
+<h3 data-anchor-id="solución-2">Solución 2</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Estrategia (a): alinear ADN directamente con MAFFT</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="ex">mafft</span> <span class="at">--auto</span> brca1_cds.fasta <span class="op">&gt;</span> aln_direct_dna.fasta</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Estrategia (b): ya hecha en ejercicio 1: brca1_cds_aln.fasta</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Contar gaps y longitud de cada alineamiento</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== Estrategia (a) ADN directo ==="</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="ex">seqkit</span> stats aln_direct_dna.fasta</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'/^&gt;/{next}{gap+=gsub(/-/,"-"); total+=length($0)} END{print "Gaps:", gap; print "Longitud:", total}'</span> aln_direct_dna.fasta</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== Estrategia (b) pal2nal ==="</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a><span class="ex">seqkit</span> stats brca1_cds_aln.fasta</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'/^&gt;/{next}{gap+=gsub(/-/,"-"); total+=length($0)} END{print "Gaps:", gap; print "Longitud:", total}'</span> brca1_cds_aln.fasta</span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Comprobar si la longitud es múltiplo de 3 (sólo estrategia b garantiza esto)</span></span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== Múltiplo de 3 ==="</span></span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'/^&gt;/{next}{print length($0)%3}'</span> aln_direct_dna.fasta <span class="kw">|</span> <span class="fu">sort</span> <span class="at">-u</span></span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'/^&gt;/{next}{print length($0)%3}'</span> brca1_cds_aln.fasta <span class="kw">|</span> <span class="fu">sort</span> <span class="at">-u</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="text"><code>=== Estrategia (a) ADN directo ===
+Gaps: 870
+Longitud: 5430
+=== Estrategia (b) pal2nal ===
+Gaps: 867  (todos múltiplos de 3)
+Longitud: 5427
+=== Múltiplo de 3 ===
+0 1 2       # estrategia a: hay longitudes que no son múltiplo de 3
+0           # estrategia b: SIEMPRE múltiplo de 3</code></pre>
+<p><strong>Conclusión</strong>: La estrategia (b) <code>pal2nal</code> preserva codones completos: todos los gaps son múltiplos de 3 y la longitud total es múltiplo de 3. La estrategia (a) puede introducir frameshifts artefactuales (gaps de longitud 1 o 2) que rompen el marco de lectura. Para cualquier análisis posterior de codones (PAML, selección) la estrategia (b) es obligatoria.</p>
+</section>
+<section id="solución-3" class="level3">
+<h3 data-anchor-id="solución-3">Solución 3</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/usr/bin/env bash</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="co"># alinear_cds.sh - pipeline codón-consciente</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Uso: alinear_cds cds.fasta output_basename</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="fu">alinear_cds()</span> <span class="kw">{</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">local</span> <span class="va">cds_fasta</span><span class="op">=</span><span class="st">"</span><span class="va">$1</span><span class="st">"</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">local</span> <span class="va">base</span><span class="op">=</span><span class="st">"</span><span class="va">$2</span><span class="st">"</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">[[</span> <span class="ot">-z</span> <span class="st">"</span><span class="va">$cds_fasta</span><span class="st">"</span> <span class="kw">||</span> <span class="ot">-z</span> <span class="st">"</span><span class="va">$base</span><span class="st">"</span> <span class="kw">]];</span> <span class="cf">then</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>        <span class="bu">echo</span> <span class="st">"Uso: alinear_cds &lt;cds.fasta&gt; &lt;output_basename&gt;"</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="dv">1</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">fi</span></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Archivos intermedios</span></span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>    <span class="bu">local</span> <span class="va">prot</span><span class="op">=</span><span class="st">"</span><span class="va">${base}</span><span class="st">_prot.fasta"</span></span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>    <span class="bu">local</span> <span class="va">prot_aln</span><span class="op">=</span><span class="st">"</span><span class="va">${base}</span><span class="st">_prot_aln.fasta"</span></span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>    <span class="bu">local</span> <span class="va">prot_trim</span><span class="op">=</span><span class="st">"</span><span class="va">${base}</span><span class="st">_prot_trim.fasta"</span></span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>    <span class="bu">local</span> <span class="va">cds_aln</span><span class="op">=</span><span class="st">"</span><span class="va">${base}</span><span class="st">_cds_aln.fasta"</span></span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>    <span class="bu">local</span> <span class="va">cds_phy</span><span class="op">=</span><span class="st">"</span><span class="va">${base}</span><span class="st">_cds_aln.phy"</span></span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 1. Traducir</span></span>
+<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"[1/5] Traduciendo CDS a proteínas..."</span></span>
+<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a>    <span class="ex">transeq</span> <span class="at">-sequence</span> <span class="st">"</span><span class="va">$cds_fasta</span><span class="st">"</span> <span class="at">-outseq</span> <span class="st">"</span><span class="va">$prot</span><span class="st">"</span> <span class="at">-trim</span></span>
+<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 2. Alinear proteínas</span></span>
+<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"[2/5] Alineando proteínas con MAFFT L-INS-i..."</span></span>
+<span id="cb20-27"><a href="#cb20-27" aria-hidden="true" tabindex="-1"></a>    <span class="ex">mafft</span> <span class="at">--localpair</span> <span class="at">--maxiterate</span> 1000 <span class="at">--thread</span> 4 <span class="st">"</span><span class="va">$prot</span><span class="st">"</span> <span class="op">&gt;</span> <span class="st">"</span><span class="va">$prot_aln</span><span class="st">"</span> <span class="dv">2</span><span class="op">&gt;</span> <span class="st">"</span><span class="va">${base}</span><span class="st">.mafft.log"</span></span>
+<span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 3. Recortar</span></span>
+<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"[3/5] Recortando con trimAl..."</span></span>
+<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a>    <span class="ex">trimal</span> <span class="at">-in</span> <span class="st">"</span><span class="va">$prot_aln</span><span class="st">"</span> <span class="at">-out</span> <span class="st">"</span><span class="va">$prot_trim</span><span class="st">"</span> <span class="at">-automated1</span></span>
+<span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-33"><a href="#cb20-33" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 4. pal2nal</span></span>
+<span id="cb20-34"><a href="#cb20-34" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"[4/5] Alineamiento codón-consciente con pal2nal..."</span></span>
+<span id="cb20-35"><a href="#cb20-35" aria-hidden="true" tabindex="-1"></a>    <span class="ex">pal2nal.pl</span> <span class="st">"</span><span class="va">$prot_trim</span><span class="st">"</span> <span class="st">"</span><span class="va">$cds_fasta</span><span class="st">"</span> <span class="at">-output</span> fasta <span class="op">&gt;</span> <span class="st">"</span><span class="va">$cds_aln</span><span class="st">"</span></span>
+<span id="cb20-36"><a href="#cb20-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-37"><a href="#cb20-37" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 5. Convertir a PHYLIP</span></span>
+<span id="cb20-38"><a href="#cb20-38" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"[5/5] Convirtiendo a PHYLIP..."</span></span>
+<span id="cb20-39"><a href="#cb20-39" aria-hidden="true" tabindex="-1"></a>    <span class="ex">seqkit</span> seq <span class="st">"</span><span class="va">$cds_aln</span><span class="st">"</span> <span class="at">--phylip</span> <span class="op">&gt;</span> <span class="st">"</span><span class="va">$cds_phy</span><span class="st">"</span></span>
+<span id="cb20-40"><a href="#cb20-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-41"><a href="#cb20-41" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Verificación</span></span>
+<span id="cb20-42"><a href="#cb20-42" aria-hidden="true" tabindex="-1"></a>    <span class="bu">local</span> <span class="va">nseq</span></span>
+<span id="cb20-43"><a href="#cb20-43" aria-hidden="true" tabindex="-1"></a>    <span class="va">nseq</span><span class="op">=</span><span class="va">$(</span><span class="fu">awk</span> <span class="st">'/^&gt;/{n++} END{print n}'</span> <span class="st">"</span><span class="va">$cds_aln</span><span class="st">"</span><span class="va">)</span></span>
+<span id="cb20-44"><a href="#cb20-44" aria-hidden="true" tabindex="-1"></a>    <span class="bu">local</span> <span class="va">len</span></span>
+<span id="cb20-45"><a href="#cb20-45" aria-hidden="true" tabindex="-1"></a>    <span class="va">len</span><span class="op">=</span><span class="va">$(</span><span class="fu">awk</span> <span class="st">'/^&gt;/{next}{print length($0)}'</span> <span class="st">"</span><span class="va">$cds_aln</span><span class="st">"</span> <span class="kw">|</span> <span class="fu">sort</span> <span class="at">-u</span><span class="va">)</span></span>
+<span id="cb20-46"><a href="#cb20-46" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"Listo: </span><span class="va">$nseq</span><span class="st"> secuencias, longitud = </span><span class="va">$len</span><span class="st">"</span></span>
+<span id="cb20-47"><a href="#cb20-47" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"Archivos:"</span></span>
+<span id="cb20-48"><a href="#cb20-48" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"  </span><span class="va">$prot_aln</span><span class="st">   (proteínas alineadas)"</span></span>
+<span id="cb20-49"><a href="#cb20-49" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"  </span><span class="va">$prot_trim</span><span class="st">  (proteínas recortadas)"</span></span>
+<span id="cb20-50"><a href="#cb20-50" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"  </span><span class="va">$cds_aln</span><span class="st">    (CDS codón-consciente FASTA)"</span></span>
+<span id="cb20-51"><a href="#cb20-51" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"  </span><span class="va">$cds_phy</span><span class="st">    (CDS codón-consciente PHYLIP)"</span></span>
+<span id="cb20-52"><a href="#cb20-52" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span>
+<span id="cb20-53"><a href="#cb20-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-54"><a href="#cb20-54" aria-hidden="true" tabindex="-1"></a><span class="co"># Probar con un archivo de prueba</span></span>
+<span id="cb20-55"><a href="#cb20-55" aria-hidden="true" tabindex="-1"></a><span class="co"># alinear_cds test_cds.fasta test</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Guardar como alinear_cds.sh y sourcearlo</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="fu">chmod</span> +x alinear_cds.sh</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> alinear_cds.sh</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Probar con archivo de ejemplo (10 secuencias)</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="ex">alinear_cds</span> brca1_cds.fasta brca1</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="text"><code>[1/5] Traduciendo CDS a proteínas...
+[2/5] Alineando proteínas con MAFFT L-INS-i...
+[3/5] Recortando con trimAl...
+[4/5] Alineamiento codón-consciente con pal2nal...
+[5/5] Convirtiendo a PHYLIP...
+Listo: 10 secuencias, longitud = 5427
+Archivos:
+  brca1_prot_aln.fasta   (proteínas alineadas)
+  brca1_prot_trim.fasta  (proteínas recortadas)
+  brca1_cds_aln.fasta    (CDS codón-consciente FASTA)
+  brca1_cds_aln.phy      (CDS codón-consciente PHYLIP)</code></pre>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/bioden\.github\.io\/bioden_website\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Semillero de Biología del Desarrollo y Plasticidad Neural © 2025. All content licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Sitio web desarrollado por Xavier Clemente García Cevallos</p>
+</div>   
+    <div class="nav-footer-center">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/bioden">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="mailto:bioden@unicauca.edu.co">
+      <i class="bi bi-envelope" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    <div class="cookie-consent-footer"><a href="#" id="open_preferences_center">Cookie Preferences</a></div></div>
+    <div class="nav-footer-right">
+<p>Made with <a href="https://www.r-project.org/"><img src="https://www.r-project.org/Rlogo.png" alt="R" width="25px"></a> and <a href="https://quarto.org/"><img src="https://quarto.org/quarto.png" alt="Quarto" width="65px"></a>.</p>
+</div>
+  </div>
+</footer>
+
+
+
+
+<script src="../../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

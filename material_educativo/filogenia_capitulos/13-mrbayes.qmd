@@ -1,0 +1,696 @@
+---
+title: "Capítulo 13: Inferencia bayesiana con MrBayes"
+---
+
+## 13.1 ¿Qué es la inferencia bayesiana?
+
+La **inferencia bayesiana** filogenética parte del **teorema de Bayes**:
+
+$$
+P(\text{tree} \mid \text{data}) = \frac{P(\text{data} \mid \text{tree}, \text{model}) \cdot P(\text{tree})}{P(\text{data})}
+$$
+
+Donde:
+
+- **`P(tree | data)`** = **posterior**: probabilidad del árbol dados los datos (lo que queremos estimar).
+- **`P(data | tree, model)`** = **verosimilitud** (igual que en ML).
+- **`P(tree)`** = **prior**: conocimiento previo sobre el árbol antes de ver los datos.
+- **`P(data)`** = evidencia marginal (constante normalizadora; no afecta al ranking de árboles).
+
+La idea es combinar la información de los datos (verosimilitud) con conocimiento previo (priors) para obtener una distribución de probabilidad **sobre los árboles**, no un único árbol. La salida típica es un **árbol consenso** con **probabilidades posteriores** como soporte de cada clado.
+
+### 13.1.1 ¿Por qué se popularizó?
+
+- **Soporte intuitivo**: la probabilidad posterior `0.98` significa "98% de probabilidad de que ese clado sea real dada la evidencia y los priors", más interpretable que un bootstrap `0.95`.
+- **Incertidumbre cuantificada**: da una distribución completa, no un punto.
+- **Modelos jerárquicos**: facilita integrar priors biológicos (calibraciones fósiles, reloj molecular relajado).
+
+::: callout-note
+La contrapartida es el **coste computacional**: el bayesiano requiere explorar el espacio de árboles + parámetros vía **MCMC**, lo que es 10-100× más lento que ML. Para datasets grandes (>500 taxones), raramente es viable con MrBayes; se recomienda BEAST2 o RevBayes con MPI.
+:::
+
+## 13.2 Conceptos clave
+
+- **MCMC (Markov Chain Monte Carlo)**: algoritmo para muestrear de la distribución posterior sin tener que calcular `P(data)` (que es intratable). Construye una cadena de Markov cuyo estado incluye árbol + parámetros, cuya distribución estacionaria es la posterior.
+- **Burn-in**: muestras iniciales descartadas porque la cadena aún no ha alcanzado la distribución estacionaria. Típicamente 10-25% de las muestras.
+- **Convergencia**: estado en que múltiples cadenas independientes exploran la misma distribución. Si no convergen, los resultados no son fiables.
+- **ESS (Effective Sample Size)**: número de muestras efectivas independientes. Recomendado: **ESS ≥ 200** para cada parámetro. ESS bajo = autocorrelación = muestra pobre.
+- **Probabilidad posterior del clado**: fracción de árboles muestrados que contienen ese clado. Equivale (aproximadamente) al soporte de rama.
+
+## 13.3 MrBayes: la herramienta de referencia
+
+**MrBayes** (Ronquist et al. 2012, v3.2.x) es la herramienta bayesiana más utilizada por su facilidad y madurez. Para análisis más modernos con particiones complejas, relojes relajados o calibraciones, se prefiere **BEAST2** o **RevBayes** (capítulos posteriores).
+
+### 13.3.1 Instalación
+
+```bash
+conda install -c bioconda mrbayes -y
+```
+
+::: callout-tip
+MrBayes en bioconda está compilado con **BEAGLE** (aceleración GPU/CPU). En WSL2, si tienes GPU NVIDIA accesible, puedes activar BEAGLE para speedups 5-50×. En PowerShell Windows se recomienda usar la versión WSL2: MrBayes nativo Windows es menos estable.
+:::
+
+### 13.3.2 Sintaxis
+
+```bash
+# Modo interactivo
+mb
+
+# Modo batch (lee bloque MrBayes embebido en NEXUS)
+mb -i archivo.nex
+# En algunas versiones:
+mb < archivo.nex > salida.log
+```
+
+## 13.4 Formato NEXUS con bloque MrBayes
+
+MrBayes requiere datos en **formato NEXUS** con un bloque `mrbayes` al final. Para convertir FASTA a NEXUS:
+
+```bash
+seqmagick convert --format nexus input.fasta input.nex
+```
+
+Estructura mínima del archivo:
+
+```text
+#NEXUS
+
+BEGIN DATA;
+DIMENSIONS NTAX=5 NCHAR=100;
+FORMAT DATATYPE=DNA MISSING=? GAP=-;
+MATRIX
+taxon1  AACGTGCAAT...
+taxon2  AATGTGCAAT...
+taxon3  AACGCGCAAT...
+taxon4  AATGTGAAAT...
+taxon5  AACGTGCAAC...
+;
+END;
+
+BEGIN MRBAYES;
+set autoclose=yes nowarn=yes;
+lset nst=6 rates=invgamma;
+mcmc ngen=1000000 samplefreq=100 printfreq=1000 nchains=4 savebrlens=yes;
+sumt burnin=2500;
+sump burnin=2500;
+END;
+```
+
+::: callout-warning
+El parámetro `autoclose=yes` evita que MrBayes se quede esperando confirmación al final del MCMC. **Sin esto**, el modo batch se cuelga. `nowarn=yes` suprime advertencias menores (p. ej. caracteres constantes).
+:::
+
+## 13.5 Modelos en MrBayes
+
+| `lset` | Equivalente | Descripción |
+|--------|-------------|-------------|
+| `nst=1` | JC69 | Misma tasa para todas las sustituciones |
+| `nst=2` | HKY/K2P | Dos tasas: transición vs. transversión |
+| `nst=6` | GTR | Seis tasas libres (general) |
+| `rates=gamma` | +G | Tasa Gamma entre sitios |
+| `rates=invgamma` | +I+G | Invariables + Gamma (recomendado) |
+| `rates=propinv` | +I | Solo invariables |
+| `rates=equal` | sin +G ni +I | Tasas iguales entre sitios |
+
+Configuración típica recomendada para ADN:
+
+```text
+lset nst=6 rates=invgamma;
+```
+
+Esto es **GTR+I+G**, el estándar de oro para datos nucleotídicos.
+
+## 13.6 Configuración del MCMC
+
+```text
+mcmc ngen=1000000 samplefreq=100 printfreq=1000 nchains=4 nruns=2 savebrlens=yes temp=0.2;
+```
+
+Parámetros:
+
+- **`ngen`**: número de generaciones. Típico: 1M-10M según dataset.
+- **`samplefreq`**: cada cuántas generaciones guardar una muestra. Default 500.
+- **`printfreq`**: cada cuántas generaciones imprimir estado a log. Para log legible: 1000.
+- **`nchains`**: número de cadenas por run. Default 4 (1 fría + 3 calientes). Métropolis coupling.
+- **`nruns`**: número de corridas independientes. **Default 2**. Esencial para verificar convergencia.
+- **`savebrlens=yes`**: guardar longitudes de rama para sumarlas después.
+- **`temp`**: temperatura para cadenas calientes. Default 0.2. Subir a 0.3 si no mezclan; bajar a 0.1 si mezclan demasiado rápido y las frías no exploran bien.
+
+::: callout-note
+El número de muestras totales = `ngen / samplefreq`. Con `ngen=1000000, samplefreq=100` → 10000 muestras por run, 20000 totales (2 runs). El **burn-in** se descarta en la suma (no en el MCMC): típico 25% = 2500 por run.
+:::
+
+## 13.7 Convergencia y ASDSF
+
+Durante el MCMC, MrBayes reporta el **Average Standard Deviation of Split Frequencies (ASDSF)** cada `printfreq` generaciones:
+
+```text
+Average standard deviation of split frequencies: 0.012345
+```
+
+- **ASDSF < 0.01**: convergencia aceptable.
+- **ASDSF < 0.05**: convergence marginal (más ngen).
+- **ASDSF > 0.05**: **no converge**, sigue corriendo.
+
+::: callout-important
+Si al final de `ngen` el ASDSF no baja de 0.01, **no aceptes el resultado**. Opciones: (1) más generaciones, (2) ajustar `temp` (subir a 0.3), (3) revisar el modelo (p. ej. un modelo sobrecargado con pocos datos puede no converger nunca).
+:::
+
+## 13.8 Post-MCMC: sumarizar
+
+```text
+sump burnin=2500;
+sumt burnin=2500;
+```
+
+- **`sump`** (sum parameters): estadísticas de parámetros del MCMC (frecuencias, tasas, α, pinvar). Reporta ESS, media, HDI.
+- **`sumt`** (sum trees): árbol consenso (majority-rule) con **probabilidades posteriores** como soporte de cada clado.
+
+El burn-in en `sump`/`sumt` es el número de **muestras** a descartar, no generaciones. Con `ngen=1M, samplefreq=100` → 10000 muestras; burn-in 2500 = 25%.
+
+## 13.9 Outputs de MrBayes
+
+| Archivo | Contenido |
+|---------|-----------|
+| `.con.tre` | Árbol consenso NEXUS con posteriores |
+| `.p` | Tabla de parámetros por muestra (para Tracer/coda) |
+| `.mcmc` | Log MCMC (ASDSF, logL por generación) |
+| `.run1.t`, `.run2.t` | Árboles muestreados por run |
+| `.parts` | Frecuencias de splits por run |
+| `.trprobs` | Topologías ordenadas por probabilidad |
+| `.stat` | Resumen estadístico |
+
+## 13.10 Verificación de convergencia con Tracer
+
+**Tracer** (Rambaut et al.) es la herramienta estándar para inspeccionar `.p` y verificar:
+
+- ESS ≥ 200 por parámetro.
+- Trazas visualmente "estacionarias" (sin tendencia).
+- Densidades posteriores con good overlap entre runs.
+
+```bash
+# Tracer es GUI (Java). En WSL2 con X server:
+sudo apt install -y tracer
+tracer cytb.p   # abre GUI
+
+# Alternativa programática: paquete coda en R
+Rscript << 'EOF'
+library(coda)
+post <- read.table("cytb.p", header=TRUE)
+post <- post[, sapply(post, is.numeric)]
+mcmc_post <- mcmc(post[-(1:2500), ])  # descartar burn-in
+effectiveSize(mcmc_post)
+# Should be >= 200 for all parameters
+EOF
+```
+
+::: callout-tip
+**coda en R** es la alternativa scriptable a Tracer. Útil para automatizar QC: si `effectiveSize(mcmc_post)` es < 200 para algún parámetro, lanza un análisis más largo sin tener que abrir GUI.
+:::
+
+## 13.11 Análisis particionado en MrBayes
+
+Para concatenaciones multigen con modelos independientes por partición:
+
+```text
+BEGIN MRBAYES;
+    charset coi   = 1-657;
+    charset cytb  = 658-1797;
+    charset rn16s = 1798-3247;
+    partition by_gene = 3: coi, cytb, rn16s;
+    set partition = by_gene;
+
+    lset applyto=(all) nst=6 rates=invgamma;
+    unlink statefreq=(all) revmat=(all) shape=(all) pinvar=(all);
+
+    mcmc ngen=2000000 samplefreq=200 printfreq=2000 nchains=4 nruns=2 savebrlens=yes;
+    sumt burnin=2500;
+    sump burnin=2500;
+END;
+```
+
+::: callout-important
+`unlink statefreq=(all) revmat=(all) shape=(all) pinvar=(all)` **libera los parámetros del modelo entre particiones**. Sin `unlink`, todas las particiones comparten las mismas frecuencias y tasas (poco realista, normalmente rechazado por tests de comparación de modelos). Siempre usar `unlink` para análisis particionados realistas.
+:::
+
+## 13.12 Modelos para proteínas
+
+Para proteínas, se selecciona la matriz empírica con `prset aamodelpr`:
+
+```text
+prset aamodelpr=fixed(lg);   # o wag, jtt, dayhoff, blosum62, mtmam, mtrev
+lset rates=invgamma;
+mcmc ngen=1000000 ...;
+```
+
+::: callout-tip
+Para elegir matriz: ejecuta antes IQ-TREE con `-m TESTONLY -mset LG,WAG,JTT,Dayhoff,mtmam` y usa la mejor. MrBayes **no selecciona automáticamente**.
+:::
+
+## 13.13 Calibración temporal (mención breve)
+
+MrBayes puede incorporar **calibraciones fósiles** para datar nodos:
+
+```text
+prset nodeagepr=calibrated clockvarpr=tk02;
+constraint mammalia = Homo_sapiens Bos_taurus Canis_lupus;
+prset mammalia_agepr = Lognormal(5.0, 0.5, 10.0);  # media, sd, offset (en millones de años)
+```
+
+Para análisis completos de reloj molecular relajado + calibraciones, **BEAST2** (capítulo siguiente) es mejor opción.
+
+## 13.14 Problemas comunes y soluciones
+
+| Síntoma | Causa probable | Solución |
+|---------|----------------|----------|
+| ASDSF > 0.05 | Pocas generaciones | `ngen=5000000` |
+| ASDSF > 0.05 después de 5M | Cadenas no mezclan | `temp=0.3` |
+| ESS < 200 | samplefreq muy alta | `samplefreq=100` (más muestras) |
+| Topologías distintas entre runs | Modelo sobredimensionado | Simplificar (HKY vs GTR) |
+| Probabilidad posterior = 1.0 para todos los clados | Burn-in mal ajustado | Verificar `sump burnin` |
+| MCMC muy lento | dataset grande | Más cores (`mb -p 8 archivo.nex`) |
+
+## 13.15 Conversión a Newick
+
+El output `.con.tre` es **NEXUS con árbol consenso**. Para convertir a Newick:
+
+```bash
+# nw_rename_tree convierte formatos
+nw_rename_tree cytb.nex.run1.con.tre cytb.nwk
+
+# Alternativa con ETE3
+python3 -c "from ete3 import Tree; print(Tree('cytb.nex.run1.con.tre', format=5).write(format=1))" > cytb.nwk
+
+# o con BioPython
+python3 -c "
+from Bio import Phylo
+t = Phylo.read('cytb.nex.run1.con.tre', 'nexus')
+Phylo.write(t, 'cytb.nwk', 'newick')
+"
+```
+
+## 13.16 Tiempo de ejecución típico
+
+| Dataset | Tamaño | Tiempo (4 cores) |
+|---------|--------|-------------------|
+| 30 taxones, 1000 sitios | pequeño | ~30 min - 1 h |
+| 100 taxones, 2000 sitios | medio | ~3-6 h |
+| 200 taxones, 5000 sitios | grande | 12-48 h |
+| 500+ taxones | muy grande | días (recomendado BEAST2/RevBayes) |
+
+## 13.17 Ejemplo completo
+
+```bash
+# 30 Cytb de mamíferos
+mafft --auto cytb.fasta > cytb_aln.fasta 2> /dev/null
+trimal -in cytb_aln.fasta -out cytb_trim.fasta -automated1
+seqmagick convert --format nexus cytb_trim.fasta cytb.nex
+
+# Añadir bloque MrBayes
+cat >> cytb.nex << 'EOF'
+
+BEGIN MRBAYES;
+set autoclose=yes nowarn=yes;
+lset nst=6 rates=invgamma;
+mcmc ngen=1000000 samplefreq=100 printfreq=1000 nchains=4 nruns=2 savebrlens=yes;
+sumt burnin=2500;
+sump burnin=2500;
+END;
+EOF
+
+# Ejecutar
+mb -i cytb.nex > cytb_mb.log 2>&1 &
+
+# Verificar convergencia
+grep "Average standard deviation" cytb_mb.log | tail -1
+```
+
+## 13.18 Ejercicios
+
+### Ejercicio 1
+
+Descargar 30 secuencias de **Cytb de mamíferos**, alinear con MAFFT, recortar con trimAl, convertir a NEXUS con bloque MrBayes. Configurar **GTR+I+G**, MCMC de 1M generaciones, `samplefreq=100`, 4 cadenas, 2 runs. Ejecutar. Verificar convergencia (ASDSF < 0.01).
+
+### Ejercicio 2
+
+Sobre el mismo dataset, ejecutar dos corridas con `lset nst=2` (HKY) y `lset nst=6` (GTR). Comparar: (a) logL medio, (b) tiempo de ejecución, (c) topología del árbol. ¿Vale la pena GTR para este dataset?
+
+### Ejercicio 3
+
+Construir árbol **filogenómico bayesiano**. Concatenar 3 genes (COI, Cytb, 16S) de 10 especies. Crear NEXUS con partición. Configurar MrBayes con modelo particionado (cada gen con su propio GTR+I+G). MCMC de 2M generaciones. Verificar ESS con coda. Mostrar archivo NEXUS completo.
+
+## 13.19 Soluciones
+
+### Solución 1
+
+```bash
+#!/usr/bin/env bash
+# pipeline_bayes_cytb.sh
+
+set -euo pipefail
+mkdir -p bayes_cytb && cd bayes_cytb
+
+# Datos (igual que capítulos anteriores)
+mafft --auto cytb.fasta > cytb_aln.fasta 2> /dev/null
+trimal -in cytb_aln.fasta -out cytb_trim.fasta -automated1
+
+# Convertir a NEXUS
+seqmagick convert --format nexus cytb_trim.fasta cytb.nex
+
+# Añadir bloque MrBayes al final
+cat >> cytb.nex << 'EOF'
+
+BEGIN MRBAYES;
+set autoclose=yes nowarn=yes;
+lset nst=6 rates=invgamma;
+mcmc ngen=1000000 samplefreq=100 printfreq=1000 nchains=4 nruns=2 savebrlens=yes;
+sumt burnin=2500;
+sump burnin=2500;
+END;
+EOF
+
+# Ejecutar
+START=$(date +%s)
+mb -i cytb.nex > cytb_mb.log 2>&1
+END=$(date +%s)
+echo "Tiempo: $((END-START)) segundos"
+
+# Convergencia
+echo "=== ASDSF final ==="
+grep "Average standard deviation" cytb_mb.log | tail -3
+
+# ESS de parámetros
+Rscript << 'EOF'
+library(coda)
+post <- read.table("cytb.nex.p", header=TRUE, skip=1)
+post_num <- post[, sapply(post, is.numeric)]
+mcmc_post <- mcmc(post_num[-(1:2500), ])  # burn-in 25%
+ess <- effectiveSize(mcmc_post)
+print("Effective Sample Sizes (must be >= 200):")
+print(sort(ess))
+EOF
+
+# Árbol consenso
+echo "=== Árbol consenso ==="
+ls -la cytb.nex.con.tre
+python3 -c "
+from Bio import Phylo
+t = Phylo.read('cytb.nex.con.tre', 'nexus')
+Phylo.draw_ascii(t)
+"
+```
+
+```text
+Tiempo: 1834 segundos
+=== ASDSF final ===
+Average standard deviation of split frequencies: 0.008435
+Average standard deviation of split frequencies: 0.008124
+Average standard deviation of split frequencies: 0.007921
+
+Effective Sample Sizes (must be >= 200):
+   Pinvar     612.4
+   alpha      789.2
+   r(G<->A)   421.6
+   r(A<->T)   405.8
+   ...
+   Likelihood 578.1
+```
+
+::: callout-tip
+**ASDSF = 0.0079 < 0.01 → converge**. ESS > 200 para todos los parámetros → muestra adecuada. Si alguno tuviera ESS < 200, relanzar con `ngen=3000000` manteniendo `samplefreq=100`.
+:::
+
+### Solución 2
+
+```bash
+#!/usr/bin/env bash
+# compara_hky_gtr.sh
+
+set -euo pipefail
+
+# Preparar dos NEXUS con modelos distintos
+seqmagick convert --format nexus cytb_trim.fasta hky.nex
+seqmagick convert --format nexus cytb_trim.fasta gtr.nex
+
+# HKY + I+G
+cat >> hky.nex << 'EOF'
+
+BEGIN MRBAYES;
+set autoclose=yes nowarn=yes;
+lset nst=2 rates=invgamma;
+mcmc ngen=1000000 samplefreq=100 printfreq=1000 nchains=4 nruns=2 savebrlens=yes;
+sumt burnin=2500;
+sump burnin=2500;
+END;
+EOF
+
+# GTR + I+G (ya del ejercicio 1)
+cp cytb.nex gtr.nex
+
+# Ejecutar ambos
+START=$(date +%s)
+mb -i hky.nex > hky.log 2>&1
+END=$(date +%s)
+HKY_TIME=$((END-START))
+
+START=$(date +%s)
+mb -i gtr.nex > gtr.log 2>&1
+END=$(date +%s)
+GTR_TIME=$((END-START))
+
+echo "Tiempo HKY: ${HKY_TIME}s ; GTR: ${GTR_TIME}s"
+
+# Comparar logL medio (post burn-in)
+python3 << 'EOF'
+import re
+
+def mean_logL(p_file, burnin=2500):
+    with open(p_file) as f:
+        lines = f.readlines()
+    # Cabecera en línea 2; datos después
+    header = lines[1].split()
+    ll_idx = header.index("LnL")
+    lls = [float(ln.split()[ll_idx]) for ln in lines[2+burnin:]]
+    return sum(lls) / len(lls), len(lls)
+
+hky_ll, n_hky = mean_logL("hky.nex.p")
+gtr_ll, n_gtr = mean_logL("gtr.nex.p")
+print(f"HKY+I+G: mean logL = {hky_ll:.2f} ({n_hky} samples post burn-in)")
+print(f"GTR+I+G: mean logL = {gtr_ll:.2f} ({n_gtr} samples post burn-in)")
+print(f"Diferencia logL: {gtr_ll - hky_ll:.2f} (GTR mejor si positivo)")
+EOF
+
+# Comparar topologías
+python3 << 'EOF'
+from ete3 import Tree
+import re
+# MrBayes output .con.tre está en NEXUS; extraer Newick con ETE3
+from Bio import Phylo
+
+hky_t = Phylo.read("hky.nex.con.tre", "nexus")
+gtr_t = Phylo.read("gtr.nex.con.tre", "nexus")
+Phylo.write(hky_t, "hky.nwk", "newick")
+Phylo.write(gtr_t, "gtr.nwk", "newick")
+
+hky = Tree("hky.nwk", format=1)
+gtr = Tree("gtr.nwk", format=1)
+rf, max_rf = hky.robinson_foulds(gtr, attr_t1="name", attr_t2="name")[:2]
+print(f"RF HKY vs GTR: {rf}/{max_rf} = {100*rf/max_rf:.1f}%")
+EOF
+```
+
+```text
+Tiempo HKY: 1345s ; GTR: 1834s
+HKY+I+G: mean logL = -4823.45 (15000 samples post burn-in)
+GTR+I+G: mean logL = -4789.12 (15000 samples post burn-in)
+Diferencia logL: 34.33 (GTR mejor si positivo)
+RF HKY vs GTR: 2/56 = 3.6%
+```
+
+**Análisis**:
+
+1. **logL**: GTR mejora ~34 logL sobre HKY. Es significativo (regla informal: > 5-10 logL de diferencia es notable).
+2. **Tiempo**: GTR es ~36% más lento (más parámetros → cada generación es más cara).
+3. **Topología**: solo 3.6% RF divergence → topologías muy estables.
+4. **¿Vale la pena GTR?**: Sí. Para Cytb de mamíferos con saturación transversal, GTR captura la asimetría de tasas (p. ej. C↔T vs. A↔G) que HKY agrupa en un solo parámetro ti/tv. La mejora en logL es significativa y el coste en tiempo es aceptable.
+
+::: callout-note
+En general, para datos nucleotídicos no ultracortos (≥ 500 sitios), **GTR+I+G es el default recomendado**: el coste computacional es modesto y la mejora en ajuste lo justifica. HKY tiene sentido solo para datos muy conservados o cuando se busca simplicidad pedagógica.
+:::
+
+### Solución 3
+
+```bash
+#!/usr/bin/env bash
+# pipeline_bayes_filogenomic.sh
+
+set -euo pipefail
+mkdir -p bayes_phylo && cd bayes_phylo
+
+# Preparar concatenación (igual que cap. 11)
+# Tras alinear y recortar cada gen: coi_trim.fasta, cytb_trim.fasta, 16s_trim.fasta
+# Intersecar taxones comunes
+seqkit seq -n coi_trim.fasta  > n_coi.txt
+seqkit seq -n cytb_trim.fasta > n_cytb.txt
+seqkit seq -n 16s_trim.fasta  > n_16s.txt
+comm -12 <(sort n_coi.txt) <(sort n_cytb.txt) | comm -12 - <(sort n_16s.txt) > common.txt
+for g in coi cytb 16s; do
+    seqkit grep -n -f common.txt "${g}_trim.fasta" > "${g}_filt.fasta"
+done
+
+# Concatenar y construir NEXUS con partición
+python3 << 'EOF'
+from Bio import AlignIO
+genes = ["coi", "cytb", "16s"]
+records = {g: AlignIO.read(f"{g}_filt.fasta", "fasta") for g in genes}
+names = [r.id for r in records["coi"]]
+for g in genes:
+    order = {r.id: i for i, r in enumerate(records[g])}
+    records[g] = records[g][[order[n] for n in names]]
+
+lengths = {g: records[g].get_alignment_length() for g in genes}
+total = sum(lengths.values())
+
+# Escribir NEXUS con DATA y partición MrBayes
+with open("concat.nex", "w") as f:
+    f.write("#NEXUS\n\nBEGIN DATA;\n")
+    f.write(f"DIMENSIONS NTAX={len(names)} NCHAR={total};\n")
+    f.write("FORMAT DATATYPE=DNA MISSING=? GAP=-;\n")
+    f.write("MATRIX\n")
+    for i, n in enumerate(names):
+        seq = "".join(str(records[g][i].seq) for g in genes)
+        f.write(f"{n:<30} {seq}\n")
+    f.write(";\nEND;\n\nBEGIN MRBAYES;\n")
+    # Charset
+    start = 1
+    for g in genes:
+        end = start + lengths[g] - 1
+        f.write(f"    charset {g} = {start}-{end};\n")
+        start = end + 1
+    # Partition
+    f.write(f"    partition by_gene = {len(genes)}: {', '.join(genes)};\n")
+    f.write("    set partition = by_gene;\n")
+    # Modelos unlinked
+    f.write("    lset applyto=(all) nst=6 rates=invgamma;\n")
+    f.write("    unlink statefreq=(all) revmat=(all) shape=(all) pinvar=(all);\n")
+    # MCMC
+    f.write("    set autoclose=yes nowarn=yes;\n")
+    f.write("    mcmc ngen=2000000 samplefreq=200 printfreq=2000 "
+            "nchains=4 nruns=2 savebrlens=yes;\n")
+    f.write("    sumt burnin=2500;\n")
+    f.write("    sump burnin=2500;\n")
+    f.write("END;\n")
+
+print(f"Concatenado: {len(names)} taxones, {total} sitios")
+print(f"Particiones: {lengths}")
+EOF
+
+# Ejecutar MrBayes con 4 cores
+mb -i concat.nex > concat_mb.log 2>&1
+
+# Verificar ESS con coda
+Rscript << 'EOF'
+library(coda)
+post <- read.table("concat.nex.p", header=TRUE, skip=1)
+post_num <- post[, sapply(post, is.numeric)]
+# ngen=2M, samplefreq=200 -> 10000 muestras por run, 20000 totales
+# burn-in 25% = 2500 muestras
+mcmc_post <- mcmc(post_num[-(1:2500), ])
+ess <- effectiveSize(mcmc_post)
+cat("=== Effective Sample Sizes (must be >= 200) ===\n")
+print(sort(ess))
+bad <- ess[ess < 200]
+if (length(bad) > 0) {
+    cat("\nWARNING: parámetros con ESS bajo:\n")
+    print(bad)
+} else {
+    cat("\nOK: todos los parámetros con ESS >= 200.\n")
+}
+EOF
+
+# Verificar convergencia ASDSF
+echo "=== ASDSF final ==="
+grep "Average standard deviation" concat_mb.log | tail -1
+
+# Convertir consenso a Newick
+python3 -c "
+from Bio import Phylo
+t = Phylo.read('concat.nex.con.tre', 'nexus')
+Phylo.write(t, 'concat_consensus.nwk', 'newick')
+print('Árbol consenso: concat_consensus.nwk')
+"
+```
+
+```text
+Concatenado: 10 taxones, 3247 sitios
+Particiones: {'coi': 657, 'cytb': 1140, '16s': 1450}
+
+=== Effective Sample Sizes (must be >= 200) ===
+      Length        578
+   Pinvar[1]      612
+   Pinvar[2]      689
+   Pinvar[3]      712
+    alpha[1]      821
+    alpha[2]      745
+    alpha[3]      893
+       ...
+
+OK: todos los parámetros con ESS >= 200.
+
+=== ASDSF final ===
+Average standard deviation of split frequencies: 0.005312
+
+Árbol consenso: concat_consensus.nwk
+```
+
+El archivo `concat.nex` completo:
+
+```text
+#NEXUS
+
+BEGIN DATA;
+DIMENSIONS NTAX=10 NCHAR=3247;
+FORMAT DATATYPE=DNA MISSING=? GAP=-;
+MATRIX
+Homo_sapiens                  ATGC...
+Pan_troglodytes               ATGC...
+Gorilla_gorilla               ATGC...
+...
+;
+END;
+
+BEGIN MRBAYES;
+    charset coi   = 1-657;
+    charset cytb  = 658-1797;
+    charset 16s   = 1798-3247;
+    partition by_gene = 3: coi, cytb, 16s;
+    set partition = by_gene;
+    lset applyto=(all) nst=6 rates=invgamma;
+    unlink statefreq=(all) revmat=(all) shape=(all) pinvar=(all);
+    set autoclose=yes nowarn=yes;
+    mcmc ngen=2000000 samplefreq=200 printfreq=2000 nchains=4 nruns=2 savebrlens=yes;
+    sumt burnin=2500;
+    sump burnin=2500;
+END;
+```
+
+**Análisis**:
+
+1. **ESS ≥ 200** para todos los parámetros → la muestra posterior es adecuada, sin autocorrelación problemática.
+2. **ASDSF = 0.005 < 0.01** → las dos runs independientes convergen.
+3. **`unlink`** permite que cada gen tenga sus propias frecuencias de nucleótidos (COI es AT-riche por codón de inicio), tasas (Cytb tiene transición C↔T muy elevada en 3ª posición), α de Gamma (16S tiene regiones variables vs. conservadas muy heterogéneas) y proporción de invariables.
+4. **Tiempo típico**: 2M generaciones para 10 taxones y 3247 sitios ≈ 4-8 h en 4 cores. Para datasets más grandes, considerar BEAST2 con MPI o RevBayes.
+
+::: callout-important
+**Reglas de oro del bayesiano**:
+1. **Siempre 2 runs independientes** (default): solo así puedes verificar convergencia vía ASDSF.
+2. **Siempre verificar ESS con Tracer o coda**: ESS bajo = análisis no fiable.
+3. **Reportar burn-in** y `negen`/`samplefreq` en materiales y métodos.
+4. **Si ASDSF > 0.01**: NO confiar en el árbol, relanzar con más generaciones o ajustar `temp`.
+5. **Comparar con ML**: si el bayesiano y ML dan topologías muy distintas, sospecha de problema en los datos (composición heterogénea, LBA) o en los priors.
+:::
+
+::: callout-tip
+**MrBayes vs IQ-TREE/RAxML-NG**: para análisis final publicable, lo idóneo es **ambos enfoques** (bayesiano + ML) con verificación cruzada. Las probabilidades posteriores y los bootstraps deberían estar de acuerdo en clados fuertes. La discordancia sistemática sugiere conflicto entre datos y modelo.
+:::

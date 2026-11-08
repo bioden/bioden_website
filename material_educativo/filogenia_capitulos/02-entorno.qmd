@@ -1,0 +1,568 @@
+---
+title: "Capítulo 2: Configuración del entorno en Windows (WSL2 + PowerShell)"
+---
+
+## 2.1 Por qué Windows fue históricamente difícil para bioinformática
+
+La mayoría del software bioinformático moderno (IQ-TREE, RAxML-NG, MrBayes, BEAST2, MAFFT, TNT, etc.) está escrito en C, C++ o Java y desarrollado sobre **Unix** (Linux o macOS). Sus *makefiles*, rutas con `/`, dependencias de librerías POSIX y supuestos sobre shells tipo Bash hacían que ejecutarlos en Windows nativo fuese, durante años, una odisea de ports inconsistentes, versiones obsoletas y binaries que crasheaban sin razón clara.
+
+A esto se sumaban problemas específicos de Windows:
+
+- Finales de línea `\r\n` frente a `\n` (que rompían scripts Bash).
+- Codificación de caracteres (cp1252 vs UTF-8) que corrompía secuencias con anotaciones.
+- Ausencia de un sistema de paquetes comparable a `apt`, `conda` o `homebrew`.
+- PowerShell (incluso en su versión 5) con sintaxis muy distinta a Bash, lo que obligaba a reescribir pipelines enteros.
+
+Microsoft resolvió el problema en 2017 con **WSL** (Windows Subsystem for Linux) y, sobre todo, con **WSL2** en 2020, que ya no es una traducción de llamadas al sistema sino una **máquina virtual ligera basada en Hyper-V** corriendo un kernel Linux real. Hoy en día, WSL2 con Ubuntu es la solución recomendada para bioinformática en Windows.
+
+::: callout-note
+WSL2 consume menos recursos que una máquina virtual VirtualBox tradicional, arranca en segundos y se integra con el explorador de Windows (`\\wsl$\...`). No requiere particionar el disco ni reiniciar para cambiar de sistema operativo.
+:::
+
+## 2.2 Ruta A: WSL2 con Ubuntu 22.04 (recomendada)
+
+### 2.2.1 Verificar que WSL2 está instalado
+
+Abre **PowerShell** (no es necesario modo administrador para verificar):
+
+```powershell
+wsl --status
+```
+
+Salida esperada (algo parecido):
+
+```text
+Default Distribution: Ubuntu-22.04
+Default Version: 2
+Versions installed: Ubuntu-22.04
+```
+
+Si no devuelve nada o lanza error, no tienes WSL instalado.
+
+### 2.2.2 Instalar WSL2 y Ubuntu 22.04
+
+Abre PowerShell **como administrador** (clic derecho → "Ejecutar como administrador"):
+
+```powershell
+wsl --install -d Ubuntu-22.04
+```
+
+Este comando instala automáticamente WSL2 y la distribución Ubuntu 22.04. Tras finalizar, **reinicia el equipo** si es la primera vez.
+
+Tras el reinicio, abre "Ubuntu 22.04" desde el menú inicio. Se abrirá una consola Linux pidiéndote:
+
+```text
+Enter new UNIX username: tu_usuario
+New password: ********
+Retype new password: ********
+```
+
+::: callout-important
+**No uses contraseñas triviales**. Aunque es un entorno de desarrollo local, muchas operaciones (`sudo`) las pedirán. Anótala en un gestor de contraseñas.
+:::
+
+### 2.2.3 Verificar la versión de WSL
+
+En PowerShell:
+
+```powershell
+wsl -l -v
+```
+
+Salida esperada:
+
+```text
+  NAME              STATE           VERSION
+* Ubuntu-22.04      Running         2
+```
+
+La columna **VERSION** debe decir **2**. Si dice 1, convierte con:
+
+```powershell
+wsl --set-version Ubuntu-22.04 2
+```
+
+### 2.2.4 Actualizar el sistema
+
+Dentro de Ubuntu (ya en el shell Bash):
+
+```bash
+sudo apt update && sudo apt upgrade -y
+```
+
+### 2.2.5 Instalar dependencias básicas
+
+```bash
+sudo apt install -y build-essential git curl wget nano htop tree \
+                    unzip bzip2 ca-certificates
+```
+
+- `build-essential`: gcc, g++, make, librerías estándar.
+- `git`, `curl`, `wget`: control de versiones y descargas.
+- `nano`: editor de texto sencillo (alternativa: `vim`).
+- `htop`: monitor de procesos.
+- `tree`: visualización de directorios.
+- `unzip`, `bzip2`: compresión.
+
+::: callout-tip
+Instala también `bat` y `ripgrep` si quieres reemplazos modernos de `cat` y `grep` con sintaxis resaltada:
+```bash
+sudo apt install -y bat ripgrep
+```
+:::
+
+## 2.3 Instalación de Miniconda dentro de WSL2
+
+Conda (y su alternativa más libre, **mamba**) es un gestor de paquetes y entornos que permite instalar software bioinformático precompilado sin tocar el sistema base. **Bioconda** es un canal específico con miles de paquetes bioinformáticos listos para usar.
+
+### 2.3.1 Descargar e instalar Miniconda
+
+```bash
+# Directorio home del usuario actual
+cd ~
+
+# Descargar el instalador (unos 130 MB)
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+
+# Verificar integridad (opcional pero recomendado)
+sha256sum Miniconda3-latest-Linux-x86_64.sh
+
+# Ejecutar instalación silenciosa (-b) en el path -p indicado
+bash Miniconda3-latest-Linux-x86_64.sh -b -p $HOME/miniconda3
+
+# Activar conda en el shell actual
+eval "$($HOME/miniconda3/bin/conda shell.bash hook)"
+
+# Inicializar conda para Bash (modifica ~/.bashrc)
+conda init bash
+
+# Cerrar y reabrir la terminal para activar los cambios
+```
+
+Tras reabrir, comprueba:
+
+```bash
+conda --version
+```
+
+Salida esperada:
+
+```text
+conda 24.x.x
+```
+
+### 2.3.2 Configurar canales bioconda
+
+Los canales de conda se consultan en orden. Es importante configurarlos **en este orden específico** para que bioconda tenga prioridad sobre defaults:
+
+```bash
+conda config --add channels defaults
+conda config --add channels bioconda
+conda config --add channels conda-forge
+conda config --set channel_priority flexible
+```
+
+::: callout-warning
+El orden importa: `conda-forge` debe estar **encima** de `bioconda`, que a su vez debe estar encima de `defaults`. Si no, algunas dependencias binarias se resuelven mal. La directiva `channel_priority flexible` es la recomendada por la documentación de Bioconda actual (rígida puede dar conflictos con paquetes nuevos).
+:::
+
+Verifica:
+
+```bash
+conda config --show channels
+```
+
+Salida esperada:
+
+```text
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+```
+
+### 2.3.3 Crear el entorno `filogenia`
+
+```bash
+conda create -n filogenia -c bioconda -c conda-forge \
+    mafft muscle5 clustalo prank macse pal2nal \
+    iqtree raxml-ng fasttree tnt \
+    mrbayes beast2 tracer \
+    modeltest-ng prottest \
+    emboss biopython seqkit \
+    figtree ete3 entrez-direct \
+    trimal -y
+```
+
+::: callout-note
+La instalación tarda entre 5 y 20 minutos según la conexión. Descarga unos 3 GB. Algunos paquetes (`tnt`, `beast2`) son pesados. Si el comando falla por conflicto de versiones, prueba a instalar por subgrupos (primero alineadores, luego filogenia, luego herramientas).
+:::
+
+### 2.3.4 Activar el entorno
+
+```bash
+conda activate filogenia
+```
+
+Tu prompt debe cambiar a algo como `(filogenia) tuusuario@equipo:~$`.
+
+### 2.3.5 Verificación de la instalación
+
+```bash
+mafft --version
+iqtree2 --version
+mrbayes  # o 'mb'
+```
+
+Salida esperada (similar):
+
+```text
+MAFFT v7.526 (2022)
+IQ-TREE CORE 2.2.2.6 for Linux x86_64
+...
+```
+
+## 2.4 Ruta B: PowerShell nativo con Miniconda Windows
+
+Si por alguna razón no puedes instalar WSL2 (por ejemplo, Windows 10 Home sin Hyper-V habilitado o políticas corporativas), existe una alternativa: instalar **Miniconda para Windows nativo** y trabajar desde PowerShell.
+
+### 2.4.1 Descargar e instalar Miniconda Windows
+
+1. Visita https://docs.conda.io/en/latest/miniconda.html
+2. Descarga **Miniconda3 Windows 64-bit** (instalador `.exe`).
+3. Ejecuta el instalador. Recomendaciones:
+   - Instalación tipo **"Just Me"** (no requiere admin).
+   - **NO** marcar "Add to PATH" (puede romper otros binarios).
+   - Sí marcar "Register as default Python".
+
+### 2.4.2 Inicializar conda para PowerShell
+
+Abre **Anaconda Prompt** (se instala automáticamente) o abre PowerShell y ejecuta:
+
+```powershell
+conda init powershell
+```
+
+Cierra y reabre PowerShell. Verifica:
+
+```powershell
+conda --version
+```
+
+Si PowerShell bloquea scripts (error *execution policy*), permite ejecución local:
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+```
+
+### 2.4.3 Configurar canales y crear entorno
+
+```powershell
+conda config --add channels defaults
+conda config --add channels bioconda
+conda config --add channels conda-forge
+conda config --set channel_priority flexible
+
+conda create -n filogenia -c bioconda -c conda-forge `
+    mafft muscle5 clustalo iqtree raxml-ng fasttree `
+    mrbayes modeltest-ng prottest emboss biopython seqkit `
+    ete3 entrez-direct trimal -y
+
+conda activate filogenia
+```
+
+::: callout-warning
+**Limitaciones de la ruta PowerShell**:
+- `beast2` y `tnt` no están disponibles o son problemáticos en conda-forge Windows.
+- `figtree` es un programa Java con GUI; funciona en Windows pero no en WSL2 sin X server.
+- Rutas con espacios (`C:\Users\Juan Pérez`) pueden romper scripts Bash heredados.
+- Algunas herramientas asumen finales de línea Unix (`\n`); usa `dos2unix` antes de pasar archivos de Windows a WSL2.
+:::
+
+## 2.5 Acceso a archivos entre Windows y WSL2
+
+### 2.5.1 Windows → WSL2
+
+Desde WSL2, tu disco `C:` se monta en `/mnt/c/`. Por ejemplo:
+
+```bash
+ls /mnt/c/Users/TuUsuario/Documents/
+```
+
+### 2.5.2 WSL2 → Windows
+
+Desde Windows (PowerShell o Explorador), accedes a WSL2 por la ruta UNC:
+
+```text
+\\wsl$\Ubuntu-22.04\home\tuusuario\
+```
+
+O en PowerShell:
+
+```powershell
+explorer.exe \\wsl$\Ubuntu-22.04\home\tuusuario
+```
+
+::: callout-tip
+Si vas a usar VS Code, instala la extensión **"WSL"** de Microsoft. Luego, dentro de WSL2:
+```bash
+cd ~/filogenia_curso
+code .
+```
+Esto abre VS Code en Windows pero con el backend Linux: edicion visual, terminal Linux integrada, todo sincronizado.
+:::
+
+## 2.6 Configuración de VS Code
+
+1. Instala **Visual Studio Code** desde https://code.visualstudio.com/ (versión Windows).
+2. Abre VS Code y ve a Extensiones (Ctrl+Shift+X).
+3. Instala:
+   - **WSL** (Microsoft): integra VS Code con WSL2.
+   - **Python** (Microsoft): para BioPython.
+   - **Quarto** (Quarto): para renderizar archivos `.qmd`.
+   - **Rainbow CSV**: útil para TSV/CSV.
+4. Para editar archivos en WSL2, abre la **Paleta de comandos** (Ctrl+Shift+P) y escribe `WSL: New Window`.
+
+## 2.7 Organización de directorios del curso
+
+Crea una estructura reproducible:
+
+```bash
+mkdir -p ~/filogenia_curso/{datos/{raw,clean},alineamientos,modelos,arboles/{ml,bayes,distancia},visualizacion,scripts}
+```
+
+Resultado:
+
+```text
+~/filogenia_curso/
+├── datos/
+│   ├── raw/        # secuencias descargadas de NCBI
+│   └── clean/      # secuencias limpias y filtradas
+├── alineamientos/
+├── modelos/
+├── arboles/
+│   ├── ml/
+│   ├── bayes/
+│   └── distancia/
+├── visualizacion/
+└── scripts/
+```
+
+::: callout-important
+**Reglas de oro**:
+- Nunca modifiques los archivos en `datos/raw/`: son el dato original inmutable.
+- Los análisis intermedios van en `alineamientos/`, `modelos/`, `arboles/`.
+- Todo comando no trivial se guarda como script en `scripts/` con un nombre descriptivo (ej: `alinear_cytb.sh`).
+- Documenta fechas y versiones de software en un `README.md` por carpeta.
+:::
+
+## 2.8 Verificación final del entorno
+
+Crea un pequeño script de sanity check en `~/filogenia_curso/scripts/check_env.sh`:
+
+```bash
+#!/usr/bin/env bash
+# check_env.sh — verifica que el entorno filogenia está correctamente instalado
+set -euo pipefail
+
+echo "=== Verificación del entorno filogenia ==="
+echo "Usuario: $(whoami)"
+echo "Hostname: $(hostname)"
+echo "Fecha: $(date)"
+echo ""
+
+echo "--- Conda ---"
+which conda && conda --version
+echo "Entorno activo: ${CONDA_DEFAULT_ENV:-ninguno}"
+echo ""
+
+echo "--- Herramientas de alineamiento ---"
+for prog in mafft muscle5 clustalo prank; do
+    if command -v "$prog" >/dev/null 2>&1; then
+        echo "OK: $prog -> $(command -v $prog)"
+    else
+        echo "FALTA: $prog"
+    fi
+done
+
+echo ""
+echo "--- Filogenia ---"
+for prog in iqtree2 raxml-ng mrbayes; do
+    if command -v "$prog" >/dev/null 2>&1; then
+        echo "OK: $prog -> $(command -v $prog)"
+    else
+        echo "FALTA: $prog"
+    fi
+done
+
+echo ""
+echo "--- Utilidades ---"
+for prog in seqkit trimal emboss transeq; do
+    command -v "$prog" >/dev/null 2>&1 && echo "OK: $prog" || echo "FALTA: $prog"
+done
+
+echo ""
+echo "=== Fin ==="
+```
+
+Dale permisos de ejecución y lánzalo:
+
+```bash
+chmod +x ~/filogenia_curso/scripts/check_env.sh
+~/filogenia_curso/scripts/check_env.sh
+```
+
+## Ejercicios
+
+### Ejercicio 1
+
+Instala WSL2 y Ubuntu 22.04 (o verifica que ya están instalados). Crea la estructura completa de directorios del curso con un único comando `mkdir -p`. Verifica con `tree ~/filogenia_curso`.
+
+### Ejercicio 2
+
+Instala Miniconda dentro de WSL2, configura los canales bioconda (en orden correcto), crea el entorno `filogenia` con al menos MAFFT, IQ-TREE y MrBayes. Actívalo y verifica las versiones de cada programa.
+
+### Ejercicio 3
+
+Para usuarios que prefieran PowerShell: instala Miniconda para Windows, crea el mismo entorno `filogenia`, y verifica que MAFFT e IQ-TREE funcionan desde PowerShell. Documenta cualquier limitación encontrada (algunos paquetes solo están disponibles para Linux).
+
+## Soluciones
+
+### Solución Ejercicio 1
+
+```bash
+# 1. Verificar WSL2 desde PowerShell (ejecutar en PowerShell, no en Bash)
+#    wsl --status
+#    wsl -l -v
+#    Debe mostrar VERSION 2
+
+# 2. Dentro de Ubuntu/WSL2, crear estructura del curso
+mkdir -p ~/filogenia_curso/{datos/{raw,clean},alineamientos,modelos,arboles/{ml,bayes,distancia},visualizacion,scripts}
+
+# 3. Verificar
+tree ~/filogenia_curso
+
+# Salida esperada:
+# /home/tuusuario/filogenia_curso/
+# ├── alineamientos
+# ├── arboles
+# │   ├── bayes
+# │   ├── distancia
+# │   └── ml
+# ├── datos
+# │   ├── clean
+# │   └── raw
+# ├── modelos
+# ├── scripts
+# └── visualizacion
+#
+# 8 directories, 0 files
+
+# 4. Crear un archivo .gitignore y README placeholder para futuras sesiones
+cd ~/filogenia_curso
+touch README.md
+echo "# Filogenia Molecular — curso" > README.md
+echo "datos/raw/" > .gitignore  # no versionar datos crudos
+```
+
+### Solución Ejercicio 2
+
+```bash
+# 1. Descargar Miniconda (versión Linux x86_64)
+cd ~
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+
+# 2. Instalar silenciosamente en ~/miniconda3
+bash Miniconda3-latest-Linux-x86_64.sh -b -p $HOME/miniconda3
+
+# 3. Activar e inicializar
+eval "$($HOME/miniconda3/bin/conda shell.bash hook)"
+conda init bash
+
+# 4. Cerrar y reabrir terminal, luego verificar
+conda --version
+# conda 24.x.x
+
+# 5. Configurar canales en el orden correcto
+conda config --add channels defaults
+conda config --add channels bioconda
+conda config --add channels conda-forge
+conda config --set channel_priority flexible
+
+# 6. Verificar orden de canales
+conda config --show channels
+# channels:
+#   - conda-forge
+#   - bioconda
+#   - defaults
+
+# 7. Crear entorno filogenia (subset mínimo + MrBayes)
+conda create -n filogenia -c bioconda -c conda-forge \
+    mafft iqtree mrbayes seqkit trimal -y
+
+# 8. Activar entorno
+conda activate filogenia
+
+# 9. Verificar versiones
+mafft --version
+# MAFFT v7.526 (2022)
+
+iqtree2 --version
+# IQ-TREE CORE 2.2.x for Linux x86_64
+
+# MrBayes se invoca como 'mb' o 'mrbayes'
+mb --version 2>&1 | head -n 3
+# MrBayes v3.2.7a
+
+# 10. Limpieza: borrar el instalador
+rm ~/Miniconda3-latest-Linux-x86_64.sh
+```
+
+### Solución Ejercicio 3
+
+```powershell
+# 1. Descargar Miniconda Windows desde
+#    https://docs.conda.io/en/latest/miniconda.html
+#    (Miniconda3 Windows 64-bit .exe)
+
+# 2. Ejecutar instalador: "Just Me", NO añadir al PATH,
+#    SÍ registrar como Python por defecto
+
+# 3. Abrir PowerShell y permitir ejecución de scripts si hace falta
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+
+# 4. Inicializar conda para PowerShell
+conda init powershell
+
+# 5. Cerrar y reabrir PowerShell. Verificar:
+conda --version
+
+# 6. Configurar canales (mismos comandos que en Bash)
+conda config --add channels defaults
+conda config --add channels bioconda
+conda config --add channels conda-forge
+conda config --set channel_priority flexible
+
+# 7. Crear entorno filogenia (sin beast2 ni tnt, que fallan en Windows)
+conda create -n filogenia -c bioconda -c conda-forge `
+    mafft iqtree seqkit trimal emboss biopython -y
+
+# 8. Activar y verificar
+conda activate filogenia
+mafft --version
+iqtree2 --version
+seqkit version
+```
+
+**Limitaciones documentadas en PowerShell nativo**:
+
+| Paquete | Estado en PowerShell | Comentario |
+|---------|----------------------|------------|
+| mafft | OK | Binario Windows disponible |
+| iqtree2 | OK | Funciona, pero algo más lento que Linux |
+| mrbayes | **No recomendado** | Binario Win desactualizado |
+| beast2 | **No disponible** | Requiere WSL2 |
+| tnt | **No disponible** | Requiere WSL2 |
+| figtree | OK (Java) | Funciona como GUI Java |
+
+**Conclusión**: para los capítulos 5+ del curso (MrBayes, BEAST2), PowerShell nativo no es suficiente. Se recomienda **migrar a WSL2** siguiendo la Ruta A. La ventaja principal de WSL2 es disponer del **mismo ecosistema bioinformático** que cualquier servidor Linux HPC, lo que facilita reproducibilidad y soporte de la comunidad.

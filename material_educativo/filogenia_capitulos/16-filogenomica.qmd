@@ -1,0 +1,764 @@
+---
+title: "Capítulo 16: Filogenómica — Concatenación y partición"
+---
+
+## 16.1 ¿Qué es la filogenómica?
+
+La **filogenómica** es la aplicación de métodos filogenéticos a **datasets a escala genómica**: múltiples genes (decenas a miles), genomas completos, o conjuntos de SNPs. La motivación es triple:
+
+1. **Más datos = más poder estadístico**: un solo gen puede tener señal filogenética insuficiente para resolver relaciones difíciles (radiaciones recientes, nodos profundos).
+2. **Concatenación de genes ortólogos**: reduce ruido y aumenta resolución.
+3. **Robustez**: si varios genes coinciden, la filogenia es más fiable.
+
+A diferencia de la filogenia clásica (1-5 genes), la filogenómica usa típicamente **100-1000+ genes** y de **10-100+ taxones**. Las matrices resultantes pueden tener **millones de caracteres**.
+
+### 16.1.1 Tipos de datasets filogenómicos
+
+| Tipo | Descripción | Ejemplo |
+|------|-------------|---------|
+| **Concatenación de ortólogos** | Matriz supermatriz de N genes × M taxones | 1000 orthogroups de 50 insectos |
+| **Species tree (coalescent)** | Árboles por gen + reconciliación | ASTRAL, ASTRID, MP-EST |
+| **Whole-genome SNP** | SNPs de genomas completos | SVDQuartets, RAxML-NG con SNPs |
+| **Whole-genome distances** | ANI, AAI para taxonomía | GTDB, FastANI |
+| **Synteny / gene order** | Orden de genes como carácter | Rearreglos cromosómicos |
+
+Nos centraremos en los dos primeros: **concatenación** y **species tree methods**.
+
+## 16.2 Concatenación de genes ortólogos
+
+### 16.2.1 El concepto de supermatriz
+
+Dado N genes ortólogos presentes en M taxones, construimos una **matriz** de M × (longitud total) donde las secuencias de cada gen se concatenan horizontalmente:
+
+```text
+              gene1    gene2    gene3   ...
+Taxon1     ATGCG...  GCTTA...  AACCC...
+Taxon2     ATGCG...  GCTTA...  AACCC...
+Taxon3     ATGCA...  GCTTA...  AAGCC...
+...
+```
+
+Cada gen tiene su propia **partición** con su modelo de sustitución óptimo. Análisis con un solo modelo para todo (unpartitioned) es subóptimo; análisis particionado permite modelar heterogeneidad entre genes.
+
+### 16.2.2 Identificación de ortólogos
+
+El primer paso crítico es identificar genes **ortólogos** (homólogos por especiación, no por duplicación). Herramientas:
+
+- **OrthoFinder** (Python): estado del arte, usa grafo de similaridad + reconstrucción de genes.
+- **OMCL** (OrthoMCL): clásico, basado en Markov clustering.
+- **ProteinOrtho**: eficiente para genomas grandes.
+- **OrthoDB**: base de datos precomputada de ortólogos.
+- **RBH (Reciprocal Best Hit)** con BLAST: simple, menos sensible.
+
+```bash
+# Instalar OrthoFinder
+conda install -c bioconda orthofinder -y
+
+# Ejecutar OrthoFinder sobre proteomas de N especies
+mkdir -p proteomes
+cp species1.faa species2.faa species3.faa ... proteomes/
+
+orthofinder -f proteomes/ -t 8
+# Output en: proteomes/OrthoFinder/Results_*/
+#   Orthogroups.tsv   → tabla ortólogos
+#   Orthogroups_SingleCopyOrthologues.txt → ortólogos de copia única
+#   (ideal para filogenómica)
+```
+
+::: callout-tip
+**Genes de copia única (single-copy orthologs)**: para filogenómica, usar solo orthogroups presentes en una sola copia en todos los taxones. Esto asegura paralogía evitada. OrthoFinder genera automáticamente el archivo `Orthogroups_SingleCopyOrthologues.txt`.
+:::
+
+### 16.2.3 Búsqueda recíproca (RBH) con BLAST
+
+Para análisis rápidos con 2-3 especies, RBH es suficiente:
+
+```bash
+# BLAST especie 1 vs especie 2
+blastp -query sp1.faa -subject sp2.faa -outfmt 6 -evalue 1e-5 > sp1_vs_sp2.blast
+blastp -query sp2.faa -subject sp1.faa -outfmt 6 -evalue 1e-5 > sp2_vs_sp1.blast
+
+# Reciprocal Best Hits con awk
+awk 'BEGIN{OFS="\t"} {if(!a[$1] || $12 < a[$1"_e"]) {a[$1]=$2; a[$1"_e"]=$12}} END{for(k in a) print k, a[k]}' sp1_vs_sp2.blast | sort -k1,1 > sp1_best.tsv
+awk 'BEGIN{OFS="\t"} {if(!a[$1] || $12 < a[$1"_e"]) {a[$1]=$2; a[$1"_e"]=$12}} END{for(k in a) print k, a[k]}' sp2_vs_sp1.blast | sort -k1,1 > sp2_best.tsv
+
+# Reciprocal: buscar pares donde cada uno es el mejor hit del otro
+join -1 1 -2 2 sp1_best.tsv <(sort -k2,2 sp2_best.tsv) > rbh_pairs.tsv
+```
+
+## 16.3 Pipeline típico de filogenómica
+
+```text
+1. Identificar ortólogos       → OrthoFinder
+2. Alinear cada gen             → MAFFT (ADN/proteína)
+3. Recortar cada alineamiento   → trimAl
+4. Concatenar en supermatriz    → AMAS / BioPython
+5. Modelo por partición         → ModelFinder (IQ-TREE)
+6. Análisis ML particionado     → IQ-TREE -spp / RAxML-NG
+```
+
+::: callout-note
+**Tipos de datos**: para ADN codificante, alinear la **proteína** (más informativa) y luego **retrotraducir** al ADN con `pal2nal.pl` para mantener el marco de lectura. Esto produce alineamientos de codones alineados correctamente, útiles para análisis de selección (PAML) y para preservar posiciones de codón.
+:::
+
+## 16.4 Concatenación con AMAS
+
+**AMAS** (Alignment Manipulation and Summary) es un script Python muy versátil:
+
+```bash
+# Instalación
+conda install -c bioconda amas -y
+# O directo: git clone https://github.com/marekborowiec/AMAS
+
+# Concatenar múltiples genes
+AMAS.py concat -f fasta -d dna \
+    -i gene1.fasta gene2.fasta gene3.fasta gene4.fasta gene5.fasta \
+    -o concatenated.fasta -p partition.txt
+
+# Opciones:
+# -f fasta|phylip|nexus: formato input
+# -d dna|aa: tipo de datos
+# -o: archivo output
+# -p: archivo de particiones (formato RAxML)
+```
+
+Formato del archivo `partition.txt` generado:
+
+```text
+DNA, gene1 = 1 - 312
+DNA, gene2 = 313 - 879
+DNA, gene3 = 880 - 1456
+DNA, gene4 = 1457 - 2244
+DNA, gene5 = 2245 - 3056
+```
+
+## 16.5 Concatenación con BioPython
+
+Para control total, script personalizado:
+
+```python
+#!/usr/bin/env python3
+# concat_alignments.py: concatenar alineamientos FASTA y generar particiones
+from Bio import SeqIO
+from collections import defaultdict
+import sys
+
+# Argumentos: lista de archivos FASTA
+gene_files = sys.argv[1:]
+if not gene_files:
+    print("Uso: python3 concat_alignments.py gene1.fasta gene2.fasta ...")
+    sys.exit(1)
+
+sequences = defaultdict(str)
+partitions = []
+start = 1
+gene_length = 0
+
+for gene_file in gene_files:
+    gene_name = gene_file.split('/')[-1].replace('.fasta', '').replace('.fa', '')
+    length = 0
+    for rec in SeqIO.parse(gene_file, "fasta"):
+        sequences[rec.id] += str(rec.seq).upper()
+        length = len(rec.seq)
+    end = start + length - 1
+    partitions.append((gene_name, start, end))
+    start = end + 1
+    gene_length += length
+    print(f"{gene_name}: {length} bp (columnas {start-length}-{end})")
+
+# Escribir supermatriz
+with open("concatenated.fasta", "w") as f:
+    for taxon, seq in sequences.items():
+        f.write(f">{taxon}\n{seq}\n")
+
+# Escribir particiones en formato RAxML
+with open("partitions.txt", "w") as f:
+    for gene, s, e in partitions:
+        f.write(f"DNA, {gene} = {s}-{e}\n")
+
+# Verificación
+print(f"\nSupermatriz: {len(sequences)} taxones × {gene_length} sitios")
+print(f"Particiones: {len(partitions)} genes")
+```
+
+Ejecución:
+
+```bash
+python3 concat_alignments.py gene*.fasta
+
+# Salida típica:
+# coi: 657 bp (columnas 1-657)
+# cytb: 1140 bp (columnas 658-1797)
+# 16s: 1450 bp (columnas 1798-3247)
+# 18s: 1789 bp (columnas 3248-5036)
+# rag1: 2904 bp (columnas 5037-7940)
+#
+# Supermatriz: 12 taxones × 7940 sitios
+# Particiones: 5 genes
+```
+
+## 16.6 Análisis particionado en IQ-TREE
+
+IQ-TREE soporta varios modelos de partición:
+
+```bash
+# === Edge-linked proportional (-spp) ===
+# Un solo árbol, pero las longitudes de rama se escalan proporcionalmente
+# entre particiones. Modelo recomendado para la mayoría de casos.
+iqtree2 -s concatenated.fasta -spp partitions.txt -m MFP -B 1000 -pre phylogenomic
+
+# === Edge-linked (-sp) ===
+# Un solo árbol, mismas longitudes de rama para todas las particiones.
+# Subóptimo si tasas varían entre genes.
+iqtree2 -s concatenated.fasta -sp partitions.txt -m MFP -B 1000 -pre phylo_linked
+
+# === Edge-unlinked (-s) ===
+# Árboles separados por partición (gene trees). Solo útil para diagnóstico
+# de conflicto entre genes.
+iqtree2 -s concatenated.fasta -S partitions.txt -m MFP -B 1000 -pre separate
+
+# === Partition file con modelos pre-especificados por partición ===
+# formato partitions.txt:
+#   DNA, gene1 = 1-657
+#   DNA, gene2 = 658-1797
+#   DNA, gene3 = 1798-3247
+```
+
+::: callout-tip
+**Recomendación**: usar `-spp` (edge-linked proportional) por defecto. Esto permite longitudes de rama proporcionales entre genes, capturando heterogeneidad de tasas sin multiplicar parámetros. `-sp` asume mismas longitudes (irreal). `-s` (unlinked) es para análisis exploratorios de conflicto.
+:::
+
+## 16.7 Análisis particionado en RAxML-NG
+
+```bash
+# Análisis con partición
+raxml-ng --all --msa concatenated.fasta \
+         --model partitions.txt \
+         --bs-trees 1000 \
+         --threads 16 \
+         --prefix phylogenomic
+
+# Con modelos pre-especificados en partitions.txt:
+#   GTR+I+G, gene1 = 1-657
+#   GTR+G, gene2 = 658-1797
+#   HKY+I+G, gene3 = 1798-3247
+```
+
+## 16.8 Análisis particionado en MrBayes
+
+```text
+#NEXUS
+BEGIN DATA;
+DIMENSIONS NTAX=12 NCHAR=7940;
+FORMAT DATATYPE=DNA MISSING=? GAP=-;
+MATRIX
+[matriz aquí]
+;
+END;
+
+BEGIN MRBAYES;
+    charset coi   = 1-657;
+    charset cytb  = 658-1797;
+    charset 16s   = 1798-3247;
+    charset 18s   = 3248-5036;
+    charset rag1  = 5037-7940;
+    partition by_gene = 5: coi, cytb, 16s, 18s, rag1;
+    set partition = by_gene;
+    lset applyto=(all) nst=6 rates=invgamma;
+    unlink statefreq=(all) revmat=(all) shape=(all) pinvar=(all);
+    set autoclose=yes nowarn=yes;
+    mcmc ngen=10000000 samplefreq=1000 nchains=4 nruns=2 savebrlens=yes;
+    sumt burnin=2500;
+    sump burnin=2500;
+END;
+```
+
+::: callout-warning
+**`unlink`**: permite que cada partición tenga sus propios parámetros. Sin `unlink`, todas las particiones comparten statefreq, revmat, etc. — esto pierde el beneficio de la partición. Para análisis final, siempre `unlink` de statefreq y revmat. Para shape y pinvar, puede o no deslinkear según caso.
+:::
+
+## 16.9 Estrategias de partición
+
+| Estrategia | Número de particiones | Cuándo usar |
+|------------|----------------------|-------------|
+| **Unpartitioned** | 1 | Datasets pequeños, genes homogéneos |
+| **By gene** | N genes | Estándar para filogenómica |
+| **By codon position** | 3N | Genes codificantes, alta heterogeneidad |
+| **By gene + codon** | 3N | Máxima resolución, datasets grandes |
+| **By rate category** | Variable | PartitionFinder (agrupamiento por tasa) |
+
+```bash
+# Partición por codón (en IQ-TREE)
+# En el archivo partitions.txt:
+#   DNA, gene1_pos1 = 1-657\3
+#   DNA, gene1_pos2 = 2-657\3
+#   DNA, gene1_pos3 = 3-657\3
+#   DNA, gene2_pos1 = 658-1797\3
+#   ...
+
+# O dejar que IQ-TREE haga la partición por codón automáticamente:
+iqtree2 -s concatenated.fasta -spp partitions.txt -m MFP+MERGE -rcluster 10 -B 1000
+# -m MFP+MERGE: busca modelo por partición, también considera fusionar particiones similares
+# -rcluster 10: algoritmo PartitionFinder-like (top 10 esquemas)
+```
+
+### 16.9.1 Comparación de estrategias
+
+```bash
+# Comparar cuatro estrategias para el mismo dataset
+for strategy in unpart gene codon gene_codon; do
+    case $strategy in
+        unpart)
+            iqtree2 -s concatenated.fasta -m MFP -B 1000 -pre strat_unpart
+            ;;
+        gene)
+            iqtree2 -s concatenated.fasta -spp partitions_gene.txt -m MFP -B 1000 -pre strat_gene
+            ;;
+        codon)
+            iqtree2 -s concatenated.fasta -spp partitions_codon.txt -m MFP -B 1000 -pre strat_codon
+            ;;
+        gene_codon)
+            iqtree2 -s concatenated.fasta -spp partitions_gene_codon.txt -m MFP+MERGE -rcluster 10 -B 1000 -pre strat_gc
+            ;;
+    esac
+done
+
+# Comparar logL, AIC, BIC
+for strategy in unpart gene codon gene_codon; do
+    logL=$(grep "Log-likelihood" strat_${strategy}.iqtree | awk '{print $NF}')
+    aic=$(grep "AIC" strat_${strategy}.iqtree | head -1 | awk '{print $NF}')
+    bic=$(grep "BIC" strat_${strategy}.iqtree | head -1 | awk '{print $NF}')
+    echo "$strategy: logL=$logL, AIC=$aic, BIC=$bic"
+done
+```
+
+## 16.10 Species tree methods
+
+La concatenación asume que **todos los genes comparten la misma historia evolutiva**. Esto puede fallar por:
+
+- **ILS (Incomplete Lineage Sorting)**: polimorfismos ancestrales que no se fijan antes de la especiación → genes con historias distintas.
+- **HGT (Horizontal Gene Transfer)**: especialmente en microorganismos.
+- **Hibridación**: introesión de genes entre especies.
+
+Los **species tree methods** construyen árboles por gen individualmente y luego **reconcilian** los gene trees en un species tree, modelando explícitamente ILS bajo el **multi-species coalescent**.
+
+### 16.10.1 ASTRAL (Mirarab et al. 2014)
+
+ASTRAL estima el species tree maximizando la **quartet frequency**: para cada cuarteto de taxones, encuentra la topología que maximiza el número de cuartetos compartidos con los gene trees.
+
+```bash
+# Instalación
+conda install -c bioconda astral -y
+
+# Input: archivo con todos los gene trees en Newick (uno por línea)
+# genetrees.nwk:
+#   (A:0.1,(B:0.2,C:0.3):0.1);
+#   ((A,B):0.1,(C,D):0.2);
+#   ...
+
+# Ejecutar ASTRAL
+astral -i genetrees.nwk -o species_tree.nwk -q quartets.q
+
+# Con bootstrap:
+astral -i genetrees.nwk -o species_tree.nwk \
+       --gene-tracker gene_support.txt \
+       --branch-annotate 2
+```
+
+### 16.10.2 ASTRID, MP-EST, SVDQuartets
+
+- **ASTRID**: más rápido que ASTRAL, métodos basados en distancias.
+- **MP-EST**: maximiza la pseudoverosimilitud.
+- **SVDQuartets** (PAUP*): usa descomposición SVD de patrones de sitios para cuartetos. Sin necesidad de gene trees pre-computados.
+
+```bash
+# SVDQuartets en PAUP*
+paup -n <<EOF
+exe concatenated.nex;
+SVDQuartets nthreads=8 nquartets=100000 bootstrap=1000;
+savetrees file=svd_tree.nwk format=newick brlens=yes;
+EOF
+```
+
+::: callout-note
+**Concatenación vs species tree**: para datasets con **alto ILS** (radiaciones recientes, p. ej., Neoaves, Australasian robins), los species tree methods pueden dar topologías más correctas. Para datasets con **bajo ILS** (especies distantes, fósiles), la concatenación es suficiente y más rápida. **Recomendación**: hacer ambos y comparar.
+:::
+
+## 16.11 Estadísticas descriptivas de datasets filogenómicos
+
+Antes de inferir el árbol, conviene describir la supermatriz:
+
+```bash
+#!/usr/bin/env bash
+# stats_phylogenomic.sh: estadísticas de supermatriz
+INPUT="concatenated.fasta"
+
+python3 <<EOF
+from Bio import AlignIO
+from collections import Counter, defaultdict
+import numpy as np
+
+aln = AlignIO.read("$INPUT", "fasta")
+n_taxa = len(aln)
+n_sites = aln.get_alignment_length()
+
+# Datos faltantes y gaps
+gap_total = 0
+informative = 0
+for i in range(n_sites):
+    col = str(aln[:, i]).upper()
+    gap_total += col.count('-') + col.count('?') + col.count('N')
+    cnt = Counter(c for c in col if c not in '-?N')
+    if sum(1 for c, n in cnt.items() if n >= 2) >= 2:
+        informative += 1
+
+pct_missing = gap_total / (n_taxa * n_sites) * 100
+pct_informative = informative / n_sites * 100
+
+# Composición por taxón
+taxon_completeness = {}
+for rec in aln:
+    seq = str(rec.seq).upper()
+    missing = seq.count('-') + seq.count('?') + seq.count('N')
+    taxon_completeness[rec.id] = (1 - missing/len(seq)) * 100
+
+print(f"=== Estadísticas supermatriz ===")
+print(f"Taxones:        {n_taxa}")
+print(f"Sites:          {n_sites}")
+print(f"Sitios informativos: {informative} ({pct_informative:.1f}%)")
+print(f"Datos faltantes: {pct_missing:.2f}%")
+print(f"\nCompletitud por taxón:")
+for taxon, comp in sorted(taxon_completeness.items()):
+    print(f"  {taxon}: {comp:.1f}%")
+EOF
+```
+
+Salida típica:
+
+```text
+=== Estadísticas supermatriz ===
+Taxones:        12
+Sites:          7940
+Sitios informativos: 4832 (60.8%)
+Datos faltantes: 4.32%
+
+Completitud por taxón:
+  Gorilla_beringei: 99.5%
+  Homo_sapiens:     100.0%
+  Hylobates_lar:    91.2%
+  Macaca_mulatta:   98.7%
+  Pan_paniscus:     99.9%
+  Pan_troglodytes:  99.9%
+  Papio_anubis:     97.8%
+  Pongo_abelii:     95.4%
+  Pongo_pygmaeus:   95.6%
+  Symphalangus:     92.3%
+  Tarsius_syrichta: 78.5%
+```
+
+## 16.12 Limitaciones de la concatenación
+
+### 16.12.1 ILS (Incomplete Lineage Sorting)
+
+Cuando la especiación ocurre más rápido que la fijación de alelos, diferentes loci pueden tener gene trees discordantes con el species tree. La concatenación asume un solo árbol y puede dar una topología **erróneamente muy soportada** (high bootstrap en nodo incorrecto), fenómeno llamado **anomaly zone**.
+
+Ejemplos clásicos:
+
+- **Neoaves**: radiación rápida post-KPg, ILS masivo.
+- **Australopithecus-Homo-Pan**: ILS documentado entre estos linajes.
+
+### 16.12.2 HGT (Horizontal Gene Transfer)
+
+En bacterias, muchos genes se transfieren entre especies. Un mismo árbol no puede representar historias contradictorias. Soluciones: **redes filogenéticas** (PhyloNetworks en Julia, SNAQ), o análisis por **tipo de gene** (clustering por función).
+
+### 16.12.3 Hibridación
+
+Especies híbridas o con introgresión (p. ej., *Homo sapiens* × *Homo neanderthalensis*) tienen mezcla de historias. Métodos como **D-statistics (ABBA-BABA)** con admixtools detectan introesión.
+
+## 16.13 Recursos computacionales
+
+Datasets filogenómicos son computacionalmente exigentes:
+
+| Dataset | Tiempo (1 core) | Memoria |
+|---------|-----------------|---------|
+| 50 taxones × 100 genes × 1000 bp (100k bp) | ~1-4 h ML | 1-2 GB |
+| 100 taxones × 500 genes × 1000 bp (500k bp) | ~12-24 h | 4-8 GB |
+| 200 taxones × 1000 genes × 1000 bp (1M bp) | días | 16-32 GB |
+| 1000 taxones × 100 genes (large Tree of Life) | 1-2 semanas | 32-64 GB |
+
+Estrategias:
+
+- **Paralelización**: `-T 16` o más en IQ-TREE/RAxML-NG.
+- **HPC con SLURM**: para datasets grandes.
+- **Submuestreo**: si tienes 1000 genes, prueba con 100 random para ver si la topología es estable.
+- **Bootstraps**: en datasets grandes, usar **ultrafast bootstrap** (`-B 1000` en IQ-TREE) en vez de standard.
+
+```bash
+# Ejemplo SLURM para HPC
+cat > submit_phylogenomic.sh <<'EOF'
+#!/bin/bash
+#SBATCH --job-name=phylogenomic
+#SBATCH --nodes=1
+#SBATCH --ntasks=8
+#SBATCH --mem=32G
+#SBATCH --time=72:00:00
+#SBATCH --output=phylo_%j.out
+
+module load iqtree/2.2
+iqtree2 -s concatenated.fasta -spp partitions.txt -m MFP -B 1000 -T 8 -pre phylo_run
+EOF
+
+sbatch submit_phylogenomic.sh
+```
+
+## 16.14 Ejercicios
+
+### Ejercicio 1: Construir supermatriz filogenómica
+
+Descargar 5 genes ortólogos (COI, Cytb, 16S, 18S, RAG1) de 8 vertebrados. Alinear cada uno con MAFFT. Recortar. Concatenar con AMAS o BioPython. Crear archivo de partición. Ejecutar IQ-TREE con `-spp` y MFP. Reportar modelo por partición.
+
+### Ejercicio 2: Comparación de estrategias de partición
+
+Sobre la supermatriz del ejercicio 1, comparar 3 estrategias: (a) unpartitioned, (b) por gen (`-spp`), (c) por codón (1st/2nd/3rd position). Comparar logL, AIC, tiempo de cómputo, topología resultante.
+
+### Ejercicio 3: Pipeline ASTRAL
+
+Para cada uno de los 5 genes del ejercicio 1, construir árbol individual con FastTree. Combinar los 5 árboles en un archivo. Ejecutar ASTRAL para obtener árbol de especies. Comparar con el árbol concatenado del ejercicio 1.
+
+## 16.15 Soluciones
+
+### Solución ejercicio 1
+
+```bash
+#!/usr/bin/env bash
+# Ejercicio 1: Construir supermatriz filogenómica de vertebrados
+set -euo pipefail
+
+WORKDIR="$HOME/filogenia_curso/phylogenomic"
+mkdir -p "$WORKDIR"
+cd "$WORKDIR"
+
+# Accessions por gen y especie (ejemplo, reemplazar con IDs reales)
+declare -A GENES=(
+    ["coi"]="NC_001564 NC_002008 NC_001643 NC_001645 ..."
+    ["cytb"]="..."
+    ["16s"]="..."
+    ["18s"]="..."
+    ["rag1"]="..."
+)
+
+# 1. Descargar secuencias
+echo "=== Paso 1: Descarga ==="
+for gene in "${!GENES[@]}"; do
+    for acc in ${GENES[$gene]}; do
+        efetch -db nucleotide -id "$acc" -format fasta >> "${gene}_raw.fasta"
+        echo "" >> "${gene}_raw.fasta"
+    done
+done
+
+# 2. Alinear cada gen con MAFFT
+echo "=== Paso 2: Alineamiento ==="
+for gene in coi cytb 16s 18s rag1; do
+    mafft --auto "${gene}_raw.fasta" > "${gene}_aln.fasta"
+done
+
+# 3. Recortar con trimAl
+echo "=== Paso 3: Recorte ==="
+for gene in coi cytb 16s 18s rag1; do
+    trimal -in "${gene}_aln.fasta" -out "${gene}_trim.fasta" -automated1
+done
+
+# 4. Concatenar con AMAS
+echo "=== Paso 4: Concatenación ==="
+AMAS.py concat -f fasta -d dna \
+    -i coi_trim.fasta cytb_trim.fasta 16s_trim.fasta 18s_trim.fasta rag1_trim.fasta \
+    -o concatenated.fasta -p partitions.txt
+
+# 5. IQ-TREE con partición y ModelFinder
+echo "=== Paso 5: ML particionado ==="
+iqtree2 -s concatenated.fasta -spp partitions.txt -m MFP -B 1000 -T 8 -pre phylo_run
+
+# 6. Reporte
+echo "=== REPORTE ==="
+cat partitions.txt
+grep -A 20 "Best-fit model" phylo_run.iqtree | head -25
+echo "Árbol: phylo_run.treefile"
+```
+
+Salida esperada (resumen):
+
+```text
+DNA, coi = 1-657
+DNA, cytb = 658-1797
+DNA, 16s = 1798-3247
+DNA, 18s = 3248-5036
+DNA, rag1 = 5037-7940
+
+Best-fit model according to AIC:
+  coi:  HKY+I+G4
+  cytb: GTR+I+G4
+  16s:  GTR+I+G4
+  18s:  GTR+I+G4
+  rag1: GTR+G4
+
+Log-likelihood: -47832.156
+AIC: 96310.312
+```
+
+### Solución ejercicio 2
+
+```bash
+#!/usr/bin/env bash
+# Ejercicio 2: Comparación de estrategias de partición
+set -euo pipefail
+
+# Generar partición por codón
+python3 <<'EOF'
+from collections import defaultdict
+genes = []
+current = 1
+with open("partitions.txt") as f:
+    for line in f:
+        if "=" in line:
+            parts = line.split("=")[1].strip().split("-")
+            start, end = int(parts[0]), int(parts[1])
+            gene = line.split(",")[1].split("=")[0].strip()
+            length = end - start + 1
+            # Asegurar múltiplo de 3
+            length_codons = length // 3
+            for pos in [1, 2, 3]:
+                start_pos = current + pos - 1
+                end_pos = start_pos + (length_codons - 1) * 3
+                genes.append(f"DNA, {gene}_pos{pos} = {start_pos}-{end_pos}\\3")
+            current = end_pos + 3  # ajustar si length no múltiplo de 3
+
+with open("partitions_codon.txt", "w") as f:
+    f.write("\n".join(genes) + "\n")
+EOF
+
+# Ejecutar 3 estrategias
+echo "=== Estrategia a: Unpartitioned ==="
+time iqtree2 -s concatenated.fasta -m MFP -B 1000 -T 8 -pre strat_unpart
+
+echo "=== Estrategia b: Por gen (-spp) ==="
+time iqtree2 -s concatenated.fasta -spp partitions.txt -m MFP -B 1000 -T 8 -pre strat_gene
+
+echo "=== Estrategia c: Por codón (-spp) ==="
+time iqtree2 -s concatenated.fasta -spp partitions_codon.txt -m MFP -B 1000 -T 8 -pre strat_codon
+
+# Comparar
+echo "=== COMPARACIÓN ==="
+for s in unpart gene codon; do
+    logL=$(grep "Log-likelihood" strat_${s}.iqtree | awk '{print $NF}')
+    aic=$(grep -m1 "AIC" strat_${s}.iqtree | awk '{print $NF}')
+    n_params=$(grep "Parameters:" strat_${s}.iqtree | awk '{print $NF}')
+    echo "$s: logL=$logL, AIC=$aic, params=$n_params"
+done
+
+# Comparar topologías
+echo "=== Distancias RF entre topologías ==="
+nw_distance -m rf strat_unpart.treefile strat_gene.treefile
+nw_distance -m rf strat_gene.treefile strat_codon.treefile
+nw_distance -m rf strat_unpart.treefile strat_codon.treefile
+```
+
+Salida típica:
+
+```text
+=== COMPARACIÓN ===
+unpart: logL=-47832.156, AIC=96310.312, params=11
+gene:   logL=-45821.847, AIC=92489.694, params=42
+codon:  logL=-44102.341, AIC=88754.682, params=126
+
+Tiempos:
+unpart: 1m 23s
+gene:   4m 56s
+codon:  12m 47s
+```
+
+**Análisis**:
+
+1. **AIC disminuye** al aumentar partición → mejor ajuste (más modelos, mejor capturan heterogeneidad).
+2. **Tiempo aumenta** exponencialmente con número de particiones.
+3. **Topologías**: suelen ser congruentes en clados fuertes; difieren en nodos cortos.
+4. **Recomendación**: por gen (`-spp`) ofrece el mejor balance. Por codón solo si tienes tiempo y necesitas máxima resolución.
+
+### Solución ejercicio 3
+
+```bash
+#!/usr/bin/env bash
+# Ejercicio 3: Pipeline ASTRAL
+set -euo pipefail
+
+# 1. Construir árbol individual por gen con FastTree
+echo "=== Gene trees con FastTree ==="
+conda install -c bioconda fasttree -y
+
+for gene in coi cytb 16s 18s rag1; do
+    fasttree -nt -gtr -gamma "${gene}_trim.fasta" > "${gene}.nwk"
+done
+
+# 2. Combinar todos los gene trees en un archivo
+echo "=== Combinando gene trees ==="
+cat coi.nwk cytb.nwk 16s.nwk 18s.nwk rag1.nwk > genetrees.nwk
+echo "Total gene trees: $(wc -l < genetrees.nwk)"
+
+# 3. Ejecutar ASTRAL
+echo "=== ASTRAL ==="
+astral -i genetrees.nwk -o species_tree.nwk 2>&1 | tee astral.log
+
+# 4. Comparar con árbol concatenado
+echo "=== Comparación topologías ==="
+# Enraizar ambos con outgroup
+nw_rename -r Tarsius_syrichta species_tree.nwk > species_rooted.nwk
+nw_rename -r Tarsius_syrichta phylo_run.treefile > concat_rooted.nwk
+
+# Distancia RF
+echo "Distancia RF (concat vs ASTRAL):"
+nw_distance -m rf concat_rooted.nwk species_rooted.nwk
+
+# 5. Visualizar ambos lado a lado
+echo "=== Visualización ==="
+ete3 view -t species_rooted.nwk
+ete3 view -t concat_rooted.nwk
+```
+
+Comparación típica:
+
+```text
+Total gene trees: 5
+
+=== ASTRAL ===
+ASTRAL finished. Species tree: species_tree.nwk
+Quartet score: 0.92
+
+=== Distancia RF (concat vs ASTRAL): 4
+```
+
+**Análisis**:
+
+1. **ASTRAL da topología similar** a concatenación pero no idéntica.
+2. **Quartet score 0.92**: el species tree explica el 92% de los cuartetos de los gene trees — alto, indica bajo conflicto.
+3. **Diferencias RF = 4**: dos biparticiones discordantes, probablemente nodos internos cortos (ILS).
+4. **Conclusión**: para Hominidae, la concatenación es adecuada (bajo ILS). Para radiaciones recientes (Neoaves), ASTRAL sería preferido.
+
+::: callout-important
+**Resumen del capítulo**:
+- Filogenómica = análisis multi-gen o genómico con alta resolución.
+- Concatenación con partición `-spp` (edge-linked proportional) es el estándar.
+- OrthoFinder para identificar ortólogos; AMAS o BioPython para concatenar.
+- Species tree methods (ASTRAL) para datasets con ILS o conflicto.
+- Comparar estrategias de partición con AIC/BIC y topologías.
+- Recursos computacionales: datasets grandes requieren HPC con SLURM.
+:::
+
+::: callout-tip
+**Pipeline recomendado para filogenómica**:
+1. OrthoFinder → single-copy orthologs.
+2. MAFFT por gen (proteína primero, luego pal2nal para ADN).
+3. trimAl recorte.
+4. AMAS concatenación con partition file.
+5. IQ-TREE `-spp partitions.txt -m MFP -B 1000 -T 8`.
+6. (Opcional) ASTRAL con gene trees para comparar.
+7. Reportar: modelos por partición, AIC, topología con bootstrap.
+:::

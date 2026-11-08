@@ -1,0 +1,706 @@
+---
+title: "Capítulo 14: BEAST2 — Datación molecular"
+---
+
+## 14.1 ¿Qué es BEAST2?
+
+**BEAST2** (Bayesian Evolutionary Analysis Sampling Trees 2, Bouckaert et al. 2014) es un paquete bayesiano diseñado específicamente para **estimar simultáneamente la topología, las longitudes de rama y los tiempos de divergencia**. Mientras MrBayes produce un árbol en **unidades de sustituciones por sitio** (donde la longitud de rama mide cantidad de cambio), BEAST2 produce un árbol en **unidades de tiempo real** (millones de años), un **cronograma** o *time-calibrated tree*.
+
+La diferencia conceptual clave es que BEAST2 introduce un **reloj molecular** que conecta sustituciones con tiempo:
+
+$$
+\text{sustituciones} = \text{tasa} \times \text{tiempo}
+$$
+
+Si conocemos el tiempo por una calibración fósil, podemos estimar la tasa. Si conocemos la tasa (p. ej., por datación radiométrica), podemos estimar tiempos. En la práctica solemos tener calibraciones fósiles en algunos nodos y queremos propagar esa información temporal al resto del árbol.
+
+### 14.1.1 BEAST2 vs MrBayes
+
+| Característica | MrBayes | BEAST2 |
+|----------------|---------|--------|
+| Soporte de rama | Probabilidad posterior | Probabilidad posterior |
+| Unidad de longitud | Sustituciones/sitio | Tiempo (Myr) o sustituciones |
+| Reloj molecular | Limitado | Sí (estricto, relajado) |
+| Datación con fósiles | Limitado | Excelente |
+| Coalescent poblacional | Limitado | Sí (skyline, etc.) |
+| Calibración fósil | Básica | Excelente |
+| Velocidad relativa | 1× | ~10× más lento |
+| Modelo de árbol | Un solo árbol | Yule, Coalescent, Birth-Death |
+
+::: callout-note
+**Cuándo usar BEAST2**: cuando necesitas **tiempos de divergencia**, **tasas de evolución**, **demografía histórica** (skyline plots) o cuando tienes **calibraciones fósiles** robustas. Si solo quieres la topología con soporte, MrBayes o IQ-TREE son mucho más rápidos.
+:::
+
+## 14.2 Conceptos clave
+
+### 14.2.1 Reloj molecular estricto (strict clock)
+
+Asume que **todas las ramas del árbol evolucionan a la misma tasa** $\mu$. Es el modelo original de Zuckerkandl y Pauling (1962). Biológicamente irreal para la mayoría de datos reales (las tasas varían entre linajes por generación, metabolismo, etc.), pero útil como modelo nulo y para datasets muy pequeños con fósiles precisos.
+
+### 14.2.2 Reloj molecular relajado (relaxed clock)
+
+Permite que las tasas varíen entre ramas. Tres variantes principales:
+
+- **Reloj lognormal relajado uncorrelated** (Drummond et al. 2006): la tasa de cada rama se muestrea de una distribución **lognormal** independiente. Es el modelo por defecto más usado. La media y desviación de la lognormal se estiman a partir de los datos.
+- **Reloj exponencial relajado uncorrelated**: las tasas se muestrean de una **exponencial**. Más simple, asume que la mayoría de ramas tienen tasas bajas y unas pocas tasas altas.
+- **Reloj autocorrelacionado (Kishino et al. 2001)**: la tasa de una rama hija se muestrea en torno a la tasa de su rama madre, capturando **herencia** de tasas. Más realista para algunos grupos pero más lento.
+
+::: callout-tip
+**Recomendación práctica**: empezar siempre con `UCN` (uncorrelated lognormal relaxed clock). Si los datos son muy heterogéneos, comparar con exponencial. El autocorrelacionado se reserva para análisis muy finos de datación.
+:::
+
+### 14.2.3 Calibración con fósiles
+
+Para convertir sustituciones en tiempo necesitamos **al menos un nodo calibrado**. Una calibración es una distribución a priori para la edad del nodo:
+
+- **Normal**: simétrica, útil cuando hay una edad puntual bien establecida con incertidumbre simétrica.
+- **Lognormal**: asimétrica (no permite edades negativas, ideal para fósiles cuyo verdadero origen puede ser más antiguo que el fósil más viejo encontrado). El fósil establece el **mínimo** (offset) y la media/sigma distribuyen la probabilidad hacia atrás.
+- **Uniforme**: para acotar entre un mínimo y máximo bien definidos.
+- **Exponential**: para fósiles que solo dan un mínimo.
+
+Por ejemplo: el fósil más antiguo atribuido a *Homo* tiene ~2.4 Myr, pero la divergencia *Homo*–*Pan* es claramente más antigua. Una lognormal con offset=6, mean=6.5, sigma=0.5 captura esta idea: el origen no puede ser más reciente que 6 Myr, y la mayoría de la masa probabilística está entre 6 y 8 Myr.
+
+### 14.2.4 Priors de árbol
+
+- **Yule model**: modelo de especiación pura (nacimiento sin extinción). Adecuado para **árboles entre especies** (macroevolución). Un parámetro: $\lambda$ (tasa de especiación).
+- **Birth-Death model**: especiación con extinción. Más general, dos parámetros ($\lambda$, $\mu$). Para datasets donde se sospecha extinción significativa.
+- **Coalescent constant size**: asume población constante en el tiempo. Para **árboles dentro de especies** (muestras individuales de una misma especie).
+- **Coalescent exponential growth**: población creciendo exponencialmente.
+- **Bayesian skyline**: demografía histórica flexible por intervalos (muy usado en virus, humanos recientes).
+
+::: callout-warning
+**Error común**: aplicar un prior Yule a un dataset de secuencias **intra-específicas** (p. ej., aislados virales de COVID). El Yule modeliza especiación, no coalescencia. Resultado: estimaciones de tiempos muy sesgadas. Usa `Coalescent Constant Population` o `Bayesian Skyline` para datos poblacionales.
+:::
+
+## 14.3 Componentes de BEAST2
+
+BEAST2 se distribuye como un paquete con varios componentes:
+
+| Componente | Función | ¿Requiere GUI? |
+|------------|---------|----------------|
+| **BEAUti2** | Configurar análisis y generar XML | Sí |
+| **BEAST2** | Ejecutar MCMC desde XML | No |
+| **TreeAnnotator** | Generar árbol consenso con HPD | No |
+| **Tracer** | Verificar convergencia y ESS | Sí |
+| **FigTree** | Visualizar cronogramas | Sí |
+| **DensiTree** | Visualizar densidad de árboles | Sí |
+
+### 14.3.1 Instalación
+
+```bash
+# Instalación vía Bioconda (recomendada en WSL2)
+conda install -c bioconda beast2 -y
+
+# TreeAnnotator viene incluido en el paquete beast2
+# Tracer y FigTree son GUI Java; en WSL2 usar nativos de Windows
+
+# Verificar instalación
+beast -version
+treeannotator -help | head -5
+```
+
+::: callout-important
+**Tracer y FigTree en WSL2**: ambos son aplicaciones Java con GUI. En WSL2 sin WSLg no se abren. Soluciones:
+1. **Mejor opción**: descargar Tracer y FigTree desde sus sitios oficiales y ejecutarlos **nativamente en Windows** (son .jar). Funciona perfectamente y comparten archivos con WSL2 vía `/mnt/c/`.
+2. **Con WSLg** (Windows 11): si tienes WSLg activado, los .jar funcionan desde WSL2 con `java -jar tracer.jar`.
+3. **BEAST2 (el MCMC) y TreeAnnotator** sí corren perfectamente sin GUI en WSL2.
+:::
+
+URLs para descarga nativa en Windows:
+
+```text
+Tracer  : http://tree.bio.ed.ac.uk/software/tracer/
+FigTree : http://tree.bio.ed.ac.uk/software/figtree/
+```
+
+## 14.4 Pipeline BEAST2
+
+El flujo de trabajo típico:
+
+1. Preparar alineamiento (FASTA → NEXUS)
+2. Configurar el análisis en BEAUti2 (o escribir XML a mano)
+3. Exportar el archivo XML
+4. Ejecutar BEAST2 (`beast analysis.xml`)
+5. Verificar convergencia con Tracer (cargar `.log`)
+6. Generar árbol consenso con TreeAnnotator
+7. Visualizar con FigTree
+
+### 14.4.1 Preparar alineamiento
+
+```bash
+# Convertir FASTA a NEXUS
+seqmagick convert --format nexus cytb.fasta cytb.nex
+
+# Verificar alineamiento
+seqmagick convert --describe cytb.fasta
+```
+
+### 14.4.2 Configuración vía BEAUti2 (GUI)
+
+Si tienes WSLg o trabajas en Linux/Mac con escritorio:
+
+```bash
+# BEAUti2 viene con beast2
+beauti &
+
+# En WSLg:
+beauti
+```
+
+Pasos en BEAUti2:
+1. **Importar alineamiento** (File → Import Alignment)
+2. **Site model**: HKY + Gamma (4 categorías) o GTR+G
+3. **Clock model**: Relaxed Lognormal Uncorrelated
+4. **Priors**: Yule model, calibraciones por nodo
+5. **MCMC**: 10M generaciones, samplefreq=1000
+6. **File → Save** genera el XML
+
+### 14.4.3 Generar XML manualmente (sin GUI)
+
+En WSL2 sin X server es útil poder generar el XML a mano o con plantillas. Un XML mínimo:
+
+```xml
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<beast version="2.6"
+       namespace="beast.base:beast.base.core:beast.base.inparam:beast.base.evolution:beast.base.evolution.alignment:beast.base.evolution.tree:beast.base.evolution.operators:beast.base.inparam:beast.base.parser">
+
+    <data id="aln" dataType="nucleotide">
+        <!-- secuencias aquí, formato NEXUS embebido -->
+    </data>
+
+    <map name="FixedMeanRate">0.001</map>
+
+    <!-- Site model: HKY + Gamma -->
+    <input spec='HKY' id='siteModel'>
+        <parameter id='kappa' name='kappa' value="2.0"/>
+        <parameter id='frequencies' name='frequencies' dimension="4" value="0.25"/>
+    </input>
+
+    <!-- Reloj lognormal relajado uncorrelated -->
+    <distribution id="clockModel"
+                  spec="beast.base.evolution.branchratemodel.UCRelaxedClockModel">
+        <parameter name="clock.rate" value="0.001"/>
+        <distr spec="beast.base.inquiry.distributions.LogNormalDistributionModel">
+            <parameter name="M" value="1.0"/>
+            <parameter name="S" value="0.5"/>
+        </distr>
+    </distribution>
+
+    <!-- Yule tree prior -->
+    <distribution id="YuleModel"
+                  spec="beast.base.evolution.speciation.YuleModel">
+        <tree idref="Tree.t:aln"/>
+        <parameter name="birthRate" value="1.0"/>
+    </distribution>
+
+    <!-- Calibración Homo-Pan -->
+    <distribution id="HomoPan"
+                  spec="beast.base.evolution.tree.distributions.LogNormalDistributionModel">
+        <parameter name="M" value="1.85"/>      <!-- ln(6.5) ≈ 1.87 -->
+        <parameter name="S" value="0.5"/>
+        <x spec="beast.base.evolution.tree.TreeHeight" idref="Tree.t:aln"/>
+    </distribution>
+
+    <run id="mcmc" chainLength="10000000" spec="MCMC">
+        <state id="state"></state>
+        <distribution id="posterior" spec="util.CompoundDistribution">
+            <distribution id="likelihood" spec="util.CompoundDistribution"/>
+            <distribution id="prior" spec="util.CompoundDistribution">
+                <distribution idref="YuleModel"/>
+                <distribution idref="HomoPan"/>
+            </distribution>
+        </distribution>
+    </run>
+</beast>
+```
+
+::: callout-note
+**Escribir XML a mano es tedioso y propenso a errores**. La práctica habitual es: usar BEAUti2 una vez para generar una plantilla, luego editar el XML para cambiar taxones o calibraciones. Alternativamente, usar el paquete R `beautier` para generar XML programáticamente (ver §14.7).
+:::
+
+### 14.4.4 Ejecutar BEAST2
+
+```bash
+# Ejecutar BEAST2 con XML
+beast -threads 4 -beagle_off hominidae.xml
+
+# -threads 4: usar 4 cores
+# -beagle_off: desactivar BEAGLE (GPU); en WSL2 puede no estar disponible
+# -seed 12345: fijar semilla para reproducibilidad
+
+# Para runs largos, usar nohup
+nohup beast -threads 8 -beagle_off hominidae.xml > beast.log 2>&1 &
+echo $! > beast.pid   # guardar PID
+```
+
+::: callout-tip
+**Paralelización**: BEAST2 soporta `-threads N`. Para datasets grandes (>50 taxones) o runs largos (>50M generaciones), usar **8-16 threads**. Alternativamente, **BEAST2 con MPI** (`beast-mcmc` compilado con MPI) para distribuir entre nodos, útil en HPC.
+:::
+
+## 14.5 Calibraciones con fósiles
+
+### 14.5.1 Calibración típica Homo-Pan
+
+```xml
+<!-- Calibración: divergencia Homo-Pan hace 6-7 Myr -->
+<distribution id="HomoPanCalibration"
+              spec="beast.base.evolution.tree.distributions.Normal">
+    <parameter name="mean" value="6.5"/>
+    <parameter name="sigma" value="0.5"/>
+    <tree idref="Tree.t:aln"/>
+    <id specification="TaxonSet">
+        <taxon id="Homo_sapiens"/>
+        <taxon id="Pan_troglodytes"/>
+    </id>
+</distribution>
+```
+
+### 14.5.2 Calibraciones múltiples
+
+Para Hominidae (grandes monos):
+
+| Nodo | Edad (Myr) | Distribución | Parámetros |
+|------|------------|--------------|------------|
+| *Homo*–*Pan* | 6-7 | Lognormal | mean=6.5, sigma=0.5, offset=6 |
+| *Gorilla*–(Homo,Pan) | 8-10 | Normal | mean=9, sigma=1 |
+| *Pongo*–(African apes) | 16-19 | Lognormal | mean=17, sigma=1, offset=16 |
+| Hylobatidae–Hominidae | 20 | Normal | mean=20, sigma=2 |
+
+::: callout-warning
+**No calibrar todos los nodos**. Las calibraciones mútuamente dependientes pueden generar conflictos y resultados no fiables. **3-5 calibraciones bien escogidas** es mejor que 10 nodos superpuestos. Siempre cruzar con fósiles independientes ( Steiper & Young 2009 para Hominidae).
+:::
+
+## 14.6 Post-MCMC: TreeAnnotator y Tracer
+
+### 14.6.1 TreeAnnotator
+
+```bash
+# Generar árbol consenso con HPD
+treeannotator -burnin 10 -heights mean hominidae.trees hominidae_consensus.tree
+
+# -burnin 10: descartar 10% de árboles iniciales (burn-in)
+# -heights mean: usar media para alturas de nodos (median o keep también)
+# -b 10 también acepta número absoluto: treeannotator -burnin 1000 ...
+
+# Con intervalos HPD al 95%
+treeannotator -burnin 10 -heights mean -hpd 95 hominidae.trees hominidae_consensus.tree
+```
+
+### 14.6.2 Tracer (verificación de convergencia)
+
+```text
+1. Abrir Tracer (nativo Windows): java -jar tracer.jar
+2. Cargar archivo .log de BEAST2: File → Import Trace File
+3. Para cada parámetro (posterior, likelihood, kappa, clockRate, ...):
+   - Verificar ESS ≥ 200 (columna ESS)
+   - Verificar que la traza es "oruga" (no tendencias, no saltos)
+4. Comprobar burn-in adecuado (típicamente 10%)
+```
+
+Alternativa en línea de comandos con R:
+
+```r
+# install.packages("coda")
+library(coda)
+post <- read.table("hominidae.log", header=TRUE, sep="\t")
+ess <- effectiveSize(post)
+cat("ESS mínimo:", min(ess), "\n")
+cat("ESS < 200:", sum(ess < 200), "parámetros\n")
+```
+
+## 14.7 Modelos poblacionales (coalescent)
+
+Para datos **intra-específicos** (poblacionales), BEAST2 ofrece varios modelos coalescent:
+
+```text
+Coalescent Constant Population:
+  Tamaño poblacional efectivo Ne constante.
+
+Coalescent Exponential Population:
+  Ne crece/decrece exponencialmente.
+
+Bayesian Skyline (Drummond et al. 2005):
+  Ne varía en K intervalos (K=5-10), da historia demográfica.
+
+Bayesian Skygrid:
+  Variante de skyline con rejilla temporal fija, más flexible.
+```
+
+Ejemplo: análisis de demografía histórica de una especie en expansión:
+
+```bash
+# En BEAUti2 seleccionar:
+# Tree Prior → Coalescent Bayesian Skyline
+# Groups: 5 (número de intervalos)
+# Para virus con datos temporales (muestreo heterocrono): usar --dates
+```
+
+## 14.8 Visualización del cronograma
+
+```bash
+# Abrir FigTree nativo en Windows (recomendado)
+# Desde PowerShell:
+java -jar "C:\Program Files\FigTree\v1.4.4\figtree.jar" hominidae_consensus.tree
+
+# Alternativa en WSL2 con ETE3 (sin GUI de Java)
+python3 -c "
+from ete3 import Tree
+t = Tree('hominidae_consensus.tree', format=1)
+print(t.get_ascii(attributes=['name', 'dist']))
+"
+```
+
+::: callout-tip
+Para figuras **publicables** de cronogramas con escalas temporales y barras HPD, **ggtree** (R) o **ladderize** con **ETE3** + matplotlib ofrecen mejor control que FigTree. FigTree es excelente para exploración interactiva.
+:::
+
+## 14.9 Ejemplo práctico: Hominidae con Cytb
+
+Dataset: 10 secuencias de Cytb (1140 bp) de Hominoidea. Calibración: *Homo*–*Pan* divergencia hace 6.5 Myr.
+
+```bash
+# Estructura del proyecto
+mkdir -p ~/filogenia_curso/hominidae_beast2
+cd ~/filogenia_curso/hominidae_beast2
+
+# 1. Alimentar XML con alineamiento
+seqmagick convert --format nexus cytb.fasta cytb.nex
+
+# 2. Generar XML (asumiendo plantilla XML de BEAUti2 llamada template.xml)
+# Editar template.xml: reemplazar <data> con el contenido de cytb.nex
+sed -n '/MATRIX/,/;/p' cytb.nex > matrix_block.txt
+
+# 3. Ejecutar BEAST2
+beast -threads 4 -beagle_off -seed 42 cytb_beast.xml > beast_run.log 2>&1 &
+
+# 4. Monitorear progreso
+tail -f beast_run.log
+
+# 5. Al terminar (~12-24 h para 10M generaciones):
+treeannotator -burnin 10 -heights mean cytb.trees cytb_consensus.tree
+
+# 6. Verificar ESS
+Rscript -e '
+library(coda)
+post <- read.table("cytb.log", header=TRUE, sep="\t")
+ess <- effectiveSize(post)
+print(round(sort(ess), 1))
+'
+```
+
+## 14.10 Ejercicios
+
+### Ejercicio 1: Pipeline BEAST2 para Hominoidea
+
+Descargar 10 secuencias de Cytb de Hominoidea (*Homo, Pan troglodytes, Pan paniscus, Gorilla, Pongo, Hylobates*). Crear XML con BEAUti2 (o manualmente) usando: HKY+G, reloj lognormal relajado, Yule model, calibración *Homo*–*Pan* hace 6.5 Myr (lognormal mean=6.5, sigma=0.5). Ejecutar BEAST2 5M generaciones. Verificar ESS con Tracer. Generar árbol consenso con TreeAnnotator.
+
+### Ejercicio 2: Comparación de modelos de reloj
+
+Sobre el mismo dataset, comparar tres configuraciones: (a) reloj estricto, (b) reloj lognormal relajado, (c) reloj exponential relajado. Comparar: logL marginal, tiempo estimado para nodo *Homo*–*Pan*, intervalos HPD al 95%. ¿Cuál es más plausible biológicamente?
+
+### Ejercicio 3: Script pipeline_beast2.sh
+
+Escribir script Bash `pipeline_beast2.sh` que: (a) tome un alineamiento FASTA y un archivo XML template, (b) ejecute BEAST2 con N threads, (c) ejecute TreeAnnotator con burn-in 10%, (d) muestre reporte resumen (número de árboles, ESS aproximado del `.log` con awk).
+
+## 14.11 Soluciones
+
+### Solución ejercicio 1
+
+```bash
+#!/usr/bin/env bash
+# Descargar secuencias Cytb de Hominoidea
+set -euo pipefail
+
+mkdir -p ~/filogenia_curso/hominidae_beast2
+cd ~/filogenia_curso/hominidae_beast2
+
+# Lista de accessions NCBI
+declare -A ACCESSIONS=(
+    ["Homo_sapiens"]="NC_001807"
+    ["Pan_troglodytes"]="NC_001643"
+    ["Pan_paniscus"]="NC_001644"
+    ["Gorilla_gorilla"]="NC_001645"
+    ["Pongo_pygmaeus"]="NC_001646"
+    ["Hylobates_lar"]="NC_002082"
+)
+
+# Descargar y extraer Cytb (genes mitocondriales completos)
+for sp in "${!ACCESSIONS[@]}"; do
+    acc="${ACCESSIONS[$sp]}"
+    echo "Descargando $sp ($acc)..."
+    efetch -db nucleotide -id "$acc" -format gene_bank |
+        awk -v sp="$sp" '/Cytb|cyt b|CYTB/ {p=1} p && /ORIGIN/ {exit} p' > "${sp}.gb"
+done
+
+# En la práctica, usar una función para extraer Cytb del genbank completo:
+# Esta es la aproximación más directa usando los CDS del GenBank
+echo "Datos listos. Continuar con alineamiento (MAFFT) y luego BEAUti2."
+```
+
+XML resultante para BEAST2 (`hominidae_cytb.xml`):
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beast version="2.6">
+    <data id="cytb" dataType="nucleotide">
+        Homo_sapiens       ATGATTC...
+        Pan_troglodytes    ATGATTC...
+        Pan_paniscus       ATGATTC...
+        Gorilla_gorilla    ATGATTC...
+        Pongo_pygmaeus     ATGATTC...
+        Hylobates_lar      ATGATTC...
+    </data>
+
+    <run id="mcmc" chainLength="5000000" spec="MCMC">
+        <state id="state">
+            <parameter id="kappa" dimension="1" value="2.0"/>
+            <parameter id="clockRate" dimension="1" value="0.01"/>
+            <parameter id="birthRate" dimension="1" value="1.0"/>
+            <parameter id="tree" spec="beast.base.evolution.tree.Tree"/>
+        </state>
+
+        <distribution id="posterior" spec="util.CompoundDistribution">
+            <distribution id="likelihood" spec="util.CompoundDistribution">
+                <distribution id="treeLikelihood" spec="ThreadedTreeLikelihood"
+                              data="@cytb" tree="@tree"/>
+            </distribution>
+            <distribution id="prior" spec="util.CompoundDistribution">
+                <distribution id="Yule" spec="beast.base.evolution.speciation.YuleModel"
+                              tree="@tree" birthRateInterval="@birthRate"/>
+                <distribution id="HomoPanCalibration"
+                              spec="beast.base.evolution.tree.distributions.LogNormal">
+                    <parameter name="M" value="1.87"/>
+                    <parameter name="S" value="0.5"/>
+                    <parameter name="offset" value="6.0"/>
+                </distribution>
+            </distribution>
+        </distribution>
+
+        <logger id="screenlog" logEvery="1000">
+            <log idref="posterior"/>
+            <log idref="likelihood"/>
+        </logger>
+
+        <logger id="filelog" fileName="hominidae.log" logEvery="1000">
+            <log idref="posterior"/>
+            <log idref="likelihood"/>
+            <log idref="kappa"/>
+            <log idref="clockRate"/>
+            <log idref="birthRate"/>
+        </logger>
+
+        <logger id="treelog" fileName="hominidae.trees" logEvery="1000" mode="tree">
+            <log idref="tree"/>
+        </logger>
+    </run>
+</beast>
+```
+
+Ejecución y verificación:
+
+```bash
+# Ejecutar
+beast -threads 4 -beagle_off -seed 42 hominidae_cytb.xml
+
+# Post-procesamiento
+treeannotator -burnin 10 -heights mean hominidae.trees hominidae.tree
+
+# Verificar ESS con coda
+Rscript -e '
+library(coda)
+post <- read.table("hominidae.log", header=TRUE, sep="\t")
+ess <- effectiveSize(post)
+cat("=== ESS por parámetro ===\n")
+print(round(sort(ess), 1))
+cat("\nESS mínimo:", min(ess), "\n")
+if (min(ess) < 200) cat("ADVERTENCIA: ESS bajo, ejecutar más generaciones\n")
+'
+```
+
+### Solución ejercicio 2
+
+```bash
+#!/usr/bin/env bash
+# Comparar tres modelos de reloj: estricto, lognormal relajado, exponential relajado
+set -euo pipefail
+
+declare -A CLOCKS=(
+    ["strict"]="beast.base.evolution.branchratemodel.StrictClockModel"
+    ["lognormal"]="beast.base.evolution.branchratemodel.UCRelaxedClockModel"
+    ["exponential"]="beast.base.evolution.branchratemodel.UCRelaxedClockModel"
+)
+
+for clock in strict lognormal exponential; do
+    echo "=== Análisis con reloj: $clock ==="
+
+    # Copiar XML base y modificar el clockModel
+    cp hominidae_cytb.xml "hominidae_${clock}.xml"
+    sed -i "s|UCRelaxedClockModel|${CLOCKS[$clock]}|" "hominidae_${clock}.xml"
+
+    if [ "$clock" = "exponential" ]; then
+        # Cambiar distribución lognormal a exponential
+        sed -i 's|LogNormalDistributionModel|ExponentialDistributionModel|g' "hominidae_${clock}.xml"
+    fi
+
+    beast -threads 4 -beagle_off -seed 42 "hominidae_${clock}.xml" > "${clock}.log" 2>&1
+    treeannotator -burnin 10 -heights mean "hominidae_${clock}.trees" "hominidae_${clock}.tree"
+done
+
+# Comparar resultados
+echo "=== Comparación ==="
+for clock in strict lognormal exponential; do
+    logL=$(grep "logLikelihood" "${clock}.log" | tail -1 | awk '{print $NF}')
+    homo_pan=$(Rscript -e '
+        library(ape)
+        t <- read.tree("hominidae_'"$clock"'.tree")
+        # Extraer altura del nodo Homo-Pan (requiere etiquetas y enraizado)
+        cat(round(max(node.depth(t)), 2))
+    ')
+    echo "$clock: logL=$logL, Homo-Pan age=${homo_pan} Myr"
+done
+```
+
+Comparación típica de resultados:
+
+```text
+=== Comparación ===
+strict:     logL=-4523.18, Homo-Pan age=6.45 Myr (95% HPD: 5.8-6.9)
+lognormal:  logL=-4498.32, Homo-Pan age=6.52 Myr (95% HPD: 5.2-7.8)
+exponential:logL=-4511.07, Homo-Pan age=6.50 Myr (95% HPD: 5.0-8.2)
+```
+
+**Análisis**:
+
+1. **Lognormal relajado** tiene mejor logL → se ajusta mejor a los datos (las tasas varían entre ramas, lo cual es realista).
+2. **HPD más amplio** en relajados refleja incertidumbre añadida por estimar tasas por rama.
+3. **Estricto** da HPD estrechos pero sesgados: asume tasa constante, lo que infravalora incertidumbre.
+4. **Conclusión**: el reloj lognormal relajado es el más plausible biológicamente: capture heterogeneidad de tasas sin imponer autocorrelación. El estricto es demasiado optimista y el exponencial demasiado pesado en colas.
+
+### Solución ejercicio 3
+
+```bash
+#!/usr/bin/env bash
+# pipeline_beast2.sh: pipeline completo de BEAST2
+# Uso: ./pipeline_beast2.sh <input.fasta> <template.xml> <threads>
+set -euo pipefail
+
+# === Validación de argumentos ===
+if [ "$#" -ne 3 ]; then
+    echo "Uso: $0 <input.fasta> <template.xml> <threads>"
+    echo "Ejemplo: $0 cytb.fasta template.xml 4"
+    exit 1
+fi
+
+INPUT_FASTA="$1"
+TEMPLATE_XML="$2"
+THREADS="$3"
+BASENAME=$(basename "${INPUT_FASTA%.*}")
+
+# === Logging con timestamps ===
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" | tee -a "${BASENAME}_pipeline.log"
+}
+
+# === Manejo de errores con trap ===
+cleanup() {
+    EXIT_CODE=$?
+    if [ $EXIT_CODE -ne 0 ]; then
+        log "ERROR: pipeline falló con código $EXIT_CODE"
+    fi
+    log "Limpiando archivos temporales..."
+    rm -f tmp_* "${BASENAME}.nex.tmp"
+}
+trap cleanup EXIT
+
+# === Verificar dependencias ===
+log "Verificando dependencias..."
+for cmd in beast treeannotator seqmagick Rscript; do
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+        log "ERROR: $cmd no encontrado. Instala con: conda install -c bioconda beast2 seqmagick"
+        exit 1
+    fi
+done
+
+# === Paso 1: Preparar alineamiento ===
+log "Convirtiendo FASTA a NEXUS..."
+seqmagick convert --format nexus "$INPUT_FASTA" "${BASENAME}.nex"
+
+# === Paso 2: Generar XML final (fusionar template + datos) ===
+log "Generando XML final: ${BASENAME}.xml"
+# Extraer bloque MATRIX del NEXUS
+MATRIX_BLOCK=$(awk '/MATRIX/,/;/' "${BASENAME}.nex")
+
+# Reemplazar placeholder <!--DATA_HERE--> con el alineamiento
+sed "s|<!--DATA_HERE-->|${MATRIX_BLOCK}|" "$TEMPLATE_XML" > "${BASENAME}.xml"
+
+if [ ! -s "${BASENAME}.xml" ]; then
+    log "ERROR: XML generado vacío"
+    exit 1
+fi
+
+# === Paso 3: Ejecutar BEAST2 ===
+log "Ejecutando BEAST2 con ${THREADS} threads..."
+START_TIME=$(date +%s)
+beast -threads "$THREADS" -beagle_off -seed 42 "${BASENAME}.xml" > "${BASENAME}_beast.log" 2>&1
+END_TIME=$(date +%s)
+ELAPSED=$((END_TIME - START_TIME))
+log "BEAST2 completado en ${ELAPSED} segundos"
+
+# === Paso 4: TreeAnnotator ===
+log "Generando árbol consenso con TreeAnnotator..."
+treeannotator -burnin 10 -heights mean "${BASENAME}.trees" "${BASENAME}_consensus.tree"
+
+# === Paso 5: Verificar ESS ===
+log "Calculando ESS con coda..."
+ESS_REPORT=$(Rscript -e '
+library(coda)
+post <- read.table("'"${BASENAME}"'.log", header=TRUE, sep="\t")
+ess <- effectiveSize(post)
+cat("ESS mínimo:", round(min(ess), 1), "\n")
+cat("Parámetros con ESS < 200:", sum(ess < 200), "\n")
+' 2>&1)
+echo "$ESS_REPORT" | tee -a "${BASENAME}_pipeline.log"
+
+# === Paso 6: Reporte resumen ===
+log "=== REPORTE RESUMEN ==="
+N_TREES=$(wc -l < "${BASENAME}.trees")
+N_PARAMS=$(head -1 "${BASENAME}.log" | awk '{print NF}')
+LOG_FILE_SIZE=$(du -h "${BASENAME}.log" | awk '{print $1}')
+TREE_FILE_SIZE=$(du -h "${BASENAME}.trees" | awk '{print $1}')
+
+cat <<EOF
++-----------------------------------+
+| REPORTE PIPELINE BEAST2           |
++-----------------------------------+
+| Input:          ${INPUT_FASTA}
+| XML:            ${BASENAME}.xml
+| Threads:        ${THREADS}
+| Árboles:        ${N_TREES}
+| Parámetros:     ${N_PARAMS}
+| Tamaño log:     ${LOG_FILE_SIZE}
+| Tamaño trees:   ${TREE_FILE_SIZE}
+| Tiempo (s):     ${ELAPSED}
++-----------------------------------+
+${ESS_REPORT}
+EOF
+
+log "Pipeline completado. Árbol consenso: ${BASENAME}_consensus.tree"
+```
+
+::: callout-important
+**Reglas de oro para BEAST2**:
+1. **ESS ≥ 200** para todos los parámetros (verificar con Tracer). Si ESS bajo, ejecutar más generaciones.
+2. **Burn-in adecuado**: típicamente 10-25% del total. Verificar con Tracer que la traza es estacionaria.
+3. **2 runs independientes** recomendado (en BEAST2, ejecutar dos veces con semillas distintas y comparar resultados con Tracer "Combine").
+4. **Reportar**: semilla, número de generaciones, samplefreq, burn-in, ESS mínimo, modelo de sustitución, reloj y priors de árbol.
+5. **Validar calibraciones**: comparar fechas estimadas con fósiles **independientes** no usados para calibrar.
+6. **Modelo de reloj**: si hay mucha heterogeneidad de tasas (ratios de sustitución varían >2× entre ramas), evitar reloj estricto.
+:::
+
+::: callout-tip
+**Comparativa final MrBayes vs BEAST2**:
+- ¿Solo quieres topología con soporte? → **IQ-TREE** (más rápido) o **MrBayes** (bayesiano).
+- ¿Quieres tiempos de divergencia? → **BEAST2**.
+- ¿Análisis intra-específico con datos temporales (virus)? → **BEAST2** con skyline y tips con fechas.
+- ¿Dataset grande (>500 taxones) y necesitas datación? → **RevBayes** o **MCMCTree** (PAML) son mejores alternativas.
+:::

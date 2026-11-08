@@ -1,0 +1,647 @@
+---
+title: "Capítulo 4: Manipulación de secuencias con Bash"
+---
+
+## 4.1 Formatos de secuencias
+
+Antes de manipular, hay que reconocer. Los cinco formatos que encontrarás en filogenia molecular:
+
+### 4.1.1 FASTA
+
+El más ubicuo. Cabecera `>ID descripción` seguida de la secuencia en una o varias líneas:
+
+```text
+>NM_007294.4 Homo sapiens BRCA1 DNA repair associated
+ATGGATTTATCTGCTCTTCGCGTTGAAGAAGTACAAAATGTCATTAATGCT
+ATGCAGAAAATCTTAGAGTGTCCCATCTGTACTCATTCATCACTGAAATAC
+...
+```
+
+### 4.1.2 FASTQ
+
+Para datos de secuenciación NGS. Cuatro líneas por lectura: cabecera `@`, secuencia, separador `+`, y calidad codificada en Phred+33:
+
+```text
+@SRR123.1
+ACGTACGTACGTACGTACGT
++
+IIIIIIIIIIIIIIIIIIII
+```
+
+No lo usaremos directamente en filogenia, pero conviene saber que existe.
+
+### 4.1.3 GenBank
+
+Anotado, estructurado en campos (`LOCUS`, `DEFINITION`, `ACCESSION`, `FEATURES`, `ORIGIN` ... `//`):
+
+```text
+LOCUS       NM_007294                5592 bp    mRNA    linear   PRI 12-SEP-2023
+DEFINITION  Homo sapiens BRCA1 DNA repair associated (BRCA1), mRNA.
+ACCESSION   NM_007294
+FEATURES    Location/Qualifiers
+     source          1..5592
+                     /organism="Homo sapiens"
+                     /mol_type="mRNA"
+     gene            1..5592
+                     /gene="BRCA1"
+     CDS             233..5710
+                     /gene="BRCA1"
+                     /translation="MDLSAL..."
+ORIGIN
+        1 atggatttat ctgctcttcg cgttgaagaa gtacaaaatg tcattaatgc
+// 
+```
+
+### 4.1.4 Phylip
+
+Formato antiguo, muy extendido en PHYLIP y aún requerido por algunos programas:
+
+```text
+ 4 5592
+Homo_sapie  atggatttat ctgctcttcg cgttgaagaa gtacaaaatg tcattaatgc
+Pan_troglo  atggatttat ctgctcttcg cgttgaagaa gtacaaaatg tcattgatgc
+Gorilla_go  atggatttat ctgctcttcg cgttgaagaa gtacaaaatg tcattaatgc
+Pongo_pygm  atggatttat ctgctcttcg cgttgaagaa gtacaaaatg tcattaatgc
+```
+
+Los nombres están truncados a **10 caracteres**. Formato estricto: espacios fijos, sin descripción.
+
+### 4.1.5 Nexus
+
+Bloques etiquetados, flexible:
+
+```text
+#NEXUS
+
+BEGIN DATA;
+  DIMENSIONS NTAX=4 NCHAR=1140;
+  FORMAT MISSING=? GAP=- DATATYPE=DNA;
+  MATRIX
+    Homo_sapiens    ATGGCT...
+    Pan_troglodytes ATGGCT...
+    Gorilla_gorilla ATGGCT...
+    Pongo_pygmaeus  ATGGCT...
+  ;
+END;
+
+BEGIN TREES;
+  tree tree1 = [&R] ((Homo:0.01,Pan:0.02):0.01,(Gorilla:0.02,Pongo:0.05):0.03);
+END;
+```
+
+## 4.2 Conversión de formatos con seqkit
+
+`seqkit` es una herramienta moderna escrita en Go, extremadamente rápida y con subcomandos al estilo de `git`. Algunas operaciones básicas:
+
+```bash
+# Mostrar IDs (sin descripción)
+seqkit seq -n input.fasta            # nombres
+seqkit seq -i input.fasta            # IDs estrictos (sin descripción)
+
+# Una línea por secuencia (eliminar saltos dentro de la secuencia)
+seqkit seq -w 0 input.fasta > oneline.fasta
+
+# FASTA ↔ TSV
+seqkit fx2tab input.fasta > input.tsv          # ID\tDESC\tSEQ
+seqkit tab2fx input.tsv > back.fasta
+
+# Extraer por lista de IDs
+seqkit grep -n -f ids.txt input.fasta > subset.fasta
+
+# Primeras N secuencias
+seqkit head -n 10 input.fasta > first10.fasta
+
+# Muestra aleatoria
+seqkit sample -n 100 input.fasta > sample100.fasta
+seqkit sample -p 0.1 -s 11 input.fasta > sample10pct.fasta  # 10% con semilla 11
+
+# Ordenar por longitud
+seqkit sort -l input.fasta > sorted_len.fasta   # ascendente
+seqkit sort -l -r input.fasta > sorted_desc.fasta
+
+# Filtrar por longitud
+seqkit seq -m 100 input.fasta > min100.fasta    # mínimo 100 pb
+seqkit seq -M 5000 input.fasta > max5000.fasta  # máximo 5000 pb
+seqkit seq -m 100 -M 5000 input.fasta > range.fasta
+
+# Estadísticas
+seqkit stats input.fasta
+seqkit stats *.fasta
+```
+
+Ejemplo de salida de `seqkit stats`:
+
+```text
+file        format  type  num_seqs      sum_len  min_len  avg_len  max_len
+input.fasta   FASTA   DNA        50      62,318    1,140    1,246    1,512
+```
+
+::: callout-tip
+`seqkit grep -n -f ids.txt input.fasta` acepta IDs **exactos**. Si quieres patrones, usa `-r` (regex) sobre la cabecera completa:
+```bash
+seqkit grep -r -p "^>Homo" input.fasta
+```
+:::
+
+## 4.3 EMBOSS suite
+
+EMBOSS (*European Molecular Biology Open Software Suite*) incluye cientos de programas clásicos. Los más útiles para filogenia:
+
+### 4.3.1 seqret — conversión
+
+```bash
+# FASTA a Phylip
+seqret -seq input.fasta -outseq output.phy -osformat phylip
+
+# GenBank a FASTA
+seqret -seq input.gb -outseq output.fasta -osformat fasta
+
+# FASTA a Nexus
+seqret -seq input.fasta -outseq output.nex -osformat nexus
+```
+
+### 4.3.2 infoseq — información
+
+```bash
+# Lista de nombre + longitud + %GC
+infoseq -only -name -length -gc -filename input.fasta
+
+# Salida tabular con cabeceras
+infoseq -only -name -length -gc -description -filename input.fasta | column -t
+```
+
+Salida:
+
+```text
+Name         Length  GC   Description
+NM_007294.4  5592    49   Homo sapiens BRCA1 DNA repair associated (BRCA1)
+NM_001301717 5589    49   Homo sapiens BRCA1 DNA repair associated
+...
+```
+
+### 4.3.3 transeq — traducir ADN a proteína
+
+```bash
+# Traducción en los 3 marcos de la cadena directa y 3 de la reversa (6 total)
+transeq -sequence cds.fasta -outseq protein6.fasta
+
+# Solo marco +1
+transeq -sequence cds.fasta -outseq prot1.fasta -frame 1
+
+# Traducción completa de un CDS, terminando en stop *
+transeq -sequence cds.fasta -outseq prot.fasta
+```
+
+::: callout-warning
+`transeq` traduce **literalmente**; no comprueba que el marco sea correcto. Si tienes un CDS anotado como tal, usa marco 1. Si tienes una secuencia genómica cruda, prueba los 6 marcos e identifica el que tenga menos paradas (`*`) y codones razonables.
+:::
+
+### 4.3.4 Otros útiles
+
+- `revseq`: solo reversa (no complementa).
+- `revtrans`: **reversa y complementaria** (la típica cadena negativa). Ojo, en BioPython esto es `Seq.reverse_complement()`.
+- `splitter`: dividir una secuencia en partes.
+- `extractseq`: extraer una región concreta (bases 100-200).
+- `trimseq`: recortar extremos.
+- `descseq`: describir una secuencia.
+- `systreseq`: sinónimos de codones (útil para selección).
+
+## 4.4 samtools faidx — indexación y acceso rápido
+
+`samtools` no es solo para BAM. El subcomando `faidx` crea un **índice** que permite acceso aleatorio instantáneo a una secuencia dentro de un FASTA grande:
+
+```bash
+# Crear el índice (genera input.fasta.fai)
+samtools faidx input.fasta
+
+# Extraer una secuencia concreta
+samtools faidx input.fasta seq1 > seq1.fasta
+
+# Extraer una región (bases 100-200, 1-based inclusive)
+samtools faidx input.fasta seq1:100-200 > region.fasta
+```
+
+El archivo `.fai` es un TSV con columnas: nombre, longitud, offset en bytes, longitud de línea de bases, longitud de línea completa:
+
+```text
+seq1  5592  12  60  61
+seq2  1140  5710  60  61
+```
+
+::: callout-note
+`samtools faidx` requiere que el FASTA tenga **una sola secuencia por línea** (no multi-línea). Si no, falla o da offset incorrectos. Para pre-procesar, usa `seqkit seq -w 0`.
+:::
+
+## 4.5 awk y sed para manipulaciones comunes
+
+### 4.5.1 Convertir FASTA multi-línea a una línea por secuencia
+
+```bash
+awk '/^>/{print; next}{printf "%s", $0} END{print ""}' input.fasta > oneline.fasta
+```
+
+Versión más robusta que preserva cabeceras con espacios:
+
+```bash
+awk 'BEGIN{RS=">"} NR>1 {split($0,a,"\n"); print ">"a[1]; for(i=2;i<=length(a);i++) printf "%s", a[i]; print ""}' input.fasta > oneline.fasta
+```
+
+### 4.5.2 Renombrar IDs (dejar solo el accession, sin descripción)
+
+```bash
+# Cabecera tipo ">NM_007294.4 Homo sapiens BRCA1 ..."
+sed -E 's/^>([^ |]+).*/>\1/' input.fasta > renamed.fasta
+```
+
+`[^ |]+` significa "uno o más caracteres que no sean espacio ni `|`", así que captura `NM_007294.4` y descarta el resto.
+
+### 4.5.3 Eliminar descripciones largas manteniendo ID
+
+```bash
+awk '/^>/{print $1; next}{print}' input.fasta > clean_headers.fasta
+```
+
+`print $1` imprime solo el primer campo (hasta el primer espacio).
+
+### 4.5.4 Contar secuencias
+
+```bash
+grep -c "^>" input.fasta
+```
+
+Alternativa `awk`:
+
+```bash
+awk '/^>/{n++} END{print n" secuencias"}' input.fasta
+```
+
+### 4.5.5 Longitud de cada secuencia
+
+```bash
+awk '/^>/{if(id)print id,len; id=$1; len=0; next}{len+=length($0)} END{print id,len}' input.fasta
+```
+
+Salida:
+
+```text
+>NM_007294.4 5592
+>NM_001301717.1 5589
+...
+```
+
+### 4.5.6 Convertir a mayúsculas
+
+```bash
+awk '/^>/{print; next}{print toupper($0)}' input.fasta > upper.fasta
+```
+
+### 4.5.7 Contar nucleótidos
+
+```bash
+# Versión 1: grep + tr + fold + sort + uniq
+grep -v "^>" input.fasta | tr -d '\n' | fold -1 | sort | uniq -c
+```
+
+Salida:
+
+```text
+   1520 A
+   1820 C
+   2010 G
+   1524 T
+     12 N
+```
+
+Versión con awk (una sola pasada):
+
+```bash
+awk '!/^>/{for(i=1;i<=length($0);i++){c=substr($0,i,1); counts[c]++}}
+     END{for(k in counts) print counts[k], k}' input.fasta | sort -rn
+```
+
+::: callout-tip
+Para conteos con `seqkit`, mucho más simple:
+```bash
+seqkit seq -w 0 input.fasta | grep -v "^>" | fold -1 | sort | uniq -c
+# O
+seqkit fx2tab -B A -B C -B G -B T input.fasta
+```
+:::
+
+## 4.6 BioPython para tareas complejas
+
+Cuando awk/sed se quedan cortos, **BioPython** es la navaja suiza:
+
+```python
+#!/usr/bin/env python3
+"""limpiar_fasta.py — filtrar y renombrar secuencias."""
+import sys
+from Bio import SeqIO
+
+# Argumentos: input, output, min_len, max_len
+inp, out, mn, mx = sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4])
+
+kept = []
+for r in SeqIO.parse(inp, "fasta"):
+    if mn <= len(r.seq) <= mx:
+        # Renombrar: dejar solo accession (sin descripción)
+        r.id = r.id.split("|")[1] if "|" in r.id else r.id
+        r.description = ""
+        kept.append(r)
+
+SeqIO.write(kept, out, "fasta")
+print(f"Filtradas {len(kept)} secuencias (longitud {mn}-{mx})")
+```
+
+Ejecutar:
+
+```bash
+python3 limpiar_fasta.py input.fasta clean.fasta 1000 2000
+```
+
+### 4.6.1 Concatenar CDS por genoma
+
+```python
+from Bio import SeqIO
+import glob
+
+records = []
+for fname in sorted(glob.glob("*.gb")):
+    for rec in SeqIO.parse(fname, "genbank"):
+        for feat in rec.features:
+            if feat.type == "CDS" and "gene" in feat.qualifiers:
+                gene = feat.qualifiers["gene"][0]
+                if gene == "cytb":
+                    seq = feat.extract(rec)
+                    seq.id = rec.annotations["organism"].replace(" ", "_")
+                    seq.description = ""
+                    records.append(seq)
+
+SeqIO.write(records, "cytb_all.fasta", "fasta")
+print(f"Extraídas {len(records)} secuencias")
+```
+
+## 4.7 Concatenar, dividir y ordenar
+
+```bash
+# Concatenar varios FASTA en uno
+cat *.fasta > all.fasta
+
+# Dividir en chunks de 10 secuencias cada uno
+seqkit split -n 10 input.fasta
+# Genera input.fasta.split/input.part_001.fasta, etc.
+
+# Dividir por tamaño (2 chunks iguales)
+seqkit split -p 2 input.fasta
+
+# Ordenar por nombre
+seqkit sort -n input.fasta > sorted_name.fasta
+
+# Eliminar duplicados por nombre
+seqkit rmdup -n input.fasta > unique.fasta
+
+# Eliminar duplicados por secuencia
+seqkit rmdup -s input.fasta > unique_seq.fasta
+```
+
+::: callout-warning
+**Cat simple no suma secuencias**: si dos FASTA tienen la misma cabecera, las duplica. Usa `seqkit rmdup` tras concatenar si sospechas repeticiones.
+:::
+
+## 4.8 Estadísticas rápidas
+
+```bash
+seqkit stats *.fasta
+infoseq -only -name -length -gc input.fasta
+
+# %GC promedio
+infoseq -only -gc input.fasta | awk 'NR>1{s+=$2; n++} END{printf "%.2f\n", s/n}'
+
+# Distribución de longitudes en percentiles
+seqkit fx2tab -l input.fasta | awk 'NR>0{print $2}' | sort -n | \
+    awk '{a[NR]=$1} END{print "min", a[1]; print "Q1", a[int(NR/4)]; print "median", a[int(NR/2)]; print "Q3", a[int(3*NR/4)]; print "max", a[NR]}'
+```
+
+## Ejercicios
+
+### Ejercicio 1
+
+Dado un archivo FASTA multi-línea con 50 secuencias (puedes generarlo o usar uno real), escribe un script Bash que: (a) convierta a una línea por secuencia, (b) renombre IDs dejando solo el accession, (c) filtre secuencias con longitud < 1000 o > 2000, (d) genere archivo de salida `clean.fasta` con las secuencias válidas.
+
+### Ejercicio 2
+
+Descarga el archivo GenBank de un gen (ej: `NM_007294.4` BRCA1) y usa EMBOSS para: (a) convertir a FASTA, (b) extraer solo la CDS, (c) traducir a proteína, (d) guardar las 3 versiones (genómica, CDS, proteína) en archivos separados.
+
+### Ejercicio 3
+
+Escribe una **función Bash** `estadisticas_fasta()` que reciba la ruta a un archivo FASTA y muestre: número de secuencias, longitud promedio, longitud máxima, longitud mínima, y %GC promedio. Combina `awk` y `seqkit` o solo `awk`.
+
+## Soluciones
+
+### Solución Ejercicio 1
+
+```bash
+#!/usr/bin/env bash
+# limpiar_fasta.sh — pre-procesamiento de un FASTA.
+# Uso: ./limpiar_fasta.sh input.fasta clean.fasta [min_len=1000] [max_len=2000]
+set -euo pipefail
+
+IN="${1:?Uso: $0 input.fasta output.fasta [min=1000] [max=2000]}"
+OUT="${2:?Falta output.fasta}"
+MIN="${3:-1000}"
+MAX="${4:-2000}"
+
+TMP=$(mktemp)
+
+# (a) Convertir a una línea por secuencia + (b) renombrar IDs dejando solo el accession
+awk 'BEGIN{RS=">"} NR>1 {
+        # cabecera completa en $1 (primera línea)
+        split($0, lines, "\n")
+        header = lines[1]
+        # accession = primer campo de la cabecera, hasta primer espacio o |
+        acc = header
+        sub(/[ |].*/, "", acc)
+        print ">"acc
+        # concatenar resto (secuencia)
+        seq = ""
+        for(i=2; i<=length(lines); i++) seq = seq lines[i]
+        # por si quedara algún \r
+        gsub(/\r/, "", seq)
+        print seq
+    }' "$IN" > "$TMP"
+
+# (c) Filtrar por longitud
+seqkit seq -m "$MIN" -M "$MAX" "$TMP" > "$OUT"
+rm -f "$TMP"
+
+# (d) Informe
+echo "Entrada:    $IN"
+echo "Salida:     $OUT"
+echo "Longitudes: [$MIN, $MAX]"
+N_IN=$(grep -c "^>" "$IN")
+N_OUT=$(grep -c "^>" "$OUT")
+echo "Secuencias input:  $N_IN"
+echo "Secuencias output: $N_OUT"
+seqkit stats "$OUT"
+```
+
+### Solución Ejercicio 2
+
+```bash
+#!/usr/bin/env bash
+# procesar_genbank.sh — GenBank → 3 versiones.
+set -euo pipefail
+
+ACC="${1:-NM_007294.4}"
+OUTDIR="${2:-$(pwd)}"
+
+mkdir -p "$OUTDIR"
+cd "$OUTDIR"
+
+# 1. Descargar el GenBank
+efetch -db nucleotide -id "$ACC" -format gb > "$ACC".gb
+
+# 2a. Versión genómica/mRNA completa en FASTA (secuencia del registro entero)
+seqret -seq "$ACC".gb -outseq "$ACC"_genomic.fasta -osformat fasta
+
+# 2b. Extraer solo la CDS usando BioPython (más fiable que parsing EMBOSS puro)
+python3 <<PY
+from Bio import SeqIO
+rec = next(SeqIO.parse("$ACC.gb", "genbank"))
+cds = None
+for feat in rec.features:
+    if feat.type == "CDS":
+        cds = feat.extract(rec)
+        cds.id = rec.id + "_CDS"
+        cds.description = ""
+        break
+if cds is None:
+    raise SystemExit("No se encontró CDS en $ACC.gb")
+SeqIO.write([cds], "$ACC"_cds.fasta, "fasta")
+PY
+
+# 2c. Traducir la CDS a proteína con transeq (marco 1)
+transeq -sequence "$ACC"_cds.fasta -outseq "$ACC"_protein.fasta -frame 1
+
+# 2d. Resumen
+echo "Archivos generados en $OUTDIR:"
+ls -lh "$ACC".gb "$ACC"_genomic.fasta "$ACC"_cds.fasta "$ACC"_protein.fasta
+
+echo ""
+echo "Longitudes:"
+infoseq -only -name -length -filename "$ACC"_genomic.fasta
+infoseq -only -name -length -filename "$ACC"_cds.fasta
+infoseq -only -name -length -filename "$ACC"_protein.fasta
+
+# Verificar que la proteína no tenga paradas internas (*)
+grep -v "^>" "$ACC"_protein.fasta | tr -d '\n' | grep -o '\*' | wc -l
+# 1 esperado (stop terminal). >1 → CDS mal definida.
+```
+
+### Solución Ejercicio 3
+
+```bash
+#!/usr/bin/env bash
+# estadisticas_fasta.sh — función para informe rápido.
+# Define una función 'estadisticas_fasta' y la llama si se ejecuta como script.
+
+estadisticas_fasta() {
+    local fa="$1"
+    if [ ! -f "$fa" ]; then
+        echo "Error: archivo no encontrado: $fa" >&2
+        return 1
+    fi
+
+    # 1. Número de secuencias
+    local n=$(grep -c "^>" "$fa")
+
+    # 2. Longitudes: una por secuencia
+    local tmpfile
+    tmpfile=$(mktemp)
+    awk '/^>/{if(id)print len; id=$1; len=0; next}{len+=length($0)} END{print len}' \
+        "$fa" > "$tmpfile"
+
+    # 3. Estadísticas de longitud con awk
+    local stats
+    stats=$(awk '
+        NR==1 {min=$1; max=$1}
+        {sum+=$1; if($1<min)min=$1; if($1>max)max=$1}
+        END {printf "%d\t%d\t%d\t%.1f", min, max, sum, sum/NR}
+    ' "$tmpfile")
+    local min_len=$(echo "$stats" | cut -f1)
+    local max_len=$(echo "$stats" | cut -f2)
+    local total_len=$(echo "$stats" | cut -f3)
+    local avg_len=$(echo "$stats" | cut -f4)
+
+    # 4. %GC promedio (sobre bases ACGT, ignorando N)
+    local gc_info
+    gc_info=$(awk '
+        /^>/ {next}
+        {
+            for (i=1; i<=length($0); i++) {
+                c = substr($0, i, 1)
+                if (c=="G"||c=="g"||c=="C"||c=="c") gc++
+                else if (c=="A"||c=="a"||c=="T"||c=="t") at++
+            }
+        }
+        END {
+            total = gc + at
+            if (total == 0) {print "NA"}
+            else {printf "%.2f", 100*gc/total}
+        }
+    ' "$fa")
+
+    rm -f "$tmpfile"
+
+    # 5. Reporte
+    printf "Archivo:           %s\n" "$fa"
+    printf "Secuencias:        %d\n" "$n"
+    printf "Longitud total:    %d pb\n" "$total_len"
+    printf "Longitud mínima:   %d pb\n" "$min_len"
+    printf "Longitud máxima:   %d pb\n" "$max_len"
+    printf "Longitud promedio: %.1f pb\n" "$avg_len"
+    printf "%%GC promedio:      %s%%\n" "$gc_info"
+    echo ""
+    # Bonus: estadísticas de seqkit para comparar
+    if command -v seqkit >/dev/null 2>&1; then
+        echo "— Verificación con seqkit —"
+        seqkit stats "$fa"
+    fi
+}
+
+# Si el script se ejecuta (no se source), llamar a la función con el argumento
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    if [ "$#" -ne 1 ]; then
+        echo "Uso: $0 <archivo.fasta>" >&2
+        exit 1
+    fi
+    estadisticas_fasta "$1"
+fi
+```
+
+Uso:
+
+```bash
+chmod +x estadisticas_fasta.sh
+./estadisticas_fasta.sh primates_coi.fasta
+
+# O sourcear para tener la función disponible:
+source estadisticas_fasta.sh
+estadisticas_fasta primates_coi.fasta
+```
+
+Salida esperada:
+
+```text
+Archivo:           primates_coi.fasta
+Secuencias:        4
+Longitud total:    6156 pb
+Longitud mínima:   1539 pb
+Longitud máxima:   1539 pb
+Longitud promedio: 1539.0 pb
+%GC promedio:      41.27%
+
+— Verificación con seqkit —
+file              format  type  num_seqs      sum_len  min_len  avg_len  max_len
+primates_coi.fasta   FASTA   DNA          4      6,156    1,539    1,539    1,539
+```

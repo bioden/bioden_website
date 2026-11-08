@@ -11,6 +11,8 @@ listing:
     - material_educativo/python_bio.qmd
     - material_educativo/rust.qmd
     - material_educativo/bash_para_dummies.qmd
+    - material_educativo/filogenia_molecular.qmd
+    - material_educativo/modelamiento_de_proteinas_desde_cero.qmd
   type: grid
   grid-columns: 3
   fields: [image, title, subtitle]

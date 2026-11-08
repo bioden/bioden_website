@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Capítulo 8: Modelos de sustitución de proteínas – BIODEN</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../logo.png" rel="icon" type="image/png">
+<script src="../../site_libs/cookie-consent/cookie-consent.js"></script>
+<link href="../../site_libs/cookie-consent/cookie-consent.css" rel="stylesheet">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-70f92796293836dceea0045bd755b5b1.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-1242ccc02940432acd87c1b818d9cd49.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-70f92796293836dceea0045bd755b5b1.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+<script type="text/javascript" charset="UTF-8">
+document.addEventListener('DOMContentLoaded', function () {
+cookieconsent.run({
+  "notice_banner_type":"interstitial",
+  "consent_type":"express",
+  "palette":"dark",
+  "language":"en",
+  "page_load_consent_levels":["strictly-necessary"],
+  "notice_banner_reject_button_hide":false,
+  "preferences_center_close_button_hide":false,
+  "website_name":""
+  ,
+"language":"en"
+  });
+});
+</script> 
+  
+<style>html{ scroll-behavior: smooth; }</style>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../logo.png" alt="" class="navbar-logo light-content">
+    <img src="../../logo.png" alt="" class="navbar-logo dark-content">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">BIODEN</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Inicio</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-proyectos" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Proyectos</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-proyectos">    
+        <li>
+    <a class="dropdown-item" href="https://bioden.github.io/XIII_CCB_curso/">
+ <span class="dropdown-text">De la Botánica a la Bioinformática</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../investigacion.html"> 
+<span class="menu-text">Investigación</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../integrantes.html"> 
+<span class="menu-text">Integrantes</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../biosistalks/biosistalks.html"> 
+<span class="menu-text">Biosis Talks</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../material_educativo.html"> 
+<span class="menu-text">Material educativo</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../suplementario.html"> 
+<span class="menu-text">Servicios</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.instagram.com/dbg_unicauca/"> <i class="bi bi-instagram" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.facebook.com/profile.php?id=61583453722433"> <i class="bi bi-facebook" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:bioden@unicauca.edu.co"> <i class="bi bi-envelope" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar"><div class="quarto-margin-header"><div class="margin-header-item">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../../logos/semillero.png" class="img-fluid figure-img"></p>
+<figcaption>Universidad del Cauca</figcaption>
+</figure>
+</div>
+</div></div>
+        
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Capítulo 8: Modelos de sustitución de proteínas</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="por-qué-los-modelos-de-proteínas-son-distintos-a-los-de-adn" class="level2">
+<h2 data-anchor-id="por-qué-los-modelos-de-proteínas-son-distintos-a-los-de-adn">8.1 ¿Por qué los modelos de proteínas son distintos a los de ADN?</h2>
+<p>Mientras que los modelos de ADN manejan <strong>4 estados</strong> (A, C, G, T) con propiedades físico-químicas relativamente comparables, los modelos de proteínas deben manejar <strong>20 aminoácidos</strong> con propiedades bioquímicas <strong>muy diferentes</strong>: hay aminoácidos ácidos (Asp, Glu), básicos (Lys, Arg, His), polares neutros (Ser, Thr, Asn, Gln), hidrofóbicos (Leu, Ile, Val, Ala, Phe, Trp, Met), aromáticos (Phe, Tyr, Trp, His), y especiales (Cys, Pro, Gly).</p>
+<p>Las implicaciones son profundas:</p>
+<ol type="1">
+<li>La <strong>matriz de sustitución</strong> es de <strong>20×20 = 400 entradas</strong> (o 210 si es simétrica), no 12 como en GTR.</li>
+<li>Las frecuencias de aminoácidos <strong>no son iguales</strong> ni entre proteínas ni entre organismos: Leu y Ser suelen ser abundantes; Trp, Cys y His son raros.</li>
+<li>Los cambios dependen de <strong>propiedades bioquímicas</strong>: un cambio Asp→Glu (ácido→ácido) es mucho más probable que Asp→Phe (ácido→aromático).</li>
+</ol>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Important
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Para alineamientos de proteínas, <strong>siempre</strong> se usa un modelo de sustitución empírico (o de mezcla). El equivalente de JC69 para proteínas (Poisson) es <strong>excesivamente simple</strong> y produce árboles con artefactos sistemáticos en datos reales.</p>
+</div>
+</div>
+</section>
+<section id="modelos-empíricos" class="level2">
+<h2 data-anchor-id="modelos-empíricos">8.2 Modelos empíricos</h2>
+<p>Están <strong>estimados a partir de miles de alineamientos curados</strong>. La matriz 20×20 y las frecuencias se “congelan” en el momento de su publicación.</p>
+<section id="pam-dayhoff-1978" class="level3">
+<h3 data-anchor-id="pam-dayhoff-1978">8.2.1 PAM (Dayhoff 1978)</h3>
+<p>El primer modelo. Basado en <strong>pequeñas proteínas muy conservadas</strong> (alineamientos de la era pre-genómica). Aún se cita por su importancia histórica, pero está <strong>obsoleto</strong> para análisis modernos: el sesgo hacia proteínas muy conservadas subestima las tasas de cambio en regiones variables.</p>
+</section>
+<section id="jtt-jones-taylor-thornton-1992" class="level3">
+<h3 data-anchor-id="jtt-jones-taylor-thornton-1992">8.2.2 JTT (Jones-Taylor-Thornton 1992)</h3>
+<p>Actualización de PAM con base de datos más grande (~17000 proteínas). Mejor que PAM, aunque sigue sesgado hacia proteínas globulares solubles.</p>
+</section>
+<section id="wag-whelan-goldman-2001" class="level3">
+<h3 data-anchor-id="wag-whelan-goldman-2001">8.2.3 WAG (Whelan-Goldman 2001)</h3>
+<p>Estimado a partir de <strong>3905 proteínas</strong> de la base de datos SWISS-PROT. Fue el estándar durante varios años y aún es muy competitivo.</p>
+</section>
+<section id="lg-le-gascuel-2008" class="level3">
+<h3 data-anchor-id="lg-le-gascuel-2008">8.2.4 LG (Le-Gascuel 2008)</h3>
+<p>Estimado con una metodología más moderna y más datos. <strong>Mejor desempeño general</strong> en benchmarkings; es el default de muchos programas cuando no se hace selección de modelo.</p>
+</section>
+<section id="modelos-específicos-para-mitocondriales" class="level3">
+<h3 data-anchor-id="modelos-específicos-para-mitocondriales">8.2.5 Modelos específicos para mitocondriales</h3>
+<p>Las proteínas mitocondriales tienen <strong>sesgos de composición</strong> extremos (p.&nbsp;ej. enriquecidas en Ala, Ser; empobrecidas en Arg, Cys) y código genético distinto:</p>
+<ul>
+<li><strong>mtMet</strong>: mitocondrial general (metazoos).</li>
+<li><strong>mtInv</strong>: invertebrados mitocondriales.</li>
+<li><strong>mtMam</strong>: mamíferos mitocondriales.</li>
+<li><strong>mtART</strong>: artrópodos mitocondriales.</li>
+<li><strong>mtZOA</strong>: metazoos (versión ampliada).</li>
+</ul>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Warning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Para genes mitocondriales (COI, Cytochrome b, ND1-6, ATP6/8), <strong>no uses LG ni WAG</strong>. Usa mtMet, mtMam, mtZOA o mtART según tu taxon. Esto afecta seriamente el árbol.</p>
+</div>
+</div>
+</section>
+<section id="modelos-específicos-para-patógenos" class="level3">
+<h3 data-anchor-id="modelos-específicos-para-patógenos">8.2.6 Modelos específicos para patógenos</h3>
+<ul>
+<li><strong>HIVb</strong>: VIH, parte de genoma <em>background</em> (accesoria, no-envoltura).</li>
+<li><strong>HIVw</strong>: VIH, proteínas <em>env</em> (envoltura), más variables.</li>
+<li><strong>FLU</strong>: influenza (especialmente hemaglutinina y neuraminidasa).</li>
+</ul>
+</section>
+<section id="modelos-específicos-por-clado-pan-et-al.-2019" class="level3">
+<h3 data-anchor-id="modelos-específicos-por-clado-pan-et-al.-2019">8.2.7 Modelos específicos por clado (Pan et al.&nbsp;2019)</h3>
+<p>Estimados con datos de organismos específicos:</p>
+<ul>
+<li><strong>Q.bird</strong>: aves.</li>
+<li><strong>Q.pfam</strong>: proteínas Pfam generales (heterogéneo).</li>
+<li><strong>Q.insect</strong>: insectos.</li>
+<li><strong>Q.mammal</strong>: mamíferos.</li>
+<li><strong>Q.plant</strong>: plantas.</li>
+<li><strong>Q.yeast</strong>: levaduras.</li>
+</ul>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Si trabajas con un clado específico (p.&nbsp;ej. plantas), prueba los modelos <code>Q.plant</code> y <code>LG+G+F</code> y compara con AIC/BIC. La diferencia puede ser notable.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="modelos-mecánicos" class="level2">
+<h2 data-anchor-id="modelos-mecánicos">8.3 Modelos mecánicos</h2>
+<p>Basados en <strong>propiedades bioquímicas</strong> en lugar de datos empíricos:</p>
+<ul>
+<li><strong>Poisson</strong>: igual tasa de cambio entre todos los aminoácidos, igual frecuencia. Equivalente a JC69 de ADN. Solo útil como referencia teórica.</li>
+<li><strong>Equalin</strong>: igual frecuencia de aminoácidos (0.05 cada uno), pero matriz empírica.</li>
+</ul>
+<p>Prácticamente en desuso para análisis reales.</p>
+</section>
+<section id="modelos-de-mezcla-cxx" class="level2">
+<h2 data-anchor-id="modelos-de-mezcla-cxx">8.4 Modelos de mezcla (+Cxx)</h2>
+<p>Los modelos empíricos asumen <strong>un único perfil de frecuencias</strong> para todos los sitios. En realidad, los sitios de una proteína tienen <strong>preferencias distintas</strong> (p.&nbsp;ej. un sitio hidrofóbico prefiere Leu/Ile/Val; un sitio de superficie prefiere Asp/Glu/Lys).</p>
+<p>Los modelos <strong>C10–C60</strong> (Le et al.&nbsp;2008) son mezclas de <strong>C perfiles</strong> de frecuencias (C=10, 20, 30, 40, 50, 60). Cada sitio se asigna a un perfil con cierta probabilidad. Variaciones: <code>EX_EHO, EX2, EX3, EHO, UL2, UL3, MIX</code>.</p>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Important
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>El modelo LG+C60+F+G suele ser el mejor empírico posible</strong> para proteínas con heterogeneidad de composición. Equivale, en espíritu, a un perfil-HMM: cada sitio “recuerda” su preferencia.</p>
+</div>
+</div>
+<section id="pmsf-posterior-mean-site-frequency" class="level3">
+<h3 data-anchor-id="pmsf-posterior-mean-site-frequency">8.4.1 PMSF (Posterior Mean Site Frequency)</h3>
+<p>Los modelos +C60 son <strong>caros</strong> (~60 perfiles a estimar). PMSF (Wang et al.&nbsp;2018) es una aproximación inteligente:</p>
+<ol type="1">
+<li>Se corre un árbol inicial con <code>LG+G+F</code>.</li>
+<li>Se calculan las <strong>frecuencias posteriores por sitio</strong> (basadas en ese árbol).</li>
+<li>Se usa este perfil como modelo fijo en un análisis final.</li>
+</ol>
+<p>Es <strong>2 órdenes de magnitud más rápido</strong> que +C60 con calidad prácticamente equivalente. Recomendado para datasets grandes.</p>
+</section>
+</section>
+<section id="variación-de-tasas" class="level2">
+<h2 data-anchor-id="variación-de-tasas">8.5 Variación de tasas</h2>
+<p>Como en ADN, se aplican las extensiones:</p>
+<ul>
+<li><strong>+I</strong>: sitios invariables.</li>
+<li><strong>+G</strong>: tasa Gamma (4 categorías por defecto; <strong>+R</strong> FreeRate es alternativa más flexible).</li>
+<li><strong>+F</strong>: frecuencias empíricas de aminoácidos del alineamiento.</li>
+<li><strong>+Cxx</strong>: mezclas de perfiles (visto arriba).</li>
+<li><strong>+Rk</strong>: FreeRate con k categorías (alternativa moderna a Gamma, no asume forma).</li>
+</ul>
+</section>
+<section id="selección-de-modelos-con-prottest" class="level2">
+<h2 data-anchor-id="selección-de-modelos-con-prottest">8.6 Selección de modelos con ProtTest</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> install <span class="at">-c</span> bioconda prottest <span class="at">-y</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">java</span> <span class="at">-jar</span> prottest.jar <span class="dt">\</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">-i</span> protein_aln.fasta <span class="dt">\</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">-o</span> prottest.out <span class="dt">\</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">-all-distributed</span> <span class="dt">\</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>     <span class="at">-threads</span> 4</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>ProtTest evalúa ~14 modelos empíricos con/sin +I, +G, +F y reporta logL, AIC, AICc, BIC, DT. Es el equivalente a jModelTest para proteínas.</p>
+</section>
+<section id="modeltest-ng-para-proteínas" class="level2">
+<h2 data-anchor-id="modeltest-ng-para-proteínas">8.7 ModelTest-NG para proteínas</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">modeltest-ng</span> <span class="at">-i</span> protein_aln.fasta <span class="at">-d</span> aa <span class="at">-p</span> 4 <span class="at">-o</span> protmodel.out</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co"># -d aa: datos aminoacídicos</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Soporta todos los modelos empíricos, pero <strong>no</strong> los modelos de mezcla +Cxx.</p>
+</section>
+<section id="modelfinder-para-proteínas-iq-tree" class="level2">
+<h2 data-anchor-id="modelfinder-para-proteínas-iq-tree">8.8 ModelFinder para proteínas (IQ-TREE)</h2>
+<p>La opción más completa: incluye mezclas, FreeRate y perfiles PMSF:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Solo selección (no inferir árbol)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-m</span> TESTONLY <span class="at">-s</span> protein_aln.fasta <span class="at">-mset</span> LG,WAG,JTT <span class="at">-madd</span> LG+C20,LG+C60</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># ModelFinder Plus (selección con mezclas)</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-m</span> MFP <span class="at">-s</span> protein_aln.fasta</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Solo selección sin árbol</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-m</span> MF <span class="at">-s</span> protein_aln.fasta <span class="at">--prefix</span> prot_mf</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>-m MFP</code> (ModelFinder Plus) es la opción <strong>default recomendada</strong>: prueba modelos empíricos y mezclas +Cxx, y termina con el mejor.</p>
+</div>
+</div>
+</section>
+<section id="cuándo-usar-qué-modelo-tabla-práctica" class="level2">
+<h2 data-anchor-id="cuándo-usar-qué-modelo-tabla-práctica">8.9 Cuándo usar qué modelo: tabla práctica</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Tipo de dato</th>
+<th>Modelo recomendado</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Proteínas generales</td>
+<td><code>LG+G+F</code> o <code>LG+I+G+F</code></td>
+</tr>
+<tr class="even">
+<td>Mitocondriales animales</td>
+<td><code>mtMet</code>, <code>mtZOA</code>, <code>mtMam</code>, <code>mtART</code></td>
+</tr>
+<tr class="odd">
+<td>VIH (envoltura)</td>
+<td><code>HIVw</code></td>
+</tr>
+<tr class="even">
+<td>VIH (otras)</td>
+<td><code>HIVb</code></td>
+</tr>
+<tr class="odd">
+<td>Influenza</td>
+<td><code>FLU</code></td>
+</tr>
+<tr class="even">
+<td>Plantas</td>
+<td><code>Q.plant</code></td>
+</tr>
+<tr class="odd">
+<td>Hongos (levaduras)</td>
+<td><code>Q.yeast</code></td>
+</tr>
+<tr class="even">
+<td>Insectos</td>
+<td><code>Q.insect</code></td>
+</tr>
+<tr class="odd">
+<td>Aves</td>
+<td><code>Q.bird</code></td>
+</tr>
+<tr class="even">
+<td>Mamíferos</td>
+<td><code>Q.mammal</code></td>
+</tr>
+<tr class="odd">
+<td>Heterogeneidad fuerte</td>
+<td><code>LG+C60+F+G</code> o PMSF</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="heterogeneidad-de-sitios-por-qué-cxx-es-mejor-que-f-sola" class="level2">
+<h2 data-anchor-id="heterogeneidad-de-sitios-por-qué-cxx-es-mejor-que-f-sola">8.10 Heterogeneidad de sitios: por qué +Cxx es mejor que +F sola</h2>
+<p><code>+F</code> asigna a <strong>cada sitio</strong> las frecuencias empíricas globales (calculadas del alineamiento completo). Pero un sitio del núcleo hidrofóbico de la proteína no tiene por qué aceptar las frecuencias globales: para él, solo son admisibles Leu/Ile/Val/Phe.</p>
+<p><code>+Cxx</code> permite a cada sitio elegir entre C perfiles distintos: perfiles hidrofóbicos, polares, aromáticos, etc. Esto captura la heterogeneidad estructural que <code>+F</code> ignora.</p>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Important
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>En proteínas con &gt; 300 sitios y composición heterogénea, <code>LG+C60+F+G</code> suele mejorar el AIC en <strong>cientos de unidades</strong> respecto a <code>LG+G+F</code>. La diferencia en el árbol puede ser notable.</p>
+</div>
+</div>
+</section>
+<section id="pmsf-en-iq-tree" class="level2">
+<h2 data-anchor-id="pmsf-en-iq-tree">8.11 PMSF en IQ-TREE</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Paso 1: árbol inicial rápido con LG+G+F</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-s</span> protein_aln.fasta <span class="at">-m</span> LG+G+F <span class="at">-pre</span> initial_tree <span class="at">-fast</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Paso 2: PMSF basado en árbol inicial</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-s</span> protein_aln.fasta <span class="dt">\</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>        <span class="at">-m</span> LG4X+C10+F+PMSF <span class="dt">\</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>        <span class="at">-te</span> initial_tree.treefile <span class="dt">\</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>        <span class="at">-pre</span> pmsf_tree</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>PMSF genera un modelo “personalizado” para tu dataset. No es portable a otros análisis directamente: hay que regenerarlo desde el árbol inicial.</p>
+</div>
+</div>
+</section>
+<section id="aplicación-del-modelo-seleccionado" class="level2">
+<h2 data-anchor-id="aplicación-del-modelo-seleccionado">8.12 Aplicación del modelo seleccionado</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># IQ-TREE</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-s</span> protein_aln.fasta <span class="at">-m</span> LG+I+G+F <span class="at">-pre</span> prot_tree <span class="at">-B</span> 1000</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># RAxML-NG</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="ex">raxml-ng</span> <span class="at">--msa</span> protein_aln.fasta <span class="at">--model</span> LG+I+G+F <span class="at">--prefix</span> raxml <span class="at">--threads</span> 4</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Para heterogeneidad:</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="ex">raxml-ng</span> <span class="at">--msa</span> protein_aln.fasta <span class="at">--model</span> LG4X <span class="at">--prefix</span> raxml <span class="at">--threads</span> 4</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co"># MrBayes (bloque NEXUS)</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="ex">prset</span> aamodelpr=fixed<span class="er">(</span><span class="ex">lg</span><span class="kw">);</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="ex">lset</span> rates=invgamma<span class="kw">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Warning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>RAxML-NG <strong>no</strong> soporta todos los modelos que IQ-TREE soporta. Para <code>+Cxx</code> y <code>+PMSF</code>, usa IQ-TREE. RAxML-NG soporta modelos empíricos, +F, +G y LG4X (perfil 4-componentes).</p>
+</div>
+</div>
+</section>
+<section id="ejemplo-completo-cytochrome-b-de-mamíferos" class="level2">
+<h2 data-anchor-id="ejemplo-completo-cytochrome-b-de-mamíferos">8.13 Ejemplo completo: Cytochrome b de mamíferos</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Alinear y recortar</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">mafft</span> <span class="at">--localpair</span> <span class="at">--maxiterate</span> 1000 cytb_prot.fasta <span class="op">&gt;</span> cytb_prot_aln.fasta</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="ex">trimal</span> <span class="at">-in</span> cytb_prot_aln.fasta <span class="at">-out</span> cytb_prot_trim.fasta <span class="at">-automated1</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co"># ModelFinder Plus</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-m</span> MFP <span class="at">-s</span> cytb_prot_trim.fasta <span class="at">-pre</span> cytb_mf <span class="at">-B</span> 1000 <span class="at">-alrt</span> 1000</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Ver modelo seleccionado</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="st">"Best-fit model"</span> cytb_mf.iqtree</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="text"><code>Best-fit model according to BIC: mtMet+I+G+F</code></pre>
+</section>
+<section id="wsl2-vs-powershell" class="level2">
+<h2 data-anchor-id="wsl2-vs-powershell">8.14 WSL2 vs PowerShell</h2>
+<p>Todos los programas anteriores son CLI nativos de Linux y corren en WSL2 sin más. ProtTest requiere Java:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">java</span> <span class="at">-version</span>   <span class="co"># 1.8+ recomendado</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>En PowerShell nativo:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode powershell code-with-copy"><code class="sourceCode powershell"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>wsl iqtree2 <span class="op">-</span>m MFP <span class="op">-</span>s protein_aln<span class="op">.</span><span class="fu">fasta</span> <span class="op">-</span>pre prot_mf</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>wsl bash <span class="op">-</span>c <span class="st">"modeltest-ng -i protein_aln.fasta -d aa -p 4 -o protmodel.out"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="ejercicios" class="level2">
+<h2 data-anchor-id="ejercicios">8.15 Ejercicios</h2>
+<section id="ejercicio-1" class="level3">
+<h3 data-anchor-id="ejercicio-1">Ejercicio 1</h3>
+<p>Descargar 20 secuencias de <strong>Citocromo b</strong> (proteína) de mamíferos, alinear con MUSCLE5, recortar con trimAl. Correr ProtTest o ModelTest-NG. Reportar el mejor modelo según AIC, BIC y DT.</p>
+</section>
+<section id="ejercicio-2" class="level3">
+<h3 data-anchor-id="ejercicio-2">Ejercicio 2</h3>
+<p>Comparar el desempeño de tres modelos —JTT, WAG, LG— sobre el mismo dataset. ¿Cuál tiene la mejor logL? ¿Cuál el menor AIC? ¿Justifica usar LG sobre JTT?</p>
+</section>
+<section id="ejercicio-3" class="level3">
+<h3 data-anchor-id="ejercicio-3">Ejercicio 3</h3>
+<p>Usar IQ-TREE ModelFinder para encontrar el mejor modelo incluyendo mezclas:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-m</span> MF <span class="at">-s</span> protein_aln.fasta <span class="at">-madd</span> LG+C10,LG+C20,LG+C30,LG+C40,LG+C50,LG+C60</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Reportar el modelo óptimo. Si es <code>LG+Cxx</code>, explicar por qué la heterogeneidad mejora el ajuste.</p>
+</section>
+</section>
+<section id="soluciones" class="level2">
+<h2 data-anchor-id="soluciones">8.16 Soluciones</h2>
+<section id="solución-1" class="level3">
+<h3 data-anchor-id="solución-1">Solución 1</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Descargar secuencias de Cytochrome b (proteína) desde NCBI</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> ~/filogenia/cytb_prot <span class="kw">&amp;&amp;</span> <span class="bu">cd</span> ~/filogenia/cytb_prot</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Usamos IDs de proteína RefSeq de mitocondrias de mamíferos</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> acc <span class="kw">in</span> YP_003024028 YP_003024030 YP_220608.1 YP_003522167 YP_003842503 <span class="dt">\</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>           YP_001733424 YP_718737 YP_083849 YP_871863 YP_001494802<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="ex">efetch</span> <span class="at">-db</span> protein <span class="at">-id</span> <span class="st">"</span><span class="va">$acc</span><span class="st">"</span> <span class="at">-format</span> fasta <span class="op">&gt;&gt;</span> cytb_prot.fasta</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Alinear con MUSCLE5</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="ex">muscle</span> <span class="at">-align</span> cytb_prot.fasta <span class="at">-output</span> cytb_prot_aln.fasta</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Recortar</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="ex">trimal</span> <span class="at">-in</span> cytb_prot_aln.fasta <span class="at">-out</span> cytb_prot_trim.fasta <span class="at">-automated1</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Selección de modelo con ModelTest-NG</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a><span class="ex">modeltest-ng</span> <span class="at">-i</span> cytb_prot_trim.fasta <span class="at">-d</span> aa <span class="at">-p</span> 4 <span class="at">-o</span> cytb_prot.out</span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Reportar el mejor modelo según AIC, BIC y DT</span></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-E</span> <span class="st">"^Best model"</span> cytb_prot.out</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="text"><code>Best model according to AIC:  mtMet+I+G+F
+Best model according to AICc: mtMet+I+G+F
+Best model according to BIC:  mtMet+I+G+F
+Best model according to DT:   mtMet+I+G+F</code></pre>
+<p><strong>Comentario</strong>: Para Cytochrome b mitocondrial de mamíferos, los modelos <code>mtMam</code> o <code>mtMet</code> son los más apropiados porque capturan los sesgos de composición del código genético mitocondrial. Modelos generales como <code>LG</code> o <code>WAG</code> quedarían muy por detrás.</p>
+</section>
+<section id="solución-2" class="level3">
+<h3 data-anchor-id="solución-2">Solución 2</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Inferir árboles con tres modelos sobre el mismo alineamiento</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-s</span> cytb_prot_trim.fasta <span class="at">-m</span> JTT+G+F <span class="at">-pre</span> jtt_tree <span class="at">--quiet</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-s</span> cytb_prot_trim.fasta <span class="at">-m</span> WAG+G+F <span class="at">-pre</span> wag_tree <span class="at">--quiet</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-s</span> cytb_prot_trim.fasta <span class="at">-m</span> LG+G+F  <span class="at">-pre</span> lg_tree <span class="at">--quiet</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Extraer logL y AIC</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> m <span class="kw">in</span> jtt wag lg<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    <span class="va">logL</span><span class="op">=</span><span class="va">$(</span><span class="fu">grep</span> <span class="at">-oP</span> <span class="st">'Log-likelihood of tree:\s+\K[-0-9.]+'</span> <span class="va">${m}</span>_tree.iqtree <span class="kw">|</span> <span class="fu">head</span> <span class="at">-1</span><span class="va">)</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    <span class="va">aic</span><span class="op">=</span><span class="va">$(</span><span class="fu">grep</span> <span class="at">-oP</span> <span class="st">'Akaike information criterion \(AIC\) score:\s+\K[-0-9.]+'</span> <span class="va">${m}</span>_tree.iqtree <span class="kw">|</span> <span class="fu">head</span> <span class="at">-1</span><span class="va">)</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"</span><span class="va">$m</span><span class="st"> : logL=</span><span class="va">$logL</span><span class="st">  AIC=</span><span class="va">$aic</span><span class="st">"</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="text"><code>jtt : logL=-13420.55  AIC=26863.10
+wag : logL=-12983.78  AIC=25989.56
+lg  : logL=-12890.12  AIC=25802.24</code></pre>
+<p><strong>Análisis</strong>:</p>
+<ul>
+<li>Mejor logL: <strong>LG</strong> (-12890.12). Menos negativo = mejor.</li>
+<li>Menor AIC: <strong>LG</strong> (25802.24). Diferencia con JTT ≈ 1060 unidades, altamente significativa.</li>
+<li>De JTT a LG: ΔlogL ≈ 530, ΔAIC ≈ 1060. <strong>Justificado</strong>: LG es de 2008, JTT de 1992. La base de datos de LG era mucho más amplia (≠15 años de datos) y la metodología de estimación moderna. Para datos mitocondriales sería aún mejor <code>mtMam</code>.</li>
+</ul>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>En este caso particular (mitocondrial), el siguiente paso natural sería comparar LG vs <code>mtMet+I+G+F</code> (ver ejercicio 1). Los modelos específicos para mitocondriales deberían ganar por margen amplio.</p>
+</div>
+</div>
+</section>
+<section id="solución-3" class="level3">
+<h3 data-anchor-id="solución-3">Solución 3</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ModelFinder con mezclas</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-m</span> MF <span class="at">-s</span> cytb_prot_trim.fasta <span class="dt">\</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>        <span class="at">-mset</span> LG,WAG,JTT <span class="dt">\</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>        <span class="at">-madd</span> LG+C10,LG+C20,LG+C30,LG+C40,LG+C50,LG+C60 <span class="dt">\</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">-pre</span> cytb_mix</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Ver modelo seleccionado</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="st">"Best-fit model"</span> cytb_mix.iqtree</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="text"><code>Best-fit model according to BIC: LG+C60+F+G</code></pre>
+<p><strong>Explicación</strong>:</p>
+<ol type="1">
+<li><code>LG+C60+F+G</code> incluye el modelo empírico LG + 60 perfiles de frecuencias + frecuencias empíricas + Gamma.</li>
+<li>Cada sitio de la proteína puede “pertenecer” a uno de los 60 perfiles. Los perfiles codifican preferencias como “hidrofóbico”, “ácido”, “aromático”, etc.</li>
+<li>La mejora del AIC/BIC respecto a <code>LG+G+F</code> suele ser de <strong>cientos de unidades</strong>, indicando que la heterogeneidad de sitios es <strong>real y modelable</strong>.</li>
+<li><strong>Por qué funciona</strong>: las posiciones de la proteína tienen restricciones funcionales/estructurales distintas. Un sitio del núcleo acepta solo aminoácidos hidrofóbicos; un sitio de superficie acepta cargados. <code>+F</code> asume que todos los sitios comparten las frecuencias globales (lo cual es falso). <code>+C60</code> permite a cada sitio elegir su perfil preferido.</li>
+<li><strong>Trade-off</strong>: <code>+C60</code> introduce 60 × 19 = 1140 parámetros extra. Es computacionalmente más costoso. Si el dataset es pequeño, puede <strong>sobreajustar</strong>. Para datasets grandes (&gt;50 secuencias y &gt;200 sitios), casi siempre mejora el ajuste de forma justificada.</li>
+</ol>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Alternativa eficiente: usar <strong>PMSF</strong> (ver §8.11) que aproxima <code>+C60</code> con un solo paso posterior, siendo órdenes de magnitud más rápido y casi equivalente en calidad.</p>
+</div>
+</div>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/bioden\.github\.io\/bioden_website\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Semillero de Biología del Desarrollo y Plasticidad Neural © 2025. All content licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Sitio web desarrollado por Xavier Clemente García Cevallos</p>
+</div>   
+    <div class="nav-footer-center">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/bioden">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="mailto:bioden@unicauca.edu.co">
+      <i class="bi bi-envelope" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    <div class="cookie-consent-footer"><a href="#" id="open_preferences_center">Cookie Preferences</a></div></div>
+    <div class="nav-footer-right">
+<p>Made with <a href="https://www.r-project.org/"><img src="https://www.r-project.org/Rlogo.png" alt="R" width="25px"></a> and <a href="https://quarto.org/"><img src="https://quarto.org/quarto.png" alt="Quarto" width="65px"></a>.</p>
+</div>
+  </div>
+</footer>
+
+
+
+
+<script src="../../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

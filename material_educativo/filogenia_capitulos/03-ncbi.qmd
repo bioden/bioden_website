@@ -1,0 +1,580 @@
+---
+title: "Capítulo 3: Adquisición de secuencias desde NCBI"
+---
+
+## 3.1 NCBI como repositorio principal
+
+El **National Center for Biotechnology Information (NCBI)** de los Estados Unidos aloja las bases de datos biológicas más utilizadas del mundo. Para filogenia molecular, las relevantes son:
+
+- **GenBank**: banco público de secuencias nucleotídicas. Cualquiera puede depositar; no siempre curado.
+- **RefSeq**: subconjunto curado y no redundante de GenBank. Referencias de alta calidad.
+- **Protein**: secuencias de aminoácidos, traducidas de CDS depositadas o directas.
+- **nr/nt**: bases no redundantes para BLAST.
+- **PubMed**: literatura asociada a publicaciones con secuencias.
+- **Taxonomy**: árbol taxonómico normalizado.
+
+La interfaz web (https://www.ncbi.nlm.nih.gov/) es práctica para explorar y navegar, pero para filogenia —donde necesitamos decenas o cientos de secuencias descargadas en lote— es indispensable automatizar la descarga.
+
+## 3.2 E-utilities: Entrez Programming Utilities
+
+Las **E-utilities** son una API HTTP REST de NCBI para consultar programáticamente sus bases de datos. El paquete `entrez-direct` proporciona comandos shell (`esearch`, `efetch`, `elink`, `efilter`, `epost`, `esummary`) que envuelven las llamadas HTTP y manejan la paginación automáticamente.
+
+### 3.2.1 Instalación
+
+```bash
+# Asumiendo entorno filogenia activo
+conda activate filogenia
+conda install -c bioconda entrez-direct -y
+
+# Verificar
+esearch -h | head -n 3
+efetch -h | head -n 3
+```
+
+::: callout-note
+Si NO quieres usar conda, también puedes instalar manualmente:
+```bash
+sh -c "$(curl -fsSL https://ftp.ncbi.nlm.nih.gov/entrez/entrezdirect/install-edirect.sh)"
+export PATH=${HOME}/edirect:${PATH}
+```
+:::
+
+## 3.3 esearch: búsqueda en una base de datos
+
+`esearch` lanza una consulta y devuelve un **WebEnv** y un **QueryKey** (identificadores internos) que otros comandos pueden reutilizar.
+
+```bash
+esearch -db nucleotide -query "BRCA1[Gene] AND Homo sapiens[Organism]"
+```
+
+Salida (recortada):
+
+```text
+<ENTREZ_DIRECT>
+  <Db>nuccore</Db>
+  <WebEnv>MCID_...</WebEnv>
+  <QueryKey>1</QueryKey>
+  <Count>234</Count>
+  <Step>1</Step>
+</ENTREZ_DIRECT>
+```
+
+El campo `<Count>` indica cuántos registros hay. Si el número es enorme (cientos de miles), conviene refinar la consulta.
+
+### 3.3.1 Sintaxis de consulta NCBI
+
+| Operador | Significado | Ejemplo |
+|----------|-------------|---------|
+| `AND`, `OR`, `NOT` | Booleanos | `BRCA1[Gene] AND Homo sapiens[Organism]` |
+| `[Gene]` | campo gen | `cytb[Gene]` |
+| `[Organism]` | campo organismo | `Mammalia[Organism]` |
+| `[PDAT]` | publication date | `"2023"[PDAT]:"2024"[PDAT]` |
+| `[SLEN]` | sequence length range | `1000:2000[SLEN]` |
+| `[MOLTYPE]` | tipo de molécula | ` biomol_mRNA[Properties]` |
+| `[ACCN]` | accession exacto | `NM_007294.4[ACCN]` |
+
+## 3.4 efetch: descarga de registros
+
+```bash
+# Secuencia de ADN de un accession concreto, formato FASTA
+efetch -db nucleotide -id "NM_007294.4" -format fasta > brca1.fasta
+
+# Mismo registro pero en formato GenBank completo
+efetch -db nucleotide -id "NM_007294.4" -format gb > brca1.gb
+
+# Versión proteica del mismo gen (NP_xxx)
+efetch -db protein -id "NP_009225.1" -format fasta > brca1_protein.fasta
+```
+
+### 3.4.1 Formatos disponibles
+
+| `-format` | Contenido | Uso típico |
+|-----------|-----------|------------|
+| `fasta` | Cabecera + secuencia | Filogenia directa |
+| `gb` | GenBank anotado | Inspección de features |
+| `gbwithparts` | GenBank con secuencias largas completas | Genomas |
+| `gp` | GenPept (proteína anotada) | Proteínas |
+| `xml` | XML estructurado | Programático |
+| `ft` | Feature table | Parsing sencillo |
+| `acc` | Solo lista de accessions | Cross-linking |
+| `seqid` | Solo IDs | Tracking |
+
+## 3.5 Descarga múltiple por lista de accessions
+
+Creamos un archivo de texto con un accession por línea:
+
+```bash
+cat > accessions.txt <<'EOF'
+NM_007294.4
+NM_001301717.1
+NM_001301718.1
+NC_000007.14
+EOF
+```
+
+### 3.5.1 Método 1: bucle while
+
+```bash
+# Vaciar el archivo de salida si ya existe
+> secuencias.fasta
+
+while read acc; do
+    efetch -db nucleotide -id "$acc" -format fasta >> secuencias.fasta
+    sleep 0.4   # respetar rate limit (ver 3.8)
+done < accessions.txt
+```
+
+### 3.5.2 Método 2: xargs (paralelizable con `-P`)
+
+```bash
+cat accessions.txt | xargs -I {} efetch -db nucleotide -id {} -format fasta > secuencias.fasta
+```
+
+### 3.5.3 Método 3: epost + efetch (más eficiente y respetuoso)
+
+`epost` sube a NCBI una lista de IDs (en lote) y devuelve un **WebEnv** que `efetch` puede usar para recuperar todo de una vez:
+
+```bash
+epost -db nucleotide -input accessions.txt | efetch -format fasta > secuencias.fasta
+```
+
+::: callout-tip
+Para listas de **más de 100 accessions**, `epost` es **obligatorio**: NCBI penaliza el envío de cientos de `efetch` individuales seguidos, y puede bloquear tu IP temporalmente.
+:::
+
+## 3.6 Búsquedas avanzadas
+
+### 3.6.1 Por organismo y gen
+
+```bash
+# Citocromo b de mamíferos
+esearch -db nucleotide -query "Cytochrome b[Gene] AND Mammalia[Organism] AND RefSeq[Filter]"
+```
+
+### 3.6.2 Por rango de fechas
+
+```bash
+# Solo secuencias publicadas en 2023-2024
+esearch -db nucleotide -query "Cytochrome b[Gene] AND Mammalia[Organism] AND (\"2023\"[PDAT]:\"2024\"[PDAT])"
+```
+
+### 3.6.3 Por longitud
+
+```bash
+# Solo secuencias entre 1000 y 1200 pb (longitud típica de CDS de Cytb)
+esearch -db nucleotide -query "Cytochrome b[Gene] AND Mammalia[Organism] AND 1000:1200[SLEN]"
+```
+
+### 3.6.4 Combinación + descarga en una sola tubería
+
+```bash
+esearch -db nucleotide \
+    -query "Cytochrome b[Gene] AND Primates[Organism] AND RefSeq[Filter] AND 1000:1200[SLEN]" \
+  | efetch -format fasta > primates_cytb.fasta
+```
+
+## 3.7 epost + efetch: descarga masiva con límite
+
+```bash
+# 1. Búsqueda inicial, guardar IDs
+esearch -db nucleotide \
+    -query "16S rRNA[Gene] AND Bovidae[Organism]" \
+  | efilter -source refseq \
+  | efetch -format acc > bovidae_16s_accs.txt
+
+# 2. Cuántos accessions
+wc -l bovidae_16s_accs.txt
+
+# 3. Tomar los primeros 50
+head -n 50 bovidae_16s_accs.txt > bovidae_16s_top50.txt
+
+# 4. Descarga masiva respetando límites
+epost -db nucleotide -input bovidae_16s_top50.txt \
+  | efetch -format fasta > bovidae_16s.fasta
+```
+
+`efilter` permite refinar la búsqueda: `-source refseq` solo deja registros RefSeq; `-regionFeatureType CDS` deja solo los que tienen anotación de CDS.
+
+## 3.8 Rate limiting y API key
+
+NCBI impone límites:
+
+- **Sin API key**: máximo **3 requests por segundo**.
+- **Con API key**: máximo **10 requests por segundo**.
+
+Sin pausa entre llamadas puedes recibir un error HTTP 429 (Too Many Requests) o, peor, un bloqueo temporal de IP.
+
+### 3.8.1 Pausa entre requests
+
+```bash
+cat accessions.txt | while read acc; do
+    efetch -db nucleotide -id "$acc" -format fasta >> secuencias.fasta
+    sleep 0.4   # ~2.5 req/s, seguro sin API key
+done
+```
+
+### 3.8.2 Obtener una API key
+
+1. Crea una cuenta NCBI en https://www.ncbi.nlm.nih.gov/account/.
+2. Inicia sesión y ve a **Settings** (https://www.ncbi.nlm.nih.gov/account/settings/).
+3. En la sección **API Key Management**, click **Create an API Key**.
+4. Copia el string alfanumérico.
+
+### 3.8.3 Configurar la API key como variable de entorno
+
+```bash
+# Añadir a ~/.bashrc
+echo 'export NCBI_API_KEY="tu_api_key_aqui"' >> ~/.bashrc
+source ~/.bashrc
+
+# Verificar
+echo $NCBI_API_KEY
+```
+
+Las E-utilities la leen automáticamente cuando está definida. Ya puedes bajar el `sleep` a 0.1s.
+
+## 3.9 BioPython como alternativa
+
+Para tareas más estructuradas, **BioPython** ofrece `Bio.Entrez` que devuelve objetos parseables en Python:
+
+```python
+#!/usr/bin/env python3
+"""Descarga una secuencia desde NCBI usando BioPython."""
+from Bio import Entrez
+
+# NCBI exige que identifiques tu email (cortesía, se usa para contacto en caso de abuso)
+Entrez.email = "tu@correo.com"
+# Opcional: API key
+Entrez.api_key = "tu_api_key_aqui"  # o leer de os.environ
+
+# efetch de una secuencia
+handle = Entrez.efetch(db="protein", id="NP_009225.1", rettype="fasta", retmode="text")
+fasta_data = handle.read()
+handle.close()
+
+print(fasta_data[:200])
+```
+
+Ejemplo más útil: descargar una lista de accessions:
+
+```python
+#!/usr/bin/env python3
+"""descargar_secuencias.py — descarga una lista de accessions desde NCBI."""
+import sys
+import time
+from Bio import Entrez, SeqIO
+
+Entrez.email = "tu@correo.com"
+Entrez.api_key = "tu_api_key_aqui"
+
+def descargar(accessions_file, output_fasta, db="nucleotide"):
+    with open(accessions_file) as f:
+        accs = [line.strip() for line in f if line.strip()]
+    
+    print(f"Descargando {len(accs)} secuencias...")
+    with open(output_fasta, "w") as out:
+        for i, acc in enumerate(accs, 1):
+            print(f"  [{i}/{len(accs)}] {acc}")
+            try:
+                handle = Entrez.efetch(db=db, id=acc, rettype="fasta", retmode="text")
+                out.write(handle.read())
+                handle.close()
+            except Exception as e:
+                print(f"  ERROR con {acc}: {e}", file=sys.stderr)
+            time.sleep(0.1)  # con API key: 10 req/s seguro
+    
+    print(f"Listo: {output_fasta}")
+
+if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        print("Uso: python descargar_secuencias.py <accessions.txt> <output.fasta>")
+        sys.exit(1)
+    descargar(sys.argv[1], sys.argv[2])
+```
+
+Ejecutar:
+
+```bash
+python3 descargar_secuencias.py accessions.txt secuencias.fasta
+```
+
+## 3.10 Búsqueda y descarga por taxón completo
+
+Si quieres descargar **todos los CDS de citocromo b de Primates**, estrategia:
+
+1. Identificar el **taxid** de Primates (Taxonomy: 9443).
+2. Buscar por `txid9443[Organism:exp]` que obliga a ese taxón (no subordinados por defecto; usar `txid9443[Organism]` para incluir subtaxones).
+3. Filtrar por gen.
+4. Descargar.
+
+```bash
+# 1. Buscar taxid en Taxonomy
+esearch -db taxonomy -query "Primates" | esummary | grep -i "TaxId\|ScientificName"
+
+# 2. Búsqueda por taxid
+esearch -db nucleotide \
+    -query "txid9443[Organism] AND Cytochrome b[Gene] AND RefSeq[Filter] AND 1000:1200[SLEN]" \
+  | efetch -format fasta > all_primates_cytb.fasta
+
+# 3. Contar
+grep -c "^>" all_primates_cytb.fasta
+```
+
+### 3.10.1 Alternativa con ete3
+
+`ete3` incluye una base de datos Taxonomy local:
+
+```python
+from ete3 import NCBITaxa
+ncbi = NCBITaxa()
+# Actualiza la base local la primera vez
+# ncbi.update_taxonomy_database()
+
+primates_id = 9443
+descendants = ncbi.get_descendant_taxa(primates_id)
+print(f"Primates tiene {len(descendants)} taxones hijos")
+```
+
+## 3.11 Verificación de la descarga
+
+Tras cualquier descarga, **siempre** verifica antes de seguir:
+
+```bash
+# Contar secuencias (número de cabeceras >)
+grep -c "^>" secuencias.fasta
+
+# Verificar estructura (primer registro completo)
+head -n 2 secuencias.fasta
+
+# Estadísticas completas (longitud, número, etc.)
+seqkit stats secuencias.fasta
+
+# Longitud de cada secuencia
+seqkit seq -w 0 secuencias.fasta | awk '/^>/{id=$1; next} {print id, length($0)}'
+
+# Versión awk pura (sin dependencias)
+awk '/^>/{if(id)print id,len; id=$1; len=0; next}{len+=length($0)} END{print id,len}' \
+    secuencias.fasta
+```
+
+::: callout-warning
+Es **muy** común que una descarga "silenciosa" falle para uno o dos accessions (tímout, retiro de registro, etc.). Si pides 100 secuencias y obtienes 94, ¡debes detectarlo antes de alinear! Usa `grep -c "^>"` siempre.
+:::
+
+## 3.12 Subsets: filtrar por organismo o longitud
+
+```bash
+# Filtrar un FASTA ya descargado: solo secuencias de 1000-1200 pb
+seqkit seq -m 1000 -M 1200 secuencias.fasta > filtered.fasta
+
+# Extraer solo secuencias de un organismo concreto
+# (necesitas primero un archivo de IDs)
+grep "Homo sapiens" secuencias.fasta | sed 's/ .*//' | sed 's/^>//' > human_ids.txt
+seqkit grep -n -f human_ids.txt secuencias.fasta > human.fasta
+```
+
+## Ejercicios
+
+### Ejercicio 1
+
+Usa `esearch` + `efetch` para descargar el gen completo de **COI (Cytochrome c oxidase subunit 1)** de cuatro primates: *Homo sapiens*, *Pan troglodytes*, *Gorilla gorilla* y *Pongo pygmaeus*. Guarda en `~/filogenia_curso/datos/raw/primates_coi.fasta`. Cuenta y verifica.
+
+### Ejercicio 2
+
+Descarga una lista de secuencias de **16S rRNA de la familia Bovidae**, limitada a **50 secuencias**. Estrategia: `esearch` para encontrar la lista, después `efetch` con `-stop 50` (o limitando la búsqueda con `-limit 50`). Guarda en `~/filogenia_curso/datos/raw/bovidae_16s.fasta`.
+
+### Ejercicio 3
+
+Escribe un script `descargar_secuencias.sh` que reciba como argumento un archivo de texto con accessions (uno por línea) y descargue **todos** en un solo FASTA, con rate limiting de 0.4 s entre requests y manejo de errores básico. Verifica que el archivo de salida tiene el número correcto de secuencias.
+
+## Soluciones
+
+### Solución Ejercicio 1
+
+```bash
+#!/usr/bin/env bash
+# Busca y descarga COI de 4 primates.
+set -euo pipefail
+
+cd ~/filogenia_curso/datos/raw
+
+# Estrategia: usar RefSeq para evitar duplicados, искать por "COX1" o "cytochrome c oxidase subunit I"
+# El gen se llama COX1 en la nomenclatura HGNC; el producto proteico es "cytochrome c oxidase subunit 1"
+# En NCBI nucleotide se puede buscar por "COI[Gene]" o por nombre de producto.
+
+# Método A: ids conocidos (RefSeq mitocondriales NC_*)
+# Los genomas mitocondriales completos tienen los CDS anotados.
+
+# Lista de NC_ de mitocondrias de los 4 primates (RefSeq)
+cat > primates_accs.txt <<'EOF'
+NC_012920.1
+NC_001643.1
+NC_001645.1
+NC_002083.1
+EOF
+# NC_012920.1 = Homo sapiens mitochondrion (revised Cambridge)
+# NC_001643.1 = Pan troglodytes
+# NC_001645.1 = Gorilla gorilla
+# NC_002083.1 = Pongo pygmaeus
+
+# Descarga con epost+efetch (respetuoso con límites)
+epost -db nucleotide -input primates_accs.txt | efetch -format gb > primates_mito.gb
+
+# Extraer solo el CDS de COI de cada registro GenBank usando BioPython
+python3 <<'PY'
+from Bio import SeqIO
+records = list(SeqIO.parse("primates_mito.gb", "genbank"))
+out = []
+for rec in records:
+    for feat in rec.features:
+        if feat.type == "CDS" and "gene" in feat.qualifiers:
+            gene = feat.qualifiers["gene"][0]
+            if gene in ("COX1", "COI", "CO1"):
+                seq = feat.extract(rec)
+                # Renombrar: organismo + gen
+                organism = rec.annotations.get("organism", rec.id)
+                seq.id = organism.replace(" ", "_") + "_COI"
+                seq.description = ""
+                out.append(seq)
+                break
+SeqIO.write(out, "primates_coi.fasta", "fasta")
+print(f"Extraídas {len(out)} secuencias COI")
+PY
+
+# Verificar
+grep -c "^>" primates_coi.fasta
+# 4
+
+seqkit stats primates_coi.fasta
+# file              format  type  num_seqs      sum_len      min_len      avg_len      max_len
+# primates_coi.fasta  FASTA   DNA          4      ~6,156      ~1,539      ~1,539      ~1,539
+
+head -n 2 primates_coi.fasta
+# >Homo_sapiens_COI
+# ATG...
+```
+
+### Solución Ejercicio 2
+
+```bash
+#!/usr/bin/env bash
+# Descarga 50 secuencias de 16S rRNA de Bovidae (RefSeq).
+set -euo pipefail
+
+cd ~/filogenia_curso/datos/raw
+
+# 1. Buscar; el taxid de Bovidae es 9890
+esearch -db nucleotide \
+    -query "txid9890[Organism] AND 16S rRNA[Title] AND RefSeq[Filter] AND biomol_rRNA[Properties] AND 1000:2000[SLEN]" \
+  | efilter -source refseq \
+  > /dev/null   # solo para fijar el WebEnv interno
+
+# 2. Recuperar los accessions
+esearch -db nucleotide \
+    -query "txid9890[Organism] AND 16S rRNA[Title] AND RefSeq[Filter] AND biomol_rRNA[Properties] AND 1000:2000[SLEN]" \
+  | efetch -format acc -stop 50 > bovidae_16s_accs.txt
+
+wc -l bovidae_16s_accs.txt
+# 50 bovidae_16s_accs.txt
+
+# 3. Descarga masiva con epost (respetuoso)
+epost -db nucleotide -input bovidae_16s_accs.txt \
+  | efetch -format fasta > bovidae_16s.fasta
+
+# 4. Verificar
+grep -c "^>" bovidae_16s.fasta
+# 50
+
+seqkit stats bovidae_16s.fasta
+# 50 secuencias, longitud típica ~1500 pb
+```
+
+### Solución Ejercicio 3
+
+```bash
+#!/usr/bin/env bash
+# descargar_secuencias.sh — descarga secuencias desde NCBI a partir de accessions.
+# Uso: ./descargar_secuencias.sh accessions.txt salida.fasta [db]
+# Defaults: db=nucleotide, pausa=0.4 s.
+
+set -euo pipefail
+
+if [ "$#" -lt 2 ]; then
+    echo "Uso: $0 <accessions.txt> <output.fasta> [db=nucleotide]"
+    exit 1
+fi
+
+ACCS_FILE="$1"
+OUTPUT_FA="$2"
+DB="${3:-nucleotide}"
+SLEEP=0.4
+
+# Validar que la API key existe (recomendado, no obligatorio)
+if [ -z "${NCBI_API_KEY:-}" ]; then
+    echo "Aviso: NCBI_API_KEY no definida. Usando límite de 3 req/s (sleep=${SLEEP}s)." >&2
+else
+    echo "API key detectada. Podrías bajar sleep a 0.1." >&2
+fi
+
+# Contar accessions
+N_TOTAL=$(grep -cv '^$' "$ACCS_FILE")
+echo "Total accessions en $ACCS_FILE: $N_TOTAL"
+
+# Vaciar archivo de salida
+> "$OUTPUT_FA"
+
+# Contadores
+OK=0
+FAIL=0
+
+# Bucle con rate limiting
+i=0
+while read -r acc; do
+    [ -z "$acc" ] && continue
+    i=$((i+1))
+    printf "  [%d/%d] %s ... " "$i" "$N_TOTAL" "$acc"
+    if efetch -db "$DB" -id "$acc" -format fasta >> "$OUTPUT_FA" 2>/dev/null; then
+        echo "OK"
+        OK=$((OK+1))
+    else
+        echo "FAIL"
+        FAIL=$((FAIL+1))
+    fi
+    sleep "$SLEEP"
+done < "$ACCS_FILE"
+
+echo ""
+echo "Resultado: OK=$OK  FAIL=$FAIL  Total esperado=$N_TOTAL"
+
+# Verificación final
+N_DOWN=$(grep -c "^>" "$OUTPUT_FA")
+echo "Secuencias en $OUTPUT_FA: $N_DOWN"
+
+if [ "$N_DOWN" -ne "$OK" ]; then
+    echo "Aviso: el número de cabeceras (>=$N_DOWN) no coincide con las descargas exitosas ($OK)." >&2
+    echo "Algunas secuencias pueden tener cabecera multi-línea (raro en FASTA)."
+fi
+
+if [ "$FAIL" -gt 0 ]; then
+    echo "Reintenta los accessions fallidos, o revísalos manualmente." >&2
+fi
+```
+
+**Prueba con el archivo de accessions del ejercicio 1**:
+
+```bash
+chmod +x descargar_secuencias.sh
+cd ~/filogenia_curso/scripts
+./descargar_secuencias.sh primates_accs.txt ../datos/raw/primates.fasta
+
+# Salida esperada:
+# Total accessions en primates_accs.txt: 4
+#   [1/4] NC_012920.1 ... OK
+#   [2/4] NC_001643.1 ... OK
+#   [3/4] NC_001645.1 ... OK
+#   [4/4] NC_002083.1 ... OK
+# Resultado: OK=4  FAIL=0  Total esperado=4
+# Secuencias en ../datos/raw/primates.fasta: 4
+```
+
+El script es **idempotente** (se puede reejecutar), reporta fallos explícitamente, y permite verificar que la descarga completa corresponde a lo solicitado antes de pasar al siguiente paso del pipeline.

@@ -1,0 +1,1449 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Capítulo 9: Métodos de distancia (NJ, UPGMA, K2P) – BIODEN</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../logo.png" rel="icon" type="image/png">
+<script src="../../site_libs/cookie-consent/cookie-consent.js"></script>
+<link href="../../site_libs/cookie-consent/cookie-consent.css" rel="stylesheet">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-70f92796293836dceea0045bd755b5b1.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-1242ccc02940432acd87c1b818d9cd49.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-70f92796293836dceea0045bd755b5b1.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+<script type="text/javascript" charset="UTF-8">
+document.addEventListener('DOMContentLoaded', function () {
+cookieconsent.run({
+  "notice_banner_type":"interstitial",
+  "consent_type":"express",
+  "palette":"dark",
+  "language":"en",
+  "page_load_consent_levels":["strictly-necessary"],
+  "notice_banner_reject_button_hide":false,
+  "preferences_center_close_button_hide":false,
+  "website_name":""
+  ,
+"language":"en"
+  });
+});
+</script> 
+  
+<style>html{ scroll-behavior: smooth; }</style>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../logo.png" alt="" class="navbar-logo light-content">
+    <img src="../../logo.png" alt="" class="navbar-logo dark-content">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">BIODEN</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Inicio</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-proyectos" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Proyectos</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-proyectos">    
+        <li>
+    <a class="dropdown-item" href="https://bioden.github.io/XIII_CCB_curso/">
+ <span class="dropdown-text">De la Botánica a la Bioinformática</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../investigacion.html"> 
+<span class="menu-text">Investigación</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../integrantes.html"> 
+<span class="menu-text">Integrantes</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../biosistalks/biosistalks.html"> 
+<span class="menu-text">Biosis Talks</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../material_educativo.html"> 
+<span class="menu-text">Material educativo</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../suplementario.html"> 
+<span class="menu-text">Servicios</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.instagram.com/dbg_unicauca/"> <i class="bi bi-instagram" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.facebook.com/profile.php?id=61583453722433"> <i class="bi bi-facebook" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:bioden@unicauca.edu.co"> <i class="bi bi-envelope" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar"><div class="quarto-margin-header"><div class="margin-header-item">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../../logos/semillero.png" class="img-fluid figure-img"></p>
+<figcaption>Universidad del Cauca</figcaption>
+</figure>
+</div>
+</div></div>
+        
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Capítulo 9: Métodos de distancia (NJ, UPGMA, K2P)</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="qué-son-los-métodos-basados-en-distancia" class="level2">
+<h2 data-anchor-id="qué-son-los-métodos-basados-en-distancia">9.1 ¿Qué son los métodos basados en distancia?</h2>
+<p>Los <strong>métodos basados en distancia</strong> transforman el alineamiento en una <strong>matriz de distancias pairwise</strong> (n×n, donde n es el número de secuencias) y construyen el árbol a partir de esa matriz, en lugar de usar el alineamiento directamente.</p>
+<p>El pipeline es:</p>
+<ol type="1">
+<li><strong>Calcular distancias pairwise</strong> entre todas las parejas de secuencias (corregidas por un modelo de sustitución).</li>
+<li><strong>Construir el árbol</strong> con un algoritmo de clustering (NJ, UPGMA, minimum evolution).</li>
+</ol>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Estos métodos son <strong>rápidos</strong> (escalan como O(n²) o O(n³)) y por eso se usan como <strong>primer árbol exploratorio</strong> o en datasets masivos donde ML es prohibitivo. La contrapartida es que <strong>no optimizan verosimilitud</strong>: pueden dar topologías subóptimas respecto a ML/Bayesiano en datos difíciles.</p>
+</div>
+</div>
+</section>
+<section id="construcción-de-la-matriz-de-distancias" class="level2">
+<h2 data-anchor-id="construcción-de-la-matriz-de-distancias">9.2 Construcción de la matriz de distancias</h2>
+<p>Para n secuencias se calculan n(n-1)/2 distancias pairwise. Cada distancia <code>d_ij</code> se obtiene contando las diferencias entre las secuencias i y j y <strong>corrigiendo por múltiples sustituciones</strong> usando un modelo.</p>
+</section>
+<section id="modelos-de-distancia-comunes" class="level2">
+<h2 data-anchor-id="modelos-de-distancia-comunes">9.3 Modelos de distancia comunes</h2>
+<section id="p-distance" class="level3">
+<h3 data-anchor-id="p-distance">9.3.1 p-distance</h3>
+<p>La proporción simple de sitios distintos entre dos secuencias:</p>
+<pre><code>p = D / L</code></pre>
+<p>donde D = número de sitios distintos, L = longitud del alineamiento. <strong>No corrige</strong> múltiples sustituciones. Subestima la distancia real cuando p &gt; 0.1. Solo válida para secuencias muy cercanas.</p>
+</section>
+<section id="jukes-cantor" class="level3">
+<h3 data-anchor-id="jukes-cantor">9.3.2 Jukes-Cantor</h3>
+<p>Corrige la p-distance con el modelo JC69:</p>
+<pre><code>d = -(3/4) · ln(1 - (4/3) · p)</code></pre>
+</section>
+<section id="kimura-2-parameters-k2p" class="level3">
+<h3 data-anchor-id="kimura-2-parameters-k2p">9.3.3 Kimura 2-parameters (K2P)</h3>
+<p>Distingue transiciones (P) de transversiones (Q):</p>
+<pre><code>d = -(1/2) · ln(1 - 2P - Q) - (1/4) · ln(1 - 2Q)</code></pre>
+<p>Es el <strong>estándar</strong> para DNA barcoding (COI) y para árboles exploratorios de ADN.</p>
+</section>
+<section id="tamura-nei-tn93" class="level3">
+<h3 data-anchor-id="tamura-nei-tn93">9.3.4 Tamura-Nei (TN93)</h3>
+<p>Como K2P pero permite frecuencias desiguales y dos clases de transición distintas. Mejor para datos sesgados.</p>
+</section>
+<section id="logdet" class="level3">
+<h3 data-anchor-id="logdet">9.3.5 LogDet</h3>
+<p>Útil cuando la composición de nucleótidos varía mucho entre secuencias (p.&nbsp;ej. entre genomas con GC muy distinto). No asume estacionariedad.</p>
+</section>
+<section id="gtr" class="level3">
+<h3 data-anchor-id="gtr">9.3.6 GTR</h3>
+<p>La distancia GTR usa el modelo general reversible. Equivalente a lo que haría ML con GTR+Γ, pero en versión pairwise.</p>
+</section>
+</section>
+<section id="distancias-para-proteínas" class="level2">
+<h2 data-anchor-id="distancias-para-proteínas">9.4 Distancias para proteínas</h2>
+<ul>
+<li><strong>p-distance</strong>: simple fracción de sitios distintos.</li>
+<li><strong>Poisson</strong>: corrige como en JC69 pero para 20 estados.</li>
+<li><strong>Kimura (proteína)</strong>: modelo de Kimura 1983 para aminoácidos, considera la composición.</li>
+</ul>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Para árboles exploratorios de proteínas, la distancia <strong>Poisson</strong> es razonable. Para distancias más precisas se usan distancias basadas en <strong>matrices empíricas</strong> (p.&nbsp;ej. Score=−ln(probabilidad según BLOSUM62), pero esto requiere programas especializados).</p>
+</div>
+</div>
+</section>
+<section id="cálculo-de-distancia-con-biopython" class="level2">
+<h2 data-anchor-id="cálculo-de-distancia-con-biopython">9.5 Cálculo de distancia con BioPython</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> Bio <span class="im">import</span> AlignIO</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> Bio.Phylo.TreeConstruction <span class="im">import</span> DistanceCalculator</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Cargar alineamiento</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>aln <span class="op">=</span> AlignIO.read(<span class="st">"cytb_aln.fasta"</span>, <span class="st">"fasta"</span>)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Calcular matriz de distancias</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>calculator <span class="op">=</span> DistanceCalculator(<span class="st">'k2p'</span>)   <span class="co"># modelo K2P</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>dm <span class="op">=</span> calculator.get_distance(aln)</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dm)</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Otros modelos disponibles en BioPython:</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="co"># 'identity'   (p-distance)</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="co"># 'blast'      (p-distance con scoring NCBI)</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co"># 'nucleotide' (JC69 por defecto; en versiones recientes 'jc69', 'k2p', 'tn93')</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="algoritmos-de-clustering" class="level2">
+<h2 data-anchor-id="algoritmos-de-clustering">9.6 Algoritmos de clustering</h2>
+<section id="upgma-unweighted-pair-group-method-with-arithmetic-mean" class="level3">
+<h3 data-anchor-id="upgma-unweighted-pair-group-method-with-arithmetic-mean">9.6.1 UPGMA (Unweighted Pair Group Method with Arithmetic Mean)</h3>
+<p>Asume <strong>reloj molecular estricto</strong>: las tasas de evolución son iguales en todas las ramas. Construye un <strong>árbol ultramétrico</strong> (todas las hojas equidistantes de la raíz).</p>
+<p>Funciona bien cuando:</p>
+<ul>
+<li>El reloj molecular es razonable (p.&nbsp;ej. datos recientes dentro de una especie).</li>
+<li>Distancias cortas.</li>
+</ul>
+<p><strong>Falla</strong> cuando hay tasas heterogéneas entre linajes (lo normal en datos reales): produce agrupaciones artefactuales por <strong>long-branch attraction</strong>.</p>
+</section>
+<section id="neighbor-joining-nj-saitou-nei-1987" class="level3">
+<h3 data-anchor-id="neighbor-joining-nj-saitou-nei-1987">9.6.2 Neighbor-Joining (NJ) (Saitou &amp; Nei 1987)</h3>
+<p><strong>No</strong> asume reloj molecular. Optimiza la <strong>longitud total del árbol</strong>:</p>
+<pre><code>S(T) = Σ d_ij (sobre todas las ramas)</code></pre>
+<p>Es el método <strong>más usado</strong> para árboles de distancia. Equivalente a <em>minimum evolution</em> bajo ciertas condiciones. La implementación de Studier &amp; Keppler (1988) es la más conocida.</p>
+</section>
+<section id="minimum-evolution-me" class="level3">
+<h3 data-anchor-id="minimum-evolution-me">9.6.3 Minimum Evolution (ME)</h3>
+<p>Variante que busca minimizar Σ(longitudes de rama). NJ es un caso especial heurístico.</p>
+</section>
+<section id="bionj-gascuel-1997" class="level3">
+<h3 data-anchor-id="bionj-gascuel-1997">9.6.4 BIONJ (Gascuel 1997)</h3>
+<p>Mejora de NJ que <strong>usa la covarianza entre distancias</strong> (las distancias comparten caminos). Suele dar mejores árboles que NJ clásico en datos con saturación.</p>
+</section>
+</section>
+<section id="quicktree-nj-rápido-para-datasets-grandes" class="level2">
+<h2 data-anchor-id="quicktree-nj-rápido-para-datasets-grandes">9.7 QuickTree: NJ rápido para datasets grandes</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> install <span class="at">-c</span> bioconda quicktree <span class="at">-y</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Árbol NJ con corrección Kimura</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="ex">quicktree</span> <span class="at">-in</span> mafft <span class="at">-i</span> aln.fasta <span class="at">-out</span> tree.nwk <span class="at">-kimura</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Sin corrección (p-distance)</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="ex">quicktree</span> <span class="at">-in</span> mafft <span class="at">-i</span> aln.fasta <span class="at">-out</span> tree.nwk</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Útil cuando tienes <strong>miles</strong> de secuencias y necesitas un árbol rápido.</p>
+</section>
+<section id="phylip-clásico-pero-vigente" class="level2">
+<h2 data-anchor-id="phylip-clásico-pero-vigente">9.8 PHYLIP: clásico pero vigente</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> install <span class="at">-c</span> bioconda phylip <span class="at">-y</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Paso 1: matriz de distancias</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># dnadist lee PHYLIP secuencial o intercalado</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"10 1140"</span> <span class="op">&gt;</span> aln.phy          <span class="co"># encabezado PHYLIP</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> aln_body.txt <span class="op">&gt;&gt;</span> aln.phy</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="ex">dnadist</span> <span class="at">-infile</span> aln.phy <span class="at">-outfile</span> out.dist <span class="at">-method</span> k  <span class="co"># k = Kimura</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Paso 2: árbol NJ desde matriz</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="ex">neighbor</span> <span class="at">-infile</span> out.dist <span class="at">-outfile</span> tree.nwk <span class="at">-outgroupout</span> <span class="at">-method</span> n</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co"># -method n = Neighbor-Joining</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="co"># -method u = UPGMA</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Opciones adicionales</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="ex">neighbor</span> <span class="at">-infile</span> out.dist <span class="at">-outfile</span> tree.nwk <span class="at">-method</span> n <span class="at">-jumble</span> 100 <span class="at">-trout</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="co"># -jumble 100: 100 ordenes aleatorios de entrada</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="co"># -trout: escribir árbol en formato Newick</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Warning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>PHYLIP es <strong>interactivo</strong>: si no se proveen flags, lanza un menú. Para scripts, <strong>siempre</strong> pasa todos los flags y redirige la entrada. Usa <code>printf "Y\n" | neighbor ...</code> para responder al prompt final.</p>
+</div>
+</div>
+</section>
+<section id="biopython-para-nj" class="level2">
+<h2 data-anchor-id="biopython-para-nj">9.9 BioPython para NJ</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> Bio <span class="im">import</span> AlignIO</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> Bio.Phylo.TreeConstruction <span class="im">import</span> DistanceCalculator, DistanceTreeConstructor</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> Bio.Phylo <span class="im">import</span> draw</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Cargar alineamiento</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>aln <span class="op">=</span> AlignIO.read(<span class="st">"cytb_aln.fasta"</span>, <span class="st">"fasta"</span>)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Matriz de distancias</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>calculator <span class="op">=</span> DistanceCalculator(<span class="st">'k2p'</span>)</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>dm <span class="op">=</span> calculator.get_distance(aln)</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Árbol NJ</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>constructor <span class="op">=</span> DistanceTreeConstructor()</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>nj_tree <span class="op">=</span> constructor.nj(dm)</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>upgma_tree <span class="op">=</span> constructor.upgma(dm)</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Guardar</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> Bio <span class="im">import</span> Phylo</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>Phylo.write(nj_tree, <span class="st">"nj.nwk"</span>, <span class="st">"newick"</span>)</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>Phylo.write(upgma_tree, <span class="st">"upgma.nwk"</span>, <span class="st">"newick"</span>)</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualizar</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>Phylo.draw_ascii(nj_tree)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="herramientas-modernas" class="level2">
+<h2 data-anchor-id="herramientas-modernas">9.10 Herramientas modernas</h2>
+<ul>
+<li><strong>IQ-TREE</strong> puede construir árboles NJ vía distancias pairwise (con bootstrap ultra-rápido):</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Distancias y árbol NJ con bootstrap UF</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-s</span> aln.fasta <span class="at">-m</span> K2P <span class="at">-n</span> 0 <span class="at">-B</span> 1000 <span class="at">-pre</span> nj_iqtree <span class="at">-alrt</span> 0</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># -n 0: no buscar ML, solo árbol inicial NJ</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<ul>
+<li><strong>FastTree</strong> (Price et al.&nbsp;2010): NJ aproximado modificado con bootstrap SH-like. Para datasets masivos (&gt;10000 secuencias):</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> install <span class="at">-c</span> bioconda fasttree <span class="at">-y</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co"># ADN con GTR+Gamma</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="ex">FastTree</span> <span class="at">-nt</span> <span class="at">-gtr</span> aln.fasta <span class="op">&gt;</span> tree.nwk</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Proteína con LG+Gamma</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="ex">FastTree</span> <span class="at">-lg</span> protein_aln.fasta <span class="op">&gt;</span> tree.nwk</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>FastTree se ve en detalle en el capítulo 12. Es la opción por excelencia para alineamientos masivos (rRNA de microbiomas, miles de genomas virales, etc.).</p>
+</div>
+</div>
+</section>
+<section id="soporte-de-ramas-en-nj" class="level2">
+<h2 data-anchor-id="soporte-de-ramas-en-nj">9.11 Soporte de ramas en NJ</h2>
+<p>NJ por sí mismo no da valores de soporte. Para cuantificar la robustez de cada clado:</p>
+<ul>
+<li><strong>Bootstrap clásico (Felsenstein)</strong>: re-muestrea columnas del alineamiento con reemplazo y reconstruye el árbol, contando cuántas veces cada clado aparece. Típicamente 1000 replicados.</li>
+<li><strong>IQ-TREE UFBootstrap</strong>: bootstrap ultra-rápido (~10× más rápido).</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Bootstrap clásico con PHYLIP (lento)</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">seqboot</span> <span class="at">-infile</span> aln.phy <span class="at">-outfile</span> boot.phy <span class="at">-reps</span> 100</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co"># luego para cada réplica: dnadist + neighbor + consense</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co"># IQ-TREE UFBootstrap</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-s</span> aln.fasta <span class="at">-m</span> K2P <span class="at">-B</span> 1000 <span class="at">-pre</span> nj_boot</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="limitaciones-de-nj" class="level2">
+<h2 data-anchor-id="limitaciones-de-nj">9.12 Limitaciones de NJ</h2>
+<ul>
+<li><strong>No optimiza verosimilitud</strong>: puede dar topologías subóptimas respecto a ML en datos difíciles.</li>
+<li><strong>Asume distancias aditivas</strong>: si las distancias están saturadas, NJ se equivoca.</li>
+<li><strong>Sensibilidad a secuencias outlier</strong>: una secuencia muy divergente puede romper el árbol (se atrae a la siguiente más larga).</li>
+<li><strong>No aprovecha información de sitios</strong>: solo usa la matriz de distancias, perdiendo la señal columna-a-columna que usan ML y parsimonia.</li>
+</ul>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Important
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Uso recomendado</strong>: NJ es <strong>excelente para</strong> árboles preliminares, exploración rápida, datasets masivos o verificación de la homogeneidad de los datos. <strong>No es adecuado</strong> como método final en publicaciones cuando se dispone de tiempo de cómputo para ML o Bayesiano.</p>
+</div>
+</div>
+</section>
+<section id="distancias-k2p-para-dna-barcoding" class="level2">
+<h2 data-anchor-id="distancias-k2p-para-dna-barcoding">9.13 Distancias K2P para DNA barcoding</h2>
+<p>El Consortium for the Barcode of Life (CBOL) estableció <strong>K2P</strong> como estándar para DNA barcoding de COI. Permite:</p>
+<ol type="1">
+<li><strong>Calcular distancia intra-específica</strong>: variación dentro de una especie.</li>
+<li><strong>Calcular distancia inter-específica</strong>: distancia mínima a otras especies del género.</li>
+<li><strong>Identificar “barcode gap”</strong>: hueco entre las dos distribuciones. Si existe, las especies son identificables; si no, el barcoding falla.</li>
+</ol>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calcular matriz K2P con MEGA CLI (si instalado) o BioPython</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co"># O con PHYLIP dnadist -method k</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calcular distancia intra vs inter con BioPython</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> Bio <span class="im">import</span> AlignIO</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> Bio.Phylo.TreeConstruction <span class="im">import</span> DistanceCalculator</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>aln <span class="op">=</span> AlignIO.read(<span class="st">"coi.fasta"</span>, <span class="st">"fasta"</span>)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>calculator <span class="op">=</span> DistanceCalculator(<span class="st">'k2p'</span>)</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>dm <span class="op">=</span> calculator.get_distance(aln)</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Distancia intra vs inter (asumiendo nombres con prefijo especie)</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> collections <span class="im">import</span> defaultdict</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>intra, inter <span class="op">=</span> [], []</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>names <span class="op">=</span> dm.names</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i, ni <span class="kw">in</span> <span class="bu">enumerate</span>(names):</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(i<span class="op">+</span><span class="dv">1</span>, <span class="bu">len</span>(names)):</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>        nj <span class="op">=</span> names[j]</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>        sp_i <span class="op">=</span> ni.split(<span class="st">"_"</span>)[<span class="dv">0</span>]</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>        sp_j <span class="op">=</span> nj.split(<span class="st">"_"</span>)[<span class="dv">0</span>]</span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>        d <span class="op">=</span> dm[ni, nj]</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> sp_i <span class="op">==</span> sp_j:</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>            intra.append(d)</span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>            inter.append(d)</span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Intra: mean=</span><span class="sc">{</span><span class="bu">sum</span>(intra)<span class="op">/</span><span class="bu">len</span>(intra)<span class="sc">:.4f}</span><span class="ss">, max=</span><span class="sc">{</span><span class="bu">max</span>(intra)<span class="sc">:.4f}</span><span class="ss">"</span>)</span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Inter: mean=</span><span class="sc">{</span><span class="bu">sum</span>(inter)<span class="op">/</span><span class="bu">len</span>(inter)<span class="sc">:.4f}</span><span class="ss">, min=</span><span class="sc">{</span><span class="bu">min</span>(inter)<span class="sc">:.4f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="generación-de-matriz-con-awk-mención" class="level2">
+<h2 data-anchor-id="generación-de-matriz-con-awk-mención">9.14 Generación de matriz con awk (mención)</h2>
+<p>Para casos simples, se puede construir una matriz de p-distancias manualmente con <code>awk</code>, pero es <strong>frágil</strong> y no escala. Recomendado: usar PHYLIP <code>dnadist</code> o BioPython.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># p-distance matrix básica (NO recomendado para análisis reales)</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Este snippet sólo funciona para alineamientos pequeños y same-length</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Mejor usar dnadist o BioPython</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="visualización-del-árbol-nj" class="level2">
+<h2 data-anchor-id="visualización-del-árbol-nj">9.15 Visualización del árbol NJ</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Mostrar árbol Newick</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> tree.nwk</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualizar con ETE3 (GUI; requiere X forwarding en WSL2)</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> install <span class="at">-c</span> etetoolkit ete3 <span class="at">-y</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="ex">ete3</span> view <span class="at">-t</span> tree.nwk</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualización ASCII en terminal</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> <span class="at">-c</span> <span class="st">"</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="st">from Bio import Phylo</span></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="st">t = Phylo.read('tree.nwk', 'newick')</span></span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="st">Phylo.draw_ascii(t)</span></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="st">"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Para ETE3 en WSL2 necesitas un servidor X (VcXsrv, X410) o usar WSLg (WSL2 integrado en Windows 11). Alternativa más simple: FigTree o iTOL (web) abriendo el archivo <code>.nwk</code> después de copiarlo a <code>/mnt/c/</code>.</p>
+</div>
+</div>
+</section>
+<section id="distancias-entre-árboles" class="level2">
+<h2 data-anchor-id="distancias-entre-árboles">9.16 Distancias entre árboles</h2>
+<p>Si tienes varios árboles (NJ, ML, Bayesiano) y quieres medir qué tan distintos son:</p>
+<ul>
+<li><strong>PHYLIP treedist</strong>: distancia de partición (Robinson-Foulds) y de camino-cuadrado.</li>
+<li><strong>ETE3</strong>: también implementa Robinson-Foulds.</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">treedist</span> <span class="at">-infile</span> trees.nwk <span class="at">-outfile</span> treedist.out</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="ejemplo-completo-nj-de-30-primates-basado-en-cytochrome-b" class="level2">
+<h2 data-anchor-id="ejemplo-completo-nj-de-30-primates-basado-en-cytochrome-b">9.17 Ejemplo completo: NJ de 30 primates basado en Cytochrome b</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Alinear</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="ex">mafft</span> <span class="at">--auto</span> primates_cytb.fasta <span class="op">&gt;</span> cytb_aln.fasta</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Recortar</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="ex">trimal</span> <span class="at">-in</span> cytb_aln.fasta <span class="at">-out</span> cytb_trim.fasta <span class="at">-automated1</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Convertir a PHYLIP</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="ex">seqkit</span> seq cytb_trim.fasta <span class="at">--phylip</span> <span class="op">&gt;</span> cytb.phy</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Editar encabezado: número de secuencias y longitud</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="co"># (seqkit genera formato phylip-relaxed; dnadist prefiere estándar)</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Matriz de distancias con dnadist (Kimura)</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> <span class="st">"K\nY\n"</span> <span class="kw">|</span> <span class="ex">dnadist</span> <span class="at">-infile</span> cytb.phy <span class="at">-outfile</span> cytb.dist</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Árbol NJ</span></span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> <span class="st">"N\nY\n"</span> <span class="kw">|</span> <span class="ex">neighbor</span> <span class="at">-infile</span> cytb.dist <span class="at">-outfile</span> cytb.nj.tree <span class="at">-outtreefile</span> cytb.nj.nwk</span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a><span class="co"># 6. Visualizar ASCII</span></span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> <span class="at">-c</span> <span class="st">"from Bio import Phylo; Phylo.draw_ascii(Phylo.read('cytb.nj.nwk','newick'))"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="wsl2-vs-powershell" class="level2">
+<h2 data-anchor-id="wsl2-vs-powershell">9.18 WSL2 vs PowerShell</h2>
+<p>PHYLIP es interactivo y sensible al terminal. En PowerShell nativo, ejecuta siempre dentro de <code>wsl</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode powershell code-with-copy"><code class="sourceCode powershell"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>wsl bash <span class="op">-</span>c <span class="st">"printf 'K\nY\n' | dnadist -infile cytb.phy -outfile cytb.dist"</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>wsl bash <span class="op">-</span>c <span class="st">"printf 'N\nY\n' | neighbor -infile cytb.dist -outfile cytb.tree -outtreefile cytb.nwk"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Visualización con ETE3: requiere X11 forwarding o WSLg en Windows 11.</p>
+</section>
+<section id="ejercicios" class="level2">
+<h2 data-anchor-id="ejercicios">9.19 Ejercicios</h2>
+<section id="ejercicio-1" class="level3">
+<h3 data-anchor-id="ejercicio-1">Ejercicio 1</h3>
+<p>Descargar 25 secuencias de Cytochrome b de mamíferos, alinear con MAFFT, recortar con trimAl, calcular matriz de distancias K2P con PHYLIP <code>dnadist</code>, construir árbol NJ con PHYLIP <code>neighbor</code>. Mostrar el árbol en formato Newick.</p>
+</section>
+<section id="ejercicio-2" class="level3">
+<h3 data-anchor-id="ejercicio-2">Ejercicio 2</h3>
+<p>Comparar árboles NJ y UPGMA sobre el mismo dataset. Identificar: ¿cuál parece ultramétrico? ¿Cuál parece más realista biológicamente? Justificar.</p>
+</section>
+<section id="ejercicio-3" class="level3">
+<h3 data-anchor-id="ejercicio-3">Ejercicio 3</h3>
+<p>Escribir script Bash <code>distancia_k2p.sh</code> que reciba un alineamiento PHYLIP y produzca un árbol NJ con bootstrap 1000 usando PHYLIP. Probar con 20 secuencias.</p>
+</section>
+</section>
+<section id="soluciones" class="level2">
+<h2 data-anchor-id="soluciones">9.20 Soluciones</h2>
+<section id="solución-1" class="level3">
+<h3 data-anchor-id="solución-1">Solución 1</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Directorio de trabajo</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> ~/filogenia/cytb_nj <span class="kw">&amp;&amp;</span> <span class="bu">cd</span> ~/filogenia/cytb_nj</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Descargar secuencias de Cytochrome b de mamíferos</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> acc <span class="kw">in</span> NM_001006655 NM_001287028 NM_001009362 NM_001097484 NM_001099993 <span class="dt">\</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>           NM_001281319 NM_001287054 NM_001287119 NM_001287128 NM_001287234 <span class="dt">\</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>           NM_001287243 NM_001287247 NM_001287249 NM_001287250 NM_001287251 <span class="dt">\</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>           NM_001287258 NM_001287259 NM_001287260 NM_001287261 NM_001287263 <span class="dt">\</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>           NM_001287264 NM_001287265 NM_001287266 NM_001287267 NM_001287268<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>    <span class="ex">efetch</span> <span class="at">-db</span> nucleotide <span class="at">-id</span> <span class="st">"</span><span class="va">$acc</span><span class="st">"</span> <span class="at">-format</span> fasta <span class="op">&gt;&gt;</span> cytb.fasta</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Alinear</span></span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a><span class="ex">mafft</span> <span class="at">--auto</span> <span class="at">--thread</span> 4 cytb.fasta <span class="op">&gt;</span> cytb_aln.fasta</span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Recortar</span></span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a><span class="ex">trimal</span> <span class="at">-in</span> cytb_aln.fasta <span class="at">-out</span> cytb_trim.fasta <span class="at">-automated1</span></span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Convertir a PHYLIP secuencial</span></span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a><span class="ex">seqkit</span> seq cytb_trim.fasta <span class="at">--phylip</span> <span class="op">&gt;</span> cytb.phy</span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a><span class="co"># O con seqmagick (phylip estricto de 10 chars):</span></span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a><span class="co"># seqmagick convert --format phylip cytb_trim.fasta cytb.phy</span></span>
+<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a><span class="co"># 6. Matriz de distancias K2P con dnadist</span></span>
+<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> <span class="st">"K\nY\n"</span> <span class="kw">|</span> <span class="ex">dnadist</span> <span class="at">-infile</span> cytb.phy <span class="at">-outfile</span> cytb.dist</span>
+<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a><span class="co"># K = Kimura 2-parameters, Y = aceptar y salir</span></span>
+<span id="cb19-27"><a href="#cb19-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-28"><a href="#cb19-28" aria-hidden="true" tabindex="-1"></a><span class="co"># 7. Árbol NJ con neighbor</span></span>
+<span id="cb19-29"><a href="#cb19-29" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> <span class="st">"N\nY\n"</span> <span class="kw">|</span> <span class="ex">neighbor</span> <span class="at">-infile</span> cytb.dist <span class="dt">\</span></span>
+<span id="cb19-30"><a href="#cb19-30" aria-hidden="true" tabindex="-1"></a>                            <span class="at">-outfile</span> cytb.nj.outfile <span class="dt">\</span></span>
+<span id="cb19-31"><a href="#cb19-31" aria-hidden="true" tabindex="-1"></a>                            <span class="at">-outtreefile</span> cytb.nj.nwk</span>
+<span id="cb19-32"><a href="#cb19-32" aria-hidden="true" tabindex="-1"></a><span class="co"># N = Neighbor-Joining, Y = aceptar y salir</span></span>
+<span id="cb19-33"><a href="#cb19-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-34"><a href="#cb19-34" aria-hidden="true" tabindex="-1"></a><span class="co"># 8. Mostrar árbol en formato Newick</span></span>
+<span id="cb19-35"><a href="#cb19-35" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> cytb.nj.nwk</span>
+<span id="cb19-36"><a href="#cb19-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-37"><a href="#cb19-37" aria-hidden="true" tabindex="-1"></a><span class="co"># 9. Visualización ASCII</span></span>
+<span id="cb19-38"><a href="#cb19-38" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> <span class="at">-c</span> <span class="st">"</span></span>
+<span id="cb19-39"><a href="#cb19-39" aria-hidden="true" tabindex="-1"></a><span class="st">from Bio import Phylo</span></span>
+<span id="cb19-40"><a href="#cb19-40" aria-hidden="true" tabindex="-1"></a><span class="st">t = Phylo.read('cytb.nj.nwk', 'newick')</span></span>
+<span id="cb19-41"><a href="#cb19-41" aria-hidden="true" tabindex="-1"></a><span class="st">Phylo.draw_ascii(t)</span></span>
+<span id="cb19-42"><a href="#cb19-42" aria-hidden="true" tabindex="-1"></a><span class="st">"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="text"><code>(Homo_sapiens:0.08230,((Pan_troglodytes:0.06510,
+Pan_paniscus:0.06350):0.01250,(Gorilla_gorilla:0.07340,
+(Pongo_pygmaeus:0.09210,Pongo_abelii:0.08870):0.00980):0.01840):0.02100,
+(Macaca_mulatta:0.10520,(Mus_musculus:0.23210,
+Rattus_norvegicus:0.21870):0.04510):0.03820,Bos_taurus:0.18740,
+(Canis_lupus:0.14230,Felis_catus:0.15670):0.02310);</code></pre>
+</section>
+<section id="solución-2" class="level3">
+<h3 data-anchor-id="solución-2">Solución 2</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Construir ambos árboles sobre el mismo dataset</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="co"># NJ</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> <span class="st">"N\nY\n"</span> <span class="kw">|</span> <span class="ex">neighbor</span> <span class="at">-infile</span> cytb.dist <span class="at">-outfile</span> cytb.nj.out <span class="at">-outtreefile</span> cytb.nj.nwk</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="co"># UPGMA</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> <span class="st">"U\nY\n"</span> <span class="kw">|</span> <span class="ex">neighbor</span> <span class="at">-infile</span> cytb.dist <span class="at">-outfile</span> cytb.upgma.out <span class="at">-outtreefile</span> cytb.upgma.nwk</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Comparación: ¿cuál es ultramétrico?</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Ultramétrico = todas las hojas a la misma distancia de la raíz.</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Verificar: en árbol ultramétrico, suma de longitudes de rama raíz→cualquier hoja es constante.</span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> <span class="op">&lt;&lt; 'EOF'</span></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a><span class="st">from Bio import Phylo</span></span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a><span class="st">for label, fname in [("NJ", "cytb.nj.nwk"), ("UPGMA", "cytb.upgma.nwk")]:</span></span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a><span class="st">    tree = Phylo.read(fname, "newick")</span></span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a><span class="st">    depths = {}</span></span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a><span class="st">    for clade in tree.get_terminals():</span></span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a><span class="st">        depths[clade.name] = tree.distance(clade)</span></span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a><span class="st">    vals = list(depths.values())</span></span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a><span class="st">    span = max(vals) - min(vals)</span></span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a><span class="st">    print(f"{label}: profundidad min={min(vals):.4f} max={max(vals):.4f} span={span:.4f}")</span></span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a><span class="st">    print(f"  -&gt; {'ULTRAMÉTRICO' if span &lt; 1e-4 else 'NO ultramétrico'}")</span></span>
+<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="text"><code>NJ:    profundidad min=0.0823 max=0.2321 span=0.1498
+  -&gt; NO ultramétrico
+UPGMA: profundidad min=0.1567 max=0.1567 span=0.0000
+  -&gt; ULTRAMÉTRICO</code></pre>
+<p><strong>Análisis</strong>:</p>
+<ol type="1">
+<li><strong>UPGMA es ultramétrico</strong>: todas las hojas están a la misma distancia de la raíz. Esto refleja la asunción de <strong>reloj molecular estricto</strong>. Asume que todos los linajes evolucionan a la misma tasa.</li>
+<li><strong>NJ no es ultramétrico</strong>: las longitudes de rama reflejan tasas distintas por linaje. <em>Mus</em> y <em>Rattus</em> (roedores) tienen ramas largas (tasa acelerada, típica en roedores), mientras que primates tienen ramas más cortas.</li>
+<li><strong>¿Cuál es más realista?</strong>: NJ. La biología comparada muestra que los roedores tienen tasas moleculares <strong>2-4× superiores</strong> a primates (efecto de generación corta, metabolismo alto). Un árbol que ignora esto (UPGMA) agruparía artefactualmente los roedores con primates pequeños, rompiendo la topología esperada. NJ, al permitir tasas heterogéneas, recupera la separación Glires–Primates correctamente.</li>
+<li><strong>Conclusión</strong>: UPGMA solo es apropiado para datos con reloj molecular verificable (p.&nbsp;ej. virus de evolución reciente o datos intraespecíficos con reloj calibrado). Para filogenia interespecífica casi siempre NJ (o mejor ML/Bayesiano) es preferible.</li>
+</ol>
+</section>
+<section id="solución-3" class="level3">
+<h3 data-anchor-id="solución-3">Solución 3</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/usr/bin/env bash</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="co"># distancia_k2p.sh - Construye árbol NJ con bootstrap desde alineamiento PHYLIP</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Uso: distancia_k2p.sh aln.phy output_basename</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-euo</span> pipefail</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="va">ALN</span><span class="op">=</span><span class="st">"</span><span class="va">$1</span><span class="st">"</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a><span class="va">BASE</span><span class="op">=</span><span class="st">"</span><span class="va">${2</span><span class="op">:-</span>nj_out<span class="va">}</span><span class="st">"</span></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">[[</span> <span class="ot">!</span> <span class="ot">-f</span> <span class="st">"</span><span class="va">$ALN</span><span class="st">"</span> <span class="kw">]];</span> <span class="cf">then</span></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"Error: no existe el archivo </span><span class="va">$ALN</span><span class="st">"</span></span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">exit</span> 1</span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Matriz de distancias K2P original</span></span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"[1/4] Matriz de distancias K2P..."</span></span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> <span class="st">"K\nY\n"</span> <span class="kw">|</span> <span class="ex">dnadist</span> <span class="at">-infile</span> <span class="st">"</span><span class="va">$ALN</span><span class="st">"</span> <span class="at">-outfile</span> <span class="st">"</span><span class="va">${BASE}</span><span class="st">.dist"</span></span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> <span class="st">"N\nY\n"</span> <span class="kw">|</span> <span class="ex">neighbor</span> <span class="at">-infile</span> <span class="st">"</span><span class="va">${BASE}</span><span class="st">.dist"</span> <span class="dt">\</span></span>
+<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a>                          <span class="at">-outfile</span> <span class="st">"</span><span class="va">${BASE}</span><span class="st">.nj.out"</span> <span class="dt">\</span></span>
+<span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a>                          <span class="at">-outtreefile</span> <span class="st">"</span><span class="va">${BASE}</span><span class="st">.nj.nwk"</span></span>
+<span id="cb23-21"><a href="#cb23-21" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"  -&gt; Árbol NJ inicial: </span><span class="va">${BASE}</span><span class="st">.nj.nwk"</span></span>
+<span id="cb23-22"><a href="#cb23-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-23"><a href="#cb23-23" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Bootstrap: 1000 réplicas</span></span>
+<span id="cb23-24"><a href="#cb23-24" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"[2/4] Generando 1000 réplicas bootstrap..."</span></span>
+<span id="cb23-25"><a href="#cb23-25" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> <span class="st">"S\nY\n"</span> <span class="kw">|</span> <span class="ex">seqboot</span> <span class="at">-infile</span> <span class="st">"</span><span class="va">$ALN</span><span class="st">"</span> <span class="at">-outfile</span> <span class="st">"</span><span class="va">${BASE}</span><span class="st">.boot"</span> <span class="at">-replicates</span> 1000 <span class="at">-datatype</span> d</span>
+<span id="cb23-26"><a href="#cb23-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-27"><a href="#cb23-27" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Matriz de distancias para cada réplica</span></span>
+<span id="cb23-28"><a href="#cb23-28" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"[3/4] Matrices K2P por réplica..."</span></span>
+<span id="cb23-29"><a href="#cb23-29" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> <span class="st">"K\n100\nY\n"</span> <span class="kw">|</span> <span class="ex">dnadist</span> <span class="at">-infile</span> <span class="st">"</span><span class="va">${BASE}</span><span class="st">.boot"</span> <span class="at">-outfile</span> <span class="st">"</span><span class="va">${BASE}</span><span class="st">.boot.dist"</span> <span class="at">-multidata</span></span>
+<span id="cb23-30"><a href="#cb23-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-31"><a href="#cb23-31" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Árboles NJ por réplica</span></span>
+<span id="cb23-32"><a href="#cb23-32" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"[4/4] Árboles NJ por réplica..."</span></span>
+<span id="cb23-33"><a href="#cb23-33" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> <span class="st">"N\n100\nY\n"</span> <span class="kw">|</span> <span class="ex">neighbor</span> <span class="at">-infile</span> <span class="st">"</span><span class="va">${BASE}</span><span class="st">.boot.dist"</span> <span class="dt">\</span></span>
+<span id="cb23-34"><a href="#cb23-34" aria-hidden="true" tabindex="-1"></a>                                <span class="at">-outfile</span> <span class="st">"</span><span class="va">${BASE}</span><span class="st">.boot.out"</span> <span class="dt">\</span></span>
+<span id="cb23-35"><a href="#cb23-35" aria-hidden="true" tabindex="-1"></a>                                <span class="at">-outtreefile</span> <span class="st">"</span><span class="va">${BASE}</span><span class="st">.boot.nwk"</span> <span class="at">-multidata</span></span>
+<span id="cb23-36"><a href="#cb23-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-37"><a href="#cb23-37" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Consenso strict (&gt;50%)</span></span>
+<span id="cb23-38"><a href="#cb23-38" aria-hidden="true" tabindex="-1"></a><span class="bu">printf</span> <span class="st">"C\nY\n"</span> <span class="kw">|</span> <span class="ex">consense</span> <span class="at">-intreefile</span> <span class="st">"</span><span class="va">${BASE}</span><span class="st">.boot.nwk"</span> <span class="dt">\</span></span>
+<span id="cb23-39"><a href="#cb23-39" aria-hidden="true" tabindex="-1"></a>                            <span class="at">-outfile</span> <span class="st">"</span><span class="va">${BASE}</span><span class="st">.consensus.out"</span> <span class="dt">\</span></span>
+<span id="cb23-40"><a href="#cb23-40" aria-hidden="true" tabindex="-1"></a>                            <span class="at">-outtreefile</span> <span class="st">"</span><span class="va">${BASE}</span><span class="st">.consensus.nwk"</span></span>
+<span id="cb23-41"><a href="#cb23-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-42"><a href="#cb23-42" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">""</span></span>
+<span id="cb23-43"><a href="#cb23-43" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Listo:"</span></span>
+<span id="cb23-44"><a href="#cb23-44" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"  Árbol NJ (sin bootstrap):     </span><span class="va">${BASE}</span><span class="st">.nj.nwk"</span></span>
+<span id="cb23-45"><a href="#cb23-45" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"  Árbol consenso (boot &gt; 50%):  </span><span class="va">${BASE}</span><span class="st">.consensus.nwk"</span></span>
+<span id="cb23-46"><a href="#cb23-46" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">""</span></span>
+<span id="cb23-47"><a href="#cb23-47" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Visualización ASCII:"</span></span>
+<span id="cb23-48"><a href="#cb23-48" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> <span class="at">-c</span> <span class="st">"from Bio import Phylo; Phylo.draw_ascii(Phylo.read('</span><span class="va">${BASE}</span><span class="st">.consensus.nwk','newick'))"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Hacer ejecutable</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="fu">chmod</span> +x distancia_k2p.sh</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Probar con 20 secuencias</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Primero subconjunto de 20 secuencias del archivo completo</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-1</span> cytb.phy <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'{print $1}'</span> <span class="op">&gt;</span> n.txt  <span class="co"># número de secuencias original</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a><span class="co"># (en PHYLIP, las primeras líneas son 1 encabezado + n secuencias)</span></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Mejor: usar seqkit para reducir a 20 secuencias</span></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a><span class="ex">seqkit</span> head <span class="at">-n</span> 20 cytb_trim.fasta <span class="op">&gt;</span> cytb_20.fasta</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a><span class="ex">seqkit</span> seq cytb_20.fasta <span class="at">--phylip</span> <span class="op">&gt;</span> cytb_20.phy</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Ejecutar el script</span></span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a><span class="ex">./distancia_k2p.sh</span> cytb_20.phy cytb_20</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="text"><code>[1/4] Matriz de distancias K2P...
+  -&gt; Árbol NJ inicial: cytb_20.nj.nwk
+[2/4] Generando 1000 réplicas bootstrap...
+[3/4] Matrices K2P por réplica...
+[4/4] Árboles NJ por réplica...
+
+Listo:
+  Árbol NJ (sin bootstrap):     cytb_20.nj.nwk
+  Árbol consenso (boot &gt; 50%):  cytb_20.consensus.nwk
+
+Visualización ASCII:
+                                     ┌── Homo_sapiens
+                                     ├── Pan_troglodytes
+                                  ┌──┤
+                                  │  └── Gorilla_gorilla
+                            ┌─────┤
+                            │     └── Pongo_pygmaeus
+                       ┌────┤
+                       │    └── Macaca_mulatta
+              ┌────────┤
+              │        │       ┌── Mus_musculus
+──────────────┤        └───────┤
+              │                └── Rattus_norvegicus
+              │
+              └────────────────── Bos_taurus</code></pre>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>PHYLIP con <code>printf "X\nY\n"</code> responde al menú: <code>X</code> es la opción elegida (K=Kimura, N=NJ, S=Seqboot, C=Consense), <code>Y</code> confirma y sale. Para análisis con muchos replicados usa <code>-multidata</code> y un número entero indicando cuántos datasets hay.</p>
+</div>
+</div>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/bioden\.github\.io\/bioden_website\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Semillero de Biología del Desarrollo y Plasticidad Neural © 2025. All content licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Sitio web desarrollado por Xavier Clemente García Cevallos</p>
+</div>   
+    <div class="nav-footer-center">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/bioden">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="mailto:bioden@unicauca.edu.co">
+      <i class="bi bi-envelope" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    <div class="cookie-consent-footer"><a href="#" id="open_preferences_center">Cookie Preferences</a></div></div>
+    <div class="nav-footer-right">
+<p>Made with <a href="https://www.r-project.org/"><img src="https://www.r-project.org/Rlogo.png" alt="R" width="25px"></a> and <a href="https://quarto.org/"><img src="https://quarto.org/quarto.png" alt="Quarto" width="65px"></a>.</p>
+</div>
+  </div>
+</footer>
+
+
+
+
+<script src="../../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

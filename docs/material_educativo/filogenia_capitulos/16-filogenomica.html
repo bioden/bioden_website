@@ -1,0 +1,1710 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Capítulo 16: Filogenómica — Concatenación y partición – BIODEN</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../logo.png" rel="icon" type="image/png">
+<script src="../../site_libs/cookie-consent/cookie-consent.js"></script>
+<link href="../../site_libs/cookie-consent/cookie-consent.css" rel="stylesheet">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-70f92796293836dceea0045bd755b5b1.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-1242ccc02940432acd87c1b818d9cd49.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-70f92796293836dceea0045bd755b5b1.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+<script type="text/javascript" charset="UTF-8">
+document.addEventListener('DOMContentLoaded', function () {
+cookieconsent.run({
+  "notice_banner_type":"interstitial",
+  "consent_type":"express",
+  "palette":"dark",
+  "language":"en",
+  "page_load_consent_levels":["strictly-necessary"],
+  "notice_banner_reject_button_hide":false,
+  "preferences_center_close_button_hide":false,
+  "website_name":""
+  ,
+"language":"en"
+  });
+});
+</script> 
+  
+<style>html{ scroll-behavior: smooth; }</style>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../logo.png" alt="" class="navbar-logo light-content">
+    <img src="../../logo.png" alt="" class="navbar-logo dark-content">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">BIODEN</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Inicio</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-proyectos" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Proyectos</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-proyectos">    
+        <li>
+    <a class="dropdown-item" href="https://bioden.github.io/XIII_CCB_curso/">
+ <span class="dropdown-text">De la Botánica a la Bioinformática</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../investigacion.html"> 
+<span class="menu-text">Investigación</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../integrantes.html"> 
+<span class="menu-text">Integrantes</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../biosistalks/biosistalks.html"> 
+<span class="menu-text">Biosis Talks</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../material_educativo.html"> 
+<span class="menu-text">Material educativo</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../suplementario.html"> 
+<span class="menu-text">Servicios</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.instagram.com/dbg_unicauca/"> <i class="bi bi-instagram" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.facebook.com/profile.php?id=61583453722433"> <i class="bi bi-facebook" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:bioden@unicauca.edu.co"> <i class="bi bi-envelope" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar"><div class="quarto-margin-header"><div class="margin-header-item">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../../logos/semillero.png" class="img-fluid figure-img"></p>
+<figcaption>Universidad del Cauca</figcaption>
+</figure>
+</div>
+</div></div>
+        
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Capítulo 16: Filogenómica — Concatenación y partición</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="qué-es-la-filogenómica" class="level2">
+<h2 data-anchor-id="qué-es-la-filogenómica">16.1 ¿Qué es la filogenómica?</h2>
+<p>La <strong>filogenómica</strong> es la aplicación de métodos filogenéticos a <strong>datasets a escala genómica</strong>: múltiples genes (decenas a miles), genomas completos, o conjuntos de SNPs. La motivación es triple:</p>
+<ol type="1">
+<li><strong>Más datos = más poder estadístico</strong>: un solo gen puede tener señal filogenética insuficiente para resolver relaciones difíciles (radiaciones recientes, nodos profundos).</li>
+<li><strong>Concatenación de genes ortólogos</strong>: reduce ruido y aumenta resolución.</li>
+<li><strong>Robustez</strong>: si varios genes coinciden, la filogenia es más fiable.</li>
+</ol>
+<p>A diferencia de la filogenia clásica (1-5 genes), la filogenómica usa típicamente <strong>100-1000+ genes</strong> y de <strong>10-100+ taxones</strong>. Las matrices resultantes pueden tener <strong>millones de caracteres</strong>.</p>
+<section id="tipos-de-datasets-filogenómicos" class="level3">
+<h3 data-anchor-id="tipos-de-datasets-filogenómicos">16.1.1 Tipos de datasets filogenómicos</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 21%">
+<col style="width: 46%">
+<col style="width: 32%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Tipo</th>
+<th>Descripción</th>
+<th>Ejemplo</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Concatenación de ortólogos</strong></td>
+<td>Matriz supermatriz de N genes × M taxones</td>
+<td>1000 orthogroups de 50 insectos</td>
+</tr>
+<tr class="even">
+<td><strong>Species tree (coalescent)</strong></td>
+<td>Árboles por gen + reconciliación</td>
+<td>ASTRAL, ASTRID, MP-EST</td>
+</tr>
+<tr class="odd">
+<td><strong>Whole-genome SNP</strong></td>
+<td>SNPs de genomas completos</td>
+<td>SVDQuartets, RAxML-NG con SNPs</td>
+</tr>
+<tr class="even">
+<td><strong>Whole-genome distances</strong></td>
+<td>ANI, AAI para taxonomía</td>
+<td>GTDB, FastANI</td>
+</tr>
+<tr class="odd">
+<td><strong>Synteny / gene order</strong></td>
+<td>Orden de genes como carácter</td>
+<td>Rearreglos cromosómicos</td>
+</tr>
+</tbody>
+</table>
+<p>Nos centraremos en los dos primeros: <strong>concatenación</strong> y <strong>species tree methods</strong>.</p>
+</section>
+</section>
+<section id="concatenación-de-genes-ortólogos" class="level2">
+<h2 data-anchor-id="concatenación-de-genes-ortólogos">16.2 Concatenación de genes ortólogos</h2>
+<section id="el-concepto-de-supermatriz" class="level3">
+<h3 data-anchor-id="el-concepto-de-supermatriz">16.2.1 El concepto de supermatriz</h3>
+<p>Dado N genes ortólogos presentes en M taxones, construimos una <strong>matriz</strong> de M × (longitud total) donde las secuencias de cada gen se concatenan horizontalmente:</p>
+<pre class="text"><code>              gene1    gene2    gene3   ...
+Taxon1     ATGCG...  GCTTA...  AACCC...
+Taxon2     ATGCG...  GCTTA...  AACCC...
+Taxon3     ATGCA...  GCTTA...  AAGCC...
+...</code></pre>
+<p>Cada gen tiene su propia <strong>partición</strong> con su modelo de sustitución óptimo. Análisis con un solo modelo para todo (unpartitioned) es subóptimo; análisis particionado permite modelar heterogeneidad entre genes.</p>
+</section>
+<section id="identificación-de-ortólogos" class="level3">
+<h3 data-anchor-id="identificación-de-ortólogos">16.2.2 Identificación de ortólogos</h3>
+<p>El primer paso crítico es identificar genes <strong>ortólogos</strong> (homólogos por especiación, no por duplicación). Herramientas:</p>
+<ul>
+<li><strong>OrthoFinder</strong> (Python): estado del arte, usa grafo de similaridad + reconstrucción de genes.</li>
+<li><strong>OMCL</strong> (OrthoMCL): clásico, basado en Markov clustering.</li>
+<li><strong>ProteinOrtho</strong>: eficiente para genomas grandes.</li>
+<li><strong>OrthoDB</strong>: base de datos precomputada de ortólogos.</li>
+<li><strong>RBH (Reciprocal Best Hit)</strong> con BLAST: simple, menos sensible.</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Instalar OrthoFinder</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> install <span class="at">-c</span> bioconda orthofinder <span class="at">-y</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Ejecutar OrthoFinder sobre proteomas de N especies</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> proteomes</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> species1.faa species2.faa species3.faa ... proteomes/</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="ex">orthofinder</span> <span class="at">-f</span> proteomes/ <span class="at">-t</span> 8</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Output en: proteomes/OrthoFinder/Results_*/</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co">#   Orthogroups.tsv   → tabla ortólogos</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co">#   Orthogroups_SingleCopyOrthologues.txt → ortólogos de copia única</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co">#   (ideal para filogenómica)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Genes de copia única (single-copy orthologs)</strong>: para filogenómica, usar solo orthogroups presentes en una sola copia en todos los taxones. Esto asegura paralogía evitada. OrthoFinder genera automáticamente el archivo <code>Orthogroups_SingleCopyOrthologues.txt</code>.</p>
+</div>
+</div>
+</section>
+<section id="búsqueda-recíproca-rbh-con-blast" class="level3">
+<h3 data-anchor-id="búsqueda-recíproca-rbh-con-blast">16.2.3 Búsqueda recíproca (RBH) con BLAST</h3>
+<p>Para análisis rápidos con 2-3 especies, RBH es suficiente:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># BLAST especie 1 vs especie 2</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">blastp</span> <span class="at">-query</span> sp1.faa <span class="at">-subject</span> sp2.faa <span class="at">-outfmt</span> 6 <span class="at">-evalue</span> 1e-5 <span class="op">&gt;</span> sp1_vs_sp2.blast</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">blastp</span> <span class="at">-query</span> sp2.faa <span class="at">-subject</span> sp1.faa <span class="at">-outfmt</span> 6 <span class="at">-evalue</span> 1e-5 <span class="op">&gt;</span> sp2_vs_sp1.blast</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Reciprocal Best Hits con awk</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'BEGIN{OFS="\t"} {if(!a[$1] || $12 &lt; a[$1"_e"]) {a[$1]=$2; a[$1"_e"]=$12}} END{for(k in a) print k, a[k]}'</span> sp1_vs_sp2.blast <span class="kw">|</span> <span class="fu">sort</span> <span class="at">-k1,1</span> <span class="op">&gt;</span> sp1_best.tsv</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'BEGIN{OFS="\t"} {if(!a[$1] || $12 &lt; a[$1"_e"]) {a[$1]=$2; a[$1"_e"]=$12}} END{for(k in a) print k, a[k]}'</span> sp2_vs_sp1.blast <span class="kw">|</span> <span class="fu">sort</span> <span class="at">-k1,1</span> <span class="op">&gt;</span> sp2_best.tsv</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Reciprocal: buscar pares donde cada uno es el mejor hit del otro</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="fu">join</span> <span class="at">-1</span> 1 <span class="at">-2</span> 2 sp1_best.tsv <span class="op">&lt;(</span><span class="fu">sort</span> <span class="at">-k2,2</span> sp2_best.tsv<span class="op">)</span> <span class="op">&gt;</span> rbh_pairs.tsv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="pipeline-típico-de-filogenómica" class="level2">
+<h2 data-anchor-id="pipeline-típico-de-filogenómica">16.3 Pipeline típico de filogenómica</h2>
+<pre class="text"><code>1. Identificar ortólogos       → OrthoFinder
+2. Alinear cada gen             → MAFFT (ADN/proteína)
+3. Recortar cada alineamiento   → trimAl
+4. Concatenar en supermatriz    → AMAS / BioPython
+5. Modelo por partición         → ModelFinder (IQ-TREE)
+6. Análisis ML particionado     → IQ-TREE -spp / RAxML-NG</code></pre>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Tipos de datos</strong>: para ADN codificante, alinear la <strong>proteína</strong> (más informativa) y luego <strong>retrotraducir</strong> al ADN con <code>pal2nal.pl</code> para mantener el marco de lectura. Esto produce alineamientos de codones alineados correctamente, útiles para análisis de selección (PAML) y para preservar posiciones de codón.</p>
+</div>
+</div>
+</section>
+<section id="concatenación-con-amas" class="level2">
+<h2 data-anchor-id="concatenación-con-amas">16.4 Concatenación con AMAS</h2>
+<p><strong>AMAS</strong> (Alignment Manipulation and Summary) es un script Python muy versátil:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Instalación</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> install <span class="at">-c</span> bioconda amas <span class="at">-y</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># O directo: git clone https://github.com/marekborowiec/AMAS</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Concatenar múltiples genes</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="ex">AMAS.py</span> concat <span class="at">-f</span> fasta <span class="at">-d</span> dna <span class="dt">\</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">-i</span> gene1.fasta gene2.fasta gene3.fasta gene4.fasta gene5.fasta <span class="dt">\</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">-o</span> concatenated.fasta <span class="at">-p</span> partition.txt</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Opciones:</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="co"># -f fasta|phylip|nexus: formato input</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="co"># -d dna|aa: tipo de datos</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="co"># -o: archivo output</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a><span class="co"># -p: archivo de particiones (formato RAxML)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Formato del archivo <code>partition.txt</code> generado:</p>
+<pre class="text"><code>DNA, gene1 = 1 - 312
+DNA, gene2 = 313 - 879
+DNA, gene3 = 880 - 1456
+DNA, gene4 = 1457 - 2244
+DNA, gene5 = 2245 - 3056</code></pre>
+</section>
+<section id="concatenación-con-biopython" class="level2">
+<h2 data-anchor-id="concatenación-con-biopython">16.5 Concatenación con BioPython</h2>
+<p>Para control total, script personalizado:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/usr/bin/env python3</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co"># concat_alignments.py: concatenar alineamientos FASTA y generar particiones</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> Bio <span class="im">import</span> SeqIO</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> collections <span class="im">import</span> defaultdict</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sys</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Argumentos: lista de archivos FASTA</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>gene_files <span class="op">=</span> sys.argv[<span class="dv">1</span>:]</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">not</span> gene_files:</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"Uso: python3 concat_alignments.py gene1.fasta gene2.fasta ..."</span>)</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    sys.exit(<span class="dv">1</span>)</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>sequences <span class="op">=</span> defaultdict(<span class="bu">str</span>)</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>partitions <span class="op">=</span> []</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>start <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>gene_length <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> gene_file <span class="kw">in</span> gene_files:</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>    gene_name <span class="op">=</span> gene_file.split(<span class="st">'/'</span>)[<span class="op">-</span><span class="dv">1</span>].replace(<span class="st">'.fasta'</span>, <span class="st">''</span>).replace(<span class="st">'.fa'</span>, <span class="st">''</span>)</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    length <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> rec <span class="kw">in</span> SeqIO.parse(gene_file, <span class="st">"fasta"</span>):</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>        sequences[rec.<span class="bu">id</span>] <span class="op">+=</span> <span class="bu">str</span>(rec.seq).upper()</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>        length <span class="op">=</span> <span class="bu">len</span>(rec.seq)</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>    end <span class="op">=</span> start <span class="op">+</span> length <span class="op">-</span> <span class="dv">1</span></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>    partitions.append((gene_name, start, end))</span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>    start <span class="op">=</span> end <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>    gene_length <span class="op">+=</span> length</span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>gene_name<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span>length<span class="sc">}</span><span class="ss"> bp (columnas </span><span class="sc">{</span>start<span class="op">-</span>length<span class="sc">}</span><span class="ss">-</span><span class="sc">{</span>end<span class="sc">}</span><span class="ss">)"</span>)</span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a><span class="co"># Escribir supermatriz</span></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(<span class="st">"concatenated.fasta"</span>, <span class="st">"w"</span>) <span class="im">as</span> f:</span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> taxon, seq <span class="kw">in</span> sequences.items():</span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>        f.write(<span class="ss">f"&gt;</span><span class="sc">{</span>taxon<span class="sc">}</span><span class="ch">\n</span><span class="sc">{</span>seq<span class="sc">}</span><span class="ch">\n</span><span class="ss">"</span>)</span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a><span class="co"># Escribir particiones en formato RAxML</span></span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> <span class="bu">open</span>(<span class="st">"partitions.txt"</span>, <span class="st">"w"</span>) <span class="im">as</span> f:</span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> gene, s, e <span class="kw">in</span> partitions:</span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>        f.write(<span class="ss">f"DNA, </span><span class="sc">{</span>gene<span class="sc">}</span><span class="ss"> = </span><span class="sc">{</span>s<span class="sc">}</span><span class="ss">-</span><span class="sc">{</span>e<span class="sc">}</span><span class="ch">\n</span><span class="ss">"</span>)</span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a><span class="co"># Verificación</span></span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Supermatriz: </span><span class="sc">{</span><span class="bu">len</span>(sequences)<span class="sc">}</span><span class="ss"> taxones × </span><span class="sc">{</span>gene_length<span class="sc">}</span><span class="ss"> sitios"</span>)</span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Particiones: </span><span class="sc">{</span><span class="bu">len</span>(partitions)<span class="sc">}</span><span class="ss"> genes"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Ejecución:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> concat_alignments.py gene<span class="pp">*</span>.fasta</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Salida típica:</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co"># coi: 657 bp (columnas 1-657)</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co"># cytb: 1140 bp (columnas 658-1797)</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="co"># 16s: 1450 bp (columnas 1798-3247)</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co"># 18s: 1789 bp (columnas 3248-5036)</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co"># rag1: 2904 bp (columnas 5037-7940)</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Supermatriz: 12 taxones × 7940 sitios</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Particiones: 5 genes</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="análisis-particionado-en-iq-tree" class="level2">
+<h2 data-anchor-id="análisis-particionado-en-iq-tree">16.6 Análisis particionado en IQ-TREE</h2>
+<p>IQ-TREE soporta varios modelos de partición:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># === Edge-linked proportional (-spp) ===</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Un solo árbol, pero las longitudes de rama se escalan proporcionalmente</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># entre particiones. Modelo recomendado para la mayoría de casos.</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-s</span> concatenated.fasta <span class="at">-spp</span> partitions.txt <span class="at">-m</span> MFP <span class="at">-B</span> 1000 <span class="at">-pre</span> phylogenomic</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co"># === Edge-linked (-sp) ===</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Un solo árbol, mismas longitudes de rama para todas las particiones.</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Subóptimo si tasas varían entre genes.</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-s</span> concatenated.fasta <span class="at">-sp</span> partitions.txt <span class="at">-m</span> MFP <span class="at">-B</span> 1000 <span class="at">-pre</span> phylo_linked</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="co"># === Edge-unlinked (-s) ===</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Árboles separados por partición (gene trees). Solo útil para diagnóstico</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="co"># de conflicto entre genes.</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-s</span> concatenated.fasta <span class="at">-S</span> partitions.txt <span class="at">-m</span> MFP <span class="at">-B</span> 1000 <span class="at">-pre</span> separate</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="co"># === Partition file con modelos pre-especificados por partición ===</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a><span class="co"># formato partitions.txt:</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a><span class="co">#   DNA, gene1 = 1-657</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a><span class="co">#   DNA, gene2 = 658-1797</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a><span class="co">#   DNA, gene3 = 1798-3247</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Recomendación</strong>: usar <code>-spp</code> (edge-linked proportional) por defecto. Esto permite longitudes de rama proporcionales entre genes, capturando heterogeneidad de tasas sin multiplicar parámetros. <code>-sp</code> asume mismas longitudes (irreal). <code>-s</code> (unlinked) es para análisis exploratorios de conflicto.</p>
+</div>
+</div>
+</section>
+<section id="análisis-particionado-en-raxml-ng" class="level2">
+<h2 data-anchor-id="análisis-particionado-en-raxml-ng">16.7 Análisis particionado en RAxML-NG</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Análisis con partición</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">raxml-ng</span> <span class="at">--all</span> <span class="at">--msa</span> concatenated.fasta <span class="dt">\</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">--model</span> partitions.txt <span class="dt">\</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">--bs-trees</span> 1000 <span class="dt">\</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">--threads</span> 16 <span class="dt">\</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>         <span class="at">--prefix</span> phylogenomic</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Con modelos pre-especificados en partitions.txt:</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="co">#   GTR+I+G, gene1 = 1-657</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co">#   GTR+G, gene2 = 658-1797</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="co">#   HKY+I+G, gene3 = 1798-3247</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="análisis-particionado-en-mrbayes" class="level2">
+<h2 data-anchor-id="análisis-particionado-en-mrbayes">16.8 Análisis particionado en MrBayes</h2>
+<pre class="text"><code>#NEXUS
+BEGIN DATA;
+DIMENSIONS NTAX=12 NCHAR=7940;
+FORMAT DATATYPE=DNA MISSING=? GAP=-;
+MATRIX
+[matriz aquí]
+;
+END;
+
+BEGIN MRBAYES;
+    charset coi   = 1-657;
+    charset cytb  = 658-1797;
+    charset 16s   = 1798-3247;
+    charset 18s   = 3248-5036;
+    charset rag1  = 5037-7940;
+    partition by_gene = 5: coi, cytb, 16s, 18s, rag1;
+    set partition = by_gene;
+    lset applyto=(all) nst=6 rates=invgamma;
+    unlink statefreq=(all) revmat=(all) shape=(all) pinvar=(all);
+    set autoclose=yes nowarn=yes;
+    mcmc ngen=10000000 samplefreq=1000 nchains=4 nruns=2 savebrlens=yes;
+    sumt burnin=2500;
+    sump burnin=2500;
+END;</code></pre>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Warning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong><code>unlink</code></strong>: permite que cada partición tenga sus propios parámetros. Sin <code>unlink</code>, todas las particiones comparten statefreq, revmat, etc. — esto pierde el beneficio de la partición. Para análisis final, siempre <code>unlink</code> de statefreq y revmat. Para shape y pinvar, puede o no deslinkear según caso.</p>
+</div>
+</div>
+</section>
+<section id="estrategias-de-partición" class="level2">
+<h2 data-anchor-id="estrategias-de-partición">16.9 Estrategias de partición</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 46%">
+<col style="width: 27%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Estrategia</th>
+<th>Número de particiones</th>
+<th>Cuándo usar</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Unpartitioned</strong></td>
+<td>1</td>
+<td>Datasets pequeños, genes homogéneos</td>
+</tr>
+<tr class="even">
+<td><strong>By gene</strong></td>
+<td>N genes</td>
+<td>Estándar para filogenómica</td>
+</tr>
+<tr class="odd">
+<td><strong>By codon position</strong></td>
+<td>3N</td>
+<td>Genes codificantes, alta heterogeneidad</td>
+</tr>
+<tr class="even">
+<td><strong>By gene + codon</strong></td>
+<td>3N</td>
+<td>Máxima resolución, datasets grandes</td>
+</tr>
+<tr class="odd">
+<td><strong>By rate category</strong></td>
+<td>Variable</td>
+<td>PartitionFinder (agrupamiento por tasa)</td>
+</tr>
+</tbody>
+</table>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Partición por codón (en IQ-TREE)</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co"># En el archivo partitions.txt:</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co">#   DNA, gene1_pos1 = 1-657\3</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co">#   DNA, gene1_pos2 = 2-657\3</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="co">#   DNA, gene1_pos3 = 3-657\3</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="co">#   DNA, gene2_pos1 = 658-1797\3</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="co">#   ...</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="co"># O dejar que IQ-TREE haga la partición por codón automáticamente:</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-s</span> concatenated.fasta <span class="at">-spp</span> partitions.txt <span class="at">-m</span> MFP+MERGE <span class="at">-rcluster</span> 10 <span class="at">-B</span> 1000</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="co"># -m MFP+MERGE: busca modelo por partición, también considera fusionar particiones similares</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="co"># -rcluster 10: algoritmo PartitionFinder-like (top 10 esquemas)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="comparación-de-estrategias" class="level3">
+<h3 data-anchor-id="comparación-de-estrategias">16.9.1 Comparación de estrategias</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Comparar cuatro estrategias para el mismo dataset</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> strategy <span class="kw">in</span> unpart gene codon gene_codon<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">case</span> <span class="va">$strategy</span> <span class="kw">in</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>        <span class="ss">unpart</span><span class="kw">)</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>            <span class="ex">iqtree2</span> <span class="at">-s</span> concatenated.fasta <span class="at">-m</span> MFP <span class="at">-B</span> 1000 <span class="at">-pre</span> strat_unpart</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>            <span class="cf">;;</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>        <span class="ss">gene</span><span class="kw">)</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>            <span class="ex">iqtree2</span> <span class="at">-s</span> concatenated.fasta <span class="at">-spp</span> partitions_gene.txt <span class="at">-m</span> MFP <span class="at">-B</span> 1000 <span class="at">-pre</span> strat_gene</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>            <span class="cf">;;</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>        <span class="ss">codon</span><span class="kw">)</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>            <span class="ex">iqtree2</span> <span class="at">-s</span> concatenated.fasta <span class="at">-spp</span> partitions_codon.txt <span class="at">-m</span> MFP <span class="at">-B</span> 1000 <span class="at">-pre</span> strat_codon</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>            <span class="cf">;;</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>        <span class="ss">gene_codon</span><span class="kw">)</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>            <span class="ex">iqtree2</span> <span class="at">-s</span> concatenated.fasta <span class="at">-spp</span> partitions_gene_codon.txt <span class="at">-m</span> MFP+MERGE <span class="at">-rcluster</span> 10 <span class="at">-B</span> 1000 <span class="at">-pre</span> strat_gc</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>            <span class="cf">;;</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">esac</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Comparar logL, AIC, BIC</span></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> strategy <span class="kw">in</span> unpart gene codon gene_codon<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>    <span class="va">logL</span><span class="op">=</span><span class="va">$(</span><span class="fu">grep</span> <span class="st">"Log-likelihood"</span> strat_<span class="va">${strategy}</span>.iqtree <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'{print $NF}'</span><span class="va">)</span></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>    <span class="va">aic</span><span class="op">=</span><span class="va">$(</span><span class="fu">grep</span> <span class="st">"AIC"</span> strat_<span class="va">${strategy}</span>.iqtree <span class="kw">|</span> <span class="fu">head</span> <span class="at">-1</span> <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'{print $NF}'</span><span class="va">)</span></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>    <span class="va">bic</span><span class="op">=</span><span class="va">$(</span><span class="fu">grep</span> <span class="st">"BIC"</span> strat_<span class="va">${strategy}</span>.iqtree <span class="kw">|</span> <span class="fu">head</span> <span class="at">-1</span> <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'{print $NF}'</span><span class="va">)</span></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"</span><span class="va">$strategy</span><span class="st">: logL=</span><span class="va">$logL</span><span class="st">, AIC=</span><span class="va">$aic</span><span class="st">, BIC=</span><span class="va">$bic</span><span class="st">"</span></span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="species-tree-methods" class="level2">
+<h2 data-anchor-id="species-tree-methods">16.10 Species tree methods</h2>
+<p>La concatenación asume que <strong>todos los genes comparten la misma historia evolutiva</strong>. Esto puede fallar por:</p>
+<ul>
+<li><strong>ILS (Incomplete Lineage Sorting)</strong>: polimorfismos ancestrales que no se fijan antes de la especiación → genes con historias distintas.</li>
+<li><strong>HGT (Horizontal Gene Transfer)</strong>: especialmente en microorganismos.</li>
+<li><strong>Hibridación</strong>: introesión de genes entre especies.</li>
+</ul>
+<p>Los <strong>species tree methods</strong> construyen árboles por gen individualmente y luego <strong>reconcilian</strong> los gene trees en un species tree, modelando explícitamente ILS bajo el <strong>multi-species coalescent</strong>.</p>
+<section id="astral-mirarab-et-al.-2014" class="level3">
+<h3 data-anchor-id="astral-mirarab-et-al.-2014">16.10.1 ASTRAL (Mirarab et al.&nbsp;2014)</h3>
+<p>ASTRAL estima el species tree maximizando la <strong>quartet frequency</strong>: para cada cuarteto de taxones, encuentra la topología que maximiza el número de cuartetos compartidos con los gene trees.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Instalación</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> install <span class="at">-c</span> bioconda astral <span class="at">-y</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Input: archivo con todos los gene trees en Newick (uno por línea)</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="co"># genetrees.nwk:</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="co">#   (A:0.1,(B:0.2,C:0.3):0.1);</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="co">#   ((A,B):0.1,(C,D):0.2);</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="co">#   ...</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Ejecutar ASTRAL</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="ex">astral</span> <span class="at">-i</span> genetrees.nwk <span class="at">-o</span> species_tree.nwk <span class="at">-q</span> quartets.q</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Con bootstrap:</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a><span class="ex">astral</span> <span class="at">-i</span> genetrees.nwk <span class="at">-o</span> species_tree.nwk <span class="dt">\</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>       <span class="at">--gene-tracker</span> gene_support.txt <span class="dt">\</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>       <span class="at">--branch-annotate</span> 2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="astrid-mp-est-svdquartets" class="level3">
+<h3 data-anchor-id="astrid-mp-est-svdquartets">16.10.2 ASTRID, MP-EST, SVDQuartets</h3>
+<ul>
+<li><strong>ASTRID</strong>: más rápido que ASTRAL, métodos basados en distancias.</li>
+<li><strong>MP-EST</strong>: maximiza la pseudoverosimilitud.</li>
+<li><strong>SVDQuartets</strong> (PAUP*): usa descomposición SVD de patrones de sitios para cuartetos. Sin necesidad de gene trees pre-computados.</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># SVDQuartets en PAUP*</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="ex">paup</span> <span class="at">-n</span> <span class="op">&lt;&lt;EOF</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="st">exe concatenated.nex;</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="st">SVDQuartets nthreads=8 nquartets=100000 bootstrap=1000;</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="st">savetrees file=svd_tree.nwk format=newick brlens=yes;</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Concatenación vs species tree</strong>: para datasets con <strong>alto ILS</strong> (radiaciones recientes, p.&nbsp;ej., Neoaves, Australasian robins), los species tree methods pueden dar topologías más correctas. Para datasets con <strong>bajo ILS</strong> (especies distantes, fósiles), la concatenación es suficiente y más rápida. <strong>Recomendación</strong>: hacer ambos y comparar.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="estadísticas-descriptivas-de-datasets-filogenómicos" class="level2">
+<h2 data-anchor-id="estadísticas-descriptivas-de-datasets-filogenómicos">16.11 Estadísticas descriptivas de datasets filogenómicos</h2>
+<p>Antes de inferir el árbol, conviene describir la supermatriz:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/usr/bin/env bash</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="co"># stats_phylogenomic.sh: estadísticas de supermatriz</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="va">INPUT</span><span class="op">=</span><span class="st">"concatenated.fasta"</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> <span class="op">&lt;&lt;EOF</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="st">from Bio import AlignIO</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="st">from collections import Counter, defaultdict</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="st">import numpy as np</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="st">aln = AlignIO.read("</span><span class="va">$INPUT</span><span class="st">", "fasta")</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="st">n_taxa = len(aln)</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="st">n_sites = aln.get_alignment_length()</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="st"># Datos faltantes y gaps</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a><span class="st">gap_total = 0</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a><span class="st">informative = 0</span></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a><span class="st">for i in range(n_sites):</span></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a><span class="st">    col = str(aln[:, i]).upper()</span></span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a><span class="st">    gap_total += col.count('-') + col.count('?') + col.count('N')</span></span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a><span class="st">    cnt = Counter(c for c in col if c not in '-?N')</span></span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a><span class="st">    if sum(1 for c, n in cnt.items() if n &gt;= 2) &gt;= 2:</span></span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a><span class="st">        informative += 1</span></span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a><span class="st">pct_missing = gap_total / (n_taxa * n_sites) * 100</span></span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a><span class="st">pct_informative = informative / n_sites * 100</span></span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a><span class="st"># Composición por taxón</span></span>
+<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a><span class="st">taxon_completeness = {}</span></span>
+<span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a><span class="st">for rec in aln:</span></span>
+<span id="cb16-30"><a href="#cb16-30" aria-hidden="true" tabindex="-1"></a><span class="st">    seq = str(rec.seq).upper()</span></span>
+<span id="cb16-31"><a href="#cb16-31" aria-hidden="true" tabindex="-1"></a><span class="st">    missing = seq.count('-') + seq.count('?') + seq.count('N')</span></span>
+<span id="cb16-32"><a href="#cb16-32" aria-hidden="true" tabindex="-1"></a><span class="st">    taxon_completeness[rec.id] = (1 - missing/len(seq)) * 100</span></span>
+<span id="cb16-33"><a href="#cb16-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-34"><a href="#cb16-34" aria-hidden="true" tabindex="-1"></a><span class="st">print(f"=== Estadísticas supermatriz ===")</span></span>
+<span id="cb16-35"><a href="#cb16-35" aria-hidden="true" tabindex="-1"></a><span class="st">print(f"Taxones:        {n_taxa}")</span></span>
+<span id="cb16-36"><a href="#cb16-36" aria-hidden="true" tabindex="-1"></a><span class="st">print(f"Sites:          {n_sites}")</span></span>
+<span id="cb16-37"><a href="#cb16-37" aria-hidden="true" tabindex="-1"></a><span class="st">print(f"Sitios informativos: {informative} ({pct_informative:.1f}%)")</span></span>
+<span id="cb16-38"><a href="#cb16-38" aria-hidden="true" tabindex="-1"></a><span class="st">print(f"Datos faltantes: {pct_missing:.2f}%")</span></span>
+<span id="cb16-39"><a href="#cb16-39" aria-hidden="true" tabindex="-1"></a><span class="st">print(f"</span><span class="dt">\n</span><span class="st">Completitud por taxón:")</span></span>
+<span id="cb16-40"><a href="#cb16-40" aria-hidden="true" tabindex="-1"></a><span class="st">for taxon, comp in sorted(taxon_completeness.items()):</span></span>
+<span id="cb16-41"><a href="#cb16-41" aria-hidden="true" tabindex="-1"></a><span class="st">    print(f"  {taxon}: {comp:.1f}%")</span></span>
+<span id="cb16-42"><a href="#cb16-42" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Salida típica:</p>
+<pre class="text"><code>=== Estadísticas supermatriz ===
+Taxones:        12
+Sites:          7940
+Sitios informativos: 4832 (60.8%)
+Datos faltantes: 4.32%
+
+Completitud por taxón:
+  Gorilla_beringei: 99.5%
+  Homo_sapiens:     100.0%
+  Hylobates_lar:    91.2%
+  Macaca_mulatta:   98.7%
+  Pan_paniscus:     99.9%
+  Pan_troglodytes:  99.9%
+  Papio_anubis:     97.8%
+  Pongo_abelii:     95.4%
+  Pongo_pygmaeus:   95.6%
+  Symphalangus:     92.3%
+  Tarsius_syrichta: 78.5%</code></pre>
+</section>
+<section id="limitaciones-de-la-concatenación" class="level2">
+<h2 data-anchor-id="limitaciones-de-la-concatenación">16.12 Limitaciones de la concatenación</h2>
+<section id="ils-incomplete-lineage-sorting" class="level3">
+<h3 data-anchor-id="ils-incomplete-lineage-sorting">16.12.1 ILS (Incomplete Lineage Sorting)</h3>
+<p>Cuando la especiación ocurre más rápido que la fijación de alelos, diferentes loci pueden tener gene trees discordantes con el species tree. La concatenación asume un solo árbol y puede dar una topología <strong>erróneamente muy soportada</strong> (high bootstrap en nodo incorrecto), fenómeno llamado <strong>anomaly zone</strong>.</p>
+<p>Ejemplos clásicos:</p>
+<ul>
+<li><strong>Neoaves</strong>: radiación rápida post-KPg, ILS masivo.</li>
+<li><strong>Australopithecus-Homo-Pan</strong>: ILS documentado entre estos linajes.</li>
+</ul>
+</section>
+<section id="hgt-horizontal-gene-transfer" class="level3">
+<h3 data-anchor-id="hgt-horizontal-gene-transfer">16.12.2 HGT (Horizontal Gene Transfer)</h3>
+<p>En bacterias, muchos genes se transfieren entre especies. Un mismo árbol no puede representar historias contradictorias. Soluciones: <strong>redes filogenéticas</strong> (PhyloNetworks en Julia, SNAQ), o análisis por <strong>tipo de gene</strong> (clustering por función).</p>
+</section>
+<section id="hibridación" class="level3">
+<h3 data-anchor-id="hibridación">16.12.3 Hibridación</h3>
+<p>Especies híbridas o con introgresión (p.&nbsp;ej., <em>Homo sapiens</em> × <em>Homo neanderthalensis</em>) tienen mezcla de historias. Métodos como <strong>D-statistics (ABBA-BABA)</strong> con admixtools detectan introesión.</p>
+</section>
+</section>
+<section id="recursos-computacionales" class="level2">
+<h2 data-anchor-id="recursos-computacionales">16.13 Recursos computacionales</h2>
+<p>Datasets filogenómicos son computacionalmente exigentes:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 48%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Dataset</th>
+<th>Tiempo (1 core)</th>
+<th>Memoria</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>50 taxones × 100 genes × 1000 bp (100k bp)</td>
+<td>~1-4 h ML</td>
+<td>1-2 GB</td>
+</tr>
+<tr class="even">
+<td>100 taxones × 500 genes × 1000 bp (500k bp)</td>
+<td>~12-24 h</td>
+<td>4-8 GB</td>
+</tr>
+<tr class="odd">
+<td>200 taxones × 1000 genes × 1000 bp (1M bp)</td>
+<td>días</td>
+<td>16-32 GB</td>
+</tr>
+<tr class="even">
+<td>1000 taxones × 100 genes (large Tree of Life)</td>
+<td>1-2 semanas</td>
+<td>32-64 GB</td>
+</tr>
+</tbody>
+</table>
+<p>Estrategias:</p>
+<ul>
+<li><strong>Paralelización</strong>: <code>-T 16</code> o más en IQ-TREE/RAxML-NG.</li>
+<li><strong>HPC con SLURM</strong>: para datasets grandes.</li>
+<li><strong>Submuestreo</strong>: si tienes 1000 genes, prueba con 100 random para ver si la topología es estable.</li>
+<li><strong>Bootstraps</strong>: en datasets grandes, usar <strong>ultrafast bootstrap</strong> (<code>-B 1000</code> en IQ-TREE) en vez de standard.</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ejemplo SLURM para HPC</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&gt;</span> submit_phylogenomic.sh <span class="op">&lt;&lt;'EOF'</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="st">#!/bin/bash</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="st">#SBATCH --job-name=phylogenomic</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="st">#SBATCH --nodes=1</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="st">#SBATCH --ntasks=8</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="st">#SBATCH --mem=32G</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="st">#SBATCH --time=72:00:00</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="st">#SBATCH --output=phylo_%j.out</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="st">module load iqtree/2.2</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a><span class="st">iqtree2 -s concatenated.fasta -spp partitions.txt -m MFP -B 1000 -T 8 -pre phylo_run</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a><span class="ex">sbatch</span> submit_phylogenomic.sh</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="ejercicios" class="level2">
+<h2 data-anchor-id="ejercicios">16.14 Ejercicios</h2>
+<section id="ejercicio-1-construir-supermatriz-filogenómica" class="level3">
+<h3 data-anchor-id="ejercicio-1-construir-supermatriz-filogenómica">Ejercicio 1: Construir supermatriz filogenómica</h3>
+<p>Descargar 5 genes ortólogos (COI, Cytb, 16S, 18S, RAG1) de 8 vertebrados. Alinear cada uno con MAFFT. Recortar. Concatenar con AMAS o BioPython. Crear archivo de partición. Ejecutar IQ-TREE con <code>-spp</code> y MFP. Reportar modelo por partición.</p>
+</section>
+<section id="ejercicio-2-comparación-de-estrategias-de-partición" class="level3">
+<h3 data-anchor-id="ejercicio-2-comparación-de-estrategias-de-partición">Ejercicio 2: Comparación de estrategias de partición</h3>
+<p>Sobre la supermatriz del ejercicio 1, comparar 3 estrategias: (a) unpartitioned, (b) por gen (<code>-spp</code>), (c) por codón (1st/2nd/3rd position). Comparar logL, AIC, tiempo de cómputo, topología resultante.</p>
+</section>
+<section id="ejercicio-3-pipeline-astral" class="level3">
+<h3 data-anchor-id="ejercicio-3-pipeline-astral">Ejercicio 3: Pipeline ASTRAL</h3>
+<p>Para cada uno de los 5 genes del ejercicio 1, construir árbol individual con FastTree. Combinar los 5 árboles en un archivo. Ejecutar ASTRAL para obtener árbol de especies. Comparar con el árbol concatenado del ejercicio 1.</p>
+</section>
+</section>
+<section id="soluciones" class="level2">
+<h2 data-anchor-id="soluciones">16.15 Soluciones</h2>
+<section id="solución-ejercicio-1" class="level3">
+<h3 data-anchor-id="solución-ejercicio-1">Solución ejercicio 1</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/usr/bin/env bash</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Ejercicio 1: Construir supermatriz filogenómica de vertebrados</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-euo</span> pipefail</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="va">WORKDIR</span><span class="op">=</span><span class="st">"</span><span class="va">$HOME</span><span class="st">/filogenia_curso/phylogenomic"</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> <span class="st">"</span><span class="va">$WORKDIR</span><span class="st">"</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> <span class="st">"</span><span class="va">$WORKDIR</span><span class="st">"</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Accessions por gen y especie (ejemplo, reemplazar con IDs reales)</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="bu">declare</span> <span class="at">-A</span> <span class="va">GENES</span><span class="op">=</span><span class="va">(</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>    <span class="op">[</span><span class="st">"coi"</span><span class="op">]</span><span class="va">=</span><span class="st">"NC_001564 NC_002008 NC_001643 NC_001645 ..."</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">[</span><span class="st">"cytb"</span><span class="op">]</span><span class="va">=</span><span class="st">"..."</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>    <span class="op">[</span><span class="st">"16s"</span><span class="op">]</span><span class="va">=</span><span class="st">"..."</span></span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">[</span><span class="st">"18s"</span><span class="op">]</span><span class="va">=</span><span class="st">"..."</span></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">[</span><span class="st">"rag1"</span><span class="op">]</span><span class="va">=</span><span class="st">"..."</span></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a><span class="va">)</span></span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Descargar secuencias</span></span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== Paso 1: Descarga ==="</span></span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> gene <span class="kw">in</span> <span class="st">"</span><span class="va">${</span><span class="op">!</span><span class="va">GENES</span><span class="op">[@]</span><span class="va">}</span><span class="st">"</span><span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> acc <span class="kw">in</span> <span class="va">${GENES</span><span class="op">[</span><span class="va">$gene</span><span class="op">]</span><span class="va">}</span><span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a>        <span class="ex">efetch</span> <span class="at">-db</span> nucleotide <span class="at">-id</span> <span class="st">"</span><span class="va">$acc</span><span class="st">"</span> <span class="at">-format</span> fasta <span class="op">&gt;&gt;</span> <span class="st">"</span><span class="va">${gene}</span><span class="st">_raw.fasta"</span></span>
+<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a>        <span class="bu">echo</span> <span class="st">""</span> <span class="op">&gt;&gt;</span> <span class="st">"</span><span class="va">${gene}</span><span class="st">_raw.fasta"</span></span>
+<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">done</span></span>
+<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-27"><a href="#cb19-27" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Alinear cada gen con MAFFT</span></span>
+<span id="cb19-28"><a href="#cb19-28" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== Paso 2: Alineamiento ==="</span></span>
+<span id="cb19-29"><a href="#cb19-29" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> gene <span class="kw">in</span> coi cytb 16s 18s rag1<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb19-30"><a href="#cb19-30" aria-hidden="true" tabindex="-1"></a>    <span class="ex">mafft</span> <span class="at">--auto</span> <span class="st">"</span><span class="va">${gene}</span><span class="st">_raw.fasta"</span> <span class="op">&gt;</span> <span class="st">"</span><span class="va">${gene}</span><span class="st">_aln.fasta"</span></span>
+<span id="cb19-31"><a href="#cb19-31" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb19-32"><a href="#cb19-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-33"><a href="#cb19-33" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Recortar con trimAl</span></span>
+<span id="cb19-34"><a href="#cb19-34" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== Paso 3: Recorte ==="</span></span>
+<span id="cb19-35"><a href="#cb19-35" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> gene <span class="kw">in</span> coi cytb 16s 18s rag1<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb19-36"><a href="#cb19-36" aria-hidden="true" tabindex="-1"></a>    <span class="ex">trimal</span> <span class="at">-in</span> <span class="st">"</span><span class="va">${gene}</span><span class="st">_aln.fasta"</span> <span class="at">-out</span> <span class="st">"</span><span class="va">${gene}</span><span class="st">_trim.fasta"</span> <span class="at">-automated1</span></span>
+<span id="cb19-37"><a href="#cb19-37" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb19-38"><a href="#cb19-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-39"><a href="#cb19-39" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Concatenar con AMAS</span></span>
+<span id="cb19-40"><a href="#cb19-40" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== Paso 4: Concatenación ==="</span></span>
+<span id="cb19-41"><a href="#cb19-41" aria-hidden="true" tabindex="-1"></a><span class="ex">AMAS.py</span> concat <span class="at">-f</span> fasta <span class="at">-d</span> dna <span class="dt">\</span></span>
+<span id="cb19-42"><a href="#cb19-42" aria-hidden="true" tabindex="-1"></a>    <span class="at">-i</span> coi_trim.fasta cytb_trim.fasta 16s_trim.fasta 18s_trim.fasta rag1_trim.fasta <span class="dt">\</span></span>
+<span id="cb19-43"><a href="#cb19-43" aria-hidden="true" tabindex="-1"></a>    <span class="at">-o</span> concatenated.fasta <span class="at">-p</span> partitions.txt</span>
+<span id="cb19-44"><a href="#cb19-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-45"><a href="#cb19-45" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. IQ-TREE con partición y ModelFinder</span></span>
+<span id="cb19-46"><a href="#cb19-46" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== Paso 5: ML particionado ==="</span></span>
+<span id="cb19-47"><a href="#cb19-47" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-s</span> concatenated.fasta <span class="at">-spp</span> partitions.txt <span class="at">-m</span> MFP <span class="at">-B</span> 1000 <span class="at">-T</span> 8 <span class="at">-pre</span> phylo_run</span>
+<span id="cb19-48"><a href="#cb19-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-49"><a href="#cb19-49" aria-hidden="true" tabindex="-1"></a><span class="co"># 6. Reporte</span></span>
+<span id="cb19-50"><a href="#cb19-50" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== REPORTE ==="</span></span>
+<span id="cb19-51"><a href="#cb19-51" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> partitions.txt</span>
+<span id="cb19-52"><a href="#cb19-52" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-A</span> 20 <span class="st">"Best-fit model"</span> phylo_run.iqtree <span class="kw">|</span> <span class="fu">head</span> <span class="at">-25</span></span>
+<span id="cb19-53"><a href="#cb19-53" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Árbol: phylo_run.treefile"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Salida esperada (resumen):</p>
+<pre class="text"><code>DNA, coi = 1-657
+DNA, cytb = 658-1797
+DNA, 16s = 1798-3247
+DNA, 18s = 3248-5036
+DNA, rag1 = 5037-7940
+
+Best-fit model according to AIC:
+  coi:  HKY+I+G4
+  cytb: GTR+I+G4
+  16s:  GTR+I+G4
+  18s:  GTR+I+G4
+  rag1: GTR+G4
+
+Log-likelihood: -47832.156
+AIC: 96310.312</code></pre>
+</section>
+<section id="solución-ejercicio-2" class="level3">
+<h3 data-anchor-id="solución-ejercicio-2">Solución ejercicio 2</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/usr/bin/env bash</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Ejercicio 2: Comparación de estrategias de partición</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-euo</span> pipefail</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Generar partición por codón</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> <span class="op">&lt;&lt;'EOF'</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="st">from collections import defaultdict</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="st">genes = []</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="st">current = 1</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a><span class="st">with open("partitions.txt") as f:</span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a><span class="st">    for line in f:</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a><span class="st">        if "=" in line:</span></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a><span class="st">            parts = line.split("=")[1].strip().split("-")</span></span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a><span class="st">            start, end = int(parts[0]), int(parts[1])</span></span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a><span class="st">            gene = line.split(",")[1].split("=")[0].strip()</span></span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a><span class="st">            length = end - start + 1</span></span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a><span class="st">            # Asegurar múltiplo de 3</span></span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a><span class="st">            length_codons = length // 3</span></span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a><span class="st">            for pos in [1, 2, 3]:</span></span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a><span class="st">                start_pos = current + pos - 1</span></span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a><span class="st">                end_pos = start_pos + (length_codons - 1) * 3</span></span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a><span class="st">                genes.append(f"DNA, {gene}_pos{pos} = {start_pos}-{end_pos}\\3")</span></span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a><span class="st">            current = end_pos + 3  # ajustar si length no múltiplo de 3</span></span>
+<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a><span class="st">with open("partitions_codon.txt", "w") as f:</span></span>
+<span id="cb21-26"><a href="#cb21-26" aria-hidden="true" tabindex="-1"></a><span class="st">    f.write("\n".join(genes) + "\n")</span></span>
+<span id="cb21-27"><a href="#cb21-27" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span>
+<span id="cb21-28"><a href="#cb21-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-29"><a href="#cb21-29" aria-hidden="true" tabindex="-1"></a><span class="co"># Ejecutar 3 estrategias</span></span>
+<span id="cb21-30"><a href="#cb21-30" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== Estrategia a: Unpartitioned ==="</span></span>
+<span id="cb21-31"><a href="#cb21-31" aria-hidden="true" tabindex="-1"></a><span class="bu">time</span> iqtree2 <span class="at">-s</span> concatenated.fasta <span class="at">-m</span> MFP <span class="at">-B</span> 1000 <span class="at">-T</span> 8 <span class="at">-pre</span> strat_unpart</span>
+<span id="cb21-32"><a href="#cb21-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-33"><a href="#cb21-33" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== Estrategia b: Por gen (-spp) ==="</span></span>
+<span id="cb21-34"><a href="#cb21-34" aria-hidden="true" tabindex="-1"></a><span class="bu">time</span> iqtree2 <span class="at">-s</span> concatenated.fasta <span class="at">-spp</span> partitions.txt <span class="at">-m</span> MFP <span class="at">-B</span> 1000 <span class="at">-T</span> 8 <span class="at">-pre</span> strat_gene</span>
+<span id="cb21-35"><a href="#cb21-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-36"><a href="#cb21-36" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== Estrategia c: Por codón (-spp) ==="</span></span>
+<span id="cb21-37"><a href="#cb21-37" aria-hidden="true" tabindex="-1"></a><span class="bu">time</span> iqtree2 <span class="at">-s</span> concatenated.fasta <span class="at">-spp</span> partitions_codon.txt <span class="at">-m</span> MFP <span class="at">-B</span> 1000 <span class="at">-T</span> 8 <span class="at">-pre</span> strat_codon</span>
+<span id="cb21-38"><a href="#cb21-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-39"><a href="#cb21-39" aria-hidden="true" tabindex="-1"></a><span class="co"># Comparar</span></span>
+<span id="cb21-40"><a href="#cb21-40" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== COMPARACIÓN ==="</span></span>
+<span id="cb21-41"><a href="#cb21-41" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> s <span class="kw">in</span> unpart gene codon<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb21-42"><a href="#cb21-42" aria-hidden="true" tabindex="-1"></a>    <span class="va">logL</span><span class="op">=</span><span class="va">$(</span><span class="fu">grep</span> <span class="st">"Log-likelihood"</span> strat_<span class="va">${s}</span>.iqtree <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'{print $NF}'</span><span class="va">)</span></span>
+<span id="cb21-43"><a href="#cb21-43" aria-hidden="true" tabindex="-1"></a>    <span class="va">aic</span><span class="op">=</span><span class="va">$(</span><span class="fu">grep</span> <span class="at">-m1</span> <span class="st">"AIC"</span> strat_<span class="va">${s}</span>.iqtree <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'{print $NF}'</span><span class="va">)</span></span>
+<span id="cb21-44"><a href="#cb21-44" aria-hidden="true" tabindex="-1"></a>    <span class="va">n_params</span><span class="op">=</span><span class="va">$(</span><span class="fu">grep</span> <span class="st">"Parameters:"</span> strat_<span class="va">${s}</span>.iqtree <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'{print $NF}'</span><span class="va">)</span></span>
+<span id="cb21-45"><a href="#cb21-45" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"</span><span class="va">$s</span><span class="st">: logL=</span><span class="va">$logL</span><span class="st">, AIC=</span><span class="va">$aic</span><span class="st">, params=</span><span class="va">$n_params</span><span class="st">"</span></span>
+<span id="cb21-46"><a href="#cb21-46" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb21-47"><a href="#cb21-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-48"><a href="#cb21-48" aria-hidden="true" tabindex="-1"></a><span class="co"># Comparar topologías</span></span>
+<span id="cb21-49"><a href="#cb21-49" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== Distancias RF entre topologías ==="</span></span>
+<span id="cb21-50"><a href="#cb21-50" aria-hidden="true" tabindex="-1"></a><span class="ex">nw_distance</span> <span class="at">-m</span> rf strat_unpart.treefile strat_gene.treefile</span>
+<span id="cb21-51"><a href="#cb21-51" aria-hidden="true" tabindex="-1"></a><span class="ex">nw_distance</span> <span class="at">-m</span> rf strat_gene.treefile strat_codon.treefile</span>
+<span id="cb21-52"><a href="#cb21-52" aria-hidden="true" tabindex="-1"></a><span class="ex">nw_distance</span> <span class="at">-m</span> rf strat_unpart.treefile strat_codon.treefile</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Salida típica:</p>
+<pre class="text"><code>=== COMPARACIÓN ===
+unpart: logL=-47832.156, AIC=96310.312, params=11
+gene:   logL=-45821.847, AIC=92489.694, params=42
+codon:  logL=-44102.341, AIC=88754.682, params=126
+
+Tiempos:
+unpart: 1m 23s
+gene:   4m 56s
+codon:  12m 47s</code></pre>
+<p><strong>Análisis</strong>:</p>
+<ol type="1">
+<li><strong>AIC disminuye</strong> al aumentar partición → mejor ajuste (más modelos, mejor capturan heterogeneidad).</li>
+<li><strong>Tiempo aumenta</strong> exponencialmente con número de particiones.</li>
+<li><strong>Topologías</strong>: suelen ser congruentes en clados fuertes; difieren en nodos cortos.</li>
+<li><strong>Recomendación</strong>: por gen (<code>-spp</code>) ofrece el mejor balance. Por codón solo si tienes tiempo y necesitas máxima resolución.</li>
+</ol>
+</section>
+<section id="solución-ejercicio-3" class="level3">
+<h3 data-anchor-id="solución-ejercicio-3">Solución ejercicio 3</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/usr/bin/env bash</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Ejercicio 3: Pipeline ASTRAL</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-euo</span> pipefail</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Construir árbol individual por gen con FastTree</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== Gene trees con FastTree ==="</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> install <span class="at">-c</span> bioconda fasttree <span class="at">-y</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> gene <span class="kw">in</span> coi cytb 16s 18s rag1<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>    <span class="ex">fasttree</span> <span class="at">-nt</span> <span class="at">-gtr</span> <span class="at">-gamma</span> <span class="st">"</span><span class="va">${gene}</span><span class="st">_trim.fasta"</span> <span class="op">&gt;</span> <span class="st">"</span><span class="va">${gene}</span><span class="st">.nwk"</span></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Combinar todos los gene trees en un archivo</span></span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== Combinando gene trees ==="</span></span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> coi.nwk cytb.nwk 16s.nwk 18s.nwk rag1.nwk <span class="op">&gt;</span> genetrees.nwk</span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Total gene trees: </span><span class="va">$(</span><span class="fu">wc</span> <span class="at">-l</span> <span class="op">&lt;</span> genetrees.nwk<span class="va">)</span><span class="st">"</span></span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Ejecutar ASTRAL</span></span>
+<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== ASTRAL ==="</span></span>
+<span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a><span class="ex">astral</span> <span class="at">-i</span> genetrees.nwk <span class="at">-o</span> species_tree.nwk <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="kw">|</span> <span class="fu">tee</span> astral.log</span>
+<span id="cb23-21"><a href="#cb23-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-22"><a href="#cb23-22" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Comparar con árbol concatenado</span></span>
+<span id="cb23-23"><a href="#cb23-23" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== Comparación topologías ==="</span></span>
+<span id="cb23-24"><a href="#cb23-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Enraizar ambos con outgroup</span></span>
+<span id="cb23-25"><a href="#cb23-25" aria-hidden="true" tabindex="-1"></a><span class="ex">nw_rename</span> <span class="at">-r</span> Tarsius_syrichta species_tree.nwk <span class="op">&gt;</span> species_rooted.nwk</span>
+<span id="cb23-26"><a href="#cb23-26" aria-hidden="true" tabindex="-1"></a><span class="ex">nw_rename</span> <span class="at">-r</span> Tarsius_syrichta phylo_run.treefile <span class="op">&gt;</span> concat_rooted.nwk</span>
+<span id="cb23-27"><a href="#cb23-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-28"><a href="#cb23-28" aria-hidden="true" tabindex="-1"></a><span class="co"># Distancia RF</span></span>
+<span id="cb23-29"><a href="#cb23-29" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Distancia RF (concat vs ASTRAL):"</span></span>
+<span id="cb23-30"><a href="#cb23-30" aria-hidden="true" tabindex="-1"></a><span class="ex">nw_distance</span> <span class="at">-m</span> rf concat_rooted.nwk species_rooted.nwk</span>
+<span id="cb23-31"><a href="#cb23-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-32"><a href="#cb23-32" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Visualizar ambos lado a lado</span></span>
+<span id="cb23-33"><a href="#cb23-33" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== Visualización ==="</span></span>
+<span id="cb23-34"><a href="#cb23-34" aria-hidden="true" tabindex="-1"></a><span class="ex">ete3</span> view <span class="at">-t</span> species_rooted.nwk</span>
+<span id="cb23-35"><a href="#cb23-35" aria-hidden="true" tabindex="-1"></a><span class="ex">ete3</span> view <span class="at">-t</span> concat_rooted.nwk</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Comparación típica:</p>
+<pre class="text"><code>Total gene trees: 5
+
+=== ASTRAL ===
+ASTRAL finished. Species tree: species_tree.nwk
+Quartet score: 0.92
+
+=== Distancia RF (concat vs ASTRAL): 4</code></pre>
+<p><strong>Análisis</strong>:</p>
+<ol type="1">
+<li><strong>ASTRAL da topología similar</strong> a concatenación pero no idéntica.</li>
+<li><strong>Quartet score 0.92</strong>: el species tree explica el 92% de los cuartetos de los gene trees — alto, indica bajo conflicto.</li>
+<li><strong>Diferencias RF = 4</strong>: dos biparticiones discordantes, probablemente nodos internos cortos (ILS).</li>
+<li><strong>Conclusión</strong>: para Hominidae, la concatenación es adecuada (bajo ILS). Para radiaciones recientes (Neoaves), ASTRAL sería preferido.</li>
+</ol>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Important
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Resumen del capítulo</strong>: - Filogenómica = análisis multi-gen o genómico con alta resolución. - Concatenación con partición <code>-spp</code> (edge-linked proportional) es el estándar. - OrthoFinder para identificar ortólogos; AMAS o BioPython para concatenar. - Species tree methods (ASTRAL) para datasets con ILS o conflicto. - Comparar estrategias de partición con AIC/BIC y topologías. - Recursos computacionales: datasets grandes requieren HPC con SLURM.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Pipeline recomendado para filogenómica</strong>: 1. OrthoFinder → single-copy orthologs. 2. MAFFT por gen (proteína primero, luego pal2nal para ADN). 3. trimAl recorte. 4. AMAS concatenación con partition file. 5. IQ-TREE <code>-spp partitions.txt -m MFP -B 1000 -T 8</code>. 6. (Opcional) ASTRAL con gene trees para comparar. 7. Reportar: modelos por partición, AIC, topología con bootstrap.</p>
+</div>
+</div>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/bioden\.github\.io\/bioden_website\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Semillero de Biología del Desarrollo y Plasticidad Neural © 2025. All content licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Sitio web desarrollado por Xavier Clemente García Cevallos</p>
+</div>   
+    <div class="nav-footer-center">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/bioden">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="mailto:bioden@unicauca.edu.co">
+      <i class="bi bi-envelope" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    <div class="cookie-consent-footer"><a href="#" id="open_preferences_center">Cookie Preferences</a></div></div>
+    <div class="nav-footer-right">
+<p>Made with <a href="https://www.r-project.org/"><img src="https://www.r-project.org/Rlogo.png" alt="R" width="25px"></a> and <a href="https://quarto.org/"><img src="https://quarto.org/quarto.png" alt="Quarto" width="65px"></a>.</p>
+</div>
+  </div>
+</footer>
+
+
+
+
+<script src="../../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

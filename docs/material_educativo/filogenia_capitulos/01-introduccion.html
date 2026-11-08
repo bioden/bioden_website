@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Capítulo 1: Introducción a la filogenia molecular – BIODEN</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../logo.png" rel="icon" type="image/png">
+<script src="../../site_libs/cookie-consent/cookie-consent.js"></script>
+<link href="../../site_libs/cookie-consent/cookie-consent.css" rel="stylesheet">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-70f92796293836dceea0045bd755b5b1.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-1242ccc02940432acd87c1b818d9cd49.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-70f92796293836dceea0045bd755b5b1.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+<script type="text/javascript" charset="UTF-8">
+document.addEventListener('DOMContentLoaded', function () {
+cookieconsent.run({
+  "notice_banner_type":"interstitial",
+  "consent_type":"express",
+  "palette":"dark",
+  "language":"en",
+  "page_load_consent_levels":["strictly-necessary"],
+  "notice_banner_reject_button_hide":false,
+  "preferences_center_close_button_hide":false,
+  "website_name":""
+  ,
+"language":"en"
+  });
+});
+</script> 
+  
+<style>html{ scroll-behavior: smooth; }</style>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../logo.png" alt="" class="navbar-logo light-content">
+    <img src="../../logo.png" alt="" class="navbar-logo dark-content">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">BIODEN</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Inicio</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-proyectos" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Proyectos</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-proyectos">    
+        <li>
+    <a class="dropdown-item" href="https://bioden.github.io/XIII_CCB_curso/">
+ <span class="dropdown-text">De la Botánica a la Bioinformática</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../investigacion.html"> 
+<span class="menu-text">Investigación</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../integrantes.html"> 
+<span class="menu-text">Integrantes</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../biosistalks/biosistalks.html"> 
+<span class="menu-text">Biosis Talks</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../material_educativo.html"> 
+<span class="menu-text">Material educativo</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../suplementario.html"> 
+<span class="menu-text">Servicios</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.instagram.com/dbg_unicauca/"> <i class="bi bi-instagram" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.facebook.com/profile.php?id=61583453722433"> <i class="bi bi-facebook" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:bioden@unicauca.edu.co"> <i class="bi bi-envelope" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar"><div class="quarto-margin-header"><div class="margin-header-item">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../../logos/semillero.png" class="img-fluid figure-img"></p>
+<figcaption>Universidad del Cauca</figcaption>
+</figure>
+</div>
+</div></div>
+        
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Capítulo 1: Introducción a la filogenia molecular</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="qué-es-la-filogenia-molecular" class="level2">
+<h2 data-anchor-id="qué-es-la-filogenia-molecular">1.1 ¿Qué es la filogenia molecular?</h2>
+<p>La <strong>filogenia molecular</strong> es la disciplina que reconstruye las relaciones evolutivas entre organismos, genes o secuencias biológicas utilizando datos moleculares (ADN, ARN o proteínas) en lugar de —o junto con— caracteres morfológicos. A diferencia de la sistemática clásica, que se basa en rasgos observables (forma del cráneo, número de vértebras, pigmentación), la filogenia molecular trabaja con caracteres discretos heredados: nucleótidos en posiciones concretas de un gen, aminoácidos en una proteína, o patrones de presencia/ausencia de genes.</p>
+<p>El impacto de esta disciplina en la biología contemporánea es difícil de exagerar. La filogenia molecular ha resuelto debates centenarios sobre el <strong>origen de los eucariotas</strong>, ha permitido rastrear la <strong>dispersión geográfica de pandemias</strong> como el SARS-CoV-2 o el VIH, ha clarificado el <strong>árbol genealógico humano</strong> frente a los neandertales y denisovanos, y ha reformulado por completo la microbiología al revelar la enorme diversidad de procariotas no cultivables. Cada vez que se describe una nueva especie y se ubica en su contexto evolutivo, hay un árbol molecular detrás.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>El término <strong>filogenia</strong> fue acuñado por Ernst Haeckel en 1866, pero su formulación moderna basada en secuencias es obra de figuras como <strong>Walter Fitch</strong>, <strong>Joseph Felsenstein</strong> y <strong>Masatoshi Nei</strong> durante las décadas de 1970 y 1980.</p>
+</div>
+</div>
+</section>
+<section id="conceptos-básicos-de-árboles-filogenéticos" class="level2">
+<h2 data-anchor-id="conceptos-básicos-de-árboles-filogenéticos">1.2 Conceptos básicos de árboles filogenéticos</h2>
+<p>Un <strong>árbol filogenético</strong> es un grafo conexo acíclico que representa las relaciones de ancestry-descendencia entre un conjunto de unidades taxonómicas operativas (OTUs, <em>operational taxonomic units</em>). En filogenia molecular, las OTUs son típicamente secuencias (un gen, un genoma, una proteína).</p>
+<section id="topología-nodos-y-ramas" class="level3">
+<h3 data-anchor-id="topología-nodos-y-ramas">Topología, nodos y ramas</h3>
+<ul>
+<li><strong>Topología</strong>: la forma del árbol, es decir, qué nodos están conectados con cuáles, sin importar (todavía) la longitud de las ramas ni la posición de la raíz.</li>
+<li><strong>Nodos terminales</strong> u <strong>hojas</strong> (<em>leaves/tips</em>): las secuencias actuales que tenemos en la mano. En un árbol de 5 primates, hay 5 hojas.</li>
+<li><strong>Nodos internos</strong>: puntos hipotéticos que representan ancestros comunes. Un árbol con <span class="math inline">\(n\)</span> hojas enraizado tiene <span class="math inline">\(n-1\)</span> nodos internos; uno no enraizado tiene <span class="math inline">\(n-2\)</span>.</li>
+<li><strong>Ramas</strong> (<em>branches/edges</em>): conectan nodos. Las <strong>ramas internas</strong> conectan dos nodos internos o un nodo interno con una hoja; la <strong>rama basal</strong> conecta la raíz con el resto.</li>
+</ul>
+</section>
+<section id="árbol-enraizado-vs-no-enraizado" class="level3">
+<h3 data-anchor-id="árbol-enraizado-vs-no-enraizado">Árbol enraizado vs no enraizado</h3>
+<p>Un <strong>árbol enraizado</strong> tiene un nodo especial —la <strong>raíz</strong>— que define la dirección del tiempo evolutivo. Permite hablar de ancestros y descendientes, de clados monofiléticos y de relaciones “hermano-de”. Un <strong>árbol no enraizado</strong> solo especifica vecindades: quién está cerca de quién, pero no el sentido del flujo evolutivo.</p>
+<p>Para enraizar un árbol necesitamos información adicional, habitualmente:</p>
+<ol type="1">
+<li>Un <strong>outgroup</strong> (grupo externo) cuya divergencia con el resto sea anterior a cualquier divergencia dentro del grupo de estudio.</li>
+<li>Un <strong>reloj molecular</strong> (cuando asumimos tasas constantes y usamos información temporal externa).</li>
+<li>Un punto medio entre las dos hojas más lejanas (método <strong>midpoint rooting</strong>, asume simetría de tasas).</li>
+</ol>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Warning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Un árbol obtenido directamente por Maximum Likelihood o métodos de distancia es, por construcción, <strong>no enraizado</strong>. Cualquier enraizado posterior es una decisión del analista, no una consecuencia de los datos.</p>
+</div>
+</div>
+</section>
+<section id="longitudes-de-rama" class="level3">
+<h3 data-anchor-id="longitudes-de-rama">Longitudes de rama</h3>
+<p>La longitud de una rama se mide típicamente en <strong>substituciones por sitio</strong> (no en años). Si una rama tiene longitud 0.1, eso significa que se espera que, en cada sitio de la secuencia, haya ocurrido en promedio 0.1 substituciones a lo largo de esa rama. Sumar las longitudes desde la raíz hasta una hoja da el <strong>path length</strong> total, que se correlaciona con la divergencia observada.</p>
+</section>
+<section id="cladograma-vs-filograma-vs-cronograma" class="level3">
+<h3 data-anchor-id="cladograma-vs-filograma-vs-cronograma">Cladograma vs filograma vs cronograma</h3>
+<ul>
+<li><strong>Cladograma</strong>: muestra solo la topología, sin importar longitudes ni tiempos.</li>
+<li><strong>Filograma</strong> (o <em>phylogram</em>): muestra topología <strong>y</strong> longitudes de rama (substituciones por sitio).</li>
+<li><strong>Cronograma</strong>: muestra topología <strong>y</strong> tiempos (en millones de años o en absoluto). Requiere calibración con fósiles o reloj molecular.</li>
+</ul>
+</section>
+</section>
+<section id="tipos-de-datos-moleculares" class="level2">
+<h2 data-anchor-id="tipos-de-datos-moleculares">1.3 Tipos de datos moleculares</h2>
+<section id="adn" class="level3">
+<h3 data-anchor-id="adn">ADN</h3>
+<p>Cuatro estados posibles por sitio: <strong>A, C, G, T</strong>. Las secuencias de ADN pueden ser:</p>
+<ul>
+<li><strong>Codificantes</strong>: agrupadas en codones de 3 nucleótidos. Cada 3 posiciones definen un aminoácido. La primera y segunda posición del codón están más conservadas que la tercera (debido a la redundancia del código genético).</li>
+<li><strong>No codificantes</strong>: intrones, regiones intergénicas, microsatélites. Típicamente más variables.</li>
+<li><strong>ADN mitocondrial</strong>: alto número de copias, herencia materna, tasa de mutación elevada. Clásico para estudios poblacionales y de especies cercanas (COI, citocromo b, D-loop).</li>
+<li><strong>ADN cloroplástico</strong> (en plantas): herencia normalmente materna, bajo ritmo de recombinación.</li>
+</ul>
+</section>
+<section id="arn" class="level3">
+<h3 data-anchor-id="arn">ARN</h3>
+<p>El ARN usa <strong>uracilo (U)</strong> en lugar de timina (T). Aunque en la práctica bioinformática las secuencias de “ARN” se almacenan con frecuencia como ADN (T en lugar de U), hay casos donde importa distinguir:</p>
+<ul>
+<li><strong>ARN mensajero (mRNA)</strong>: secuencia codificante madura, sin intrones (ya spliced).</li>
+<li><strong>ARN ribosómico (rRNA)</strong>: 16S (bacterias), 18S (eucariotas), 23S/28S, 5S, 5.8S. Estructura secundaria conservada, esenciales para filogenias profundas.</li>
+<li><strong>ARN de transferencia (tRNA)</strong>: corto (~70-90 nt), estructura secundaria en hoja de trébol.</li>
+</ul>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>El gen <strong>16S rRNA</strong> es el estántum <em>gold</em> de la microbiología ambiental. Para filogenias profundas (entre dominios) se usan combinaciones de 16S + 23S, o el gen ARNasa P.</p>
+</div>
+</div>
+<p>Para ARN estructural, alinear solo la secuencia primaria pierde información. Herramientas como <strong>RNAalifold</strong>, <strong>LocARNA</strong> o <strong>MAFFT –qinsi</strong> incorporan estructura secundaria en el alineamiento.</p>
+</section>
+<section id="proteínas" class="level3">
+<h3 data-anchor-id="proteínas">Proteínas</h3>
+<p>Las proteínas usan <strong>20 aminoácidos</strong> estándar. Tienen varias ventajas sobre el ADN para filogenias profundas:</p>
+<ul>
+<li>Solo 20 estados (frente a 4) → más información por sitio.</li>
+<li>Menos saturación (la sustitución de un aminoácido por otro suele ser más conservadora).</li>
+<li>Modelos empíricos de sustitución muy refinados (PAM, BLOSUM, JTT, WAG, LG, mtZOA…).</li>
+</ul>
+<p>Típicamente se alinean proteínas para reconstruir relaciones evolutivas que superan los ~500 millones de años, mientras que el ADN se prefiere para divergencias recientes donde la información sinónima es informativa.</p>
+</section>
+</section>
+<section id="representación-de-árboles" class="level2">
+<h2 data-anchor-id="representación-de-árboles">1.4 Representación de árboles</h2>
+<section id="formato-newick" class="level3">
+<h3 data-anchor-id="formato-newick">Formato Newick</h3>
+<p>Notación compacta basada en paréntesis anidados. Las hojas se nombran, los nodos internos se representan por paréntesis agrupando, y las longitudes de rama se indican con <code>:numero</code>.</p>
+<pre class="text"><code>(A:0.1,(B:0.2,C:0.3):0.1);</code></pre>
+<p>Interpretación: hay un nodo raíz; A se separa primero con rama 0.1; luego un nodo interno con rama 0.1 del que salen B (0.2) y C (0.3).</p>
+<p>Algunas extensiones:</p>
+<ul>
+<li><code>)</code> seguido de <code>:longitud</code> indica longitud de rama interna.</li>
+<li><code>)</code> seguido de un nombre indica <strong>label</strong> de nodo interno (a veces el ancestro hipotético).</li>
+<li><code>[&amp;label=valor]</code> para anotaciones en formato NHX (Newick eXtended).</li>
+</ul>
+</section>
+<section id="formato-nexus" class="level3">
+<h3 data-anchor-id="formato-nexus">Formato Nexus</h3>
+<p>Más verboso, en bloques. Permite anotaciones ricas:</p>
+<pre class="text"><code>#NEXUS
+BEGIN TREES;
+  tree tree1 = [&amp;R] ((A:0.1,B:0.2):0.1,C:0.3);
+END;</code></pre>
+<p>Lo usan MrBayes, BEAST2, FigTree, PAUP* y Mesquite.</p>
+</section>
+<section id="phyloxml" class="level3">
+<h3 data-anchor-id="phyloxml">PhyloXML</h3>
+<p>Formato XML que permite anotar eventos (duplicaciones, transferencias), tasas, intervalos de confianza, colores. Muy verboso pero muy expresivo:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode xml code-with-copy"><code class="sourceCode xml"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>&lt;<span class="kw">phyloxml</span> <span class="ot">xmlns=</span><span class="st">"http://www.phyloxml.org"</span>&gt;</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  &lt;<span class="kw">phylogeny</span> <span class="ot">rooted=</span><span class="st">"true"</span>&gt;</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    &lt;<span class="kw">clade</span>&gt;</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>      &lt;<span class="kw">name</span>&gt;root&lt;/<span class="kw">name</span>&gt;</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>      &lt;<span class="kw">clade</span>&gt;&lt;<span class="kw">name</span>&gt;A&lt;/<span class="kw">name</span>&gt;&lt;/<span class="kw">clade</span>&gt;</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    &lt;/<span class="kw">clade</span>&gt;</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  &lt;/<span class="kw">phylogeny</span>&gt;</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>&lt;/<span class="kw">phyloxml</span>&gt;</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="métodos-de-reconstrucción-filogenética" class="level2">
+<h2 data-anchor-id="métodos-de-reconstrucción-filogenética">1.5 Métodos de reconstrucción filogenética</h2>
+<p>Existen cuatro familias principales. Cada una tiene supuestos distintos y costos computacionales distintos.</p>
+<section id="métodos-de-distancia" class="level3">
+<h3 data-anchor-id="métodos-de-distancia">Métodos de distancia</h3>
+<p>Calculan primero una <strong>matriz de distancias</strong> entre pares de secuencias (corrección de Kimura 2 parámetros, etc.) y luego agrupan. Los algoritmos clásicos son:</p>
+<ul>
+<li><strong>UPGMA</strong>: asume reloj molecular estricto. Produce árboles ultramétricos. Apenas se usa en la práctica moderna.</li>
+<li><strong>Neighbor-Joining (NJ)</strong>: no asume reloj. Muy rápido, razonablemente preciso. Útil como primer árbol guía.</li>
+</ul>
+</section>
+<section id="parsimonia" class="level3">
+<h3 data-anchor-id="parsimonia">Parsimonia</h3>
+<p>Busca el árbol que requiere el <strong>mínimo número de substituciones</strong> para explicar los datos. Implementada por <strong>Fitch</strong>, <strong>Wagner</strong> y el programa <strong>TNT</strong> (con búsqueda mediante ratchet y drifting). La parsimonia es rápida y conceptualmente limpia, pero sufre de <strong>atracción de ramas largas</strong> cuando hay heterogeneidad de tasas.</p>
+</section>
+<section id="maximum-likelihood-ml" class="level3">
+<h3 data-anchor-id="maximum-likelihood-ml">Maximum Likelihood (ML)</h3>
+<p>Busca el árbol <span class="math inline">\(\tau\)</span> y los parámetros del modelo <span class="math inline">\(\theta\)</span> que maximizan la probabilidad de los datos:</p>
+<p><span class="math display">\[
+\hat{\tau}, \hat{\theta} = \arg\max_{\tau, \theta} P(D \mid \tau, \theta)
+\]</span></p>
+<p>Software clave: <strong>IQ-TREE</strong> (ultra-rápido, con selección automática de modelo y bootstrap ultra-rápido UFboot2), <strong>RAxML-NG</strong> (sucesor de RAxML, robustez y escalabilidad), y el clásico <strong>PHYML</strong>.</p>
+</section>
+<section id="métodos-bayesianos" class="level3">
+<h3 data-anchor-id="métodos-bayesianos">Métodos Bayesianos</h3>
+<p>Calculan la <strong>distribución posterior</strong> de árboles usando MCMC (Markov Chain Monte Carlo). El software principal es <strong>MrBayes</strong> (clásico, fácil de usar) y <strong>BEAST2</strong> (orientado a estimar tiempos divergentes y reloj molecular).</p>
+<p>La salida bayesiana no es un único árbol sino una <strong>muestra de la distribución posterior</strong>; el árbol consenso y las probabilidades posteriores se derivan de ella.</p>
+</section>
+</section>
+<section id="soporte-de-ramas" class="level2">
+<h2 data-anchor-id="soporte-de-ramas">1.6 Soporte de ramas</h2>
+<p>Un árbol por sí solo es una estimación puntual. Necesitamos cuantificar la <strong>incertidumbre</strong>:</p>
+<ul>
+<li><strong>Bootstrap Felsenstein (BP)</strong>: remuestrea sitios con reemplazo <span class="math inline">\(N\)</span> veces (típicamente 100 o 1000), reconstruye el árbol y reporta la fracción de réplicas que contienen cada clado. &gt;70% suele considerarse bueno, &gt;95% excelente (con ML clásico).</li>
+<li><strong>UFboot2 (IQ-TREE)</strong>: bootstrap ultra-rápido basado en aproximaciones; se detiene automáticamente cuando las probabilidades se estabilizan. Recomendación: 1000 replicaciones, umbral de parada 0.5.</li>
+<li><strong>SH-aLRT</strong>: test de razón de verosimilitud aproximado por Shimodaira-Hasegawa. Rápido. Un valor ≥80% se considera evidencia fuerte.</li>
+<li><strong>Posterior probability (PP)</strong>: en bayesiano. Valores ≥0.95 se consideran fuertes.</li>
+</ul>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>IQ-TREE permite combinar <strong>SH-aLRT + UFboot2</strong>: <code>--alrt 1000 -B 1000</code>. Se suele aceptar como bien soportado un clado con SH-aLRT ≥ 80% <strong>y</strong> UFboot2 ≥ 95%.</p>
+</div>
+</div>
+</section>
+<section id="homología-ortólogos-parólogos-xenólogos" class="level2">
+<h2 data-anchor-id="homología-ortólogos-parólogos-xenólogos">1.7 Homología: ortólogos, parólogos, xenólogos</h2>
+<p>Dos secuencias son <strong>homólogas</strong> si derivan de un ancestro común. La homología es el requisito previo de cualquier filogenia: alinear secuencias que no son homólogas no tiene sentido biológico.</p>
+<p>Dentro de la homología hay tres subtipos:</p>
+<ul>
+<li><strong>Ortólogos</strong>: separados por <strong>especiación</strong>. Típicamente conservan la misma función. Ideales para construir árboles de especies.</li>
+<li><strong>Parólogos</strong>: separados por <strong>duplicación</strong> dentro del mismo genoma. Pueden diverger funcionalmente.</li>
+<li><strong>Xenólogos</strong>: separados por <strong>transferencia horizontal</strong> entre linajes distintos. Comunes en bacterias.</li>
+</ul>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Warning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Mezclar ortólogos y parólogos en el mismo árbol produce un árbol que NO refleja la historia de las especies, sino una mezcla de duplicaciones y especiaciones. Por eso es imprescindible identificarlos antes de alinear.</p>
+</div>
+</div>
+</section>
+<section id="monofilia-parafilia-polifilia" class="level2">
+<h2 data-anchor-id="monofilia-parafilia-polifilia">1.8 Monofilia, parafilia, polifilia</h2>
+<ul>
+<li><strong>Monofilético</strong> (clado): un grupo que incluye un ancestro común y <strong>todos</strong> sus descendientes. Ejemplo: Mammalia.</li>
+<li><strong>Parafilético</strong>: incluye al ancestro común pero <strong>no</strong> a todos los descendientes. Ejemplo clásico: Reptilia, que excluye Aves.</li>
+<li><strong>Polofilético</strong>: incluye especies descendientes de <strong>más de un ancestro común inmediato</strong>. Ejemplo: “animales que vuelan” (incluye aves, murciélagos e insectos).</li>
+</ul>
+<p>La sistemática cladística moderna acepta solo <strong>grupos monofiléticos</strong> como taxones válidos.</p>
+</section>
+<section id="árbol-de-especies-vs-árbol-de-genes" class="level2">
+<h2 data-anchor-id="árbol-de-especies-vs-árbol-de-genes">1.9 Árbol de especies vs árbol de genes</h2>
+<ul>
+<li><strong>Árbol de especies</strong>: representa la historia de divergencia de linajes (especiación). Idealmente se obtiene de ortólogos uno-a-uno.</li>
+<li><strong>Árbol de genes</strong>: representa la historia de un locus concreto, que puede incluir duplicaciones, pérdidas y transferencias. Puede discordar con el árbol de especies.</li>
+</ul>
+<p>La <strong>coalescencia incompleta</strong> (<em>incomplete lineage sorting</em>) es una causa importante de discordancia entre árbol de genes y árbol de especies: si una población ancestral era polimórfica para un locus, las copias que se fijan en cada linaje hija pueden no reflejar la verdadera especiación.</p>
+</section>
+<section id="limitaciones-de-la-filogenia-molecular" class="level2">
+<h2 data-anchor-id="limitaciones-de-la-filogenia-molecular">1.10 Limitaciones de la filogenia molecular</h2>
+<ul>
+<li><strong>Saturación</strong>: en sitios muy variables, substituciones múltiples enmascaran las originales. Las distancias observadas subestiman las reales.</li>
+<li><strong>Atracción de ramas largas (LBA)</strong>: linajes con tasas altas parecen artificialmente cercanos por convergencia. Clásico problema de parsimonia, también presente en ML si el modelo es pobre.</li>
+<li><strong>Transferencia horizontal de genes (HGT)</strong>: rompe el supuesto de árbol vertical. Muy común en procariotas. Requiere representar relaciones como <strong>redes</strong>, no árboles.</li>
+<li><strong>Heterogeneidad de tasas entre sitios</strong>: ignorarla lleva a subestimar varianzas y a errores topológicos. Solución: modelo <strong>Gamma</strong> (+G) o partición por gen/codon.</li>
+<li><strong>Selección de modelo</strong>: usar un modelo demasiado simple (JC69 para proteínas remotas) introduce sesgo sistemático.</li>
+</ul>
+</section>
+<section id="ejemplo-conceptual-primates-y-citocromo-b" class="level2">
+<h2 data-anchor-id="ejemplo-conceptual-primates-y-citocromo-b">1.11 Ejemplo conceptual: primates y citocromo b</h2>
+<p>Imaginemos que queremos reconstruir la filogenia de cinco primates: <em>Homo sapiens</em>, <em>Pan troglodytes</em>, <em>Gorilla gorilla</em>, <em>Pongo pygmaeus</em> y <em>Macaca mulatta</em> (outgroup). El gen <strong>citocromo b</strong> (Cytb) del genoma mitocondrial tiene ~1140 pb, evoluciona a una tasa que discrimina bien entre estos taxones y apenas tiene indels. Procedimiento resumido:</p>
+<ol type="1">
+<li>Descargar las cinco secuencias desde NCBI (capítulo 3).</li>
+<li>Alinearlas con MAFFT (capítulo 5).</li>
+<li>Seleccionar modelo de substitución (GTR+G probablemente) con ModelTest-ng.</li>
+<li>Reconstruir el árbol con IQ-TREE (<code>-m MFP -B 1000 -alrt 1000</code>).</li>
+<li>Enraizar con <em>Macaca</em> como outgroup.</li>
+<li>Visualizar con FigTree.</li>
+</ol>
+<p>El árbol esperado muestra que <em>Homo</em> y <em>Pan</em> son hermanos, que <em>Gorilla</em> es el grupo externo de ellos, y que <em>Pongo</em> se separó antes. Esto concuerda con evidencia morfológica, karyotípica y genómica.</p>
+</section>
+<section id="software-clave-del-curso" class="level2">
+<h2 data-anchor-id="software-clave-del-curso">1.12 Software clave del curso</h2>
+<ul>
+<li><strong>MAFFT</strong> y <strong>MUSCLE5</strong>: alineamiento múltiple.</li>
+<li><strong>IQ-TREE</strong>, <strong>RAxML-NG</strong>: Maximum Likelihood.</li>
+<li><strong>MrBayes</strong>, <strong>BEAST2</strong>: inferencia bayesiana y datado.</li>
+<li><strong>ModelTest-ng</strong>, <strong>ProtTest</strong>: selección de modelos.</li>
+<li><strong>trimAl</strong>, <strong>Gblocks</strong>: recorte de alineamientos.</li>
+<li><strong>FigTree</strong>, <strong>ete3</strong>: visualización.</li>
+</ul>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Important
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Todas estas herramientas se instalan vía Bioconda dentro de un único entorno <code>filogenia</code>, que configuraremos en el <strong>Capítulo 2</strong>.</p>
+</div>
+</div>
+</section>
+<section id="ejercicios" class="level2">
+<h2 data-anchor-id="ejercicios">Ejercicios</h2>
+<section id="ejercicio-1" class="level3">
+<h3 data-anchor-id="ejercicio-1">Ejercicio 1</h3>
+<p>Dado el árbol Newick:</p>
+<pre class="text"><code>(A:0.1,(B:0.2,(C:0.3,D:0.4):0.1):0.1);</code></pre>
+<p>Dibújalo a mano (o en papel cuadriculado) identificando: raíz, nodos internos, hojas y longitudes de rama. Indica si está enraizado o no, y por qué.</p>
+</section>
+<section id="ejercicio-2" class="level3">
+<h3 data-anchor-id="ejercicio-2">Ejercicio 2</h3>
+<p>Investiga y lista <strong>tres ejemplos biológicos</strong> concretos donde la filogenia molecular haya sido clave. Para cada uno, menciona: (a) el problema biológico, (b) los datos moleculares utilizados, (c) la conclusión principal.</p>
+</section>
+<section id="ejercicio-3" class="level3">
+<h3 data-anchor-id="ejercicio-3">Ejercicio 3</h3>
+<p>Explica con un ejemplo concreto la diferencia entre <strong>ortólogos</strong> y <strong>parólogos</strong>. ¿Por qué es importante distinguirlos antes de construir un árbol filogenético?</p>
+</section>
+</section>
+<section id="soluciones" class="level2">
+<h2 data-anchor-id="soluciones">Soluciones</h2>
+<section id="solución-ejercicio-1" class="level3">
+<h3 data-anchor-id="solución-ejercicio-1">Solución Ejercicio 1</h3>
+<pre class="text"><code>                  raíz
+                  /   \
+            A:0.1/     \:0.1
+              A        nodo_i1
+                       /   \
+                 B:0.2/     \:0.1
+                   B        nodo_i2
+                            /   \
+                      C:0.3/     \:0.4
+                        C         D</code></pre>
+<p><strong>Análisis</strong>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Podemos cargar el árbol en R (paquete ape) para inspeccionarlo:</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co"># R -e 'library(ape); t &lt;- read.tree(text="(A:0.1,(B:0.2,(C:0.3,D:0.4):0.1):0.1);"); plot(t); str(t)'</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<ul>
+<li><strong>Raíz</strong>: el nodo inicial del cual se separa A (rama 0.1) del resto (rama 0.1). El árbol está escrito como enraizado: hay un punto claro de partida.</li>
+<li><strong>Nodos internos</strong>: dos: el nodo ancestral a B, C, D; y el nodo ancestral a C y D.</li>
+<li><strong>Hojas</strong>: A, B, C, D (cuatro).</li>
+<li><strong>Longitudes</strong>: A=0.1, B=0.2, C=0.3, D=0.4, rama interna hacia B/C/D=0.1, rama interna hacia C/D=0.1.</li>
+<li><strong>¿Enraizado?</strong> Sí, formalmente: la presencia de una rama externa (la que conduce a A) define la raíz. En la práctica Newick no especifica enraizado vs no enraizado explícitamente, pero la topología con un paréntesis que abre el árbol entero se interpreta como enraizada. Si el árbol fuese <code>((A,B),(C,D));</code> sería un cuarteto no enraizado.</li>
+</ul>
+</section>
+<section id="solución-ejercicio-2" class="level3">
+<h3 data-anchor-id="solución-ejercicio-2">Solución Ejercicio 2</h3>
+<ol type="1">
+<li><p><strong>Origen de los eucariotas</strong>. Datos: ARN ribosómico pequeño (18S rRNA) y genes de ARNasa P y M (ARN) en los tres dominios. Conclusión (Guy &amp; Field, 2018 y posteriores): los eucariotas surgieron dentro de un clado Archaea (Asgard archaea), confirmando el árbol “de dos dominios” frente al “de tres dominios”.</p></li>
+<li><p><strong>Filogenia de SARS-CoV-2 durante la pandemia COVID-19</strong>. Datos: genomas virales completos depositados en GISAID y NCBI (ADN copiado del ARN viral mediante RT-PCR; ~30 kb). Conclusión: identificación de variantes (Alpha, Delta, Ómicron), rastreo de rutas de introducción país-a-país, y detección de recombinación entre linajes.</p></li>
+<li><p><strong>Origen humano y mezcla con homininos arcaicos</strong>. Datos: genomas nucleares de neandertales y denisovanos (ADN antiguo recuperado de huesos) comparados con humanos modernos. Conclusión: los eurasiáticos modernos llevan ~1-2% de ADN neandertal; poblaciones de Oceanía llevan hasta ~5% de ADN denisovano, evidencia de mestizaje inter-específico.</p></li>
+</ol>
+</section>
+<section id="solución-ejercicio-3" class="level3">
+<h3 data-anchor-id="solución-ejercicio-3">Solución Ejercicio 3</h3>
+<p><strong>Ejemplo</strong>: el gen de la <strong>hemoglobina</strong> en vertebrados existe en dos copias: <strong>HBA</strong> (alfa-hemoglobina) y <strong>HBB</strong> (beta-hemoglobina). Estas dos copias surgieron por una duplicación ancestral previa a la divergencia de todos los vertebrados actuales.</p>
+<ul>
+<li><strong>HBA de humano</strong> vs <strong>HBA de chimpancé</strong>: son <strong>ortólogos</strong> — se separaron por la especiación humano/chimpancé. Conservan la misma función (cadena alfa de la hemoglobina adulta).</li>
+<li><strong>HBA de humano</strong> vs <strong>HBB de humano</strong>: son <strong>parólogos</strong> — se separaron por duplicación dentro del genoma de un ancestro común.</li>
+</ul>
+<p><strong>Importancia de distinguirlos</strong>:</p>
+<ul>
+<li>Si quiero un <strong>árbol de especies</strong> que compare humano, chimpancé y perro, debo alinear <strong>solo ortólogos</strong> (HBA humano + HBA chimpancé + HBA perro). Mezclarlos con HBB generaría un árbol donde la duplicación ancestral aparecería mezclada con la especiación.</li>
+<li>Si mezclo parólogos y ortólogos, obtendría un árbol como <code>((HBA_humano, HBB_humano), (HBA_chimp, HBB_chimp))</code>, lo cual <strong>falsamente</strong> sugiere que humano y chimpancé no son tan cercanos entre sí como las dos copias humanas lo son entre sí. Esto es un error de interpretación.</li>
+<li>Distinguirlos requiere buscar primero el árbol de genes (con todos los parólogos) y reconstruir la historia de duplicaciones — habitualmente con herramientas como <strong>OrthoFinder</strong>, <strong>GeneTree</strong> o bases de datos como <strong>OMA</strong> y <strong>InParanoid</strong>.</li>
+</ul>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/bioden\.github\.io\/bioden_website\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Semillero de Biología del Desarrollo y Plasticidad Neural © 2025. All content licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Sitio web desarrollado por Xavier Clemente García Cevallos</p>
+</div>   
+    <div class="nav-footer-center">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/bioden">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="mailto:bioden@unicauca.edu.co">
+      <i class="bi bi-envelope" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    <div class="cookie-consent-footer"><a href="#" id="open_preferences_center">Cookie Preferences</a></div></div>
+    <div class="nav-footer-right">
+<p>Made with <a href="https://www.r-project.org/"><img src="https://www.r-project.org/Rlogo.png" alt="R" width="25px"></a> and <a href="https://quarto.org/"><img src="https://quarto.org/quarto.png" alt="Quarto" width="65px"></a>.</p>
+</div>
+  </div>
+</footer>
+
+
+
+
+<script src="../../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

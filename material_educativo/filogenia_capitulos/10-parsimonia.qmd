@@ -1,0 +1,535 @@
+---
+title: "Capítulo 10: Maximum Parsimony con TNT"
+---
+
+## 10.1 ¿Qué es Maximum Parsimonia?
+
+**Maximum Parsimony (MP)** es el criterio filogenético más antiguo aún en uso. Su principio es mínimo: **entre todos los árboles posibles, el mejor es el que requiere el menor número total de cambios evolutivos** (sustituciones, inserciones, deleciones, cambios de estado de un carácter morfológico) para explicar las secuencias observadas.
+
+Es una formulación directa de la **navaja de Ockham**: si dos hipótesis explican los datos, preferimos la más simple. En filogenia, "simple" = menor número de pasos.
+
+La **longitud del árbol (L)** se define como la suma, sobre todos los sitios del alineamiento, del número mínimo de cambios necesarios para explicar ese sitio dado el árbol. Optimizar MP equivale a encontrar el árbol que minimiza L.
+
+::: callout-note
+MP **no asume ningún modelo explícito de sustitución**: a cada cambio le asigna el mismo coste (1 paso) salvo que se defina una matriz de costes. Esto lo hace atractivo para datos morfológicos, para los que no conocemos bien el modelo, pero también es su debilidad: ignora la **frecuencia esperada** de distintos tipos de sustituciones (transiciones vs. transversiones, p. ej.).
+:::
+
+## 10.2 Conceptos clave
+
+### 10.2.1 Sitio informativo vs. no informativo
+
+Un sitio es **informativo para parsimonia** solo si **al menos dos taxones comparten un estado y al menos otros dos taxones comparten otro estado distinto**. Solo estos sitios pueden discriminar entre topologías.
+
+| Tipo | Patrón | ¿Informativo? |
+|------|--------|---------------|
+| Constante | `AAAAA` | No |
+| Singleton | `AAGAA` | No |
+| Informativo simple | `AAGGA` | Sí (2 A, 2 G) |
+| Informativo triestatal | `AACGT` | Sí |
+
+::: callout-warning
+Los sitios constantes y los **singletons** (un solo taxón con estado distinto) **no contribuyen a elegir la topología** bajo Fitch no ponderada. Solo añaden 0 o 1 paso fijo a L, sin importar la topología. Por eso, antes de un análisis MP conviene **ver cuántos sitios informativos hay**: si son < 20-30 en un alineamiento de cientos de posiciones, MP no tiene poder discriminatorio real.
+:::
+
+### 10.2.2 Longitud del árbol y homoplasia
+
+La **homoplasia** es la similitud entre taxones debida a **convergencia, paralelismo o reversión**, no a ancestría compartida. Cuanta más homoplasia, mayor L. MP asume (como ideal) que la homoplasia es rara; cuando abunda, MP puede equivocarse.
+
+### 10.2.3 Índices de medición de homoplasia
+
+- **CI (Consistency Index)** = `m / L`, donde `m` es el mínimo número posible de cambios (igual al número de sitios informativos no constantes + constantes con estado único) y `L` es la longitud observada del árbol. `CI = 1` = sin homoplasia; `CI < 0.5` = mucha homoplasia.
+- **RI (Retention Index)** = `(m - L) / (m - s)` donde `s` es el número de pasos del árbol más "degenerado" (todo_singleton). RI mide cuánta homoplasia **resuelve** la topología elegida respecto a una arbitraria.
+- **RC (Rescaled Consistency Index)** = `CI × RI`. Combina ambos.
+
+## 10.3 Tipos de parsimonia
+
+| Tipo | Característica | Aplicación típica |
+|------|----------------|-------------------|
+| **Wagner (ordenada)** | Cambios acumulativos entre estados adyacentes | Datos morfológicos cuantitativos (merísticos) |
+| **Fitch (no ordenada)** | Cualquier cambio entre estados cuesta 1 paso | ADN, ARN, datos cualitativos |
+| **Dollo** | Origen único de un carácter; pérdidas múltiples | Deleciones/inserciones, caracteres binarios raros |
+| **Parsimonia ponderada** | Transiciones pesan menos (p. ej. 1) que transversiones (p. ej. 2-4) | ADN realista |
+| **Implied weighting (Goloboff 1993)** | Pondera automáticamente por índice de concavidad `k` | Análisis por defecto en TNT moderno |
+
+Para datos moleculares de ADN la opción más usada es **Fitch no ponderada** o **ponderada ti/tv**. Para morfología, Wagner con **implied weighting** es estándar.
+
+## 10.4 TNT: la herramienta de referencia
+
+**TNT (Tree Analysis using New Technology)**, desarrollado por Goloboff, Farris y Nixon, es la implementación más potente de MP. Sus algoritmos heurísticos (ratchet, tree drifting, sectorial search, driven search) están diseñados para escapar de óptimos locales.
+
+### 10.4.1 Instalación
+
+```bash
+# Bioconda
+conda install -c bioconda tnt -y
+```
+
+::: callout-tip
+En WSL2 Ubuntu, `tnt` se ejecuta sin problemas en consola nativa. En PowerShell de Windows se puede usar con `tnt.exe` si se instala el binario nativo, pero es **más estable** invocarlo desde WSL2 porque la redirección de stdin/stdout funciona igual que en Linux. La versión conda para WSL es la misma que para Linux.
+:::
+
+### 10.4.2 Sintaxis básica
+
+```bash
+# Modo interactivo (consola)
+tnt
+
+# Modo batch (lee script y ejecuta)
+tnt script_file.cmd
+
+# Con logfile explícito
+tnt script_file.cmd > output.log 2>&1
+```
+
+## 10.5 Formato de entrada TNT
+
+TNT tiene su formato nativo **`xread`**, pero también puede leer NEXUS.
+
+### 10.5.1 Formato nativo TNT (`xread`)
+
+```text
+xread
+100 5
+taxon1   AACGTGCAAT
+taxon2   AATGTGCAAT
+taxon3   AACGCGCAAT
+taxon4   AATGTGAAAT
+taxon5   AACGTGCAAC
+;
+```
+
+Formato: primera línea `xread`, segunda línea `n_caracteres n_taxones`, luego `n_taxones` líneas con nombre + secuencia (separados por espacio/tab), y `;` para cerrar.
+
+### 10.5.2 Conversión desde otros formatos
+
+```bash
+# NEXUS a TNT (usando seqmagick si tiene soporte)
+seqmagick convert --format tnt input.nex output.tnt
+
+# FASTA a TNT: conversión manual con BioPython
+python3 << 'EOF'
+from Bio import AlignIO
+aln = AlignIO.read("aln.fasta", "fasta")
+n_sites = aln.get_alignment_length()
+n_tax = len(aln)
+with open("aln.tnt", "w") as f:
+    f.write("xread\n")
+    f.write(f"{n_sites} {n_tax}\n")
+    for rec in aln:
+        # nombre sin espacios, padding a 10 chars opcional
+        name = rec.id.replace(" ", "_")[:30]
+        f.write(f"{name}\t{str(rec.seq)}\n")
+    f.write(";\n")
+EOF
+```
+
+::: callout-note
+TNT también acepta **NEXUS directamente** mediante el comando `procedure` (que carga cualquier archivo .nex) o `nexus` (lectura explícita). Recomendado: convertir a formato `xread` para evitar ambigüedades en los nombres.
+:::
+
+## 10.6 Comandos básicos de TNT
+
+| Comando | Función |
+|---------|---------|
+| `procedure archivo.cmd;` | Cargar script |
+| `xread` | Leer datos (o abrir bloque inline) |
+| `hold N;` | Mantener hasta N árboles en memoria |
+| `mult N;` | N réplicas de búsqueda aleatoria (Wagner) |
+| `bbreak;` | Branch-breaking (TBR) sobre árboles en memoria |
+| `ratchet;` | Algoritmo ratchet (Nixon 1999) |
+| `twdrift;` | Tree drifting |
+| `sectorial;` | Búsqueda sectorial |
+| `piwe=k;` | Implied weighting con concavidad k |
+| `bootstrap N;` | N réplicas bootstrap |
+| `export;` | Exporta árbol actual a Newick |
+| `tsave archivo;` | Abre archivo para guardar árboles |
+| `save;` | Escribe árboles en archivo abierto |
+| `log archivo;` / `log /;` | Abre/cierra log |
+| `quit;` | Salir |
+| `ttplot;` | Ver gráfico de mejoría de búsqueda |
+| `length;` | Mostrar longitud del árbol |
+| `cscores;` | Calcular CI, RI |
+
+## 10.7 Búsqueda heurística recomendada
+
+```text
+hold 10000;
+mult 100=ratchet:20;
+bbreak=tbr;
+```
+
+Explicación:
+
+- `hold 10000` — guarda hasta 10000 árboles igualmente óptimos (para explorar islas de árboles).
+- `mult 100=ratchet:20` — 100 réplicas de adición aleatoria, cada una con **20 iteraciones de ratchet** (perturba ponderaciones, busca, restaura).
+- `bbreak=tbr` — **Tree Bisection and Reconnection**, el movimiento más agresivo. Reorganiza cualquier rama.
+
+## 10.8 Soporte de ramas: bootstrap
+
+```text
+bootstrap 1000;
+```
+
+TNT hace bootstrap clásico de Felsenstein (remuestreo de sitios con reemplazo, árbol MP óptimo por réplica, consenso majority-rule). El comando produce un árbol consenso con los valores de soporte como **nombres internos de los clados**.
+
+## 10.9 Pipeline completo TNT
+
+Crear archivo `analisis_mp.cmd`:
+
+```text
+macro=;
+log analisis_mp.log;
+procedure datos.tnt;
+hold 10000;
+mult 100=ratchet:20;
+bbreak=tbr;
+length;
+cscores;
+tsave arboles_mp.tre;
+save;
+tsave /;
+bootstrap 1000;
+tsave arboles_boot.tre;
+save;
+tsave /;
+export = arbol_boot.nwk;
+log /;
+quit;
+```
+
+Ejecutar:
+
+```bash
+tnt analisis_mp.cmd
+```
+
+::: callout-warning
+La sintaxis de TNT es **idiosincrásica**: muchos comandos terminan en `;` pero `export` y `tsave` usan `=`. Si un comando falla sin error claro, revisar los espacios y los `;`. El `log /;` **cierra** el log (`/` = apagar).
+:::
+
+## 10.10 Alternativas a TNT
+
+### 10.10.1 PHYLIP (`dnapars` / `protpars`)
+
+```bash
+# parsimonia para ADN
+dnapars -infile aln.phy -outfile tree.out -outtreefile tree.nwk
+
+# parsimonia para proteínas
+protpars -infile aln.phy -outfile tree.out -outtreefile tree.nwk
+```
+
+::: callout-tip
+PHYLIP responde con menús interactivos: usa `printf "Y\n"` para aceptar defaults y salir, o un archivo de respuestas con `-stdin`. Es más lento que TNT y no tiene ratchet. Útil solo si quieres un análisis clásico comparable con publicaciones antiguas.
+:::
+
+### 10.10.2 IQ-TREE en modo parsimonia
+
+```bash
+iqtree2 -s aln.fasta -m MP -B 1000 -pre mp_tree
+```
+
+Mucho más rápido para datasets pequeños/medianos, pero **sin ratchet**. Útil como baseline para comparar con ML.
+
+## 10.11 MP vs ML vs Bayesiano
+
+| Aspecto | MP | ML | Bayesiano |
+|---------|----|----|-----------|
+| Asunciones | Ninguna explícita | Modelo de sustitución | Modelo + prior |
+| Coste computacional | Bajo-medio | Medio | Alto |
+| Sensibilidad a LBA | **Alta** (atracción de ramas largas) | Baja (si modelo correcto) | Baja |
+| Uso actual | Morfología, comparación, datasets pequeños | Estándar | Estándar para análisis finales |
+
+::: callout-important
+El principal defecto teórico de MP es la **atracción de ramas largas (Long Branch Attraction, LBA)**: taxones con tasas altas de evolución se agrupan artefactualmente porque comparten por azar más sitios con el mismo estado. MP no tiene mecanismo para corregir esto; ML y Bayesiano, al modelar la tasa, sí. Por eso MP **cae en desuso** para datos moleculares, aunque sigue siendo importante para morfología y como benchmark.
+:::
+
+## 10.12 Características avanzadas de TNT
+
+### 10.12.1 Análisis sensible (Goloboff 1999)
+
+```text
+xmult = level5;
+```
+
+Ejecuta **búsqueda sensible**: combina ratchet, drifting, sectorial y fused en niveles crecientes de intensidad.
+
+### 10.12.2 Implied weighting (Goloboff 1993)
+
+```text
+piwe=3;
+```
+
+Aplica **ponderación implícita** con concavidad `k=3`. Caracteres con más homoplasia pesan menos. Valores típicos: `k = 1-12`. Valores bajos (k=1-3) penalizan fuerte la homoplasia; altos (k=10-12) se acercan a parsimonia no ponderada.
+
+### 10.12.3 Análisis particionado
+
+```text
+& [gene1] 1-300;
+& [gene2] 301-600;
+& [gene3] 601-900;
+```
+
+Permite asignar **pesos distintos** por partición o evaluar **congruencia** entre particiones (comando `symres` para test de simetría de Larsen).
+
+## 10.13 Ejemplo completo: 16S de primates
+
+Supongamos `primates_16s.tnt` con 50 taxones, 1500 sitios.
+
+```bash
+# Pipeline en bash
+tnt primates_mp.cmd
+```
+
+`primates_mp.cmd`:
+
+```text
+macro=;
+log primates_mp.log;
+procedure primates_16s.tnt;
+hold 10000;
+xmult = level5;
+bbreak=tbr;
+length;
+cscores;
+tsave primates_mp.tre;
+save;
+tsave /;
+bootstrap 1000;
+export = primates_boot.nwk;
+log /;
+quit;
+```
+
+Output esperado (resumen):
+
+```text
+Length = 4523 steps
+CI = 0.412 ; RI = 0.678 ; RC = 0.279
+```
+
+## 10.14 Visualización del árbol
+
+```bash
+cat arbol_boot.nwk
+# ETE3
+ete3 view -t arbol_boot.nwk
+# o FigTree (GUI Java)
+```
+
+## 10.15 Ejercicios
+
+### Ejercicio 1
+
+Descargar 30 secuencias de **Cytochrome b** de mamíferos desde NCBI, alinear con MAFFT, recortar con trimAl y convertir a formato TNT (o NEXUS). Ejecutar búsqueda heurística con `mult 100=ratchet:20` y `bbreak=tbr`. Exportar el árbol en Newick. Mostrar el script completo.
+
+### Ejercicio 2
+
+Sobre el mismo dataset, ejecutar **bootstrap 1000** con TNT. Comparar los valores de soporte con un árbol ML equivalente (IQ-TREE con `-B 1000`).
+
+### Ejercicio 3
+
+Escribir un script TNT `analisis_completo.cmd` que ejecute: (a) búsqueda inicial con ratchet, (b) TBR branch-breaking, (c) bootstrap 1000, (d) exportación del árbol consenso con valores de soporte, (e) exportación de estadísticas (CI, RI).
+
+## 10.16 Soluciones
+
+### Solución 1
+
+```bash
+#!/usr/bin/env bash
+# pipeline_mp_cytb.sh
+
+set -euo pipefail
+
+# 1. Descargar 30 Cytb de mamíferos (IDs ejemplar)
+ACCESSIONS="NC_006440 NC_001640 NC_002083 NC_000845 NC_005043 NC_012920 NC_020630 NC_012781 NC_004025 NC_002086 NC_006380 NC_005133 NC_008070 NC_007350 NC_010427 NC_006499 NC_011821 NC_016868 NC_012801 NC_005091 NC_006860 NC_012919 NC_011123 NC_020040 NC_020083 NC_020058 NC_012601 NC_020078 NC_020638 NC_011118"
+
+mkdir -p cytb_mp && cd cytb_mp
+
+# Descargar
+for acc in $ACCESSIONS; do
+    efetch -db nucleotide -id "$acc" -format fasta -seq_start 1 -seq_stop 1140 \
+        > "${acc}.fasta" 2>/dev/null || echo "  Fallo $acc"
+done
+cat *.fasta > cytb_raw.fasta
+
+# Limpiar nombres (solo identificador species-like)
+seqkit seq --name cytb_raw.fasta | head -5
+awk '/^>/{split($1,a,"|"); print ">" substr(a[1],2); next} {print}' cytb_raw.fasta \
+    > cytb_clean.fasta
+
+# Alinear con MAFFT
+mafft --auto cytb_clean.fasta > cytb_aln.fasta 2> /dev/null
+
+# Recortar con trimAl
+trimal -in cytb_aln.fasta -out cytb_trim.fasta -automated1
+
+# Convertir FASTA a TNT
+python3 << 'EOF'
+from Bio import AlignIO
+aln = AlignIO.read("cytb_trim.fasta", "fasta")
+with open("cytb.tnt", "w") as f:
+    f.write("xread\n")
+    f.write(f"{aln.get_alignment_length()} {len(aln)}\n")
+    for rec in aln:
+        name = rec.id.replace(" ", "_")[:30]
+        f.write(f"{name}\t{str(rec.seq)}\n")
+    f.write(";\n")
+print(f"Escrito cytb.tnt: {len(aln)} taxones, {aln.get_alignment_length()} sitios")
+EOF
+
+# Crear script TNT
+cat > analisis_mp.cmd << 'CMD'
+macro=;
+log cytb_mp.log;
+procedure cytb.tnt;
+hold 10000;
+mult 100=ratchet:20;
+bbreak=tbr;
+length;
+cscores;
+tsave cytb_mp.tre;
+save;
+tsave /;
+export = cytb_mp.nwk;
+log /;
+quit;
+CMD
+
+# Ejecutar
+tnt analisis_mp.cmd
+
+# Resultado
+echo "=== Árbol MP (Newick) ==="
+cat cytb_mp.nwk
+echo ""
+echo "=== Longitud e índices ==="
+grep -E "(Length|CI|RI)" cytb_mp.log | head -5
+```
+
+Output típico:
+
+```text
+Length = 3127 steps
+CI = 0.38 ; RI = 0.62 ; RC = 0.24
+```
+
+### Solución 2
+
+```bash
+# Script con bootstrap TNT
+cat > boot_mp.cmd << 'CMD'
+macro=;
+log cytb_boot.log;
+procedure cytb.tnt;
+hold 10000;
+mult 100=ratchet:20;
+bbreak=tbr;
+bootstrap 1000;
+tsave cytb_boot.tre;
+save;
+tsave /;
+export = cytb_boot.nwk;
+log /;
+quit;
+CMD
+
+tnt boot_mp.cmd
+
+# Árbol ML equivalente con IQ-TREE
+iqtree2 -s cytb_trim.fasta -m MFP -B 1000 -alrt 1000 -pre cytb_ml
+
+# Comparación de soportes: parsear ambos árboles y comparar
+python3 << 'EOF'
+from ete3 import Tree
+
+mp_t = Tree("cytb_boot.nwk", format=1)
+ml_t = Tree("cytb_ml.treefile", format=1)
+
+print(f"MP: {len(mp_t.get_leaves())} hojas")
+print(f"ML: {len(ml_t.get_leaves())} hojas")
+
+# Comparar un clado específico
+def find_clade_supports(tree):
+    supports = []
+    for node in tree.traverse():
+        if not node.is_leaf() and node.support:
+            supports.append(node.support)
+    return supports
+
+mp_supp = find_clade_supports(mp_t)
+ml_supp = find_clade_supports(ml_t)
+print(f"MP soporte medio: {sum(mp_supp)/len(mp_supp):.1f} (rango {min(mp_supp)}-{max(mp_supp)})")
+print(f"ML soporte medio: {sum(ml_supp)/len(ml_supp):.1f} (rango {min(ml_supp)}-{max(ml_supp)})")
+EOF
+```
+
+```text
+MP: 30 hojas
+ML: 30 hojas
+MP soporte medio: 78.4 (rango 51-100)
+ML soporte medio: 96.2 (rango 65-100)
+```
+
+**Análisis**: MP da soportes sistemáticamente más bajos que ML (especialmente en clados internos con señales conflictivas). Esto es esperable: MP no usa información cuantitativa de las frecuencias de sustitución, mientras que ML explota todo el alineamiento vía GTR+I+G. Si hay LBA (p. ej., entre roedores y lagomorfos), MP probablemente agrupa por atracción artefactual; ML, al modelar correctamente tasas heterogéneas, recupera la topología consensuada de la literatura.
+
+### Solución 3
+
+```text
+# analisis_completo.cmd - Pipeline MP completo con estadísticas
+macro=;
+log analisis_completo.log;
+
+# (0) Cargar datos
+procedure datos.tnt;
+
+# (a) Búsqueda inicial con ratchet
+hold 10000;
+mult 100=ratchet:20;
+
+# (b) TBR branch-breaking sobre todos los árboles en memoria
+bbreak=tbr;
+
+# (c) Estadísticas de homoplasia del mejor árbol
+length;
+cscores;       # imprime CI, RI, RC
+
+# (d) Bootstrap 1000
+bootstrap 1000;
+tsave arboles_boot.tre;
+save;
+tsave /;
+
+# (e) Exportar árbol consenso con soportes a Newick
+export = arbol_con_soporte.nwk;
+
+# (f) Exportar árbol óptimo (sin bootstrap) a Newick
+hold 1;
+export = arbol_optimo.nwk;
+
+log /;
+quit;
+```
+
+```bash
+# Ejecutar
+tnt analisis_completo.cmd
+
+# Verificar outputs
+ls -lh arbol_con_soporte.nwk arbol_optimo.nwk arboles_boot.tre analisis_completo.log
+
+# Ver estadísticas
+grep -E "(Length|CI|RI|RC)" analisis_completo.log
+
+# Visualizar con ETE3
+ete3 view -t arbol_con_soporte.nwk
+```
+
+```text
+Length = 3127 steps
+CI = 0.38 ; RI = 0.62 ; RC = 0.24
+```
+
+::: callout-tip
+Para **implied weighting**, añade `piwe=3;` **antes** de `mult`. Repite el análisis con varios valores de `k` (1, 3, 10) y compara las topologías. Si son estables, el resultado es robusto a la elección de `k`. Si cambian, los datos tienen homoplasia estructural que un solo `k` no resuelve.
+:::

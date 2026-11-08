@@ -1,0 +1,548 @@
+---
+title: "Capítulo 5: Alineamiento múltiple de ADN"
+---
+
+## 5.1 ¿Qué es un MSA y por qué es la base de toda filogenia?
+
+Un **alineamiento múltiple de secuencias** (MSA, *Multiple Sequence Alignment*) coloca varias secuencias homólogas en una matriz donde **cada columna** corresponde —hipotéticamente— a una posición **homóloga** (un mismo sitio ancestral). Las columnas se rellenan con el símbolo `-` (gap) cuando en una secuencia falta un residuo presente en otra.
+
+La premisa fundamental es:
+
+> Si dos residuos están en la misma columna, derivan del mismo residuo ancestral.
+
+De esta premisa se derivan **todas** las inferencias filogenéticas: los métodos de distancia cuentan diferencias columna-a-columna; la parsimonia cuenta substituciones requeridas columna-a-columna; ML calcula la verosimilitud recorriendo columnas.
+
+::: callout-important
+**"Rubbish in, rubbish out"**. Cualquier error en el alineamiento se propaga al árbol. Un MSA mal hecho con secuencias mal elegidas produce un árbol filogenético —incluso con buen bootstrap— que es simplemente **erróneo**. El alineamiento es el paso más crítico del pipeline, no una mera preparación.
+:::
+
+## 5.2 Conceptos clave
+
+- **Gap** (`-`): hueco introducido para alinear. Representa una inserción o deleción (indel) respecto al ancestro común.
+- **Identidad** (`% identidad`): fracción de columnas en que dos secuencias tienen el mismo residuo.
+- **Conservación**: cuantitativamente, grado en que una columna preserva un mismo residuo o residuos químicamente similares.
+- **Posición conservada**: columna con un único residuo (o casi) en todas las secuencias.
+- **Posición variable**: columna con residuos distintos entre secuencias.
+- **Posición informativa (parsimonia)**: columna variable donde cada estado aparece en al menos dos taxones. Solo estas columnas contribuyen a distinguir topologías.
+
+### 5.2.1 Tipos de alineamiento
+
+- **Global**: alinea las secuencias enteras de extremo a extremo. Adecuado cuando son similares y de longitud comparable.
+- **Local**: alinea solo la región más similar. Adecuado para secuencias con dominios móviles.
+- **Múltiple (MSA)**: generaliza global/local a N secuencias simultáneamente.
+
+En filogenia, **MSA global** es la norma cuando se trabaja con un mismo gen homólogo.
+
+## 5.3 MAFFT: el default recomendado
+
+MAFFT (Katoh & Standley 2013) combina precisión y velocidad. Ofrece varias estrategias según el tamaño y complejidad:
+
+### 5.3.1 Sintaxis básica
+
+```bash
+# Auto-selección de estrategia según tamaño
+mafft --auto input.fasta > aligned.fasta
+
+# Output con Phylip en vez de FASTA
+mafft --auto --phylipout input.fasta > aligned.phy
+
+# Paralelizar
+mafft --auto --thread 8 input.fasta > aligned.fasta
+```
+
+### 5.3.2 Estrategias
+
+| Estrategia | Flag MAFFT | Cuándo usar |
+|------------|-----------|------------|
+| L-INS-i | `--localpair --maxiterate 1000` | <200 secuencias con indels complejos; máxima precisión |
+| G-INS-i | `--genafpair --maxiterate 1000` | <200 secuencias similares en longitud y globales |
+| FFT-NS-2 | `--retree 2` (default con `--auto` para datasets medianos) | Datasets medianos (200-1000 seqs), rápido |
+| FFT-NS-1 | `--retree 1` | Datasets grandes (>1000) donde la velocidad manda |
+| PartTree | `--parttree` | Datasets muy grandes (>10,000), aproximado |
+| Q-INS-i | `--qinsi` | ARN estructural (incorpora estructura secundaria) |
+
+Ejemplo recomendado para genes mitocondriales en primates:
+
+```bash
+mafft --localpair --maxiterate 1000 --thread 4 cytb.fasta > cytb_aln.fasta
+```
+
+::: callout-tip
+`--auto` elige razonablemente bien la mayoría de las veces. Si tienes dudas sobre qué estrategia usar, empieza con `--auto` y compara con `--localpair` para datasets pequeños.
+:::
+
+### 5.3.3 Opciones útiles
+
+- `--maxiterate N`: número de iteraciones de refinamiento. Más = más lento y más preciso.
+- `--retree N`: número de mejoras del árbol guía.
+- `--thread N`: número de hilos CPU.
+- `--leavegappyregion`: no cierra gaps excesivos (mejor para datasets muy divergentes).
+- `--adjustdirectionaccurately`: corrige orientación de secuencias mal orientadas (útil con secuencias mal anotadas).
+- `--treefile out.nwk`: guarda árbol guía.
+
+## 5.4 MUSCLE5
+
+MUSCLE5 (Edgar 2022) es la última versión, completamente reescrita. Más rápida y precisa que MUSCLE3/v4.
+
+```bash
+# Sintaxis nueva (MUSCLE5)
+muscle -align input.fasta -output aligned.fasta
+
+# Para datasets grandes (>1000 seqs): modo super5
+muscle -super5 input.fasta -output aligned.fasta
+
+# Output en formato Phylip
+muscle -align input.fasta -output aligned.phy -physout aligned.phy
+```
+
+::: callout-warning
+La sintaxis de MUSCLE5 (`-align` / `-super5`) **rompe compatibilidad** con MUSCLE3 (`-in` / `-out`). Lee la documentación de tu instalación antes de escribir scripts.
+:::
+
+MUSCLE5 es excelente para proteínas y para datasets medianos (100-1000 secuencias). No recomendado para datasets muy grandes (>10,000) sin `-super5`.
+
+## 5.5 ClustalOmega
+
+ClustalΩ (Sievers et al. 2011) usa **HMMs profile-profile** y es muy rápido para datasets grandes:
+
+```bash
+clustalo -i input.fasta -o aligned.fasta --outfmt=fasta
+
+# Con número de hilos e iteraciones
+clustalo -i input.fasta -o aligned.fasta --threads=8 --iterations=2
+
+# Guardar árbol guía
+clustalo -i input.fasta -o aligned.fasta --guidetree-out=gt.txt
+
+# Output en Phylip
+clustalo -i input.fasta -o aligned.phy --outfmt=phylip
+```
+
+Buena opción para >1000 secuencias; para <200, MAFFT L-INS-i suele ganar en precisión.
+
+## 5.6 PRANK
+
+PRANK (Löytynoja & Goldman 2008) es **filogenéticamente consciente**: usa un árbol guía y evita el "over-alignment" (alineamientos donde se insertan gaps espurios para hacer parecer todo conservado).
+
+```bash
+# Sintaxis clásica
+prank -d=input.fasta -o=output -f=fasta
+
+# Evitar re-alineamiento iterativo (recomendado si ya tienes buen árbol guía)
+prank -d=input.fasta -o=output -f=fasta -once
+
+# Modo codón: respeta el marco de lectura
+prank -d=cds.fasta -o=output -f=fasta -codon
+
+# Pasar un árbol guía (Newick)
+prank -d=input.fasta -t=guide.nwk -o=output -f=fasta
+```
+
+::: callout-note
+PRANK es **lento** (decenas de minutos para 50 secuencias) pero produce alineamientos filogenéticamente correctos en presencia de indels reales. Úsalo para genes con indels verdaderos (rRNA, intrones), no para CDS sin gaps.
+:::
+
+## 5.7 Comparación de herramientas
+
+| Herramienta | Velocidad | Precisión | Mejor uso |
+|-------------|-----------|-----------|-----------|
+| MAFFT L-INS-i | Lenta | Muy alta | <200 seqs, indels complejos |
+| MAFFT FFT-NS-2 | Rápida | Media-alta | Datasets medianos (default `--auto`) |
+| MAFFT PartTree | Muy rápida | Baja | >10,000 seqs |
+| MUSCLE5 | Media | Alta | General, proteínas |
+| ClustalOmega | Rápida | Media-baja | >1000 seqs |
+| PRANK | Lenta | Alta (indels) | Indels filogenéticos, CDS con gaps |
+
+::: callout-tip
+**Buena práctica**: corre **dos herramientas distintas** y compara con `seqkit stats`. Si las longitudes del alineamiento difieren en <5% y los árboles guía son similares, confía. Si difieren mucho, inspecciona manualmente con Aliview o Jalview.
+:::
+
+## 5.8 Alineamiento con árbol guía
+
+Pasando un árbol guía pre-existente a MAFFT:
+
+```bash
+# Si ya tienes un árbol Newick (de un análisis anterior o de NJ rápido)
+mafft --treefile guide.nwk --localpair --maxiterate 1000 input.fasta > aln.fasta
+```
+
+Esto mejora el alineamiento cuando las secuencias son divergentes y la topología ya es conocida (por ejemplo, al reanalizar un dataset publicado).
+
+## 5.9 Evaluación de la calidad del alineamiento
+
+### 5.9.1 GUIDANCE2
+
+GUIDANCE2 (Sela et al. 2015) evalúa la **confianza** columna-a-columna re-alineando con árboles guía perturbados. Genera un score por sitio y permite eliminar columnas poco fiables.
+
+```bash
+# GUIDANCE2 no está en bioconda directamente; instalar desde http://guidance.tau.ac.il/
+# Requiere Java y MAFFT/MUSCLE/PRANK ya instalados.
+# Salida: alineamiento + score por columna.
+```
+
+### 5.9.2 trimAl
+
+trimAl (Capella-Gutiérrez et al. 2009) elimina columnas mal alineadas o con muchos gaps:
+
+```bash
+# Estrategia automática (recomendada default)
+trimal -in aligned.fasta -out trimmed.fasta -automated1
+
+# Eliminar columnas con >50% de gaps
+trimal -in aligned.fasta -out trimmed.fasta -gapout 0.5
+
+# Conservar solo columnas con gap threshold estricto (manual)
+trimal -in aligned.fasta -out trimmed.fasta -gt 0.8 -cons 60
+
+# Modo gappyout (rápido)
+trimal -in aligned.fasta -out trimmed.fasta -gappyout
+```
+
+Estrategias principales:
+
+- `-automated1`: heurística automática, recomendada.
+- `-gappyout`: elimina columnas con gaps en bloques; rápido pero menos estricto.
+- `-strict`: más conservador, requiere conservación de residuos además de gaps.
+- `-strictplus`: aún más estricto.
+- `-gt N` (gap threshold): conserva columnas con fracción de gaps ≤ 1-N.
+- `-cons N`: conserva columnas con conservación ≥ N%.
+- `-rescut`: rescate de columnas con alta conservación rodeadas.
+
+### 5.9.3 Gblocks
+
+Gblocks (Castresana 2000) es la alternativa clásica:
+
+```bash
+Gblocks aligned.fasta -t=d -b5=h
+# -t=d tipo ADN (d) vs proteína (p)
+# -b5=h permitir gaps en posiciones conservadas (h = half, n = none)
+```
+
+Parámetros clave:
+
+- `-b1`: mínimas posiciones conservadas adyacentes.
+- `-b2`: mínimas posiciones no conservadas para hacer un corte.
+- `-b3`: máximo número de cortes.
+- `-b4`: mínimo tamaño de bloque.
+- `-b5`: gaps en posiciones conservadas.
+
+## 5.10 Visualización del alineamiento
+
+- **AliView** (Linux nativo): visualizador interactivo, permite editar manualmente.
+  ```bash
+  aliview aligned.fasta
+  ```
+- **Jalview** (Java, multiplataforma): rico en opciones.
+  ```bash
+  jalview aligned.fasta
+  ```
+- **En terminal** (rápido, sin GUI):
+  ```bash
+  seqkit seq -w 80 aligned.fasta | head -n 100
+  ```
+
+::: callout-tip
+Para visualizar desde WSL2 necesitas un servidor X (X410, VcXsrv) o usar la versión Windows de AliView/Jalview apuntando al archivo vía `\\wsl$\...`. Más sencillo: instalar `bat` y revisar por bloques con `seqkit seq -w 60`.
+:::
+
+## 5.11 Tratamiento de gaps
+
+Decisión metodológica: **qué hacer con los gaps en el árbol**.
+
+Opciones:
+
+1. **Tratar gap como carácter**: Fifth state (en parsimonia) o state-missing (en ML). Algunos modelos lo permiten.
+2. **Tratar gap como missing data** (`?` o `N`): ML los ignora; parsimonia también.
+3. **Eliminar columnas con gaps**: descarta columnas; pierdes datos pero reduces ambigüedad.
+4. **Codificar indels como binary characters**: adición de caracteres binarios presencia/ausencia de cada indel (en MrBayes y TNT).
+
+Para ADN con ML, la convención más común es **tratar gap como missing** (X o N) o **eliminar columnas con gaps excesivos**:
+
+```bash
+# Eliminar columnas con cualquier gap
+trimal -in aligned.fasta -out nogap.fasta -nogaps
+
+# Eliminar columnas con >50% gaps
+trimal -in aligned.fasta -out trimmed.fasta -gapout 0.5
+
+# Eliminar columnas con >20% gaps
+trimal -in aligned.fasta -out trimmed.fasta -gapout 0.2
+```
+
+## 5.12 Conversión a formatos filogenéticos
+
+```bash
+# FASTA a Phylip
+seqkit seq aligned.fasta --phylip > aln.phy
+
+# FASTA a Nexus (más potente con seqmagick)
+seqmagick convert --format nexus aligned.fasta aln.nex
+
+# Phylip a Nexus
+seqmagick convert --input-format phylip --format nexus aln.phy aln.nex
+
+# Añadir particiones (cuando tienes genes concatenados)
+# Una vez hecho el alineamiento, define un partitions.nex:
+#   #nexus
+#   begin sets;
+#     charset cyt_b = 1-1140;
+#     charset cox1 = 1141-2679;
+#     charpartition mine = cyt_b:1-1140, cox1:1141-2679;
+#   end;
+```
+
+## 5.13 Ejemplo completo: 16S bacteriano
+
+Pipeline real sobre 50 secuencias 16S:
+
+```bash
+cd ~/filogenia_curso
+
+# 1. Datos crudos
+ls datos/raw/bovidae_16s.fasta
+
+# 2. Alinear con MAFFT (auto, paralelizado)
+mafft --auto --thread 4 datos/raw/bovidae_16s.fasta > alineamientos/bovidae_16s_aln.fasta
+
+# 3. Estadísticas del alineamiento
+seqkit stats alineamientos/bovidae_16s_aln.fasta
+
+# 4. Recortar columnas mal alineadas
+trimal -in alineamientos/bovidae_16s_aln.fasta \
+       -out alineamientos/bovidae_16s_trim.fasta \
+       -automated1
+
+# 5. Comparar longitudes antes/después
+echo "Antes:"
+seqkit stats alineamientos/bovidae_16s_aln.fasta | awk 'NR==2{print "long_aln="$7}'
+echo "Después:"
+seqkit stats alineamientos/bovidae_16s_trim.fasta | awk 'NR==2{print "long_trim="$7}'
+
+# 6. Convertir a Phylip para IQ-TREE
+seqkit seq alineamientos/bovidae_16s_trim.fasta --phylip > alineamientos/bovidae_16s.phy
+
+# 7. Listo para inferencia filogenética
+ls -lh alineamientos/bovidae_16s.phy
+```
+
+## Ejercicios
+
+### Ejercicio 1
+
+Descarga 20 secuencias de **Cytochrome b de Primates**, alinea con MAFFT usando estrategia `--auto`, recorta con `trimAl -automated1`, y convierte a Phylip. Verifica el número de sitios antes y después del recorte.
+
+### Ejercicio 2
+
+Compara **dos alineamientos** del mismo dataset: uno con MAFFT `--localpair` (preciso) y otro con `--retree 1` (rápido). Usa `seqkit stats` y compara longitud del alineamiento. ¿Cuál tiene más gaps?
+
+### Ejercicio 3
+
+Escribe una **función Bash** `alinear_y_recortar` que reciba `(input_fasta, output_phylip)`: (a) ejecute MAFFT con estrategia `--auto`, (b) recorte con `trimAl -automated1`, (c) convierta a Phylip con `seqkit seq`. Pruébala con 50 secuencias y reporta las longitudes en cada etapa.
+
+## Soluciones
+
+### Solución Ejercicio 1
+
+```bash
+#!/usr/bin/env bash
+# cytb_primates_msa.sh — alinear + recortar + Phylip.
+set -euo pipefail
+
+cd ~/filogenia_curso
+
+# 1. Descargar 20 Cytb de primates (RefSeq)
+esearch -db nucleotide \
+    -query "Cytochrome b[Gene] AND Primates[Organism] AND RefSeq[Filter] AND 1000:1200[SLEN]" \
+  | efetch -format acc -stop 20 > datos/raw/primates_cytb_accs.txt
+
+wc -l datos/raw/primates_cytb_accs.txt
+# 20 primates_cytb_accs.txt
+
+epost -db nucleotide -input datos/raw/primates_cytb_accs.txt \
+  | efetch -format fasta > datos/raw/primates_cytb.fasta
+
+# Verificar
+seqkit stats datos/raw/primates_cytb.fasta
+# Debe dar 20 secuencias de ~1140 pb
+
+# 2. Alinear con MAFFT --auto
+mafft --auto --thread 4 datos/raw/primates_cytb.fasta > alineamientos/primates_cytb_aln.fasta
+
+# 3. Estadísticas del alineamiento
+echo "— Antes del trimming —"
+seqkit stats alineamientos/primates_cytb_aln.fasta
+# Longitud típica: ~1145-1155 pb
+
+# 4. Trim con trimAl -automated1
+trimal -in alineamientos/primates_cytb_aln.fasta \
+       -out alineamientos/primates_cytb_trim.fasta \
+       -automated1
+
+echo "— Después del trimming —"
+seqkit stats alineamientos/primates_cytb_trim.fasta
+# Longitud típica tras trim: ~1100-1130 pb
+
+# 5. Número de sitios antes y después
+N_BEFORE=$(awk '/^[^>]/{n+=length($0)} END{print n/NR}' alineamientos/primates_cytb_aln.fasta | awk '{printf "%.0f", $1}')
+N_AFTER=$(awk '/^[^>]/{n+=length($0)} END{print n/NR}' alineamientos/primates_cytb_trim.fasta | awk '{printf "%.0f", $1}')
+# Mejor: seqkit stats ya muestra avg_len (longitud alineada == avg_len)
+
+AVG_BEFORE=$(seqkit stats -T alineamientos/primates_cytb_aln.fasta | awk -F'\t' 'NR==2{print $7}')
+AVG_AFTER=$(seqkit stats -T alineamientos/primates_cytb_trim.fasta | awk -F'\t' 'NR==2{print $7}')
+echo "Sitios antes: $AVG_BEFORE"
+echo "Sitios después: $AVG_AFTER"
+
+# 6. Convertir a Phylip
+seqkit seq alineamientos/primates_cytb_trim.fasta --phylip > alineamientos/primates_cytb.phy
+
+head alineamientos/primates_cytb.phy
+#  20  1132
+# NM_001305xxx atg...
+# ...
+```
+
+### Solución Ejercicio 2
+
+```bash
+#!/usr/bin/env bash
+# compara_mafft.sh — alineamiento fino vs rápido.
+set -euo pipefail
+
+IN="datos/raw/primates_cytb.fasta"   # 20 secuencias del Ejercicio 1
+
+# Alineamiento 1: L-INS-i (preciso)
+mafft --localpair --maxiterate 1000 --thread 4 "$IN" > alineamientos/cytb_LINSi.fasta
+
+# Alineamiento 2: FFT-NS-1 (rápido)
+mafft --retree 1 --thread 4 "$IN" > alineamientos/cytb_FFTNS1.fasta
+
+# Estadísticas
+echo "— L-INS-i (preciso) —"
+seqkit stats alineamientos/cytb_LINSi.fasta
+
+echo ""
+echo "— FFT-NS-1 (rápido) —"
+seqkit stats alineamientos/cytb_FFTNS1.fasta
+
+# Contar gaps en cada uno
+gaps_in() {
+    # cuenta caracteres '-' en el MSA, normalizado por número de secuencias
+    local fa=$1
+    local n=$(grep -c "^>" "$fa")
+    local total_gaps=$(grep -v "^>" "$fa" | tr -cd '-' | wc -c)
+    awk -v g=$total_gaps -v n=$n 'BEGIN{printf "Gaps totales: %d\tGaps/seq: %.1f\n", g, g/n}'
+}
+
+echo ""
+gaps_in alineamientos/cytb_LINSi.fasta
+gaps_in alineamientos/cytb_FFTNS1.fasta
+```
+
+Salida típica esperada (los números exactos dependen de los datos):
+
+```text
+— L-INS-i (preciso) —
+file                format  type  num_seqs  sum_len  min_len  avg_len  max_len
+cytb_LINSi.fasta    FASTA   DNA          20  22,800    1,140    1,140    1,140
+
+— FFT-NS-1 (rápido) —
+file                format  type  num_seqs  sum_len  min_len  avg_len  max_len
+cytb_FFTNS1.fasta   FASTA   DNA          20  22,940    1,140    1,147    1,147
+
+Gaps totales: 0    Gaps/seq: 0.0
+Gaps totales: 120  Gaps/seq: 6.0
+```
+
+**Interpretación**: en este caso particular, como los Cytb de primates son secuencias CDS de longitud casi idéntica (sin indels reales), L-INS-i encuentra alineamiento sin gaps y FFT-NS-1, al ser menos iterativo, tiende a insertar gaps espurios. Para datasets con **indels reales**, sin embargo, L-INS-i identifica correctamente los bloques de inserción/deleción, mientras que FFT-NS-1 tiende a **subalign** (menos gaps pero posiciones mal pareadas). **Siempre compara**: cuanto más divergente el dataset, mayor el motivo para usar L-INS-i.
+
+### Solución Ejercicio 3
+
+```bash
+#!/usr/bin/env bash
+# alinear_y_recortar.sh — pipeline MSA → trim → Phylip.
+# Uso: ./alinear_y_recortar.sh input.fasta output.phy [threads]
+set -euo pipefail
+
+IN="${1:?Uso: $0 input.fasta output.phy [threads]}"
+OUT="${2:?Falta output.phy}"
+THREADS="${3:-4}"
+
+# Validaciones
+[ -f "$IN" ] || { echo "No existe $IN" >&2; exit 1; }
+command -v mafft >/dev/null   || { echo "Falta mafft" >&2; exit 1; }
+command -v trimal >/dev/null  || { echo "Falta trimal" >&2; exit 1; }
+command -v seqkit >/dev/null  || { echo "Falta seqkit" >&2; exit 1; }
+
+# Directorios temporales dentro del propio directorio del input
+WORKDIR=$(dirname "$OUT")
+mkdir -p "$WORKDIR"
+BASE=$(basename "$IN" .fasta)
+
+ALN_RAW="$WORKDIR/${BASE}_aln.fasta"
+ALN_TRIM="$WORKDIR/${BASE}_trim.fasta"
+
+echo "1/3 — Alineando con MAFFT --auto (--thread $THREADS) ..."
+mafft --auto --thread "$THREADS" "$IN" > "$ALN_RAW"
+
+echo "2/3 — Recortando con trimAl -automated1 ..."
+trimal -in "$ALN_RAW" -out "$ALN_TRIM" -automated1
+
+echo "3/3 — Convirtiendo a Phylip con seqkit ..."
+seqkit seq "$ALN_TRIM" --phylip > "$OUT"
+
+# Informe final
+echo ""
+echo "=== Resumen ==="
+printf "Input               %s\n" "$IN"
+printf "Alineamiento crudo  %s\n" "$ALN_RAW"
+printf "Alineamiento trim   %s\n" "$ALN_TRIM"
+printf "Phylip              %s\n" "$OUT"
+echo ""
+echo "Longitudes (avg_len = nº de sitios en MSA):"
+seqkit stats -T "$IN" "$ALN_RAW" "$ALN_TRIM" | \
+    awk -F'\t' 'NR==1{print} NR>1{printf "  %-50s N=%s  long=%s\n", $1, $4, $7}'
+
+echo ""
+echo "Gaps eliminados:"
+GAPS_RAW=$(grep -v "^>" "$ALN_RAW" | tr -cd '-' | wc -c)
+GAPS_TRIM=$(grep -v "^>" "$ALN_TRIM" | tr -cd '-' | wc -c)
+echo "  Crudo:  $GAPS_RAW gaps totales"
+echo "  Trim:   $GAPS_TRIM gaps totales"
+
+# Prueba con 50 secuencias
+#   $ ./alinear_y_recortar.sh datos/raw/bovidae_16s.fasta alineamientos/bovidae_16s.phy 4
+#   1/3 — Alineando con MAFFT --auto (--thread 4) ...
+#   2/3 — Recortando con trimAl -automated1 ...
+#   3/3 — Convirtiendo a Phylip con seqkit ...
+#   
+#   === Resumen ===
+#   Input               datos/raw/bovidae_16s.fasta
+#   Alineamiento crudo  alineamientos/bovidae_16s_aln.fasta
+#   Alineamiento trim   alineamientos/bovidae_16s_trim.fasta
+#   Phylip              alineamientos/bovidae_16s.phy
+#   
+#   Longitudes (avg_len = nº de sitios en MSA):
+#     file                                N    long
+#     datos/raw/bovidae_16s.fasta         50   1492
+#     alineamientos/bovidae_16s_aln.fasta 50   1538
+#     alineamientos/bovidae_16s_trim.fasta 50  1487
+#   
+#   Gaps eliminados:
+#     Crudo:  1840 gaps totales
+#     Trim:   120 gaps totales
+```
+
+El pipeline es **idempotente**: si lo re-ejecutas con los mismos argumentos, sobreescribe los archivos intermedios. Si quieres conservar corridas previas, añade un timestamp al `BASE` (ej: `BASE="${BASE}_$(date +%Y%m%d)"`).
+
+::: callout-tip
+Para producción real conviene **loguear** el comando exacto ejecutado y las versiones del software:
+```bash
+{
+  echo "# $(date)"
+  echo "# mafft: $(mafft --version 2>&1 | head -n1)"
+  echo "# trimal: $(trimal --version 2>&1 | head -n1)"
+  echo "# seqkit: $(seqkit version 2>&1 | head -n1)"
+  echo "# cmd: mafft --auto --thread $THREADS $IN"
+} > "$WORKDIR/${BASE}.log"
+```
+:::

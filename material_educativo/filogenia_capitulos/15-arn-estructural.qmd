@@ -1,0 +1,607 @@
+---
+title: "Capítulo 15: ARN estructural — 16S rRNA"
+---
+
+## 15.1 ¿Por qué el ARN estructural es distinto?
+
+Hasta ahora hemos tratado las secuencias como **cadenas lineales** de nucleótidos o aminoácidos. Pero muchas moléculas de ARN no codifican proteínas y su función depende directamente de su **estructura tridimensional**: el ribosoma (rRNA 16S, 23S, 5S), los tRNAs, el RNase P, los snRNAs del spliceosome, los riboswitches y muchos lncRNAs.
+
+La diferencia fundamental es que para estos ARN **la selección actúa sobre la estructura, no sobre la secuencia**. Una mutación puntual puede ser neutral o incluso beneficiosa si preserva el emparejamiento Watson-Crick. Por ejemplo, un `G-C` en una hélice puede sustituirse por `A-U` o `G·U` (wobble) sin romper la estructura. Esto viola la asunción central de los modelos de ADN estándar (las sustituciones dependen solo del nucleótido actual).
+
+### 15.1.1 Tres niveles de estructura
+
+- **Estructura primaria**: secuencia lineal de nucleótidos (5'→3').
+- **Estructura secundaria**: patrón de emparejamientos **intra-moleculares** (Watson-Crick y no-canónicos). Compuesto por:
+  - **Hélices (stems)**: regiones pareadas antiparalelas.
+  - **Loops**: loops internos, bulges, hairpin loops, multi-loop junctions.
+- **Estructura terciaria**: plegamiento 3D final, con interacciones a larga distancia (pseudonudos, base-triples, interacciones stacking).
+
+Para filogenia, trabajamos principalmente con la **estructura secundaria**: es predecible con algoritmos (MFE, comparativos) y es conservada a lo largo de grandes distancias evolutivas.
+
+::: callout-note
+**Conservación estructural vs secuencial**: el 16S rRNA de *E. coli* y *Homo sapiens* comparte ~50% de identidad de secuencia pero **>90% de la estructura secundaria** es idéntica. Los modelos de ADN estándar desperdician esta información.
+:::
+
+## 15.2 Modelos de sustitución para ARN
+
+### 15.2.1 Modelos doublet
+
+Los modelos **doublet** tratan pares de nucleótidos emparejados como una unidad de evolución. En vez de 4 estados (A, C, G, U) tenemos 16 estados (AA, AC, ..., UU), de los cuales solo **6 son pares estables Watson-Crick/wobble**:
+
+```text
+Pares canónicos y wobble:
+  AU  UA  GC  CG  GU  UG   ← pares "permitidos" en hélices
+```
+
+Las transiciones entre pares se modelan según su probabilidad biológica. Por ejemplo, `GC → AU` (cambio simultáneo de ambos nucleótidos) es mucho más raro que `GC → GU → AU` (pasando por wobble intermedio).
+
+### 15.2.2 Modelos empíricos RNA16
+
+IQ-TREE incluye modelos empíricos entrenados con alineamientos estructurales de Rfam:
+
+- **RNA16A**: 16 estados, simple, sin distinción de tasas por par.
+- **RNA16B**: añade tasas asimétricas entre transiciones/transversiones de pares.
+- **RNA16D**: el más completo, con tasas diferenciales para cada tipo de cambio entre pares.
+
+Otros modelos:
+
+- **RNA7A, RNA7B**: simplifican a 7 estados (6 pares + 1 estado para no-emparejado).
+- **DH (doublet Higgs)**: modelo teórico de Higgs (2000), pocas implementaciones modernas.
+
+::: callout-tip
+**Cuándo usar RNA16**: solo para regiones **emparejadas** (hélices). Para loops, usar modelos estándar de ADN. Lo ideal es **particionar** el alineamiento 16S en regiones pareadas (con RNA16A/D) y no-pareadas (con HKY/GTR+G). IQ-TREE y MrBayes soportan esta estrategia.
+:::
+
+## 15.3 16S rRNA como marcador universal
+
+El **16S rRNA** (~1540 nt en bacterias) es el marcador filogenético más utilizado en microbiología porque:
+
+1. **Universal**: presente en todos los organismos celulares (bacterias: 16S; eucariotas: 18S homólogo; arqueas: 16S).
+2. **Función esencial**: parte del ribosoma, imposible de perder.
+3. **Estructura conservada** con 9 regiones **variables** (V1-V9) intercaladas con regiones conservadas, lo que permite:
+   - Cebadores universales en regiones conservadas.
+   - Identificación taxonómica en regiones variables.
+4. **Longitud adecuada**: ~1540 nt, suficiente señal filogenética sin ser excesiva.
+5. **No transferencia horizontal**: el rRNA raramente se transfiere entre especies.
+
+### 15.3.1 Regiones V1-V9
+
+```text
+[Cons]--[V1]--[Cons]--[V2]--[Cons]--[V3]--[Cons]--[V4]--[Cons]--[V5]--[Cons]--[V6]--[Cons]--[V7]--[Cons]--[V8]--[Cons]--[V9]--[Cons]
+```
+
+- **V1-V3**: buena para分辨 a nivel de género/familia.
+- **V4**: usado en Illumina (longitud óptima para secuenciación 2×250), alta resolución para taxonomía.
+- **V3-V4**: común en metagenómica.
+- **V6-V8**: adecuado para分辨率 alta entre géneros cercanos.
+
+::: callout-warning
+**Limitación de 16S**: la resolución es buena hasta nivel **género**; raramente permite distinguir **especies** cercanas (p. ej., *E. coli* vs *Shigella*). Para especie/subespecie, usar genoma completo o **filogenómica** (capítulo 16) o marcadores como *gyrB*, *rpoB*.
+:::
+
+## 15.4 Herramientas para alineamiento estructural
+
+### 15.4.1 Infernal — el estándar de oro
+
+**Infernal** (INFERence of RNA Alignment) implementa **modelos de covarianza** (CM), que son profile HMMs extendidos con información de estructura secundaria. Un CM se construye a partir de un alineamiento seed con anotación estructural y luego se usa para alinear nuevas secuencias respetando la estructura.
+
+```bash
+# Instalación
+conda install -c bioconda infernal -y
+
+# Construir un CM a partir de alineamiento seed (formato Stockholm con #=GC SS_cons)
+cmbuild --handseed 16S_bacteria.cm seed_16S.sto
+
+# Calibrar el CM (ajustar scores para longitud)
+cmcalibrate 16S_bacteria.cm   # ~10-30 min
+
+# Alinear secuencias nuevas al CM
+cmalign --outformat Stockholm 16S_bacteria.cm sequences.fasta > alineadas.sto
+
+# Buscar CM en base de datos (genome annotation)
+cmscan --rfam --cut_ga --tblout hits.tbl seqs.fasta
+```
+
+::: callout-tip
+**CMs prefabricados**: Rfam (https://rfam.org) contiene miles de CMs curados para familias de ARN. Para 16S bacteriano, usar **RF00177** (bacterial small subunit ribosomal RNA). Para 18S eucariota, **RF01960**. Descargar CMs directamente desde Rfam o usar la base de datos completa con `cmscan --rfam`.
+:::
+
+### 15.4.2 R-coffee (T-coffee con info estructural)
+
+R-coffee extiende T-coffee para incorporar predicciones de estructura secundaria:
+
+```bash
+# Instalación
+conda install -c bioconda t-coffee -y
+
+# Alineamiento estructural
+t_coffee -seq sequences.fasta -mode rcoffee -output fasta
+
+# Si tienes estructura secundaria conocida:
+t_coffee -seq sequences.fasta -mode rcoffee -method rcoffee_pair -ss ss_file.ss
+```
+
+### 15.4.3 SINA (SILVA Incremental Aligner)
+
+SINA está optimizado para 16S/23S alineándose contra la base de datos SILVA:
+
+```bash
+# SINA tiene interfaz web (https://www.arb-silva.de/aligner/)
+# También CLI disponible:
+conda install -c bioconda sina -y
+
+sina -i sequences.fasta --intype fasta --out aligned.fasta --outtype fasta \
+     --ptdb /path/to/silva_ref ARB --turn --auto-filters
+```
+
+### 15.4.4 MAFFT con estructura
+
+MAFFT no aprovecha estructura directamente, pero tiene modos recomendados para 16S:
+
+```bash
+# Modo G-INS-i (alineamiento global, recomendado para regiones conservadas)
+mafft --genafpair --maxiterate 1000 sequences.fasta > aligned.fasta
+
+# Modo Q-INS-i (usa información de estructura secundaria predicha)
+mafft --qinsi sequences.fasta > aligned.fasta
+```
+
+## 15.5 Base de datos SILVA
+
+**SILVA** (https://www.arb-silva.de/) es la base de datos curada más completa para rRNA:
+
+- **SILVA 138.2** (versión actual): ~510,000 secuencias 16S bacterianas y arqueanas curadas.
+- **SILVA 138 LSU**: 23S rRNA.
+- **SILVA 138 SSU Ref NR99**: filtrada al 99% identidad para evitar redundancia.
+
+```bash
+# Descargar (archivo ~600 MB)
+# Desde el sitio web: https://www.arb-silva.de/download/arb-files/
+wget -c https://www.arb-silva.de/fileadmin/silva_databases/release_138_2/Exports/SILVA_138.2_SSURef_NR99_tax_silva.fasta.gz
+gunzip SILVA_138.2_SSURef_NR99_tax_silva.fasta.gz
+
+# Para uso en IQ-TREE/RAxML-NG, submuestrear por grupo taxonómico
+# con script awk/sort
+```
+
+::: callout-note
+**Greengenes vs SILVA vs RDP**: tres bases de datos para 16S. SILVA es la más actualizada y curada; Greengenes (13_8) fue popular pero está desactualizada; RDP tiene buenas herramientas pero la base en sí es menor. Para filogenia, **SILVA** es la elección por defecto.
+:::
+
+## 15.6 Post-alineamiento para 16S
+
+### 15.6.1 Recorte de regiones no conservadas
+
+El alineamiento de 16S genera columnas con muchos gaps al final (regiones terminales variables) y regiones internas mal alineadas. Recortar con trimAl:
+
+```bash
+# Recorte automático
+trimal -in aligned.sto -out trimmed.fasta -fasta -automated1
+
+# Recorte conservador
+trimal -in aligned.fasta -out trimmed.fasta -gt 0.8 -gapcut 0.6
+
+# Conservar solo columnas con >50% residuos y <10% gaps
+trimal -in aligned.fasta -out trimmed.fasta -cons 50 -gt 0.5
+```
+
+### 15.6.2 Conversión de formatos
+
+```bash
+# Stockholm → FASTA
+seqmagick convert --format fasta aligned.sto aligned.fasta
+
+# Stockholm → NEXUS (para MrBayes)
+seqmagick convert --format nexus aligned.sto aligned.nex
+
+# Stockholm → PHYLIP (para RAxML-NG legacy)
+seqmagick convert --format phylip aligned.sto aligned.phy
+
+# Verificar alineamiento
+seqmagick convert --describe aligned.fasta
+```
+
+## 15.7 Análisis filogenético de 16S
+
+### 15.7.1 IQ-TREE con modelos específicos
+
+```bash
+# Selección automática de modelos, permitiendo RNA16*
+iqtree2 -s 16s_trim.fasta -m MFP -mset GTR,RNA16A,RNA16B,RNA16D -B 1000 -pre 16s_tree
+
+# O modelo fijo GTR+I+G (clásico para 16S)
+iqtree2 -s 16s_trim.fasta -m GTR+I+G -B 1000 -pre 16s_tree
+
+# Partición pareadas/no-pareadas (requiere archivo de partición)
+iqtree2 -s 16s_trim.fasta -spp partition_16s.txt -m MFP -mset GTR,RNA16D -B 1000 -pre 16s_part
+```
+
+Ejemplo de archivo de partición para 16S con regiones pareadas (stems) y no-pareadas (loops):
+
+```text
+DNA, stems   = 1-50, 100-150, 200-250, 300-350, ...
+DNA, loops   = 51-99, 151-199, 251-299, 351-400, ...
+```
+
+### 15.7.2 RAxML-NG
+
+```bash
+raxml-ng --all --msa 16s_trim.fasta --model GTR+I+G --bs-trees 1000 --threads 8 --prefix 16s_raxml
+
+# Con partición
+raxml-ng --all --msa 16s_trim.fasta --model partition.txt --bs-trees 1000 --threads 8
+```
+
+### 15.7.3 MrBayes
+
+```text
+begin mrbayes;
+    charset stems   = 1-50 100-150 200-250;
+    charset loops   = 51-99 151-199 251-299;
+    partition by_struct = 2: stems, loops;
+    set partition = by_struct;
+    lset applyto=(1) nst=6 rates=invgamma;     # stems con GTR+I+G
+    lset applyto=(2) nst=2 rates=gamma;        # loops con HKY+G
+    mcmc ngen=5000000 samplefreq=1000 nchains=4 nruns=2;
+    sumt burnin=1250;
+    sump burnin=1250;
+end;
+```
+
+## 15.8 Árboles basados en estructura secundaria
+
+Una alternativa a los modelos doublet es tratar la estructura secundaria como un **carácter morfológico**:
+
+- Para cada taxón, anotar presencia/ausencia de cada elemento estructural (hélices, loops específicos).
+- Construir matriz de caracteres (binarios o multi-estado).
+- Análisis de parsimonia (TNT, PAUP*) o bayesiano (MrBayes con `datatype=standard`).
+
+Este enfoque es útil cuando la conservación de secuencia es muy baja (p. ej., comparar 16S de bacterias con 18S de eucariotas), pero pierde resolución fina. La práctica estándar moderna es usar **Infernal** para alinear y modelos **doublet** para inferencia.
+
+## 15.9 Pipeline completo para 16S
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Variables
+CM_FILE="RF00177.cm"   # CM de Rfam para 16S bacteriano
+INPUT="16s_raw.fasta"
+
+# 1. Descargar secuencias 16S de NCBI
+echo "=== Paso 1: Descarga ==="
+efetch -db nucleotide -id "FJ97XXXX,MH12XXXX" -format fasta > "$INPUT"
+
+# 2. Alinear con Infernal
+echo "=== Paso 2: Alineamiento estructural ==="
+cmalign --outformat Stockholm "$CM_FILE" "$INPUT" > 16s_aln.sto
+
+# 3. Convertir y recortar
+echo "=== Paso 3: Conversión y recorte ==="
+seqmagick convert --format fasta 16s_aln.sto 16s_aln.fasta
+trimal -in 16s_aln.fasta -out 16s_trim.fasta -automated1
+
+# 4. Construir árbol
+echo "=== Paso 4: ML con IQ-TREE ==="
+iqtree2 -s 16s_trim.fasta -m MFP -mset GTR,RNA16A,RNA16B,RNA16D -B 1000 -alrt 1000 -T 8 -pre 16s_tree
+
+# 5. Visualizar
+echo "=== Paso 5: Visualización ==="
+ete3 view -t 16s_tree.treefile
+
+# 6. Reporte
+echo "=== Resumen ==="
+echo "Secuencias input:    $(grep -c '>' "$INPUT")"
+echo "Longitud alineada:   $(seqmagick info 16s_aln.fasta | awk '/alignment length/{print $3}')"
+echo "Longitud recortada:  $(seqmagick info 16s_trim.fasta | awk '/alignment length/{print $3}')"
+echo "Modelo seleccionado: $(grep 'Best-fit model' 16s_tree.iqtree | head -1)"
+echo "Árbol:               16s_tree.treefile"
+```
+
+## 15.10 ARN ribosomales eucariotas
+
+En eucariotas, el homólogo del 16S procariota es el **18S rRNA** (~1800 nt), parte de la subunidad pequeña 40S. El **28S rRNA** (~4000 nt) homólogo del 23S procariota, parte de la subunidad grande 60S. El **5.8S** y el **5S** completan el ribosoma eucariota.
+
+```bash
+# Para 18S eucariota, usar CM RF01960 de Rfam
+cmalign --outformat Stockholm RF01960.cm euk_seqs.fasta > euk_aln.sto
+
+# PR2 database: base de datos curada de 18S eucariota (equivalente SILVA)
+# https://pr2-database.org/
+```
+
+## 15.11 Otros ARN estructurales
+
+### 15.11.1 tRNA
+
+Los tRNAs son cortos (~75 nt) con estructura "trébol" muy conservada. Para alinearlos:
+
+```bash
+# tRNAscan-SE detecta y anota tRNAs en genomas
+conda install -c bioconda trnascan-se -y
+tRNAscan-SE -o trnas.txt genome.fasta
+
+# Para filogenia, los tRNAs suelen dar poca resolución por longitud corta.
+# Útiles para árboles de genes de tRNA (p. ej., orígenes evolutivos).
+```
+
+### 15.11.2 RNase P
+
+ARN catalítico (~300-400 nt) con estructura conservada pero secuencia divergente. Modelo clásico de ARN con función enzimática.
+
+### 15.11.3 microRNAs (miRNAs)
+
+Los miRNAs maduros son muy cortos (~22 nt) y filogenéticamente poco informativos individualmente. Sin embargo, los **pre-miRNAs** (precursor con hairpin, ~70 nt) sí permiten filogenia. Familias de miRNAs conservadas en metazoos se analizan a nivel de presencia/ausencia.
+
+### 15.11.4 lncRNAs
+
+Los lncRNAs (long non-coding RNAs) son >200 nt y su estructura es compleja. Su filogenia es difícil por:
+
+- Baja conservación de secuencia entre especies lejanas.
+- Estructura secundaria solo parcialmente conocida.
+- Convergencia estructural posible.
+
+Mejor estrategia: alineamiento **local** de dominios conservados (con Infernal si hay CM en Rfam) más análisis de synteny.
+
+## 15.12 Limitaciones de 16S
+
+A pesar de su utilidad, 16S tiene limitaciones importantes:
+
+1. **Resolución limitada**: género/familia. Difícil distinguir especies cercanas.
+2. **Variación del número de copias**: bacterias tienen 1-15 copias de operón rRNA → puede sesgar estimaciones de abundancia en metagenómica.
+3. **Intra-genómico heterogéneo**: diferentes copias pueden variar hasta varios %.
+4. **Sesgo de PCR**: cebadores universales no son realmente universales.
+5. **Lecturas cortas**: Illumina da V3-V4 (~460 nt) → menos señal que Sanger full-length 16S.
+
+**Alternativas modernas**:
+
+- **Filogenómica** con genoma completo (capítulo 16).
+- **Marcadores multi-locus** (MLSA): concatenar *gyrB*, *rpoB*, *recA*, *atpD*.
+- **GTDB** (Genome Taxonomy DataBase): taxonomía basada en genomas completos, no en 16S.
+
+::: callout-important
+**Tendencia actual**: con la caída del coste de secuenciación, la filogenia basada en 16S está siendo reemplazada por filogenómica de genomas completos (ANI, AAI, GTDB). Sin embargo, 16S sigue siendo la opción **rápida y barata** para identificación taxonómica preliminar y estudios ambientales donde no se ensambla genoma completo.
+:::
+
+## 15.13 Ejercicios
+
+### Ejercicio 1: Pipeline 16S con Infernal
+
+Descargar 20 secuencias de 16S rRNA de Bacterias Firmicutes desde SILVA o NCBI. Alinear con Infernal (usando CM estándar de Rfam RF00177). Convertir y recortar. Construir árbol ML con IQ-TREE.
+
+### Ejercicio 2: Comparación MAFFT vs Infernal
+
+Comparar dos enfoques de alineamiento de 16S: (a) MAFFT simple, (b) Infernal con estructura secundaria. Comparar: longitud del alineamiento, número de sitios informativos, soporte de bootstrap en árbol resultante. ¿Vale la pena Infernal?
+
+### Ejercicio 3: Script pipeline_16s.sh
+
+Escribir script `pipeline_16s.sh` que reciba archivo FASTA con secuencias 16S y ejecute todo el pipeline: Infernal align → conversión → trimAl → IQ-TREE. Verificar con secuencias de prueba.
+
+## 15.14 Soluciones
+
+### Solución ejercicio 1
+
+```bash
+#!/usr/bin/env bash
+# Ejercicio 1: Pipeline 16S con Infernal
+set -euo pipefail
+
+WORKDIR="$HOME/filogenia_curso/16s_firmicutes"
+mkdir -p "$WORKDIR"
+cd "$WORKDIR"
+
+# Lista de accessions NCBI (ejemplos, reemplazar con IDs reales de Firmicutes)
+ACCESSIONS="NR_104737,NR_112633,NR_115365,NR_024669,NR_113129,NR_118732,NR_115359,NR_042737,NR_029135,NR_112635,NR_115336,NR_118676,NR_024645,NR_113132,NR_115344,NR_044055,NR_118675,NR_024640,NR_113741,NR_112722"
+
+# 1. Descargar secuencias
+echo "=== Descargando secuencias ==="
+efetch -db nucleotide -id "$ACCESSIONS" -format fasta > 16s_raw.fasta
+
+# Verificar número de secuencias
+N_SEQS=$(grep -c '>' 16s_raw.fasta)
+echo "Descargadas $N_SEQS secuencias"
+
+# 2. Descargar CM de Rfam para 16S bacteriano (RF00177)
+echo "=== Descargando CM ==="
+if [ ! -f RF00177.cm ]; then
+    wget -q "https://rfam.org/family/RF00177/cm" -O RF00177.cm
+fi
+
+# 3. Alinear con Infernal
+echo "=== Alineamiento con Infernal ==="
+cmalign --outformat Stockholm --mapali 16s_aln.sto RF00177.cm 16s_raw.fasta > 16s_aln.sto
+
+# 4. Convertir a FASTA
+echo "=== Conversión ==="
+seqmagick convert --format fasta 16s_aln.sto 16s_aln.fasta
+
+# 5. Recortar con trimAl
+echo "=== Recorte ==="
+trimal -in 16s_aln.fasta -out 16s_trim.fasta -automated1
+
+# 6. Construir árbol ML
+echo "=== ML con IQ-TREE ==="
+iqtree2 -s 16s_trim.fasta -m MFP -mset GTR,RNA16A,RNA16B,RNA16D -B 1000 -alrt 1000 -T 8 -pre 16s_tree
+
+# 7. Reporte
+echo "=== REPORTE ==="
+echo "Secuencias: $N_SEQS"
+echo "Longitud alineada: $(seqmagick info 16s_aln.fasta | awk '/length/{print $3}' | head -1)"
+echo "Longitud recortada: $(seqmagick info 16s_trim.fasta | awk '/length/{print $3}' | head -1)"
+echo "Modelo seleccionado: $(grep -A1 'Best-fit model' 16s_tree.iqtree | head -1)"
+echo "Árbol: 16s_tree.treefile"
+```
+
+### Solución ejercicio 2
+
+```bash
+#!/usr/bin/env bash
+# Ejercicio 2: Comparación MAFFT vs Infernal
+set -euo pipefail
+
+INPUT="16s_raw.fasta"
+
+# Alineamiento MAFFT
+echo "=== Alineamiento con MAFFT ==="
+mafft --genafpair --maxiterate 1000 "$INPUT" > 16s_mafft.fasta
+trimal -in 16s_mafft.fasta -out 16s_mafft_trim.fasta -automated1
+
+# Alineamiento Infernal (ya hecho en ejercicio 1)
+# Asumimos: 16s_trim.fasta ya existe
+
+# Función para estadísticas
+alignment_stats() {
+    local file="$1"
+    local name="$2"
+    local length=$(seqmagick info "$file" | awk '/alignment length/{print $3}' | head -1)
+    # Contar sitios informativos (≥2 taxones con nucleótido diferente)
+    # Simplificado: contar columnas con ≥3 estados diferentes
+    local informative=$(python3 -c "
+from Bio import AlignIO
+aln = AlignIO.read('$file', 'fasta')
+informative = 0
+for i in range(aln.get_alignment_length()):
+    col = set(aln[:, i].upper()) - {'-', '?', 'N'}
+    if len(col) >= 2:
+        # verificar que al menos 2 estados aparecen ≥2 veces
+        from collections import Counter
+        cnt = Counter(aln[:, i].upper())
+        if sum(1 for c, n in cnt.items() if c not in '-?N' and n >= 2) >= 2:
+            informative += 1
+print(informative)
+")
+    echo "$name: longitud=$length, sitios_informativos=$informative"
+}
+
+alignment_stats 16s_mafft_trim.fasta "MAFFT"
+alignment_stats 16s_trim.fasta "Infernal"
+
+# Árboles con IQ-TREE
+echo "=== ML MAFFT ==="
+iqtree2 -s 16s_mafft_trim.fasta -m GTR+I+G -B 1000 -pre 16s_mafft_tree
+
+echo "=== ML Infernal ==="
+iqtree2 -s 16s_trim.fasta -m GTR+I+G -B 1000 -pre 16s_infernal_tree
+
+# Comparar topologías (RF distance)
+echo "=== Distancia Robinson-Foulds ==="
+nw_distance -m rf 16s_mafft_tree.treefile 16s_infernal_tree.treefile
+
+# Comparar soporte bootstrap medio
+echo "=== Bootstrap medio ==="
+python3 -c "
+from ete3 import Tree
+for name, tree_file in [('MAFFT', '16s_mafft_tree.treefile'), ('Infernal', '16s_infernal_tree.treefile')]:
+    t = Tree(tree_file)
+    supports = [n.support for n in t.traverse() if not n.is_leaf() and n.support]
+    print(f'{name}: bootstrap medio = {sum(supports)/len(supports):.1f}')
+"
+```
+
+Salida típica:
+
+```text
+MAFFT:  longitud=1450, sitios_informativos=612
+Infernal: longitud=1487, sitios_informativos=705
+
+=== Distancia Robinson-Foulds ===
+8
+
+=== Bootstrap medio ===
+MAFFT:   bootstrap medio = 87.3
+Infernal: bootstrap medio = 92.8
+```
+
+**Análisis**:
+
+1. **Infernal genera alineamientos ligeramente más largos** porque respeta regiones estructurales que MAFFT puede colapsar.
+2. **Más sitios informativos** con Infernal: las posiciones emparejadas se alinean correctamente, recogiendo señal filogenética que MAFFT puede perder.
+3. **Bootstrap medio más alto** con Infernal: las relaciones evolutivas están mejor soportadas.
+4. **Distancia RF = 8**: diferencias topológicas menores, pero significativas. Las diferencias suelen estar en clados de soporte bajo.
+
+**Conclusión**: Infernal vale la pena especialmente para datasets con taxones lejanos (familias/órdenes distintos) o cuando la estructura es muy conservada. Para análisis intra-género, MAFFT es suficiente.
+
+### Solución ejercicio 3
+
+```bash
+#!/usr/bin/env bash
+# pipeline_16s.sh: pipeline completo de filogenia para 16S rRNA
+# Uso: ./pipeline_16s.sh <input.fasta> <cm_file> [threads]
+set -euo pipefail
+
+# === Validación ===
+if [ "$#" -lt 2 ]; then
+    echo "Uso: $0 <input.fasta> <cm_file> [threads]"
+    echo "Ejemplo: $0 16s.fasta RF00177.cm 8"
+    exit 1
+fi
+
+INPUT="$1"
+CM_FILE="$2"
+THREADS="${3:-4}"
+BASENAME=$(basename "${INPUT%.*}")
+
+# === Logging ===
+log() { echo "[$(date '+%H:%M:%S')] $*" | tee -a "${BASENAME}_pipeline.log"; }
+
+# === Trap para errores ===
+cleanup() {
+    EXIT_CODE=$?
+    [ $EXIT_CODE -ne 0 ] && log "ERROR: pipeline falló (código $EXIT_CODE)"
+}
+trap cleanup EXIT
+
+# === Verificar dependencias ===
+log "Verificando dependencias..."
+for cmd in cmalign seqmagick trimal iqtree2; do
+    command -v "$cmd" >/dev/null 2>&1 || {
+        log "ERROR: $cmd no encontrado"
+        exit 1
+    }
+done
+[ -f "$CM_FILE" ] || { log "ERROR: CM $CM_FILE no existe"; exit 1; }
+[ -f "$INPUT" ]   || { log "ERROR: input $INPUT no existe"; exit 1; }
+
+# === Ejecución ===
+log "Paso 1/4: Alineamiento con Infernal..."
+cmalign --outformat Stockholm "$CM_FILE" "$INPUT" > "${BASENAME}.sto"
+
+log "Paso 2/4: Conversión a FASTA..."
+seqmagick convert --format fasta "${BASENAME}.sto" "${BASENAME}_aln.fasta"
+
+log "Paso 3/4: Recorte con trimAl..."
+trimal -in "${BASENAME}_aln.fasta" -out "${BASENAME}_trim.fasta" -automated1
+
+log "Paso 4/4: ML con IQ-TREE..."
+iqtree2 -s "${BASENAME}_trim.fasta" -m MFP -mset GTR,RNA16A,RNA16B,RNA16D \
+        -B 1000 -alrt 1000 -T "$THREADS" -pre "${BASENAME}_tree"
+
+# === Reporte final ===
+log "=== REPORTE PIPELINE 16S ==="
+cat <<EOF
++-------------------------------+
+| REPORTE PIPELINE 16S          |
++-------------------------------+
+| Input:        ${INPUT}
+| CM:           ${CM_FILE}
+| Threads:      ${THREADS}
+| Secuencias:   $(grep -c '>' "$INPUT")
+| Long. alineada: $(seqmagick info "${BASENAME}_aln.fasta" | awk '/length/{print $3}' | head -1)
+| Long. recortada: $(seqmagick info "${BASENAME}_trim.fasta" | awk '/length/{print $3}' | head -1)
+| Modelo:       $(grep -m1 'Best-fit model' "${BASENAME}_tree.iqtree")
+| Árbol:        ${BASENAME}_tree.treefile
++-------------------------------+
+EOF
+
+log "Pipeline completado exitosamente."
+```
+
+::: callout-important
+**Resumen del capítulo**:
+- 16S rRNA requiere alineamiento estructural (Infernal) y modelos específicos (RNA16).
+- Infernal es el estándar de oro: respeta estructura secundaria vía CMs.
+- SILVA es la base de datos de referencia para 16S/23S.
+- Resolución de 16S: género/familia; para especie usar filogenómica.
+- Modelos doublet (RNA16A/B/D) capturan dependencia entre pares emparejados.
+- Pipeline: Infernal → trimAl → IQ-TREE con RNA16* en mset.
+:::

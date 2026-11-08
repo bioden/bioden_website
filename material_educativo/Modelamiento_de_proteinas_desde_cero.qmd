@@ -1,0 +1,11 @@
+---
+title: "Modelamiento de proteínas desde cero"
+subtitle: "Un curso completo de de como modelar proteínas"
+image: multimedia/protein.png
+format:
+  html:
+    toc: true
+    css: card.css
+margin-header: |
+  ![Xavier Clemente García Cevallos](multimedia/protein.png)
+---

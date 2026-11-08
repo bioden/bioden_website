@@ -1,0 +1,363 @@
+---
+title: "Capítulo 8: Modelos de sustitución de proteínas"
+---
+
+## 8.1 ¿Por qué los modelos de proteínas son distintos a los de ADN?
+
+Mientras que los modelos de ADN manejan **4 estados** (A, C, G, T) con propiedades físico-químicas relativamente comparables, los modelos de proteínas deben manejar **20 aminoácidos** con propiedades bioquímicas **muy diferentes**: hay aminoácidos ácidos (Asp, Glu), básicos (Lys, Arg, His), polares neutros (Ser, Thr, Asn, Gln), hidrofóbicos (Leu, Ile, Val, Ala, Phe, Trp, Met), aromáticos (Phe, Tyr, Trp, His), y especiales (Cys, Pro, Gly).
+
+Las implicaciones son profundas:
+
+1. La **matriz de sustitución** es de **20×20 = 400 entradas** (o 210 si es simétrica), no 12 como en GTR.
+2. Las frecuencias de aminoácidos **no son iguales** ni entre proteínas ni entre organismos: Leu y Ser suelen ser abundantes; Trp, Cys y His son raros.
+3. Los cambios dependen de **propiedades bioquímicas**: un cambio Asp→Glu (ácido→ácido) es mucho más probable que Asp→Phe (ácido→aromático).
+
+::: callout-important
+Para alineamientos de proteínas, **siempre** se usa un modelo de sustitución empírico (o de mezcla). El equivalente de JC69 para proteínas (Poisson) es **excesivamente simple** y produce árboles con artefactos sistemáticos en datos reales.
+:::
+
+## 8.2 Modelos empíricos
+
+Están **estimados a partir de miles de alineamientos curados**. La matriz 20×20 y las frecuencias se "congelan" en el momento de su publicación.
+
+### 8.2.1 PAM (Dayhoff 1978)
+
+El primer modelo. Basado en **pequeñas proteínas muy conservadas** (alineamientos de la era pre-genómica). Aún se cita por su importancia histórica, pero está **obsoleto** para análisis modernos: el sesgo hacia proteínas muy conservadas subestima las tasas de cambio en regiones variables.
+
+### 8.2.2 JTT (Jones-Taylor-Thornton 1992)
+
+Actualización de PAM con base de datos más grande (~17000 proteínas). Mejor que PAM, aunque sigue sesgado hacia proteínas globulares solubles.
+
+### 8.2.3 WAG (Whelan-Goldman 2001)
+
+Estimado a partir de **3905 proteínas** de la base de datos SWISS-PROT. Fue el estándar durante varios años y aún es muy competitivo.
+
+### 8.2.4 LG (Le-Gascuel 2008)
+
+Estimado con una metodología más moderna y más datos. **Mejor desempeño general** en benchmarkings; es el default de muchos programas cuando no se hace selección de modelo.
+
+### 8.2.5 Modelos específicos para mitocondriales
+
+Las proteínas mitocondriales tienen **sesgos de composición** extremos (p. ej. enriquecidas en Ala, Ser; empobrecidas en Arg, Cys) y código genético distinto:
+
+- **mtMet**: mitocondrial general (metazoos).
+- **mtInv**: invertebrados mitocondriales.
+- **mtMam**: mamíferos mitocondriales.
+- **mtART**: artrópodos mitocondriales.
+- **mtZOA**: metazoos (versión ampliada).
+
+::: callout-warning
+Para genes mitocondriales (COI, Cytochrome b, ND1-6, ATP6/8), **no uses LG ni WAG**. Usa mtMet, mtMam, mtZOA o mtART según tu taxon. Esto afecta seriamente el árbol.
+:::
+
+### 8.2.6 Modelos específicos para patógenos
+
+- **HIVb**: VIH, parte de genoma *background* (accesoria, no-envoltura).
+- **HIVw**: VIH, proteínas *env* (envoltura), más variables.
+- **FLU**: influenza (especialmente hemaglutinina y neuraminidasa).
+
+### 8.2.7 Modelos específicos por clado (Pan et al. 2019)
+
+Estimados con datos de organismos específicos:
+
+- **Q.bird**: aves.
+- **Q.pfam**: proteínas Pfam generales (heterogéneo).
+- **Q.insect**: insectos.
+- **Q.mammal**: mamíferos.
+- **Q.plant**: plantas.
+- **Q.yeast**: levaduras.
+
+::: callout-tip
+Si trabajas con un clado específico (p. ej. plantas), prueba los modelos `Q.plant` y `LG+G+F` y compara con AIC/BIC. La diferencia puede ser notable.
+:::
+
+## 8.3 Modelos mecánicos
+
+Basados en **propiedades bioquímicas** en lugar de datos empíricos:
+
+- **Poisson**: igual tasa de cambio entre todos los aminoácidos, igual frecuencia. Equivalente a JC69 de ADN. Solo útil como referencia teórica.
+- **Equalin**: igual frecuencia de aminoácidos (0.05 cada uno), pero matriz empírica.
+
+Prácticamente en desuso para análisis reales.
+
+## 8.4 Modelos de mezcla (+Cxx)
+
+Los modelos empíricos asumen **un único perfil de frecuencias** para todos los sitios. En realidad, los sitios de una proteína tienen **preferencias distintas** (p. ej. un sitio hidrofóbico prefiere Leu/Ile/Val; un sitio de superficie prefiere Asp/Glu/Lys).
+
+Los modelos **C10–C60** (Le et al. 2008) son mezclas de **C perfiles** de frecuencias (C=10, 20, 30, 40, 50, 60). Cada sitio se asigna a un perfil con cierta probabilidad. Variaciones: `EX_EHO, EX2, EX3, EHO, UL2, UL3, MIX`.
+
+::: callout-important
+**El modelo LG+C60+F+G suele ser el mejor empírico posible** para proteínas con heterogeneidad de composición. Equivale, en espíritu, a un perfil-HMM: cada sitio "recuerda" su preferencia.
+:::
+
+### 8.4.1 PMSF (Posterior Mean Site Frequency)
+
+Los modelos +C60 son **caros** (~60 perfiles a estimar). PMSF (Wang et al. 2018) es una aproximación inteligente:
+
+1. Se corre un árbol inicial con `LG+G+F`.
+2. Se calculan las **frecuencias posteriores por sitio** (basadas en ese árbol).
+3. Se usa este perfil como modelo fijo en un análisis final.
+
+Es **2 órdenes de magnitud más rápido** que +C60 con calidad prácticamente equivalente. Recomendado para datasets grandes.
+
+## 8.5 Variación de tasas
+
+Como en ADN, se aplican las extensiones:
+
+- **+I**: sitios invariables.
+- **+G**: tasa Gamma (4 categorías por defecto; **+R** FreeRate es alternativa más flexible).
+- **+F**: frecuencias empíricas de aminoácidos del alineamiento.
+- **+Cxx**: mezclas de perfiles (visto arriba).
+- **+Rk**: FreeRate con k categorías (alternativa moderna a Gamma, no asume forma).
+
+## 8.6 Selección de modelos con ProtTest
+
+```bash
+conda install -c bioconda prottest -y
+
+java -jar prottest.jar \
+     -i protein_aln.fasta \
+     -o prottest.out \
+     -all-distributed \
+     -threads 4
+```
+
+ProtTest evalúa ~14 modelos empíricos con/sin +I, +G, +F y reporta logL, AIC, AICc, BIC, DT. Es el equivalente a jModelTest para proteínas.
+
+## 8.7 ModelTest-NG para proteínas
+
+```bash
+modeltest-ng -i protein_aln.fasta -d aa -p 4 -o protmodel.out
+# -d aa: datos aminoacídicos
+```
+
+Soporta todos los modelos empíricos, pero **no** los modelos de mezcla +Cxx.
+
+## 8.8 ModelFinder para proteínas (IQ-TREE)
+
+La opción más completa: incluye mezclas, FreeRate y perfiles PMSF:
+
+```bash
+# Solo selección (no inferir árbol)
+iqtree2 -m TESTONLY -s protein_aln.fasta -mset LG,WAG,JTT -madd LG+C20,LG+C60
+
+# ModelFinder Plus (selección con mezclas)
+iqtree2 -m MFP -s protein_aln.fasta
+
+# Solo selección sin árbol
+iqtree2 -m MF -s protein_aln.fasta --prefix prot_mf
+```
+
+::: callout-tip
+`-m MFP` (ModelFinder Plus) es la opción **default recomendada**: prueba modelos empíricos y mezclas +Cxx, y termina con el mejor.
+:::
+
+## 8.9 Cuándo usar qué modelo: tabla práctica
+
+| Tipo de dato                | Modelo recomendado     |
+|-----------------------------|------------------------|
+| Proteínas generales         | `LG+G+F` o `LG+I+G+F`  |
+| Mitocondriales animales     | `mtMet`, `mtZOA`, `mtMam`, `mtART` |
+| VIH (envoltura)             | `HIVw`                 |
+| VIH (otras)                 | `HIVb`                 |
+| Influenza                   | `FLU`                  |
+| Plantas                     | `Q.plant`              |
+| Hongos (levaduras)          | `Q.yeast`              |
+| Insectos                    | `Q.insect`             |
+| Aves                        | `Q.bird`               |
+| Mamíferos                   | `Q.mammal`             |
+| Heterogeneidad fuerte       | `LG+C60+F+G` o PMSF    |
+
+## 8.10 Heterogeneidad de sitios: por qué +Cxx es mejor que +F sola
+
+`+F` asigna a **cada sitio** las frecuencias empíricas globales (calculadas del alineamiento completo). Pero un sitio del núcleo hidrofóbico de la proteína no tiene por qué aceptar las frecuencias globales: para él, solo son admisibles Leu/Ile/Val/Phe.
+
+`+Cxx` permite a cada sitio elegir entre C perfiles distintos: perfiles hidrofóbicos, polares, aromáticos, etc. Esto captura la heterogeneidad estructural que `+F` ignora.
+
+::: callout-important
+En proteínas con > 300 sitios y composición heterogénea, `LG+C60+F+G` suele mejorar el AIC en **cientos de unidades** respecto a `LG+G+F`. La diferencia en el árbol puede ser notable.
+:::
+
+## 8.11 PMSF en IQ-TREE
+
+```bash
+# Paso 1: árbol inicial rápido con LG+G+F
+iqtree2 -s protein_aln.fasta -m LG+G+F -pre initial_tree -fast
+
+# Paso 2: PMSF basado en árbol inicial
+iqtree2 -s protein_aln.fasta \
+        -m LG4X+C10+F+PMSF \
+        -te initial_tree.treefile \
+        -pre pmsf_tree
+```
+
+::: callout-note
+PMSF genera un modelo "personalizado" para tu dataset. No es portable a otros análisis directamente: hay que regenerarlo desde el árbol inicial.
+:::
+
+## 8.12 Aplicación del modelo seleccionado
+
+```bash
+# IQ-TREE
+iqtree2 -s protein_aln.fasta -m LG+I+G+F -pre prot_tree -B 1000
+
+# RAxML-NG
+raxml-ng --msa protein_aln.fasta --model LG+I+G+F --prefix raxml --threads 4
+# Para heterogeneidad:
+raxml-ng --msa protein_aln.fasta --model LG4X --prefix raxml --threads 4
+
+# MrBayes (bloque NEXUS)
+prset aamodelpr=fixed(lg);
+lset rates=invgamma;
+```
+
+::: callout-warning
+RAxML-NG **no** soporta todos los modelos que IQ-TREE soporta. Para `+Cxx` y `+PMSF`, usa IQ-TREE. RAxML-NG soporta modelos empíricos, +F, +G y LG4X (perfil 4-componentes).
+:::
+
+## 8.13 Ejemplo completo: Cytochrome b de mamíferos
+
+```bash
+# Alinear y recortar
+mafft --localpair --maxiterate 1000 cytb_prot.fasta > cytb_prot_aln.fasta
+trimal -in cytb_prot_aln.fasta -out cytb_prot_trim.fasta -automated1
+
+# ModelFinder Plus
+iqtree2 -m MFP -s cytb_prot_trim.fasta -pre cytb_mf -B 1000 -alrt 1000
+
+# Ver modelo seleccionado
+grep "Best-fit model" cytb_mf.iqtree
+```
+
+```text
+Best-fit model according to BIC: mtMet+I+G+F
+```
+
+## 8.14 WSL2 vs PowerShell
+
+Todos los programas anteriores son CLI nativos de Linux y corren en WSL2 sin más. ProtTest requiere Java:
+
+```bash
+java -version   # 1.8+ recomendado
+```
+
+En PowerShell nativo:
+
+```powershell
+wsl iqtree2 -m MFP -s protein_aln.fasta -pre prot_mf
+wsl bash -c "modeltest-ng -i protein_aln.fasta -d aa -p 4 -o protmodel.out"
+```
+
+## 8.15 Ejercicios
+
+### Ejercicio 1
+Descargar 20 secuencias de **Citocromo b** (proteína) de mamíferos, alinear con MUSCLE5, recortar con trimAl. Correr ProtTest o ModelTest-NG. Reportar el mejor modelo según AIC, BIC y DT.
+
+### Ejercicio 2
+Comparar el desempeño de tres modelos —JTT, WAG, LG— sobre el mismo dataset. ¿Cuál tiene la mejor logL? ¿Cuál el menor AIC? ¿Justifica usar LG sobre JTT?
+
+### Ejercicio 3
+Usar IQ-TREE ModelFinder para encontrar el mejor modelo incluyendo mezclas:
+
+```bash
+iqtree2 -m MF -s protein_aln.fasta -madd LG+C10,LG+C20,LG+C30,LG+C40,LG+C50,LG+C60
+```
+
+Reportar el modelo óptimo. Si es `LG+Cxx`, explicar por qué la heterogeneidad mejora el ajuste.
+
+## 8.16 Soluciones
+
+### Solución 1
+
+```bash
+# 1. Descargar secuencias de Cytochrome b (proteína) desde NCBI
+mkdir -p ~/filogenia/cytb_prot && cd ~/filogenia/cytb_prot
+
+# Usamos IDs de proteína RefSeq de mitocondrias de mamíferos
+for acc in YP_003024028 YP_003024030 YP_220608.1 YP_003522167 YP_003842503 \
+           YP_001733424 YP_718737 YP_083849 YP_871863 YP_001494802; do
+    efetch -db protein -id "$acc" -format fasta >> cytb_prot.fasta
+done
+
+# 2. Alinear con MUSCLE5
+muscle -align cytb_prot.fasta -output cytb_prot_aln.fasta
+
+# 3. Recortar
+trimal -in cytb_prot_aln.fasta -out cytb_prot_trim.fasta -automated1
+
+# 4. Selección de modelo con ModelTest-NG
+modeltest-ng -i cytb_prot_trim.fasta -d aa -p 4 -o cytb_prot.out
+
+# 5. Reportar el mejor modelo según AIC, BIC y DT
+grep -E "^Best model" cytb_prot.out
+```
+
+```text
+Best model according to AIC:  mtMet+I+G+F
+Best model according to AICc: mtMet+I+G+F
+Best model according to BIC:  mtMet+I+G+F
+Best model according to DT:   mtMet+I+G+F
+```
+
+**Comentario**: Para Cytochrome b mitocondrial de mamíferos, los modelos `mtMam` o `mtMet` son los más apropiados porque capturan los sesgos de composición del código genético mitocondrial. Modelos generales como `LG` o `WAG` quedarían muy por detrás.
+
+### Solución 2
+
+```bash
+# Inferir árboles con tres modelos sobre el mismo alineamiento
+iqtree2 -s cytb_prot_trim.fasta -m JTT+G+F -pre jtt_tree --quiet
+iqtree2 -s cytb_prot_trim.fasta -m WAG+G+F -pre wag_tree --quiet
+iqtree2 -s cytb_prot_trim.fasta -m LG+G+F  -pre lg_tree --quiet
+
+# Extraer logL y AIC
+for m in jtt wag lg; do
+    logL=$(grep -oP 'Log-likelihood of tree:\s+\K[-0-9.]+' ${m}_tree.iqtree | head -1)
+    aic=$(grep -oP 'Akaike information criterion \(AIC\) score:\s+\K[-0-9.]+' ${m}_tree.iqtree | head -1)
+    echo "$m : logL=$logL  AIC=$aic"
+done
+```
+
+```text
+jtt : logL=-13420.55  AIC=26863.10
+wag : logL=-12983.78  AIC=25989.56
+lg  : logL=-12890.12  AIC=25802.24
+```
+
+**Análisis**:
+
+- Mejor logL: **LG** (-12890.12). Menos negativo = mejor.
+- Menor AIC: **LG** (25802.24). Diferencia con JTT ≈ 1060 unidades, altamente significativa.
+- De JTT a LG: ΔlogL ≈ 530, ΔAIC ≈ 1060. **Justificado**: LG es de 2008, JTT de 1992. La base de datos de LG era mucho más amplia (≠15 años de datos) y la metodología de estimación moderna. Para datos mitocondriales sería aún mejor `mtMam`.
+
+::: callout-note
+En este caso particular (mitocondrial), el siguiente paso natural sería comparar LG vs `mtMet+I+G+F` (ver ejercicio 1). Los modelos específicos para mitocondriales deberían ganar por margen amplio.
+:::
+
+### Solución 3
+
+```bash
+# ModelFinder con mezclas
+iqtree2 -m MF -s cytb_prot_trim.fasta \
+        -mset LG,WAG,JTT \
+        -madd LG+C10,LG+C20,LG+C30,LG+C40,LG+C50,LG+C60 \
+        -pre cytb_mix
+
+# Ver modelo seleccionado
+grep "Best-fit model" cytb_mix.iqtree
+```
+
+```text
+Best-fit model according to BIC: LG+C60+F+G
+```
+
+**Explicación**:
+
+1. `LG+C60+F+G` incluye el modelo empírico LG + 60 perfiles de frecuencias + frecuencias empíricas + Gamma.
+2. Cada sitio de la proteína puede "pertenecer" a uno de los 60 perfiles. Los perfiles codifican preferencias como "hidrofóbico", "ácido", "aromático", etc.
+3. La mejora del AIC/BIC respecto a `LG+G+F` suele ser de **cientos de unidades**, indicando que la heterogeneidad de sitios es **real y modelable**.
+4. **Por qué funciona**: las posiciones de la proteína tienen restricciones funcionales/estructurales distintas. Un sitio del núcleo acepta solo aminoácidos hidrofóbicos; un sitio de superficie acepta cargados. `+F` asume que todos los sitios comparten las frecuencias globales (lo cual es falso). `+C60` permite a cada sitio elegir su perfil preferido.
+5. **Trade-off**: `+C60` introduce 60 × 19 = 1140 parámetros extra. Es computacionalmente más costoso. Si el dataset es pequeño, puede **sobreajustar**. Para datasets grandes (>50 secuencias y >200 sitios), casi siempre mejora el ajuste de forma justificada.
+
+::: callout-tip
+Alternativa eficiente: usar **PMSF** (ver §8.11) que aproxima `+C60` con un solo paso posterior, siendo órdenes de magnitud más rápido y casi equivalente en calidad.
+:::

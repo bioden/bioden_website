@@ -1,0 +1,944 @@
+---
+title: "Capítulo 17: Visualización y anotación de árboles"
+---
+
+## 17.1 ¿Por qué es importante visualizar árboles?
+
+Un árbol filogenético es una hipótesis científica. Como toda hipótesis, debe comunicarse claramente. La visualización cumple tres funciones:
+
+1. **Exploración**: detectar patrones, identificar ramas con soporte bajo, validar resultados.
+2. **Interpretación**: añadir contexto (taxonomía, geografía, caracteres morfológicos, fechas).
+3. **Comunicación**: producir figuras para publicaciones, presentaciones, materiales docentes.
+
+Un buen árbol publicado debe mostrar: **topología**, **soporte de ramas** (bootstrap/probabilidad posterior), **longitudes de rama** (o escala temporal en cronogramas), **etiquetas legibles** y **anotaciones relevantes** (color por clado, símbolos por carácter, escalas).
+
+::: callout-note
+**Error común**: publicar árboles con bootstrap como números sobre cada nodo sin distinguir cuál es el soporte. Siempre: declarar el tipo de soporte en la figura (leyenda) y usar **colores de rama** o **símbolos** (círculos llenos/vacíos) además de números.
+:::
+
+## 17.2 Formatos de árboles
+
+### 17.2.1 Newick
+
+Formato textual más extendido. Cada sub-árbol se escribe como `(hijo1:longitud, hijo2:longitud):longitud_padre`.
+
+```text
+(A:0.1,(B:0.2,C:0.3):0.1);
+```
+
+- Los `:` separan la longitud de rama.
+- `,` separa hijos de un mismo nodo.
+- `()` agrupan.
+- `;` termina el árbol.
+- Soporte: se escribe como nombre interno del nodo: `(A:0.1,(B:0.2,C:0.3)95:0.1);`
+
+### 17.2.2 NEXUS
+
+Bloque `trees` dentro de un archivo NEXUS:
+
+```text
+#NEXUS
+
+BEGIN TREES;
+    TRANSLATE
+        1 Homo_sapiens,
+        2 Pan_troglodytes,
+        3 Gorilla_gorilla;
+    TREE tree1 = ((1:0.1,2:0.2)95:0.1,3:0.3);
+END;
+```
+
+### 17.2.3 PhyloXML
+
+Formato XML que permite anotaciones avanzadas: colores, eventos (duplicaciones, especiaciones), distribución geográfica, etc.
+
+```xml
+<phyloxml>
+  <phylogeny>
+    <clade>
+      <name>Homo-Pan</name>
+      <branch_length>0.1</branch_length>
+      <confidence type="bootstrap">95</confidence>
+      <clade>
+        <name>Homo_sapiens</name>
+        <branch_length>0.1</branch_length>
+      </clade>
+      <!-- ... -->
+    </clade>
+  </phylogeny>
+</phyloxml>
+```
+
+### 17.2.4 FigTree (NEXUS anotado)
+
+Extensión de NEXUS con metadatos visuales (color de rama, ancho, rango temporal HPD):
+
+```text
+#NEXUS
+BEGIN TREES;
+    TREE tree1 = [&R] ((A:0.1,B:0.2)[&length_mean=0.1,range={0.05,0.15}]:0.1,C:0.3);
+END;
+```
+
+## 17.3 FigTree (clásico, GUI)
+
+**FigTree** (Rambaut) es la GUI más extendida para árboles. Java-based, multiplataforma.
+
+### 17.3.1 Instalación
+
+```bash
+# En WSL2/Linux con Bioconda (requiere X server)
+conda install -c bioconda figtree -y
+
+# En Windows nativo (recomendado para WSL2): descargar el .jar
+# desde http://tree.bio.ed.ac.uk/software/figtree/
+# Ejecutar con: java -jar figtree.jar
+```
+
+::: callout-warning
+**WSL2 y FigTree**: FigTree es una GUI Java. En WSL2 sin WSLg (Windows 10) no funciona. Opciones:
+1. **Windows 11 con WSLg**: `figtree` desde WSL2 abre la GUI automáticamente.
+2. **Windows 10**: instalar FigTree nativo en Windows y abrir el `.treefile` desde el explorador.
+3. **Sin GUI**: usar ETE3 o ggtree desde WSL2 para generar imágenes (PNG/PDF) directamente.
+:::
+
+### 17.3.2 Visualizaciones disponibles
+
+- **Rectangular**: clásica, ramas verticales a las hojas.
+- **Radial**: cirular con raíz en el centro.
+- **Polar / circular**: ramas en abanico.
+- **Cladogram vs phylogram**: cladogram sin longitudes; phylogram con longitudes.
+
+### 17.3.3 Anotaciones en FigTree
+
+- **Branch colors**: por clado, por soporte.
+- **Node labels**: bootstrap, probabilidades posteriores, edades.
+- **Tip labels**: nombres de taxones.
+- **Scale bar**: escala de sustituciones o tiempo (Myr).
+- **HPD bars**: para cronogramas de BEAST2.
+
+## 17.4 ETE3 (Python toolkit + CLI)
+
+**ETE3** (Huerta-Cepas et al.) es el toolkit más potente para árboles en Python. Combina CLI y API Python.
+
+### 17.4.1 Instalación
+
+```bash
+conda install -c bioconda ete3 -y
+
+# Verificar
+ete3 version
+```
+
+::: callout-note
+**ETE4** es la nueva versión, disponible en GitHub pero no en conda todavía. ETE3 sigue siendo el estándar bioconda y funciona perfectamente. Para instalar ETE4: `pip install --upgrade ete4`.
+:::
+
+### 17.4.2 CLI básico
+
+```bash
+# Visualizar árbol (abre GUI interactiva)
+ete3 view -t tree.nwk
+
+# Convertir formato
+ete3 convert -t tree.nwk -src newick -dst nexus -o tree.nex
+
+# Renderizar a imagen
+ete3 view -t tree.nwk -i tree.png --format png
+ete3 view -t tree.nwk -i tree.pdf --format pdf
+ete3 view -t tree.nwk -i tree.svg --format svg
+
+# Anotar con bootstrap (sacar soporte de nombres internos)
+ete3 annotate -t tree.nwk --bootstrap support -o annotated.nwk
+```
+
+### 17.4.3 API Python (más flexible)
+
+```python
+#!/usr/bin/env python3
+# render_tree.py: visualizar árbol con ETE3
+from ete3 import Tree, TreeStyle, NodeStyle, faces, AttrFace
+
+# Cargar árbol
+t = Tree("tree.nwk")
+
+# Estilo del árbol
+ts = TreeStyle()
+ts.show_leaf_name = True
+ts.mode = "r"           # rectangular
+ts.orientation = 0       # izquierda a derecha
+ts.scale = 100           # 100 px por unidad de longitud
+ts.show_scale = True
+
+# Personalizar nodos según soporte
+for node in t.traverse():
+    nstyle = NodeStyle()
+    nstyle["size"] = 10
+    if node.is_leaf():
+        nstyle["shape"] = "square"
+        nstyle["fgcolor"] = "black"
+    else:
+        # Color por soporte de bootstrap
+        if node.support > 95:
+            nstyle["fgcolor"] = "red"
+        elif node.support > 70:
+            nstyle["fgcolor"] = "orange"
+        else:
+            nstyle["fgcolor"] = "gray"
+    node.set_style(nstyle)
+
+# Añadir etiqueta de soporte en nodos internos
+for node in t.traverse():
+    if not node.is_leaf():
+        faces.add_face_to_node(AttrFace("support"), node, column=0, position="branch-top")
+
+# Renderizar
+t.render("tree_styled.png", tree_style=ts, w=1200, units="px")
+t.render("tree_styled.pdf", tree_style=ts, w=8, units="in")  # 8 inches wide
+print("Árbol renderizado: tree_styled.png y tree_styled.pdf")
+```
+
+::: callout-tip
+**ETE3 para figuras publicables**: con la API Python puedes controlar cada aspecto del árbol: formas, colores, fuentes, anotaciones. Es la opción preferida cuando necesitas una figura exacta para publicación. Para exploración rápida, `ete3 view -t` con GUI es suficiente.
+:::
+
+## 17.5 iTOL (Interactive Tree Of Life)
+
+**iTOL** (Letunic & Bork) es una herramienta web para visualizar y anotar árboles interactivamente. Sin instalación.
+
+### 17.5.1 Uso manual
+
+URL: https://itol.embl.de/
+
+1. Subir árbol (Newick o NEXUS).
+2. Añadir datasets de anotación (archivos de texto):
+   - **Branch colors**: por clado o taxón.
+   - **Heatmaps**: matriz de valores por hoja.
+   - **Bar charts**: barras asociadas a cada hoja.
+   - **Protein domains**: para árboles de proteínas.
+   - **Dataset text labels**: etiquetas adiciones.
+3. Exportar como PNG, PDF, SVG.
+
+### 17.5.2 API para subir programáticamente
+
+```bash
+# Subir árbol vía API con curl
+curl -s -F "treeFile=@tree.nwk" \
+     -F "projectName=mi_proyecto" \
+     -F "treeName=arbol_hominidae" \
+     -F "description=Análisis filogenómico de Hominidae" \
+     https://itol.embl.de/batch_uploader.cgi
+
+# Retorna un XML con la URL del árbol
+# Ejemplo de respuesta:
+#   <?xml version="1.0"?>
+#   <iTOL>
+#     <status>success</status>
+#     <tree_id>1234567890</tree_id>
+#     <url>https://itol.embl.de/tree/1234567890/arbol_hominidae</url>
+#   </iTOL>
+```
+
+### 17.5.3 Archivos de anotación
+
+Ejemplo de archivo de colores por familia (`hominidae_colors.txt`):
+
+```text
+DATASET_LABEL
+Colors by family
+
+DATASET_SCALE
+1
+
+DATASET_COLORSTRIP
+SEPARATOR COMMA
+DATA
+Homo_sapiens,#FF0000,2
+Pan_troglodytes,#FF0000,2
+Pan_paniscus,#FF0000,2
+Gorilla_gorilla,#00FF00,2
+Gorilla_beringei,#00FF00,2
+Pongo_pygmaeus,#0000FF,2
+Pongo_abelii,#0000FF,2
+Hylobates_lar,#FFFF00,2
+Symphalangus_syndactylus,#FFFF00,2
+Macaca_mulatta,#FF00FF,2
+Papio_anubis,#FF00FF,2
+Tarsius_syrichta,#FFFFFF,2
+```
+
+Subir este archivo al árbol ya cargado en iTOL (botón "Datasets" → "Upload").
+
+## 17.6 ggtree (R, muy potente)
+
+**ggtree** (Yu et al.) es un paquete R basado en ggplot2. Ofrece control total sobre la estética.
+
+### 17.6.1 Instalación
+
+```r
+# En R:
+install.packages("BiocManager")
+BiocManager::install("ggtree")
+BiocManager::install("treeio")  # complementario
+```
+
+### 17.6.2 Uso básico
+
+```r
+#!/usr/bin/env Rscript
+# render_ggtree.R
+library(ggtree)
+library(ape)
+library(treeio)
+library(ggplot2)
+
+# Cargar árbol
+tree <- read.tree("tree.nwk")
+
+# Visualización básica
+p <- ggtree(tree) +
+  geom_tiplab() +
+  theme_tree2() +
+  xlim(0, 1.2)
+ggsave("tree_basic.png", p, width=10, height=8, dpi=300)
+
+# Con bootstrap coloreado
+p2 <- ggtree(tree) +
+  geom_tiplab(fontface="italic") +
+  geom_nodepoint(aes(color=as.numeric(label)), size=3) +
+  scale_color_gradient(low="gray", high="red", name="Bootstrap") +
+  theme_tree2() +
+  xlim(0, 1.2)
+ggsave("tree_bootstrap.pdf", p2, width=10, height=8)
+
+# Anotar clados
+p3 <- ggtree(tree) +
+  geom_tiplab() +
+  geom_hilight(node=MRCA(tree, "Homo_sapiens", "Pan_troglodytes"),
+               fill="steelblue", alpha=0.3) +
+  geom_cladelabel(node=MRCA(tree, "Homo_sapiens", "Pan_troglodytes"),
+                  label="Homininae", align=TRUE) +
+  theme_tree2()
+ggsave("tree_clades.png", p3, width=12, height=8, dpi=300)
+```
+
+::: callout-tip
+**ggtree es la opción preferida para figuras publicables**. Soporta anotaciones avanzadas: heatmap de expresión genética junto al árbol, barras de edad fósil, rangos HPD, anotaciones de dominios de proteínas. La curva de aprendizaje es mayor pero los resultados son de calidad profesional.
+:::
+
+## 17.7 ape (R, análisis filogenéticos)
+
+El paquete **ape** (Paradis et al.) incluye `plot.phylo`:
+
+```r
+#!/usr/bin/env Rscript
+library(ape)
+tree <- read.tree("tree.nwk")
+
+# Visualización básica
+plot(tree, type="phylogram", show.node.label=TRUE, cex=0.7)
+add.scale.bar()
+
+# Tipos disponibles
+plot(tree, type="fan")        # radial
+plot(tree, type="unrooted")   # sin enraizar
+plot(tree, type="cladogram")  # sin longitudes
+
+# Con bootstrap como etiquetas de nodo
+plot(tree, show.node.label=TRUE, node.depth=2)
+nodelabels(tree$node.label, bg="white", frame="circle")
+```
+
+## 17.8 Bio.Phylo (BioPython)
+
+```python
+#!/usr/bin/env python3
+from Bio import Phylo
+
+# Cargar árbol
+tree = Phylo.read("tree.nwk", "newick")
+
+# ASCII art (terminal)
+Phylo.draw_ascii(tree)
+
+# Visualización gráfica (requiere matplotlib)
+import matplotlib.pyplot as plt
+Phylo.draw(tree, do_show=False)
+plt.savefig("tree_biophylo.png", dpi=300, bbox_inches='tight')
+
+# Manipulación
+tree.root_with_outgroup({"name": "Tarsius_syrichta"})
+tree.ladderize()
+Phylo.write(tree, "tree_ladderized.nwk", "newick")
+```
+
+## 17.9 newick_utils (CLI potente)
+
+**newick_utils** (Junier & Zdobnov) ofrece utilidades CLI muy útiles para manipular árboles:
+
+```bash
+# Instalación
+conda install -c bioconda newick_utils -y
+
+# Mostrar árbol en ASCII
+nw_display tree.nwk
+
+# Renombrar hojas
+# names.tsv: ID_original<TAB>nombre_bonito
+nw_rename -i names.tsv tree.nwk > renamed.nwk
+
+# Enrizar con outgroup
+nw_rename -r outgroup tree.nwk > rooted.nwk
+
+# Ordenar (ladderize)
+nw_order tree.nwk > ordered.nwk
+
+# Topología solo (sin longitudes)
+nw_topology tree.nwk
+
+# Calcular distancias (p. ej., Robinson-Foulds entre árboles)
+nw_distance -m rf tree1.nwk tree2.nwk
+
+# Condensar (colapsar ramas con soporte bajo)
+nw_condense -t 70 tree.nwk > condensed.nwk
+
+# Extraer subárbol (clado con lista de taxones)
+nw_cut -c clade.txt tree.nwk > subtree.nwk
+
+# Calcular distancia patrística entre dos taxones
+nw_distance -m pat tree.nwk Homo_sapiens Pan_troglodytes
+
+# Estadísticas del árbol
+nw_stats tree.nwk
+```
+
+## 17.10 Manipulaciones comunes de árboles
+
+### 17.10.1 Enrizar con outgroup
+
+```bash
+# Enrizar con un taxón como outgroup
+nw_rename -r Tarsius_syrichta tree.nwk > rooted.nwk
+
+# Alternativa en R
+Rscript -e '
+library(ape)
+t <- read.tree("tree.nwk")
+t <- root(t, outgroup="Tarsius_syrichta", resolve.root=TRUE)
+write.tree(t, file="rooted.nwk")
+'
+```
+
+::: callout-warning
+**Elegir un buen outgroup**: debe ser **claramente externo** al grupo de estudio (no dentro del clado). Si dudas, usa **multiple outgroups** (un taxón levemente fuera pero relacionado, p. ej., *Tarsius* para Hominidae). Un outgroup mal escogido puede inducir **atracción de ramas largas** y topología errónea.
+:::
+
+### 17.10.2 Colapsar ramas con soporte bajo
+
+```bash
+# Colapsar ramas con bootstrap < 70 a politomías
+nw_condense -t 70 tree.nwk > condensed.nwk
+
+# En Python con ETE3
+python3 -c "
+from ete3 import Tree
+t = Tree('tree.nwk')
+for node in t.traverse():
+    if not node.is_leaf() and node.support < 70:
+        node.support = 0  # colapsar visualmente
+t.write(format=2, outfile='condensed.nwk')
+"
+```
+
+### 17.10.3 Renombrar hojas
+
+```bash
+# Archivo names.tsv: ID_original<TAB>nombre_científico
+# FJ97XXXX<TAB>Homo sapiens
+# MH12XXXX<TAB>Pan troglodytes
+
+nw_rename -i names.tsv tree.nwk > renamed.nwk
+
+# Verificar
+grep -c ">" renamed.nwk
+nw_display renamed.nwk | head
+```
+
+### 17.10.4 Extraer subárbol
+
+```bash
+# clade.txt contiene los taxones del clado a extraer
+# (un nombre por línea)
+echo "Homo_sapiens
+Pan_troglodytes
+Pan_paniscus" > clade.txt
+
+nw_cut -c clade.txt tree.nwk > homininae.nwk
+```
+
+### 17.10.5 Comparar árboles (Robinson-Foulds)
+
+```bash
+# RF distance: mide cuántas biparticiones difieren entre dos árboles
+nw_distance -m rf tree1.nwk tree2.nwk
+
+# RF normalizada: divide por la suma de biparticiones de ambos árboles
+python3 -c "
+from ete3 import Tree
+t1 = Tree('tree1.nwk')
+t2 = Tree('tree2.nwk')
+rf, max_rf = t1.compare(t2, unrooted=True)['rf'], t1.compare(t2, unrooted=True)['max_rf']
+print(f'RF: {rf} / {max_rf} = {rf/max_rf:.3f}')
+"
+```
+
+## 17.11 Output para publicaciones
+
+Estándares de calidad para figuras filogenéticas en revistas científicas:
+
+- **Resolución**: 300 DPI mínimo para impresión (600 DPI preferido).
+- **Formatos vectoriales**: PDF o SVG preferidos (escalables sin pérdida).
+- **Tipografía**: sans-serif (Arial, Helvetica, Liberation Sans), tamaño 8-12 pt.
+- **Escala**: incluir barra de escala (sustituciones/sitio o Myr en cronogramas).
+- **Soporte**: siempre indicar tipo (bootstrap, posterior prob) en leyenda.
+- **Colores**: usar paletas accesibles a daltonismo (p. ej., viridis, colorbrewer).
+- **Nombres**: preferir **nombres científicos** en itálica sobre accessions.
+
+::: callout-tip
+**Buenas prácticas**:
+1. Siempre **barra de escala** visible.
+2. **Soporte en branches** (no solo en nodos): color/anchura más informativo que números.
+3. **Leyenda** explicando colores, símbolos, escala.
+4. **Outgroup etiquetado** y, si es muy distante, considerar **podar** del árbol final.
+5. **Guardar en formato vectorial** (PDF/SVG) para no perder calidad al imprimir.
+:::
+
+## 17.12 Anotaciones comunes en filogenia
+
+| Tipo | Ejemplo | Herramienta recomendada |
+|------|---------|------------------------|
+| Soporte de rama | Bootstrap, posterior prob | FigTree, ETE3 |
+| Longitudes de rama | Sust/sitio o Myr | Todas |
+| Clados y nombres | Familia, orden | ggtree (geom_hilight) |
+| Calibraciones temporales | HPD 95% | FigTree, ggtree |
+| Estados de caracteres | Morfología | ggtree (geom_fruit) |
+| Distribución geográfica | Mapas | iTOL, phytools |
+| Expresión génica | Heatmap | ggtree + pheatmap |
+| Dominios de proteína | Pfam | iTOL |
+
+## 17.13 Pipeline de visualización
+
+```bash
+#!/usr/bin/env bash
+# Pipeline completo de visualización
+set -euo pipefail
+
+# 1. Árbol crudo de IQ-TREE
+iqtree2 -s aln.fasta -m MFP -B 1000 -alrt 1000 -pre tree
+
+# 2. Enrizar con outgroup
+nw_rename -r Tarsius_syrichta tree.treefile > rooted.nwk
+
+# 3. Renombrar etiquetas
+nw_rename -i names.tsv rooted.nwk > renamed.nwk
+
+# 4. Visualizar interactivamente
+ete3 view -t renamed.nwk
+
+# 5. Renderizar a PDF (publicable)
+python3 render_tree.py renamed.nwk tree_final.pdf
+
+# 6. Subir a iTOL
+curl -s -F "treeFile=@renamed.nwk" \
+     -F "projectName=filogenia" \
+     -F "treeName=hominidae" \
+     https://itol.embl.de/batch_uploader.cgi > itol_response.xml
+
+# 7. Extraer URL pública
+URL=$(grep -oP '(?<=<url>)[^<]+' itol_response.xml)
+echo "URL pública del árbol: $URL"
+```
+
+## 17.14 Ejercicios
+
+### Ejercicio 1: Árbol ML de primates
+
+Construir árbol ML de 30 primates con IQ-TREE. Enrizar con outgroup (p. ej., *Tarsius*). Renombrar etiquetas con archivo `names.tsv` (accession → nombre científico). Renderizar con ETE3 a PNG y PDF. Mostrar árbol con bootstrap como colores de ramas.
+
+### Ejercicio 2: Subir árbol a iTOL
+
+Subir árbol a iTOL vía API. Crear archivo de anotación de colores por familia taxonómica (p. ej., Hominidae en rojo, Cercopithecidae en azul). Compartir URL pública del árbol.
+
+### Ejercicio 3: Script `arbol_publicable.sh`
+
+Escribir script Bash `arbol_publicable.sh` que reciba: árbol Newick, archivo de nombres, outgroup, archivo de anotación opcional. Produzca: (a) árbol enraizado, (b) renombrado, (c) visualización PNG, (d) visualización PDF, (e) árbol subido a iTOL con URL impresa.
+
+## 17.15 Soluciones
+
+### Solución ejercicio 1
+
+```bash
+#!/usr/bin/env bash
+# Ejercicio 1: Árbol ML de primates con visualización
+set -euo pipefail
+
+WORKDIR="$HOME/filogenia_curso/primates_viz"
+mkdir -p "$WORKDIR"
+cd "$WORKDIR"
+
+# 1. Alineamiento y árbol ML (asumiendo alineamiento ya preparado)
+echo "=== ML con IQ-TREE ==="
+iqtree2 -s primates_aln.fasta -m MFP -B 1000 -alrt 1000 -T 8 -pre primates_tree
+
+# 2. Enrizar con Tarsius como outgroup
+echo "=== Enraizando con Tarsius ==="
+nw_rename -r Tarsius_syrichta primates_tree.treefile > primates_rooted.nwk
+
+# 3. Crear archivo names.tsv (accession -> nombre científico)
+cat > names.tsv <<'EOF'
+NC_002008	Homo sapiens
+NC_001643	Pan troglodytes
+NC_001644	Pan paniscus
+NC_001645	Gorilla gorilla
+NC_001646	Pongo pygmaeus
+NC_002082	Hylobates lar
+FJ97XXXX	Macaca mulatta
+MH12XXXX	Papio anubis
+AB030XXX	Tarsius syrichta
+EOF
+
+# 4. Renombrar etiquetas
+echo "=== Renombrar etiquetas ==="
+nw_rename -i names.tsv primates_rooted.nwk > primates_renamed.nwk
+
+# 5. Renderizar con ETE3 (script Python)
+echo "=== Renderizando con ETE3 ==="
+cat > render_primates.py <<'PYEOF'
+#!/usr/bin/env python3
+from ete3 import Tree, TreeStyle, NodeStyle, faces, AttrFace
+import sys
+
+tree_file = sys.argv[1]
+out_png = sys.argv[2]
+out_pdf = sys.argv[3]
+
+t = Tree(tree_file)
+ts = TreeStyle()
+ts.show_leaf_name = True
+ts.mode = "r"
+ts.orientation = 0
+ts.scale = 50
+ts.show_scale = True
+ts.title.add_face(AttrFace("name", text="Primates Phylogeny"), column=0)
+
+# Estilo por soporte
+for node in t.traverse():
+    nstyle = NodeStyle()
+    if node.is_leaf():
+        nstyle["size"] = 0
+        nstyle["shape"] = "square"
+    else:
+        nstyle["size"] = 12
+        if hasattr(node, 'support'):
+            if node.support >= 95:
+                nstyle["fgcolor"] = "#d62728"  # rojo
+                nstyle["shape"] = "circle"
+            elif node.support >= 70:
+                nstyle["fgcolor"] = "#ff7f0e"  # naranja
+                nstyle["shape"] = "circle"
+            else:
+                nstyle["fgcolor"] = "#7f7f7f"  # gris
+                nstyle["shape"] = "circle"
+        else:
+            nstyle["size"] = 0
+    node.set_style(nstyle)
+
+# Etiquetas de soporte en nodos internos
+for node in t.traverse():
+    if not node.is_leaf() and hasattr(node, 'support') and node.support:
+        faces.add_face_to_node(AttrFace("support", fsize=8), node, column=0, position="branch-top")
+
+t.render(out_png, tree_style=ts, w=1400, units="px", dpi=300)
+t.render(out_pdf, tree_style=ts, w=8, units="in")
+print(f"Renderizado: {out_png}, {out_pdf}")
+PYEOF
+
+python3 render_primates.py primates_renamed.nwk primates.png primates.pdf
+
+# 6. Verificar outputs
+echo "=== Outputs ==="
+ls -lh primates.png primates.pdf primates_renamed.nwk
+echo "Árbol enraizado y renombrado: primates_renamed.nwk"
+echo "Imagen PNG: primates.png"
+echo "Documento PDF: primates.pdf"
+```
+
+### Solución ejercicio 2
+
+```bash
+#!/usr/bin/env bash
+# Ejercicio 2: Subir árbol a iTOL con anotaciones
+set -euo pipefail
+
+TREE="primates_renamed.nwk"
+
+# 1. Subir árbol a iTOL vía API
+echo "=== Subiendo árbol a iTOL ==="
+RESPONSE=$(curl -s -F "treeFile=@${TREE}" \
+    -F "projectName=curso_filogenia" \
+    -F "treeName=primates_ml" \
+    -F "description=Árbol ML de primates con bootstrap" \
+    https://itol.embl.de/batch_uploader.cgi)
+
+echo "Respuesta iTOL:"
+echo "$RESPONSE"
+
+# Extraer URL
+URL=$(echo "$RESPONSE" | grep -oP '(?<=<url>)[^<]+')
+TREE_ID=$(echo "$RESPONSE" | grep -oP '(?<=<tree_id>)[^<]+')
+echo "URL pública: $URL"
+echo "Tree ID: $TREE_ID"
+
+# 2. Crear archivo de anotación de colores por familia
+cat > primates_families.txt <<'EOF'
+DATASET_LABEL
+Familia taxonómica
+
+DATASET_SCALE
+1
+
+DATASET_COLORSTRIP
+SEPARATOR COMMA
+COLOR_BRANCHES
+1
+DATA
+Homo sapiens,#FF0000,2,Hominidae
+Pan troglodytes,#FF0000,2,Hominidae
+Pan paniscus,#FF0000,2,Hominidae
+Gorilla gorilla,#FF0000,2,Hominidae
+Pongo pygmaeus,#FF0000,2,Hominidae
+Hylobates lar,#FFA500,2,Hylobatidae
+Symphalangus syndactylus,#FFA500,2,Hylobatidae
+Macaca mulatta,#0000FF,2,Cercopithecidae
+Papio anubis,#0000FF,2,Cercopithecidae
+Tarsius syrichta,#008000,2,Tarsiidae
+EOF
+
+# 3. Subir el archivo de anotación al árbol ya cargado
+echo "=== Subiendo anotación ==="
+ANNOT_RESPONSE=$(curl -s -F "treeFile=@primates_families.txt" \
+    -F "projectName=curso_filogenia" \
+    -F "treeName=primates_ml" \
+    https://itol.embl.de/batch_uploader.cgi)
+
+echo "Respuesta anotación:"
+echo "$ANNOT_RESPONSE"
+
+echo ""
+echo "=== ACCESO ==="
+echo "URL pública del árbol (editable interactivamente):"
+echo "  $URL"
+echo ""
+echo "Para añadir más datasets, entrar a la URL y subir archivos desde la interfaz web."
+```
+
+Respuesta esperada:
+
+```text
+Respuesta iTOL:
+<?xml version="1.0"?>
+<iTOL>
+  <status>success</status>
+  <tree_id>1681234567890123</tree_id>
+  <url>https://itol.embl.de/tree/1681234567890123/primates_ml</url>
+</iTOL>
+
+URL pública: https://itol.embl.de/tree/1681234567890123/primates_ml
+```
+
+### Solución ejercicio 3
+
+```bash
+#!/usr/bin/env bash
+# arbol_publicable.sh: pipeline completo de visualización para publicaciones
+# Uso: ./arbol_publicable.sh <tree.nwk> <names.tsv> <outgroup> [annotation.txt]
+set -euo pipefail
+
+# === Validación ===
+if [ "$#" -lt 3 ]; then
+    echo "Uso: $0 <tree.nwk> <names.tsv> <outgroup> [annotation.txt]"
+    echo "  tree.nwk       : árbol Newick crudo"
+    echo "  names.tsv      : archivo ID<TAB>Nombre_científico"
+    echo "  outgroup       : nombre del taxón outgroup"
+    echo "  annotation.txt : (opcional) archivo de anotación iTOL"
+    exit 1
+fi
+
+TREE="$1"
+NAMES="$2"
+OUTGROUP="$3"
+ANNOTATION="${4:-}"
+BASENAME=$(basename "${TREE%.*}")
+
+# === Logging ===
+log() { echo "[$(date '+%H:%M:%S')] $*"; }
+
+# === Trap ===
+cleanup() {
+    EXIT_CODE=$?
+    [ $EXIT_CODE -ne 0 ] && log "ERROR: pipeline falló ($EXIT_CODE)"
+}
+trap cleanup EXIT
+
+# === Verificar dependencias ===
+log "Verificando dependencias..."
+for cmd in nw_rename nw_display python3 curl; do
+    command -v "$cmd" >/dev/null 2>&1 || {
+        log "ERROR: $cmd no encontrado"
+        exit 1
+    }
+done
+
+# === Pipeline ===
+log "Paso 1/5: Enraizando con outgroup $OUTGROUP..."
+nw_rename -r "$OUTGROUP" "$TREE" > "${BASENAME}_rooted.nwk"
+
+log "Paso 2/5: Renombrando etiquetas con $NAMES..."
+nw_rename -i "$NAMES" "${BASENAME}_rooted.nwk" > "${BASENAME}_final.nwk"
+
+log "Paso 3/5: Renderizando PNG..."
+cat > _render.py <<'PYEOF'
+#!/usr/bin/env python3
+import sys
+from ete3 import Tree, TreeStyle, NodeStyle, faces, AttrFace
+
+tree_file = sys.argv[1]
+out_file = sys.argv[2]
+out_format = sys.argv[3]
+
+t = Tree(tree_file)
+ts = TreeStyle()
+ts.show_leaf_name = True
+ts.mode = "r"
+ts.scale = 50
+ts.show_scale = True
+
+for node in t.traverse():
+    nstyle = NodeStyle()
+    if node.is_leaf():
+        nstyle["size"] = 0
+    else:
+        nstyle["size"] = 10
+        if hasattr(node, 'support'):
+            if node.support >= 95:
+                nstyle["fgcolor"] = "#d62728"
+            elif node.support >= 70:
+                nstyle["fgcolor"] = "#ff7f0e"
+            else:
+                nstyle["fgcolor"] = "#7f7f7f"
+    node.set_style(nstyle)
+
+for node in t.traverse():
+    if not node.is_leaf() and hasattr(node, 'support') and node.support:
+        faces.add_face_to_node(AttrFace("support", fsize=8), node, column=0, position="branch-top")
+
+t.render(out_file, tree_style=ts, w=1400, units="px", dpi=300)
+print(f"Renderizado: {out_file}")
+PYEOF
+
+python3 _render.py "${BASENAME}_final.nwk" "${BASENAME}.png" "png"
+rm _render.py
+
+log "Paso 4/5: Renderizando PDF..."
+cat > _render_pdf.py <<'PYEOF'
+#!/usr/bin/env python3
+import sys
+from ete3 import Tree, TreeStyle, NodeStyle, faces, AttrFace
+
+tree_file = sys.argv[1]
+out_file = sys.argv[2]
+
+t = Tree(tree_file)
+ts = TreeStyle()
+ts.show_leaf_name = True
+ts.mode = "r"
+ts.scale = 50
+ts.show_scale = True
+
+for node in t.traverse():
+    nstyle = NodeStyle()
+    if node.is_leaf():
+        nstyle["size"] = 0
+    else:
+        nstyle["size"] = 8
+        if hasattr(node, 'support'):
+            if node.support >= 95:
+                nstyle["fgcolor"] = "#d62728"
+            elif node.support >= 70:
+                nstyle["fgcolor"] = "#ff7f0e"
+            else:
+                nstyle["fgcolor"] = "#7f7f7f"
+    node.set_style(nstyle)
+
+t.render(out_file, tree_style=ts, w=8, units="in")
+print(f"Renderizado: {out_file}")
+PYEOF
+
+python3 _render_pdf.py "${BASENAME}_final.nwk" "${BASENAME}.pdf"
+rm _render_pdf.py
+
+log "Paso 5/5: Subiendo a iTOL..."
+RESPONSE=$(curl -s -F "treeFile=@${BASENAME}_final.nwk" \
+    -F "projectName=curso_filogenia" \
+    -F "treeName=${BASENAME}" \
+    https://itol.embl.de/batch_uploader.cgi)
+
+URL=$(echo "$RESPONSE" | grep -oP '(?<=<url>)[^<]+')
+
+if [ -n "$ANNOTATION" ] && [ -f "$ANNOTATION" ]; then
+    log "Subiendo anotación: $ANNOTATION..."
+    curl -s -F "treeFile=@${ANNOTATION}" \
+        -F "projectName=curso_filogenia" \
+        -F "treeName=${BASENAME}" \
+        https://itol.embl.de/batch_uploader.cgi > /dev/null
+    log "Anotación subida."
+fi
+
+# === Reporte final ===
+log "=== REPORTE ==="
+cat <<EOF
++-----------------------------------+
+| ÁRBOL PUBLICABLE                  |
++-----------------------------------+
+| Árbol input:     ${TREE}
+| Outgroup:        ${OUTGROUP}
+| Archivos generados:
+|   - ${BASENAME}_rooted.nwk   (enraizado)
+|   - ${BASENAME}_final.nwk    (renombrado)
+|   - ${BASENAME}.png          (imagen PNG)
+|   - ${BASENAME}.pdf          (documento PDF)
++-----------------------------------+
+| URL iTOL: $URL
++-----------------------------------+
+EOF
+
+log "Pipeline completado exitosamente."
+```
+
+::: callout-important
+**Resumen del capítulo**:
+- Varias herramientas para visualizar: FigTree (GUI), ETE3 (Python+CLI), iTOL (web), ggtree (R), ape (R), Bio.Phylo (Python), newick_utils (CLI).
+- Para **figuras publicables**: ggtree (R) o ETE3 (Python) con control total.
+- Para **exploración rápida**: FigTree o iTOL.
+- Para **manipulación CLI**: newick_utils (`nw_*`).
+- Pipeline estándar: enraizar → renombrar → renderizar → subir a iTOL.
+:::
+
+::: callout-tip
+**Stack recomendado del filogenetista moderno**:
+- **Manipulación**: newick_utils (`nw_*`).
+- **Exploración GUI**: FigTree (Windows) o ETE3 view.
+- **Figuras publicables**: ETE3 API Python o ggtree en R.
+- **Visualización interactiva web**: iTOL (compartir URL).
+- **Análisis en R**: ape + treeio + ggtree.
+:::

@@ -1,0 +1,495 @@
+---
+title: "Capítulo 6: Alineamiento de proteínas y codón-consciente"
+---
+
+## 6.1 Diferencias entre alinear ADN y proteínas
+
+Alinear proteínas es **cualitativamente distinto** a alinear ADN. Las razones son tanto estadísticas como biológicas:
+
+- El alfabeto es de **20 símbolos** (aminoácidos) en lugar de 4 (nucleótidos), lo que reduce el ruido de coincidencias aleatorias: dos aminoácidos idénticos alineados son mucho más informativos que dos nucleótidos idénticos.
+- Las sustituciones entre aminoácidos **no son equivalentes**: un cambio Asp → Glu (ácidos, similares) es evolutivamente más probable que un Asp → Phe (ácido → aromático). Los algoritmos de alineamiento de proteínas usan **matrices de sustitución** (BLOSUM, PAM) que ponderan estos cambios.
+- Las proteínas tienen **estructura tridimensional** que se conserva mejor que la secuencia primaria. Posiciones estructuralmente equivalentes suelen estar alineadas correctamente aunque la identidad sea baja.
+- La conservación puede ser **funcional** (sitio activo) y no estrictamente de secuencia: un Ser → Thr en un sitio catalítico puede preservar la función.
+
+::: callout-note
+La señal filogenética en proteínas es más **persistente** a grandes distancias evolutivas. Para divergencias > 100 Ma, las proteínas siguen siendo informativas mientras que el ADN a menudo está saturado.
+:::
+
+## 6.2 Por qué alinear proteínas primero cuando se tienen CDS
+
+Cuando el dato original es una **secuencia codificante (CDS)** de ADN, una tentación ingenua es alinear directamente los nucleótidos. **Eso suele ser un error** por dos motivos:
+
+1. **Ruido de sustitución sinónima**: muchos cambios en tercera posición del codón son sinónimos y no aportan señal filogenética, pero introducen ruido que confunde al alineador.
+2. **Frameshifts artefactuales**: al alinear ADN sin restricción de marco de lectura, un alineador puede introducir un gap de longitud no múltiplo de 3, rompiendo el marco de lectura y produciendo un "alineamiento" biológicamente imposible.
+
+El procedimiento correcto es:
+
+1. **Traducir** los CDS a proteínas (preservando el ID de cada secuencia).
+2. **Alinear las proteínas**: la señal es más limpia y los alineadores aprovechan matrices de sustitución.
+3. **Trasladar** los gaps del alineamiento de proteínas al alineamiento de nucleótidos, insertando gaps de 3 nucleótidos por cada gap de aminoácido.
+
+Esto preserva el marco de lectura y se llama **alineamiento codón-consciente** (*codon-aware alignment*).
+
+::: callout-important
+Para cualquier análisis posterior que use codones como unidad (modelos dN/dS, modelos de codón en PAML, selección sitio-a-sitio) **el alineamiento codón-consciente es obligatorio**. Alinear ADN directamente produce resultados inválidos en estos análisis.
+:::
+
+## 6.3 Alineamiento de proteínas con MAFFT
+
+MAFFT es la herramienta más versátil: sirve tanto para ADN como para proteínas, y detecta automáticamente el tipo de secuencia. Para proteínas, la estrategia L-INS-i es la más precisa para datasets pequeños con indels complejos:
+
+```bash
+# Instalación (Bioconda)
+conda install -c bioconda mafft -y
+
+# L-INS-i: máxima precisión para <200 proteínas
+mafft --localpair --maxiterate 1000 protein.fasta > protein_aln.fasta
+
+# Auto (recomendado si tienes dudas)
+mafft --auto protein.fasta > protein_aln.fasta
+
+# Paralelizar
+mafft --localpair --maxiterate 1000 --thread 8 protein.fasta > protein_aln.fasta
+```
+
+MAFFT utiliza la matriz BLOSUM62 por defecto al alinear proteínas. Para proteínas muy divergentes puede cambiarse con `--matrix` (p. ej. `--matrix blastn` equivalente, aunque se recomienda usar BLOSUM45 manualmente solo en pipelines personalizados).
+
+## 6.4 Alineamiento con MUSCLE5
+
+MUSCLE5 (Edgar 2021) es una reescritura moderna de MUSCLE con algoritmo `super5` para datasets grandes y mayor precisión que MUSCLE3:
+
+```bash
+conda install -c bioconda muscle -y
+
+# Uso estándar
+muscle -align protein.fasta -output protein_aln.fasta
+
+# Para datasets grandes (>1000 secuencias)
+muscle -super5 large_protein.fasta -output aln.fasta
+
+# Convergencia estricta
+muscle -align protein.fasta -output aln.fasta -consiters 16 -refineiters 16
+```
+
+::: callout-tip
+`muscle -super5` divide el dataset en clusters, alinea cada uno y los une. Es **magnitudes de orden más rápido** que MAFFT L-INS-i en datasets grandes, con calidad comparable. Útil cuando tienes > 5000 proteínas.
+:::
+
+## 6.5 ClustalOmega
+
+ClustalOmega (Sievers et al. 2011) usa **HMMs profilados** y guía con árboles:
+
+```bash
+conda install -c bioconda clustalo -y
+
+clustalo -i protein.fasta -o aln.fasta --outfmt=fasta --iterations=3
+
+# Para datasets grandes con HMM guía
+clustalo -i protein.fasta -o aln.fasta --threads=8 --iterations=5
+
+# Output en formato PHYLIP
+clustalo -i protein.fasta -o aln.phy --outfmt=phylip
+```
+
+Comparación práctica:
+
+| Herramienta  | Mejor para                                  | Velocidad  | Precisión típica |
+|--------------|---------------------------------------------|------------|------------------|
+| MAFFT L-INS-i | <200 seqs, indels complejos, máxima calidad | Lento      | Muy alta         |
+| MUSCLE5      | Datasets medianos/grandes                   | Rápido     | Alta             |
+| ClustalOmega | Datasets grandes, HMM perfilados            | Medio      | Alta             |
+
+## 6.6 Alineamiento codón-consciente con pal2nal
+
+`pal2nal.pl` (Suyama et al. 2006) es el método **de facto**: toma un alineamiento de proteínas y los CDS originales y genera el alineamiento de nucleótidos "trasladando" los gaps como tripletes.
+
+```bash
+conda install -c bioconda pal2nal -y
+
+# Formato FASTA (alineamiento de nucleótidos con gaps de 3)
+pal2nal.pl protein_aln.fasta cds.fasta -output fasta > cds_aln.fasta
+
+# Formato PAML (para codeml)
+pal2nal.pl protein_aln.fasta cds.fasta -output paml > cds_aln.paml
+
+# Formato codon (número de codón en cada sitio)
+pal2nal.pl protein_aln.fasta cds.fasta -output codon > cds_aln.codon
+
+# Aviso de codones de paro internos (warn-only)
+pal2nal.pl protein_aln.fasta cds.fasta -output fasta -nogap > cds_aln.fasta
+```
+
+::: callout-warning
+Si una secuencia CDS tiene longitud no múltiplo de 3, o contiene codones de paro internos, `pal2nal` aborta con error. Revisa siempre los CDS con `transeq` antes de pasar a `pal2nal`.
+:::
+
+## 6.7 MACSE: alineamiento de CDS con conciencia de codones
+
+MACSE (Ranwez et al. 2011) **alinea directamente los CDS** teniendo en cuenta el marco de lectura. Es la opción adecuada cuando:
+
+- Hay **frameshifts reales** (errores de secuenciación, pseudogenes).
+- Hay **codones de paro internos** (pseudogenes en formación).
+- No se quiere depender de un alineamiento de proteínas previo.
+
+```bash
+conda install -c bioconda macse -y
+
+# Alineamiento básico de CDS
+macse align_sequences -seq cds.fasta -out_CDS_ALN cds_aln.fasta
+
+# Genera también el alineamiento de aminoácidos
+macse align_sequences -seq cds.fasta -out_AA_ALN protein_aln.fasta -out_CDS_ALN cds_aln.fasta
+
+# ConFrameshift: penaliza menos los frameshifts (pseudogenes)
+macse align_sequences -seq cds.fasta -out_CDS_ALN cds_aln.fasta \
+       -fs 20 -stop 20
+```
+
+MACSE usa caracteres especiales en su salida: `!` y `*` marcan frameshifts y codones de paro internos, respectivamente. Estos pueden filtrarse después:
+
+```bash
+# Limpiar frameshifts del alineamiento MACSE
+sed 's/!//g' cds_aln.fasta > cds_aln_clean.fasta
+```
+
+## 6.8 PRANK: alineamiento filogenético consciente
+
+PRANK (Löytynoja & Goldman 2008) es único: **usa un árbol guía filogenético** para colocar los gaps según la historia evolutiva, evitando el sobre-alineamiento típico de otros métodos:
+
+```bash
+conda install -c bioconda prank -y
+
+# Para proteínas
+prank -d=protein.fasta -o=output -f=fasta -protein
+
+# Para CDS (codón-consciente)
+prank -d=cds.fasta -o=output -f=fasta -codon
+
+# Con árbol guía previo (mejora precisión)
+prank -d=protein.fasta -o=output -f=fasta -protein -t=guide_tree.nwk
+```
+
+::: callout-note
+PRANK tiende a producir alineamientos **más largos** (con más gaps) que MAFFT o MUSCLE, pero teóricamente más realistas. Para análisis de selección dN/dS es una opción elegante.
+:::
+
+## 6.9 Recorte de alineamientos con trimAl
+
+`trimAl` (Capella-Gutiérrez et al. 2009) elimina columnas de baja calidad. Modos automáticos:
+
+```bash
+conda install -c bioconda trimal -y
+
+# Modo automático (heurística recomendada)
+trimal -in protein_aln.fasta -out trimmed.fasta -automated1
+
+# Recorte por porcentaje de gaps
+trimal -in protein_aln.fasta -out trimmed.fasta -gapthreshold 0.5
+
+# Conservar solo columnas con identidad mínima
+trimal -in protein_aln.fasta -out trimmed.fasta -ct 0.6 -cons 60
+
+# Output con reporte de columnas eliminadas
+trimal -in protein_aln.fasta -out trimmed.fasta -automated1 -colnumbering
+```
+
+Cuándo recortar:
+
+- Columnas con **>50% de gaps** (ruido estructural).
+- **Regiones hipervariables** (bucle flexible sin restricción funcional).
+- **Extremos N/C terminales** mal alineados (típico de proteínas con dominios variables).
+
+Cuándo **no** recortar:
+
+- Análisis que requieren sitios saturados (estudios de dinámica evolutiva).
+- Cuando el alineamiento ya es muy corto (recortar más lo empobrecería).
+
+## 6.10 Identificar dominios conservados con HMMER
+
+Para proteínas multidominio, antes de alinear conviene identificar dominios con **HMMER** y Pfam:
+
+```bash
+conda install -c bioconda hmmer -y
+
+# Buscar dominios Pfam en una proteína
+hmmsearch pfam.hmm protein.fasta > search.out
+
+# Output tabular
+hmmsearch --tblout search.tbl pfam.hmm protein.fasta
+```
+
+Si las proteínas tienen **dominios múltiples en orden distinto**, lo correcto es separar dominios y alinearlos independientemente. Esto evita forzar el alineamiento de regiones no homólogas.
+
+## 6.11 Conversión de formatos
+
+```bash
+# One-line FASTA
+seqkit seq -w 0 protein_aln.fasta > one_line.fasta
+
+# FASTA a NEXUS
+seqmagick convert --format nexus protein_aln.fasta aln.nex
+
+# FASTA a PHYLIP
+seqkit seq cds_aln.fasta --phylip > cds_aln.phy
+
+# PHYLIP relajado (nombres largos)
+seqmagick convert --format phylip-relaxed protein_aln.fasta aln.phy
+```
+
+## 6.12 Verificación del alineamiento
+
+```bash
+# Longitud de cada secuencia (infoseq viene con EMBOSS)
+infoseq -only -name -length protein_aln.fasta
+
+# Contar secuencias
+awk '/^>/{n++} END{print n" secuencias"}' protein_aln.fasta
+
+# Verificar que todas tienen misma longitud
+awk '/^>/{next}{print length($0)}' protein_aln.fasta | sort -u
+
+# Estadísticas con seqkit
+seqkit stats protein_aln.fasta
+```
+
+::: callout-warning
+Si el comando `sort -u` devuelve **más de un valor de longitud**, tu "alineamiento" no es un MSA: faltan gaps. Revisa el archivo de salida del alineador.
+:::
+
+## 6.13 Casos especiales
+
+### 6.13.1 Secuencias con longitudes muy diferentes
+
+Si las proteínas tienen dominios conservados pero extensiones terminales variables, usa **L-INS-i de MAFFT** (estrategia local) que es robusto a esto:
+
+```bash
+mafft --localpair --maxiterate 1000 variable_proteins.fasta > aln.fasta
+```
+
+### 6.13.2 Proteínas multidominio
+
+Separa los dominios con HMMER y alinea cada uno:
+
+```bash
+# Para cada dominio identificado por hmmsearch
+hmmfetch pfam.hmm PF00085 > kinase.hmm
+hmmalign kinase.hmm proteins.fasta > kinase_aln.sto
+```
+
+### 6.13.3 Isoformas
+
+Si tu set incluye **isoformas de splicing** de un mismo gen, dos opciones:
+
+1. Usar la **isoforma canónica** como referencia y alinear el resto contra ella.
+2. Quedarse solo con las isoformas canónicas (recomendado para filogenia).
+
+```bash
+# Filtrar isoformas canónicas desde UniProt
+awk '/^>/ && /canonical/{p=1} /^>/ && !/canonical/{p=0} p' uniprot.fasta > canonical.fasta
+```
+
+## 6.14 Pipeline típico CDS → proteína → alineamiento codón-consciente
+
+```bash
+# 1. Traducir CDS a proteínas (EMBOSS transeq, formato FASTA)
+transeq -sequence cds.fasta -outseq proteins.fasta
+
+# 2. Alinear proteínas con MAFFT L-INS-i
+mafft --localpair --maxiterate 1000 proteins.fasta > proteins_aln.fasta
+
+# 3. Recortar regiones no informativas
+trimal -in proteins_aln.fasta -out proteins_trim.fasta -automated1
+
+# 4. Trasladar gaps al CDS (alineamiento codón-consciente)
+pal2nal.pl proteins_trim.fasta cds.fasta -output fasta > cds_aln.fasta
+
+# 5. Convertir a PHYLIP para análisis posterior (IQ-TREE, RAxML-NG, PAML)
+seqkit seq cds_aln.fasta --phylip > cds_aln.phy
+
+# 6. Verificar
+awk '/^>/{next}{print length($0)}' cds_aln.fasta | sort -u
+```
+
+::: callout-tip
+Guarda los archivos intermedios (`proteins_aln.fasta`, `proteins_trim.fasta`) — son útiles para análisis paralelos basados en proteínas y para depurar errores.
+:::
+
+## 6.15 WSL2 vs PowerShell
+
+En WSL2/Ubuntu todos los comandos anteriores funcionan sin más. En PowerShell nativo, los binarios instalados vía Bioconda en el entorno WSL deben invocarse pasando por `wsl`:
+
+```powershell
+# Desde PowerShell nativo, llamando a herramientas WSL
+wsl mafft --localpair --maxiterate 1000 protein.fasta `> protein_aln.fasta
+
+# O ejecutar todo dentro de una sesión wsl
+wsl bash -c "mafft --localpair --maxiterate 1000 protein.fasta > protein_aln.fasta"
+```
+
+El símbolo `>` debe escaparse en PowerShell con `` ` `` (backtick). Para pipelines largos, siempre es más simple usar `wsl bash -c "..."` con la cadena completa.
+
+## 6.16 Ejercicios
+
+### Ejercicio 1
+Descargar 10 CDS completos del gen **BRCA1** de mamíferos (*Homo, Pan, Gorilla, Pongo, Macaca, Mus, Rattus, Bos, Canis, Felis*). Traducir con `transeq`. Alinear las proteínas con MAFFT `--localpair`. Recortar con trimAl. Generar alineamiento codón-consciente con `pal2nal`. Mostrar el comando completo.
+
+### Ejercicio 2
+Comparar dos estrategias de alineamiento de CDS: (a) alinear ADN directamente con MAFFT, (b) alinear proteínas y luego `pal2nal`. Comparar número de gaps y longitud final. ¿Cuál preserva mejor los codones?
+
+### Ejercicio 3
+Escribir función Bash `alinear_cds(cds_fasta, output_basename)` que ejecute el pipeline completo: traducir, alinear proteínas, recortar, generar alineamiento codón-consciente, convertir a PHYLIP. Probar con un archivo de prueba.
+
+## 6.17 Soluciones
+
+### Solución 1
+
+```bash
+# 1. Crear directorio de trabajo
+mkdir -p ~/filogenia/brca1 && cd ~/filogenia/brca1
+
+# 2. Descargar CDS de BRCA1 usando entrez-direct (NCBI)
+# IDs de ejemplo (RefSeq mRNA); adaptar si cambian
+for acc in NM_007294 NM_001276703 NM_001276762 NM_001276717 NM_001276765 \
+           NM_001276705 NM_001276761 XM_054224335 NM_001006655 NM_001287028; do
+    efetch -db nucleotide -id "$acc" -format fasta >> brca1_cds.fasta
+done
+
+# 3. Traducir CDS → proteínas
+transeq -sequence brca1_cds.fasta -outseq brca1_prot.fasta -trim  # -trim quita el *
+
+# 4. Alinear proteínas con MAFFT L-INS-i
+mafft --localpair --maxiterate 1000 --thread 4 brca1_prot.fasta > brca1_prot_aln.fasta
+
+# 5. Recortar con trimAl
+trimal -in brca1_prot_aln.fasta -out brca1_prot_trim.fasta -automated1
+
+# 6. Alineamiento codón-consciente
+pal2nal.pl brca1_prot_trim.fasta brca1_cds.fasta -output fasta > brca1_cds_aln.fasta
+
+# 7. Convertir a PHYLIP para análisis posterior
+seqkit seq brca1_cds_aln.fasta --phylip > brca1_cds_aln.phy
+
+# 8. Verificar
+awk '/^>/{next}{print length($0)}' brca1_cds_aln.fasta | sort -u
+seqkit stats brca1_cds_aln.fasta
+```
+
+### Solución 2
+
+```bash
+# Estrategia (a): alinear ADN directamente con MAFFT
+mafft --auto brca1_cds.fasta > aln_direct_dna.fasta
+
+# Estrategia (b): ya hecha en ejercicio 1: brca1_cds_aln.fasta
+
+# Contar gaps y longitud de cada alineamiento
+echo "=== Estrategia (a) ADN directo ==="
+seqkit stats aln_direct_dna.fasta
+awk '/^>/{next}{gap+=gsub(/-/,"-"); total+=length($0)} END{print "Gaps:", gap; print "Longitud:", total}' aln_direct_dna.fasta
+
+echo "=== Estrategia (b) pal2nal ==="
+seqkit stats brca1_cds_aln.fasta
+awk '/^>/{next}{gap+=gsub(/-/,"-"); total+=length($0)} END{print "Gaps:", gap; print "Longitud:", total}' brca1_cds_aln.fasta
+
+# Comprobar si la longitud es múltiplo de 3 (sólo estrategia b garantiza esto)
+echo "=== Múltiplo de 3 ==="
+awk '/^>/{next}{print length($0)%3}' aln_direct_dna.fasta | sort -u
+awk '/^>/{next}{print length($0)%3}' brca1_cds_aln.fasta | sort -u
+```
+
+```text
+=== Estrategia (a) ADN directo ===
+Gaps: 870
+Longitud: 5430
+=== Estrategia (b) pal2nal ===
+Gaps: 867  (todos múltiplos de 3)
+Longitud: 5427
+=== Múltiplo de 3 ===
+0 1 2       # estrategia a: hay longitudes que no son múltiplo de 3
+0           # estrategia b: SIEMPRE múltiplo de 3
+```
+
+**Conclusión**: La estrategia (b) `pal2nal` preserva codones completos: todos los gaps son múltiplos de 3 y la longitud total es múltiplo de 3. La estrategia (a) puede introducir frameshifts artefactuales (gaps de longitud 1 o 2) que rompen el marco de lectura. Para cualquier análisis posterior de codones (PAML, selección) la estrategia (b) es obligatoria.
+
+### Solución 3
+
+```bash
+#!/usr/bin/env bash
+# alinear_cds.sh - pipeline codón-consciente
+# Uso: alinear_cds cds.fasta output_basename
+
+alinear_cds() {
+    local cds_fasta="$1"
+    local base="$2"
+
+    if [[ -z "$cds_fasta" || -z "$base" ]]; then
+        echo "Uso: alinear_cds <cds.fasta> <output_basename>"
+        return 1
+    fi
+
+    # Archivos intermedios
+    local prot="${base}_prot.fasta"
+    local prot_aln="${base}_prot_aln.fasta"
+    local prot_trim="${base}_prot_trim.fasta"
+    local cds_aln="${base}_cds_aln.fasta"
+    local cds_phy="${base}_cds_aln.phy"
+
+    # 1. Traducir
+    echo "[1/5] Traduciendo CDS a proteínas..."
+    transeq -sequence "$cds_fasta" -outseq "$prot" -trim
+
+    # 2. Alinear proteínas
+    echo "[2/5] Alineando proteínas con MAFFT L-INS-i..."
+    mafft --localpair --maxiterate 1000 --thread 4 "$prot" > "$prot_aln" 2> "${base}.mafft.log"
+
+    # 3. Recortar
+    echo "[3/5] Recortando con trimAl..."
+    trimal -in "$prot_aln" -out "$prot_trim" -automated1
+
+    # 4. pal2nal
+    echo "[4/5] Alineamiento codón-consciente con pal2nal..."
+    pal2nal.pl "$prot_trim" "$cds_fasta" -output fasta > "$cds_aln"
+
+    # 5. Convertir a PHYLIP
+    echo "[5/5] Convirtiendo a PHYLIP..."
+    seqkit seq "$cds_aln" --phylip > "$cds_phy"
+
+    # Verificación
+    local nseq
+    nseq=$(awk '/^>/{n++} END{print n}' "$cds_aln")
+    local len
+    len=$(awk '/^>/{next}{print length($0)}' "$cds_aln" | sort -u)
+    echo "Listo: $nseq secuencias, longitud = $len"
+    echo "Archivos:"
+    echo "  $prot_aln   (proteínas alineadas)"
+    echo "  $prot_trim  (proteínas recortadas)"
+    echo "  $cds_aln    (CDS codón-consciente FASTA)"
+    echo "  $cds_phy    (CDS codón-consciente PHYLIP)"
+}
+
+# Probar con un archivo de prueba
+# alinear_cds test_cds.fasta test
+```
+
+```bash
+# Guardar como alinear_cds.sh y sourcearlo
+chmod +x alinear_cds.sh
+source alinear_cds.sh
+
+# Probar con archivo de ejemplo (10 secuencias)
+alinear_cds brca1_cds.fasta brca1
+```
+
+```text
+[1/5] Traduciendo CDS a proteínas...
+[2/5] Alineando proteínas con MAFFT L-INS-i...
+[3/5] Recortando con trimAl...
+[4/5] Alineamiento codón-consciente con pal2nal...
+[5/5] Convirtiendo a PHYLIP...
+Listo: 10 secuencias, longitud = 5427
+Archivos:
+  brca1_prot_aln.fasta   (proteínas alineadas)
+  brca1_prot_trim.fasta  (proteínas recortadas)
+  brca1_cds_aln.fasta    (CDS codón-consciente FASTA)
+  brca1_cds_aln.phy      (CDS codón-consciente PHYLIP)
+```

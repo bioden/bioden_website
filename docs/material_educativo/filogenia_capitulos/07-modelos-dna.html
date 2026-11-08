@@ -1,0 +1,1299 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Capítulo 7: Modelos de sustitución de ADN – BIODEN</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../logo.png" rel="icon" type="image/png">
+<script src="../../site_libs/cookie-consent/cookie-consent.js"></script>
+<link href="../../site_libs/cookie-consent/cookie-consent.css" rel="stylesheet">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-70f92796293836dceea0045bd755b5b1.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-1242ccc02940432acd87c1b818d9cd49.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-70f92796293836dceea0045bd755b5b1.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+<script type="text/javascript" charset="UTF-8">
+document.addEventListener('DOMContentLoaded', function () {
+cookieconsent.run({
+  "notice_banner_type":"interstitial",
+  "consent_type":"express",
+  "palette":"dark",
+  "language":"en",
+  "page_load_consent_levels":["strictly-necessary"],
+  "notice_banner_reject_button_hide":false,
+  "preferences_center_close_button_hide":false,
+  "website_name":""
+  ,
+"language":"en"
+  });
+});
+</script> 
+  
+<style>html{ scroll-behavior: smooth; }</style>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../logo.png" alt="" class="navbar-logo light-content">
+    <img src="../../logo.png" alt="" class="navbar-logo dark-content">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">BIODEN</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Inicio</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-proyectos" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Proyectos</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-proyectos">    
+        <li>
+    <a class="dropdown-item" href="https://bioden.github.io/XIII_CCB_curso/">
+ <span class="dropdown-text">De la Botánica a la Bioinformática</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../investigacion.html"> 
+<span class="menu-text">Investigación</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../integrantes.html"> 
+<span class="menu-text">Integrantes</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../biosistalks/biosistalks.html"> 
+<span class="menu-text">Biosis Talks</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../material_educativo.html"> 
+<span class="menu-text">Material educativo</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../suplementario.html"> 
+<span class="menu-text">Servicios</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.instagram.com/dbg_unicauca/"> <i class="bi bi-instagram" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.facebook.com/profile.php?id=61583453722433"> <i class="bi bi-facebook" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:bioden@unicauca.edu.co"> <i class="bi bi-envelope" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar"><div class="quarto-margin-header"><div class="margin-header-item">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../../logos/semillero.png" class="img-fluid figure-img"></p>
+<figcaption>Universidad del Cauca</figcaption>
+</figure>
+</div>
+</div></div>
+        
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Capítulo 7: Modelos de sustitución de ADN</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="por-qué-necesitamos-modelos-de-sustitución" class="level2">
+<h2 data-anchor-id="por-qué-necesitamos-modelos-de-sustitución">7.1 ¿Por qué necesitamos modelos de sustitución?</h2>
+<p>Cuando observamos dos secuencias homólogas y contamos sus diferencias (p-distance), <strong>estamos subestimando el número real de sustituciones</strong> que han ocurrido. La razón es la <strong>saturación</strong>: si en un mismo sitio ocurren dos sustituciones (A→G→A), el resultado observable es cero diferencias, pero el proceso real involucró dos eventos.</p>
+<p>Un <strong>modelo de sustitución</strong> es una descripción matemática del proceso evolutivo a nivel de nucleótidos. Sus objetivos son:</p>
+<ol type="1">
+<li><strong>Corregir múltiples sustituciones</strong> y estimar distancias evolutivas reales.</li>
+<li><strong>Ponderar distintas clases de cambios</strong> (transiciones vs transversiones).</li>
+<li><strong>Reflejar la composición de nucleótidos</strong> observada (no siempre 25% cada uno).</li>
+<li><strong>Modelar heterogeneidad entre sitios</strong> (algunos sitios son invariables, otros evolucionan rápido).</li>
+</ol>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Important
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Todo método filogenético basado en verosimilitud (ML) o Bayesiano <strong>requiere</strong> un modelo de sustitución. La elección del modelo afecta directamente el árbol inferido. Usar un modelo demasiado simple produce árboles con <strong>artefactos sistemáticos</strong> (long-branch attraction).</p>
+</div>
+</div>
+</section>
+<section id="suposiciones-de-los-modelos-reversibles" class="level2">
+<h2 data-anchor-id="suposiciones-de-los-modelos-reversibles">7.2 Suposiciones de los modelos reversibles</h2>
+<p>Los modelos más usados asumen:</p>
+<ul>
+<li><strong>Estacionariedad</strong>: las frecuencias de los nucleótidos en equilibrio son constantes en el tiempo y en todas las ramas.</li>
+<li><strong>Reversibilidad detallada</strong> (<em>detailed balance</em>): la tasa de cambio A→B es igual a B→A ponderada por las frecuencias. Esto implica que el proceso no tiene direccionalidad.</li>
+<li><strong>Homogeneidad entre ramas</strong>: las mismas tasas aplican a todas las ramas del árbol (simplificación; relajada en modelos “relaxed-clock” y “non-stationary”).</li>
+</ul>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Warning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Estas suposiciones <strong>se violan a menudo</strong> en datos reales: composición de nucleótidos variable entre linajes (típico en mitocondriales), presiones selectivas que rompen reversibilidad, etc. Para esos casos existen modelos más complejos (no reversibles, heterogéneos).</p>
+</div>
+</div>
+</section>
+<section id="modelos-clásicos-del-simple-al-complejo" class="level2">
+<h2 data-anchor-id="modelos-clásicos-del-simple-al-complejo">7.3 Modelos clásicos: del simple al complejo</h2>
+<p>Presentamos los modelos en orden creciente de complejidad. Todos son casos especiales del modelo general <strong>GTR</strong>.</p>
+<section id="jc69-jukes-cantor-1969" class="level3">
+<h3 data-anchor-id="jc69-jukes-cantor-1969">7.3.1 JC69 (Jukes-Cantor 1969)</h3>
+<p>El modelo más simple:</p>
+<ul>
+<li>Frecuencias iguales: π_A = π_C = π_G = π_T = 0.25</li>
+<li>Misma tasa de sustitución entre cualquier par de nucleótidos.</li>
+</ul>
+<p>Solo tiene un parámetro: la tasa global μ. Útil solo como referencia.</p>
+</section>
+<section id="k2p-kimura-2-parameters-1980" class="level3">
+<h3 data-anchor-id="k2p-kimura-2-parameters-1980">7.3.2 K2P (Kimura 2-parameters 1980)</h3>
+<p>Distingue:</p>
+<ul>
+<li><strong>Transiciones</strong> (purina↔︎purina: A↔︎G, o pirimidina↔︎pirimidina: C↔︎T): tasa α.</li>
+<li><strong>Transversiones</strong> (purina↔︎pirimidina): tasa β.</li>
+</ul>
+<p>Sigue asumiendo frecuencias iguales (0.25 cada uno). Dos parámetros. Mejor que JC69 porque las transiciones son típicamente 2–10× más frecuentes que las transversiones.</p>
+</section>
+<section id="hky85-hasegawa-kishino-yano-1985" class="level3">
+<h3 data-anchor-id="hky85-hasegawa-kishino-yano-1985">7.3.3 HKY85 (Hasegawa-Kishino-Yano 1985)</h3>
+<p>Añade a K2P <strong>frecuencias de nucleótidos desiguales</strong> (π_A, π_C, π_G, π_T estimadas). Sigue distinguiendo transiciones/transversiones. Es uno de los modelos más usados para datos nucleotídicos reales.</p>
+</section>
+<section id="tnequal-i" class="level3">
+<h3 data-anchor-id="tnequal-i">7.3.4 TNequal + I</h3>
+<p>Igual frecuencia de los 4 nucleótidos, pero distintas tasas para transición y transversión, más proporción de sitios invariables (<code>+I</code>). Caso intermedio entre K2P y TN93.</p>
+</section>
+<section id="tn93-tamura-nei-1993" class="level3">
+<h3 data-anchor-id="tn93-tamura-nei-1993">7.3.5 TN93 (Tamura-Nei 1993)</h3>
+<p>Como HKY85 pero permite que las <strong>dos clases de transiciones tengan tasas distintas</strong>: A↔︎G ≠ C↔︎T. Útil cuando hay sesgo fuerte entre purinas y pirimidinas.</p>
+</section>
+<section id="gtr-general-time-reversible-tavaré-1986" class="level3">
+<h3 data-anchor-id="gtr-general-time-reversible-tavaré-1986">7.3.6 GTR (General Time Reversible, Tavaré 1986)</h3>
+<p>El modelo reversible más general:</p>
+<ul>
+<li>6 tasas de sustitución distintas (A↔︎C, A↔︎G, A↔︎T, C↔︎G, C↔︎T, G↔︎T).</li>
+<li>4 frecuencias de nucleótidos.</li>
+</ul>
+<p>Total: 9 parámetros libres. Es el estándar “completo” y la base de los modelos más usados hoy.</p>
+</section>
+<section id="extensiones-i-g-ig" class="level3">
+<h3 data-anchor-id="extensiones-i-g-ig">7.3.7 Extensiones: +I, +G, +I+G</h3>
+<p>Sobre cualquier modelo anterior se pueden añadir:</p>
+<ul>
+<li><strong>+I</strong>: proporción de sitios invariables (parámetro I entre 0 y 1).</li>
+<li><strong>+G</strong>: tasas distribuidas según una <strong>Gamma</strong> con parámetro α (4 categorías discretas por defecto).</li>
+<li><strong>+I+G</strong>: combinación de ambos.</li>
+</ul>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>GTR+I+G</code> es el modelo reversible <strong>más completo</strong> y es el default en muchos análisis filogenéticos modernos (IQ-TREE, RAxML-NG) si no se hace selección explícita.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="modelos-no-reversibles" class="level2">
+<h2 data-anchor-id="modelos-no-reversibles">7.4 Modelos no reversibles</h2>
+<p>Para datasets donde la composición de nucleótidos varía entre linajes o donde hay sesgos direccionales, los modelos reversibles son insuficientes:</p>
+<ul>
+<li><strong>UNREST</strong> (<em>unrestricted</em>): 12 tasas de sustitución independientes, sin restricción de reversibilidad.</li>
+<li>Útiles en análisis que requieren modelar <strong>direccionalidad evolutiva</strong> (p.&nbsp;ej. sesgos de reparación del ADN en mitocondriales).</li>
+</ul>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Warning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Los modelos no reversibles requieren <strong>árbol enraizado</strong> y son computacionalmente más costosos. Para la mayoría de análisis filogenéticos clásicos, los modelos reversibles son suficientes.</p>
+</div>
+</div>
+</section>
+<section id="variación-de-tasas-entre-sitios" class="level2">
+<h2 data-anchor-id="variación-de-tasas-entre-sitios">7.5 Variación de tasas entre sitios</h2>
+<p>Las posiciones de un alineamiento <strong>no son equivalentes</strong>:</p>
+<ul>
+<li>Sitios conservados por función (codones de sitios activos, regiones regulatorias).</li>
+<li>Sitios neutros que evolucionan rápido.</li>
+<li>Sitios absolutamente invariables (restrictos estructuralmente).</li>
+</ul>
+<p>Tres formas de modelar esto:</p>
+<ol type="1">
+<li><strong>+I (sitios invariables)</strong>: fracción <code>I</code> de sitios que nunca cambian.</li>
+<li><strong>+G (Gamma)</strong>: tasas continuas modeladas con distribución Gamma de parámetro α. α pequeño → gran heterogeneidad; α grande → tasas similares.</li>
+<li><strong>+I+G</strong>: combina ambos. Estadísticamente debatido (los sitios invariables ya están parcialmente en la cola de Gamma), pero usado en la práctica.</li>
+</ol>
+<pre class="text"><code>Ejemplo: si α = 0.2 → gran heterogeneidad (pocos sitios muy rápidos)
+         si α = 5   → casi homogéneo</code></pre>
+</section>
+<section id="estimación-de-frecuencias-de-nucleótidos" class="level2">
+<h2 data-anchor-id="estimación-de-frecuencias-de-nucleótidos">7.6 Estimación de frecuencias de nucleótidos</h2>
+<p>Tres estrategias:</p>
+<ul>
+<li><strong>F (empíricas)</strong>: calculadas directamente del alineamiento.</li>
+<li><strong>FQ (iguales)</strong>: todas = 0.25 (modelos JC69, K2P).</li>
+<li><strong>ML (estimadas por maximum likelihood)</strong>: optimizadas junto con el árbol.</li>
+</ul>
+<p>En IQ-TREE y RAxML-NG, <code>+F</code> indica frecuencias empíricas por defecto. <code>+FO</code> o <code>+FU</code> permiten optimizarlas o fijarlas en iguales.</p>
+</section>
+<section id="selección-de-modelos-con-jmodeltest" class="level2">
+<h2 data-anchor-id="selección-de-modelos-con-jmodeltest">7.7 Selección de modelos con jModelTest</h2>
+<p><code>jModelTest</code> (Darriba et al.&nbsp;2012) es el clásico, basado en PhyML:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> install <span class="at">-c</span> bioconda jmodeltest <span class="at">-y</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">java</span> <span class="at">-jar</span> jmodeltest.jar <span class="at">-d</span> aln.fasta <span class="dt">\</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>     <span class="at">-s</span> 11          <span class="co"># 11 modelos base</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>     <span class="ex">-f</span>             <span class="co"># incluir +F</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>     <span class="ex">-i</span>             <span class="co"># incluir +I</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>     <span class="ex">-g</span> 4           <span class="co"># 4 categorías Gamma</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>     <span class="ex">-tr</span> 4          <span class="co"># 4 threads</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>     <span class="ex">-AIC</span>           <span class="co"># Akaike Information Criterion</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>     <span class="ex">-o</span> jmodeltest.out</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Para comparar todos los criterios a la vez, usa <code>-AIC -BIC -AICc -DT -hLRT</code>. El output final indica el mejor modelo según cada criterio.</p>
+</div>
+</div>
+</section>
+<section id="modeltest-ng-versión-moderna" class="level2">
+<h2 data-anchor-id="modeltest-ng-versión-moderna">7.8 ModelTest-NG (versión moderna)</h2>
+<p>Más rápida y con más modelos:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> install <span class="at">-c</span> bioconda modeltest-ng <span class="at">-y</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">modeltest-ng</span> <span class="at">-i</span> aln.fasta <span class="at">-d</span> nt <span class="at">-p</span> 4 <span class="at">-o</span> modeltest.out</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># -d nt: datos nucleotídicos</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># -p 4:  4 threads</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Output: tabla con todos los modelos, sus logL, AIC, AICc, BIC, y el mejor según cada criterio.</p>
+</section>
+<section id="modelfinder-iq-tree" class="level2">
+<h2 data-anchor-id="modelfinder-iq-tree">7.9 ModelFinder (IQ-TREE)</h2>
+<p>Integrado en IQ-TREE, es la opción más rápida y con más modelos (incluye particionados y mezclas):</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> install <span class="at">-c</span> bioconda iqtree <span class="at">-y</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Solo selección de modelo</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-m</span> TESTONLY <span class="at">-s</span> aln.fasta <span class="at">-mset</span> GTR <span class="at">-madd</span> GTR+I+G</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co"># ModelFinder Plus (incluye mezclas, FreeRate, etc.)</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-m</span> MFP <span class="at">-s</span> aln.fasta</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Solo selección, sin inferir árbol</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-m</span> MF <span class="at">-s</span> aln.fasta <span class="at">--prefix</span> modeltest</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="criterios-de-selección" class="level2">
+<h2 data-anchor-id="criterios-de-selección">7.10 Criterios de selección</h2>
+<p>Criterios de información (penalizan la complejidad del modelo):</p>
+<ul>
+<li><strong>AIC (Akaike)</strong>: <code>2k - 2logL</code>. Recomendado para muestras grandes.</li>
+<li><strong>AICc (AIC corregido)</strong>: corrige AIC para muestras pequeñas (n/k &lt; 40).</li>
+<li><strong>BIC (Bayesian)</strong>: <code>k·log(n) - 2logL</code>. Penaliza más la complejidad.</li>
+<li><strong>DT (Decision Theoretic)</strong>: basado en pesos de Akaike.</li>
+</ul>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Cuándo usar cada uno</strong>: BIC para muestras pequeñas o cuando se quiere modelo parsimonioso; AIC/AICc para muestras grandes. En la práctica, los tres suelen coincidir en el modelo óptimo.</p>
+</div>
+</div>
+</section>
+<section id="interpretación-del-output" class="level2">
+<h2 data-anchor-id="interpretación-del-output">7.11 Interpretación del output</h2>
+<pre class="text"><code>Best model according to AIC:  GTR+I+G
+Best model according to AICc: GTR+I+G
+Best model according to BIC:  HKY+I+G
+Best model according to DT:   HKY+I+G</code></pre>
+<p>BIC a veces elige un modelo más simple (HKY en vez de GTR) porque penaliza más los parámetros extra. <strong>Suele ser mejor seguir BIC</strong> a menos que se justifique lo contrario.</p>
+</section>
+<section id="aplicación-del-modelo-en-análisis-posteriores" class="level2">
+<h2 data-anchor-id="aplicación-del-modelo-en-análisis-posteriores">7.12 Aplicación del modelo en análisis posteriores</h2>
+<p>Una vez elegido el modelo:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># IQ-TREE</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-s</span> aln.fasta <span class="at">-m</span> GTR+I+G <span class="at">-pre</span> tree_ml</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># RAxML-NG</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="ex">raxml-ng</span> <span class="at">--msa</span> aln.fasta <span class="at">--model</span> GTR+I+G <span class="at">--prefix</span> raxml <span class="at">--threads</span> 4</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co"># MrBayes (en bloque de comandos NEXUS)</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="ex">lset</span> nst=6 rates=invgamma<span class="kw">;</span>   <span class="co"># GTR+I+G</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Para HKY+G: lset nst=2 rates=gamma;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Para JC69:  lset nst=1 rates=equal;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="modelos-para-codones-mención" class="level2">
+<h2 data-anchor-id="modelos-para-codones-mención">7.13 Modelos para codones (mención)</h2>
+<p>Cuando se trabaja con <strong>alineamientos de CDS</strong> y se quiere modelar a nivel de codón (no nucleótido):</p>
+<ul>
+<li><strong>MG94 (Muse-Gaut 1994)</strong>: codones, distingue sinónimas/no sinónimas.</li>
+<li><strong>GY94 (Goldman-Yang 1994)</strong>: el más usado, base de PAML <code>codeml</code>.</li>
+<li>Modelos M0, M1, M2, M7, M8 en PAML: variantes que permiten heterogeneidad de ω = dN/dS entre sitios.</li>
+</ul>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Se profundiza en estos modelos en el módulo avanzado de PAML. Aquí sólo destacamos que <strong>existen</strong> y son la herramienta para análisis de selección.</p>
+</div>
+</div>
+</section>
+<section id="modelos-para-regiones-no-codificantes" class="level2">
+<h2 data-anchor-id="modelos-para-regiones-no-codificantes">7.14 Modelos para regiones no codificantes</h2>
+<ul>
+<li><strong>Microsatélites</strong>: SMM (<em>Stepwise Mutation Model</em>, Ohta &amp; Kimura) — añade/borra una unidad cada vez. Modelo TPM (<em>Two Phase Model</em>) para mutaciones de varias unidades.</li>
+<li><strong>ITS</strong>: regiones con estructura secundaria. Modelos específicos que incorporan <em>stem-loop</em>, p.&nbsp;ej. con <code>RNAalifold</code> seguido de modelos de sustitución RNA-specific (ver capítulo ARN).</li>
+<li><strong>Intrones</strong>: modelos GTR estándar suelen ser suficientes.</li>
+</ul>
+</section>
+<section id="ejemplos-bioinformáticos" class="level2">
+<h2 data-anchor-id="ejemplos-bioinformáticos">7.15 Ejemplos bioinformáticos</h2>
+<section id="ejemplo-1-selección-de-modelo-para-16s-de-primates" class="level3">
+<h3 data-anchor-id="ejemplo-1-selección-de-modelo-para-16s-de-primates">Ejemplo 1: Selección de modelo para 16S de primates</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Alinear 30 secuencias de 16S rRNA (mitocondrial) de primates</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">mafft</span> <span class="at">--auto</span> primates_16s.fasta <span class="op">&gt;</span> aln.fasta</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="ex">trimal</span> <span class="at">-in</span> aln.fasta <span class="at">-out</span> aln_trim.fasta <span class="at">-automated1</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co"># ModelTest-NG</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="ex">modeltest-ng</span> <span class="at">-i</span> aln_trim.fasta <span class="at">-d</span> nt <span class="at">-p</span> 4 <span class="at">-o</span> 16s_modeltest.out</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Ver resultado</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-E</span> <span class="st">"Best model|Model:"</span> 16s_modeltest.out <span class="kw">|</span> <span class="fu">head</span> <span class="at">-10</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="text"><code>Model 102: GTR+I+G   logL: -7892.45  AIC: 15810.9  BIC: 15920.4
+Best model according to AIC:  GTR+I+G
+Best model according to BIC:  GTR+I+G</code></pre>
+</section>
+<section id="ejemplo-2-comparar-aic-vs-bic-en-dataset-pequeño" class="level3">
+<h3 data-anchor-id="ejemplo-2-comparar-aic-vs-bic-en-dataset-pequeño">Ejemplo 2: Comparar AIC vs BIC en dataset pequeño</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Con un alineamiento pequeño (15 secuencias, 500 bp)</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">modeltest-ng</span> <span class="at">-i</span> small_aln.fasta <span class="at">-d</span> nt <span class="at">-p</span> 2 <span class="at">-o</span> small.out</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Extraer top-3 por cada criterio</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'/^Best model according to AIC/{print; next} /^Best model according to BIC/{print}'</span> small.out</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="wsl2-vs-powershell" class="level2">
+<h2 data-anchor-id="wsl2-vs-powershell">7.16 WSL2 vs PowerShell</h2>
+<p><code>jModelTest</code> y <code>ModelTest-NG</code> funcionan nativamente en WSL2. En PowerShell, invoca siempre dentro de una sesión WSL:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode powershell code-with-copy"><code class="sourceCode powershell"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Powershell nativo</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>wsl modeltest-ng <span class="op">-</span>i aln<span class="op">.</span><span class="fu">fasta</span> <span class="op">-</span>d nt <span class="op">-</span>p <span class="dv">4</span> <span class="op">-</span>o modeltest<span class="op">.</span><span class="fu">out</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>jModelTest</code> requiere Java; verifica la instalación:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">java</span> <span class="at">-version</span>    <span class="co"># debe devolver 1.8 o superior</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="ejercicios" class="level2">
+<h2 data-anchor-id="ejercicios">7.17 Ejercicios</h2>
+<section id="ejercicio-1" class="level3">
+<h3 data-anchor-id="ejercicio-1">Ejercicio 1</h3>
+<p>Descargar 30 secuencias de <strong>Citocromo b</strong> de mamíferos, alinear con MAFFT, recortar con trimAl. Correr ModelTest-NG con todos los modelos nucleotídicos. Reportar el mejor modelo según AIC y BIC.</p>
+</section>
+<section id="ejercicio-2" class="level3">
+<h3 data-anchor-id="ejercicio-2">Ejercicio 2</h3>
+<p>Dado el output de jModelTest (archivo <code>.out</code>), parsear con <code>awk</code> o <code>grep</code> para extraer: (a) mejor modelo según AIC, (b) mejor modelo según BIC, (c) longitud del árbol ML para ese modelo.</p>
+</section>
+<section id="ejercicio-3" class="level3">
+<h3 data-anchor-id="ejercicio-3">Ejercicio 3</h3>
+<p>Comparar la verosimilitud (logL) de tres modelos —JC, HKY+G, GTR+I+G— sobre el mismo dataset. ¿Cuánto mejora la logL al usar un modelo más complejo? Justificar si la complejidad añadida está justificada.</p>
+</section>
+</section>
+<section id="soluciones" class="level2">
+<h2 data-anchor-id="soluciones">7.18 Soluciones</h2>
+<section id="solución-1" class="level3">
+<h3 data-anchor-id="solución-1">Solución 1</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Descargar secuencias de Cytochrome b desde NCBI</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> ~/filogenia/cytb <span class="kw">&amp;&amp;</span> <span class="bu">cd</span> ~/filogenia/cytb</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co"># IDs de ejemplo (RefSeq mitochondrial cytb)</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> acc <span class="kw">in</span> NC_001807 NC_002083 NC_001640 NC_001643 NC_001316 NC_002008 <span class="dt">\</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>           NC_005043 NC_000950 NC_006853 NC_004025 NC_006919 NC_007896<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="ex">efetch</span> <span class="at">-db</span> nucleotide <span class="at">-id</span> <span class="st">"</span><span class="va">$acc</span><span class="st">"</span> <span class="at">-db</span> nuccore <span class="at">-format</span> fasta <span class="kw">|</span> <span class="dt">\</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>        <span class="fu">awk</span> <span class="at">-v</span> acc=<span class="st">"</span><span class="va">$acc</span><span class="st">"</span> <span class="st">'BEGIN{RS="&gt;"} NR&gt;1{print "&gt;"$0}'</span> <span class="kw">|</span> <span class="dt">\</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>        <span class="fu">awk</span> <span class="st">'/cytb|CYTB/{print}'</span> </span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span> <span class="op">&gt;</span> cytb.fasta</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="co"># En la práctica: descargar el gen cytb por separado usando `efetch`</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="co"># con el rango de coordenadas correspondiente.</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Alinear</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a><span class="ex">mafft</span> <span class="at">--auto</span> <span class="at">--thread</span> 4 cytb.fasta <span class="op">&gt;</span> cytb_aln.fasta</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Recortar</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a><span class="ex">trimal</span> <span class="at">-in</span> cytb_aln.fasta <span class="at">-out</span> cytb_trim.fasta <span class="at">-automated1</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. ModelTest-NG</span></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a><span class="ex">modeltest-ng</span> <span class="at">-i</span> cytb_trim.fasta <span class="at">-d</span> nt <span class="at">-p</span> 4 <span class="at">-o</span> cytb_modeltest.out</span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Reportar el mejor modelo</span></span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-E</span> <span class="st">"^Best model"</span> cytb_modeltest.out</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="text"><code>Best model according to AIC:  GTR+I+G
+Best model according to AICc: GTR+I+G
+Best model according to BIC:  GTR+I+G
+Best model according to DT:   GTR+I+G</code></pre>
+</section>
+<section id="solución-2" class="level3">
+<h3 data-anchor-id="solución-2">Solución 2</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Parsear el archivo de salida de jModelTest</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="co"># (a) mejor modelo según AIC</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-E</span> <span class="st">"^Model|^best|^Best"</span> jmodeltest.out <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-i</span> <span class="st">"AIC"</span> <span class="kw">|</span> <span class="fu">head</span> <span class="at">-1</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Alternativa robusta con awk</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'/Best AIC model/{print "Mejor AIC: " $NF}'</span> jmodeltest.out</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'/Best BIC model/{print "Mejor BIC: " $NF}'</span> jmodeltest.out</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="co"># (c) Longitud del árbol ML para el mejor modelo (AIC)</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="co"># El output contiene un bloque con parámetros del mejor modelo</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="fu">awk</span> <span class="st">'/Model selected:/{mod=$NF}</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="st">     /tree length/{if (selected) print "Tree length (" mod "): " $NF}</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="st">     /Best AIC model:/{selected=1; mod=$NF}'</span> jmodeltest.out</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Versión compacta</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Mejor AIC: </span><span class="va">$(</span><span class="fu">grep</span> <span class="at">-oP</span> <span class="st">'AIC:\s+\K\S+'</span> jmodeltest.out <span class="kw">|</span> <span class="fu">head</span> <span class="at">-1</span><span class="va">)</span><span class="st">"</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Mejor BIC: </span><span class="va">$(</span><span class="fu">grep</span> <span class="at">-oP</span> <span class="st">'BIC:\s+\K\S+'</span> jmodeltest.out <span class="kw">|</span> <span class="fu">head</span> <span class="at">-1</span><span class="va">)</span><span class="st">"</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Tree length: </span><span class="va">$(</span><span class="fu">grep</span> <span class="at">-oP</span> <span class="st">'tree length\s+=\s+\K[0-9.]+'</span> jmodeltest.out <span class="kw">|</span> <span class="fu">head</span> <span class="at">-1</span><span class="va">)</span><span class="st">"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="text"><code>Mejor AIC: GTR+I+G
+Mejor BIC: HKY+I+G
+Tree length: 2.34791</code></pre>
+</section>
+<section id="solución-3" class="level3">
+<h3 data-anchor-id="solución-3">Solución 3</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Inferir árboles ML con tres modelos sobre el mismo dataset</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="co"># JC: nucleótidos iguales, 1 parámetro</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-s</span> cytb_trim.fasta <span class="at">-m</span> JC+G <span class="at">-pre</span> jc_tree <span class="at">--quiet</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co"># HKY+G: transiciones/transversiones + frecuencias empíricas + Gamma</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-s</span> cytb_trim.fasta <span class="at">-m</span> HKY+G <span class="at">-pre</span> hky_tree <span class="at">--quiet</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="co"># GTR+I+G: el más completo reversible</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-s</span> cytb_trim.fasta <span class="at">-m</span> GTR+I+G <span class="at">-pre</span> gtr_tree <span class="at">--quiet</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Extraer logL de cada uno (en el archivo .log o .iqtree)</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== Log-likelihoods ==="</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"JC+G:        </span><span class="va">$(</span><span class="fu">grep</span> <span class="at">-oP</span> <span class="st">'Log-likelihood of tree:\s+\K[-0-9.]+'</span> jc_tree.iqtree<span class="va">)</span><span class="st">"</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"HKY+G:       </span><span class="va">$(</span><span class="fu">grep</span> <span class="at">-oP</span> <span class="st">'Log-likelihood of tree:\s+\K[-0-9.]+'</span> hky_tree.iqtree<span class="va">)</span><span class="st">"</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"GTR+I+G:     </span><span class="va">$(</span><span class="fu">grep</span> <span class="at">-oP</span> <span class="st">'Log-likelihood of tree:\s+\K[-0-9.]+'</span> gtr_tree.iqtree<span class="va">)</span><span class="st">"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre class="text"><code>=== Log-likelihoods ===
+JC+G:        -9823.41
+HKY+G:       -8110.22
+GTR+I+G:     -7956.18</code></pre>
+<p><strong>Análisis</strong>:</p>
+<ul>
+<li>De JC+G a HKY+G: ΔlogL = -9823 - (-8110) = -1713. Mejora enorme al introducir frecuencias empíricas y transición/transversión distintas. Justificado.</li>
+<li>De HKY+G a GTR+I+G: ΔlogL = -8110 - (-7956) = -154. Mejora más modesta. Test de razón de verosimilitudes: <code>2 × 154 = 308</code>. Con <code>df = 7 - 2 = 5</code> parámetros extra (4 tasas adicionales + I), el χ² crítico a p=0.001 con 5 df ≈ 20.5. Como 308 &gt;&gt; 20.5, <strong>la mejora es altamente significativa</strong>. Usar GTR+I+G está justificado.</li>
+</ul>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>La mejora de JC a HKY es enorme porque JC69 ignora el sesgo transición/transversión, que en mitocondriales es ≈ 10:1. La mejora de HKY a GTR refleja heterogeneidad entre las distintas tasas de transversión y transición, también real en estos datos.</p>
+</div>
+</div>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/bioden\.github\.io\/bioden_website\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Semillero de Biología del Desarrollo y Plasticidad Neural © 2025. All content licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Sitio web desarrollado por Xavier Clemente García Cevallos</p>
+</div>   
+    <div class="nav-footer-center">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/bioden">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="mailto:bioden@unicauca.edu.co">
+      <i class="bi bi-envelope" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    <div class="cookie-consent-footer"><a href="#" id="open_preferences_center">Cookie Preferences</a></div></div>
+    <div class="nav-footer-right">
+<p>Made with <a href="https://www.r-project.org/"><img src="https://www.r-project.org/Rlogo.png" alt="R" width="25px"></a> and <a href="https://quarto.org/"><img src="https://quarto.org/quarto.png" alt="Quarto" width="65px"></a>.</p>
+</div>
+  </div>
+</footer>
+
+
+
+
+<script src="../../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

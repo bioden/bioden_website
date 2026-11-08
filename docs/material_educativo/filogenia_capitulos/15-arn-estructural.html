@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Capítulo 15: ARN estructural — 16S rRNA – BIODEN</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../../logo.png" rel="icon" type="image/png">
+<script src="../../site_libs/cookie-consent/cookie-consent.js"></script>
+<link href="../../site_libs/cookie-consent/cookie-consent.css" rel="stylesheet">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-70f92796293836dceea0045bd755b5b1.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-1242ccc02940432acd87c1b818d9cd49.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-70f92796293836dceea0045bd755b5b1.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+<script type="text/javascript" charset="UTF-8">
+document.addEventListener('DOMContentLoaded', function () {
+cookieconsent.run({
+  "notice_banner_type":"interstitial",
+  "consent_type":"express",
+  "palette":"dark",
+  "language":"en",
+  "page_load_consent_levels":["strictly-necessary"],
+  "notice_banner_reject_button_hide":false,
+  "preferences_center_close_button_hide":false,
+  "website_name":""
+  ,
+"language":"en"
+  });
+});
+</script> 
+  
+<style>html{ scroll-behavior: smooth; }</style>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../logo.png" alt="" class="navbar-logo light-content">
+    <img src="../../logo.png" alt="" class="navbar-logo dark-content">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">BIODEN</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">Inicio</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-proyectos" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Proyectos</span>
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-proyectos">    
+        <li>
+    <a class="dropdown-item" href="https://bioden.github.io/XIII_CCB_curso/">
+ <span class="dropdown-text">De la Botánica a la Bioinformática</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" href="../../investigacion.html"> 
+<span class="menu-text">Investigación</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../integrantes.html"> 
+<span class="menu-text">Integrantes</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../biosistalks/biosistalks.html"> 
+<span class="menu-text">Biosis Talks</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../material_educativo.html"> 
+<span class="menu-text">Material educativo</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../suplementario.html"> 
+<span class="menu-text">Servicios</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.instagram.com/dbg_unicauca/"> <i class="bi bi-instagram" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.facebook.com/profile.php?id=61583453722433"> <i class="bi bi-facebook" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:bioden@unicauca.edu.co"> <i class="bi bi-envelope" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar"><div class="quarto-margin-header"><div class="margin-header-item">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="../../logos/semillero.png" class="img-fluid figure-img"></p>
+<figcaption>Universidad del Cauca</figcaption>
+</figure>
+</div>
+</div></div>
+        
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Capítulo 15: ARN estructural — 16S rRNA</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="por-qué-el-arn-estructural-es-distinto" class="level2">
+<h2 data-anchor-id="por-qué-el-arn-estructural-es-distinto">15.1 ¿Por qué el ARN estructural es distinto?</h2>
+<p>Hasta ahora hemos tratado las secuencias como <strong>cadenas lineales</strong> de nucleótidos o aminoácidos. Pero muchas moléculas de ARN no codifican proteínas y su función depende directamente de su <strong>estructura tridimensional</strong>: el ribosoma (rRNA 16S, 23S, 5S), los tRNAs, el RNase P, los snRNAs del spliceosome, los riboswitches y muchos lncRNAs.</p>
+<p>La diferencia fundamental es que para estos ARN <strong>la selección actúa sobre la estructura, no sobre la secuencia</strong>. Una mutación puntual puede ser neutral o incluso beneficiosa si preserva el emparejamiento Watson-Crick. Por ejemplo, un <code>G-C</code> en una hélice puede sustituirse por <code>A-U</code> o <code>G·U</code> (wobble) sin romper la estructura. Esto viola la asunción central de los modelos de ADN estándar (las sustituciones dependen solo del nucleótido actual).</p>
+<section id="tres-niveles-de-estructura" class="level3">
+<h3 data-anchor-id="tres-niveles-de-estructura">15.1.1 Tres niveles de estructura</h3>
+<ul>
+<li><strong>Estructura primaria</strong>: secuencia lineal de nucleótidos (5’→3’).</li>
+<li><strong>Estructura secundaria</strong>: patrón de emparejamientos <strong>intra-moleculares</strong> (Watson-Crick y no-canónicos). Compuesto por:
+<ul>
+<li><strong>Hélices (stems)</strong>: regiones pareadas antiparalelas.</li>
+<li><strong>Loops</strong>: loops internos, bulges, hairpin loops, multi-loop junctions.</li>
+</ul></li>
+<li><strong>Estructura terciaria</strong>: plegamiento 3D final, con interacciones a larga distancia (pseudonudos, base-triples, interacciones stacking).</li>
+</ul>
+<p>Para filogenia, trabajamos principalmente con la <strong>estructura secundaria</strong>: es predecible con algoritmos (MFE, comparativos) y es conservada a lo largo de grandes distancias evolutivas.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Conservación estructural vs secuencial</strong>: el 16S rRNA de <em>E. coli</em> y <em>Homo sapiens</em> comparte ~50% de identidad de secuencia pero <strong>&gt;90% de la estructura secundaria</strong> es idéntica. Los modelos de ADN estándar desperdician esta información.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="modelos-de-sustitución-para-arn" class="level2">
+<h2 data-anchor-id="modelos-de-sustitución-para-arn">15.2 Modelos de sustitución para ARN</h2>
+<section id="modelos-doublet" class="level3">
+<h3 data-anchor-id="modelos-doublet">15.2.1 Modelos doublet</h3>
+<p>Los modelos <strong>doublet</strong> tratan pares de nucleótidos emparejados como una unidad de evolución. En vez de 4 estados (A, C, G, U) tenemos 16 estados (AA, AC, …, UU), de los cuales solo <strong>6 son pares estables Watson-Crick/wobble</strong>:</p>
+<pre class="text"><code>Pares canónicos y wobble:
+  AU  UA  GC  CG  GU  UG   ← pares "permitidos" en hélices</code></pre>
+<p>Las transiciones entre pares se modelan según su probabilidad biológica. Por ejemplo, <code>GC → AU</code> (cambio simultáneo de ambos nucleótidos) es mucho más raro que <code>GC → GU → AU</code> (pasando por wobble intermedio).</p>
+</section>
+<section id="modelos-empíricos-rna16" class="level3">
+<h3 data-anchor-id="modelos-empíricos-rna16">15.2.2 Modelos empíricos RNA16</h3>
+<p>IQ-TREE incluye modelos empíricos entrenados con alineamientos estructurales de Rfam:</p>
+<ul>
+<li><strong>RNA16A</strong>: 16 estados, simple, sin distinción de tasas por par.</li>
+<li><strong>RNA16B</strong>: añade tasas asimétricas entre transiciones/transversiones de pares.</li>
+<li><strong>RNA16D</strong>: el más completo, con tasas diferenciales para cada tipo de cambio entre pares.</li>
+</ul>
+<p>Otros modelos:</p>
+<ul>
+<li><strong>RNA7A, RNA7B</strong>: simplifican a 7 estados (6 pares + 1 estado para no-emparejado).</li>
+<li><strong>DH (doublet Higgs)</strong>: modelo teórico de Higgs (2000), pocas implementaciones modernas.</li>
+</ul>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Cuándo usar RNA16</strong>: solo para regiones <strong>emparejadas</strong> (hélices). Para loops, usar modelos estándar de ADN. Lo ideal es <strong>particionar</strong> el alineamiento 16S en regiones pareadas (con RNA16A/D) y no-pareadas (con HKY/GTR+G). IQ-TREE y MrBayes soportan esta estrategia.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="s-rrna-como-marcador-universal" class="level2">
+<h2 data-anchor-id="s-rrna-como-marcador-universal">15.3 16S rRNA como marcador universal</h2>
+<p>El <strong>16S rRNA</strong> (~1540 nt en bacterias) es el marcador filogenético más utilizado en microbiología porque:</p>
+<ol type="1">
+<li><strong>Universal</strong>: presente en todos los organismos celulares (bacterias: 16S; eucariotas: 18S homólogo; arqueas: 16S).</li>
+<li><strong>Función esencial</strong>: parte del ribosoma, imposible de perder.</li>
+<li><strong>Estructura conservada</strong> con 9 regiones <strong>variables</strong> (V1-V9) intercaladas con regiones conservadas, lo que permite:
+<ul>
+<li>Cebadores universales en regiones conservadas.</li>
+<li>Identificación taxonómica en regiones variables.</li>
+</ul></li>
+<li><strong>Longitud adecuada</strong>: ~1540 nt, suficiente señal filogenética sin ser excesiva.</li>
+<li><strong>No transferencia horizontal</strong>: el rRNA raramente se transfiere entre especies.</li>
+</ol>
+<section id="regiones-v1-v9" class="level3">
+<h3 data-anchor-id="regiones-v1-v9">15.3.1 Regiones V1-V9</h3>
+<pre class="text"><code>[Cons]--[V1]--[Cons]--[V2]--[Cons]--[V3]--[Cons]--[V4]--[Cons]--[V5]--[Cons]--[V6]--[Cons]--[V7]--[Cons]--[V8]--[Cons]--[V9]--[Cons]</code></pre>
+<ul>
+<li><strong>V1-V3</strong>: buena para分辨 a nivel de género/familia.</li>
+<li><strong>V4</strong>: usado en Illumina (longitud óptima para secuenciación 2×250), alta resolución para taxonomía.</li>
+<li><strong>V3-V4</strong>: común en metagenómica.</li>
+<li><strong>V6-V8</strong>: adecuado para分辨率 alta entre géneros cercanos.</li>
+</ul>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Warning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Limitación de 16S</strong>: la resolución es buena hasta nivel <strong>género</strong>; raramente permite distinguir <strong>especies</strong> cercanas (p.&nbsp;ej., <em>E. coli</em> vs <em>Shigella</em>). Para especie/subespecie, usar genoma completo o <strong>filogenómica</strong> (capítulo 16) o marcadores como <em>gyrB</em>, <em>rpoB</em>.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="herramientas-para-alineamiento-estructural" class="level2">
+<h2 data-anchor-id="herramientas-para-alineamiento-estructural">15.4 Herramientas para alineamiento estructural</h2>
+<section id="infernal-el-estándar-de-oro" class="level3">
+<h3 data-anchor-id="infernal-el-estándar-de-oro">15.4.1 Infernal — el estándar de oro</h3>
+<p><strong>Infernal</strong> (INFERence of RNA Alignment) implementa <strong>modelos de covarianza</strong> (CM), que son profile HMMs extendidos con información de estructura secundaria. Un CM se construye a partir de un alineamiento seed con anotación estructural y luego se usa para alinear nuevas secuencias respetando la estructura.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Instalación</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> install <span class="at">-c</span> bioconda infernal <span class="at">-y</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Construir un CM a partir de alineamiento seed (formato Stockholm con #=GC SS_cons)</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="ex">cmbuild</span> <span class="at">--handseed</span> 16S_bacteria.cm seed_16S.sto</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Calibrar el CM (ajustar scores para longitud)</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="ex">cmcalibrate</span> 16S_bacteria.cm   <span class="co"># ~10-30 min</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Alinear secuencias nuevas al CM</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="ex">cmalign</span> <span class="at">--outformat</span> Stockholm 16S_bacteria.cm sequences.fasta <span class="op">&gt;</span> alineadas.sto</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Buscar CM en base de datos (genome annotation)</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="ex">cmscan</span> <span class="at">--rfam</span> <span class="at">--cut_ga</span> <span class="at">--tblout</span> hits.tbl seqs.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Tip
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>CMs prefabricados</strong>: Rfam (https://rfam.org) contiene miles de CMs curados para familias de ARN. Para 16S bacteriano, usar <strong>RF00177</strong> (bacterial small subunit ribosomal RNA). Para 18S eucariota, <strong>RF01960</strong>. Descargar CMs directamente desde Rfam o usar la base de datos completa con <code>cmscan --rfam</code>.</p>
+</div>
+</div>
+</section>
+<section id="r-coffee-t-coffee-con-info-estructural" class="level3">
+<h3 data-anchor-id="r-coffee-t-coffee-con-info-estructural">15.4.2 R-coffee (T-coffee con info estructural)</h3>
+<p>R-coffee extiende T-coffee para incorporar predicciones de estructura secundaria:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Instalación</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> install <span class="at">-c</span> bioconda t-coffee <span class="at">-y</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Alineamiento estructural</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="ex">t_coffee</span> <span class="at">-seq</span> sequences.fasta <span class="at">-mode</span> rcoffee <span class="at">-output</span> fasta</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Si tienes estructura secundaria conocida:</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="ex">t_coffee</span> <span class="at">-seq</span> sequences.fasta <span class="at">-mode</span> rcoffee <span class="at">-method</span> rcoffee_pair <span class="at">-ss</span> ss_file.ss</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="sina-silva-incremental-aligner" class="level3">
+<h3 data-anchor-id="sina-silva-incremental-aligner">15.4.3 SINA (SILVA Incremental Aligner)</h3>
+<p>SINA está optimizado para 16S/23S alineándose contra la base de datos SILVA:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># SINA tiene interfaz web (https://www.arb-silva.de/aligner/)</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co"># También CLI disponible:</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> install <span class="at">-c</span> bioconda sina <span class="at">-y</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="ex">sina</span> <span class="at">-i</span> sequences.fasta <span class="at">--intype</span> fasta <span class="at">--out</span> aligned.fasta <span class="at">--outtype</span> fasta <span class="dt">\</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">--ptdb</span> /path/to/silva_ref ARB <span class="at">--turn</span> <span class="at">--auto-filters</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="mafft-con-estructura" class="level3">
+<h3 data-anchor-id="mafft-con-estructura">15.4.4 MAFFT con estructura</h3>
+<p>MAFFT no aprovecha estructura directamente, pero tiene modos recomendados para 16S:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Modo G-INS-i (alineamiento global, recomendado para regiones conservadas)</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">mafft</span> <span class="at">--genafpair</span> <span class="at">--maxiterate</span> 1000 sequences.fasta <span class="op">&gt;</span> aligned.fasta</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Modo Q-INS-i (usa información de estructura secundaria predicha)</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="ex">mafft</span> <span class="at">--qinsi</span> sequences.fasta <span class="op">&gt;</span> aligned.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="base-de-datos-silva" class="level2">
+<h2 data-anchor-id="base-de-datos-silva">15.5 Base de datos SILVA</h2>
+<p><strong>SILVA</strong> (https://www.arb-silva.de/) es la base de datos curada más completa para rRNA:</p>
+<ul>
+<li><strong>SILVA 138.2</strong> (versión actual): ~510,000 secuencias 16S bacterianas y arqueanas curadas.</li>
+<li><strong>SILVA 138 LSU</strong>: 23S rRNA.</li>
+<li><strong>SILVA 138 SSU Ref NR99</strong>: filtrada al 99% identidad para evitar redundancia.</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Descargar (archivo ~600 MB)</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Desde el sitio web: https://www.arb-silva.de/download/arb-files/</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> <span class="at">-c</span> https://www.arb-silva.de/fileadmin/silva_databases/release_138_2/Exports/SILVA_138.2_SSURef_NR99_tax_silva.fasta.gz</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="fu">gunzip</span> SILVA_138.2_SSURef_NR99_tax_silva.fasta.gz</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Para uso en IQ-TREE/RAxML-NG, submuestrear por grupo taxonómico</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co"># con script awk/sort</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Greengenes vs SILVA vs RDP</strong>: tres bases de datos para 16S. SILVA es la más actualizada y curada; Greengenes (13_8) fue popular pero está desactualizada; RDP tiene buenas herramientas pero la base en sí es menor. Para filogenia, <strong>SILVA</strong> es la elección por defecto.</p>
+</div>
+</div>
+</section>
+<section id="post-alineamiento-para-16s" class="level2">
+<h2 data-anchor-id="post-alineamiento-para-16s">15.6 Post-alineamiento para 16S</h2>
+<section id="recorte-de-regiones-no-conservadas" class="level3">
+<h3 data-anchor-id="recorte-de-regiones-no-conservadas">15.6.1 Recorte de regiones no conservadas</h3>
+<p>El alineamiento de 16S genera columnas con muchos gaps al final (regiones terminales variables) y regiones internas mal alineadas. Recortar con trimAl:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Recorte automático</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">trimal</span> <span class="at">-in</span> aligned.sto <span class="at">-out</span> trimmed.fasta <span class="at">-fasta</span> <span class="at">-automated1</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Recorte conservador</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="ex">trimal</span> <span class="at">-in</span> aligned.fasta <span class="at">-out</span> trimmed.fasta <span class="at">-gt</span> 0.8 <span class="at">-gapcut</span> 0.6</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Conservar solo columnas con &gt;50% residuos y &lt;10% gaps</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="ex">trimal</span> <span class="at">-in</span> aligned.fasta <span class="at">-out</span> trimmed.fasta <span class="at">-cons</span> 50 <span class="at">-gt</span> 0.5</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="conversión-de-formatos" class="level3">
+<h3 data-anchor-id="conversión-de-formatos">15.6.2 Conversión de formatos</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Stockholm → FASTA</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">seqmagick</span> convert <span class="at">--format</span> fasta aligned.sto aligned.fasta</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Stockholm → NEXUS (para MrBayes)</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="ex">seqmagick</span> convert <span class="at">--format</span> nexus aligned.sto aligned.nex</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Stockholm → PHYLIP (para RAxML-NG legacy)</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="ex">seqmagick</span> convert <span class="at">--format</span> phylip aligned.sto aligned.phy</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Verificar alineamiento</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="ex">seqmagick</span> convert <span class="at">--describe</span> aligned.fasta</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="análisis-filogenético-de-16s" class="level2">
+<h2 data-anchor-id="análisis-filogenético-de-16s">15.7 Análisis filogenético de 16S</h2>
+<section id="iq-tree-con-modelos-específicos" class="level3">
+<h3 data-anchor-id="iq-tree-con-modelos-específicos">15.7.1 IQ-TREE con modelos específicos</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Selección automática de modelos, permitiendo RNA16*</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-s</span> 16s_trim.fasta <span class="at">-m</span> MFP <span class="at">-mset</span> GTR,RNA16A,RNA16B,RNA16D <span class="at">-B</span> 1000 <span class="at">-pre</span> 16s_tree</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># O modelo fijo GTR+I+G (clásico para 16S)</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-s</span> 16s_trim.fasta <span class="at">-m</span> GTR+I+G <span class="at">-B</span> 1000 <span class="at">-pre</span> 16s_tree</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Partición pareadas/no-pareadas (requiere archivo de partición)</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-s</span> 16s_trim.fasta <span class="at">-spp</span> partition_16s.txt <span class="at">-m</span> MFP <span class="at">-mset</span> GTR,RNA16D <span class="at">-B</span> 1000 <span class="at">-pre</span> 16s_part</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Ejemplo de archivo de partición para 16S con regiones pareadas (stems) y no-pareadas (loops):</p>
+<pre class="text"><code>DNA, stems   = 1-50, 100-150, 200-250, 300-350, ...
+DNA, loops   = 51-99, 151-199, 251-299, 351-400, ...</code></pre>
+</section>
+<section id="raxml-ng" class="level3">
+<h3 data-anchor-id="raxml-ng">15.7.2 RAxML-NG</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">raxml-ng</span> <span class="at">--all</span> <span class="at">--msa</span> 16s_trim.fasta <span class="at">--model</span> GTR+I+G <span class="at">--bs-trees</span> 1000 <span class="at">--threads</span> 8 <span class="at">--prefix</span> 16s_raxml</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Con partición</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="ex">raxml-ng</span> <span class="at">--all</span> <span class="at">--msa</span> 16s_trim.fasta <span class="at">--model</span> partition.txt <span class="at">--bs-trees</span> 1000 <span class="at">--threads</span> 8</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="mrbayes" class="level3">
+<h3 data-anchor-id="mrbayes">15.7.3 MrBayes</h3>
+<pre class="text"><code>begin mrbayes;
+    charset stems   = 1-50 100-150 200-250;
+    charset loops   = 51-99 151-199 251-299;
+    partition by_struct = 2: stems, loops;
+    set partition = by_struct;
+    lset applyto=(1) nst=6 rates=invgamma;     # stems con GTR+I+G
+    lset applyto=(2) nst=2 rates=gamma;        # loops con HKY+G
+    mcmc ngen=5000000 samplefreq=1000 nchains=4 nruns=2;
+    sumt burnin=1250;
+    sump burnin=1250;
+end;</code></pre>
+</section>
+</section>
+<section id="árboles-basados-en-estructura-secundaria" class="level2">
+<h2 data-anchor-id="árboles-basados-en-estructura-secundaria">15.8 Árboles basados en estructura secundaria</h2>
+<p>Una alternativa a los modelos doublet es tratar la estructura secundaria como un <strong>carácter morfológico</strong>:</p>
+<ul>
+<li>Para cada taxón, anotar presencia/ausencia de cada elemento estructural (hélices, loops específicos).</li>
+<li>Construir matriz de caracteres (binarios o multi-estado).</li>
+<li>Análisis de parsimonia (TNT, PAUP*) o bayesiano (MrBayes con <code>datatype=standard</code>).</li>
+</ul>
+<p>Este enfoque es útil cuando la conservación de secuencia es muy baja (p.&nbsp;ej., comparar 16S de bacterias con 18S de eucariotas), pero pierde resolución fina. La práctica estándar moderna es usar <strong>Infernal</strong> para alinear y modelos <strong>doublet</strong> para inferencia.</p>
+</section>
+<section id="pipeline-completo-para-16s" class="level2">
+<h2 data-anchor-id="pipeline-completo-para-16s">15.9 Pipeline completo para 16S</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/usr/bin/env bash</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-euo</span> pipefail</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Variables</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="va">CM_FILE</span><span class="op">=</span><span class="st">"RF00177.cm"</span>   <span class="co"># CM de Rfam para 16S bacteriano</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="va">INPUT</span><span class="op">=</span><span class="st">"16s_raw.fasta"</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Descargar secuencias 16S de NCBI</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== Paso 1: Descarga ==="</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="ex">efetch</span> <span class="at">-db</span> nucleotide <span class="at">-id</span> <span class="st">"FJ97XXXX,MH12XXXX"</span> <span class="at">-format</span> fasta <span class="op">&gt;</span> <span class="st">"</span><span class="va">$INPUT</span><span class="st">"</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Alinear con Infernal</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== Paso 2: Alineamiento estructural ==="</span></span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a><span class="ex">cmalign</span> <span class="at">--outformat</span> Stockholm <span class="st">"</span><span class="va">$CM_FILE</span><span class="st">"</span> <span class="st">"</span><span class="va">$INPUT</span><span class="st">"</span> <span class="op">&gt;</span> 16s_aln.sto</span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Convertir y recortar</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== Paso 3: Conversión y recorte ==="</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a><span class="ex">seqmagick</span> convert <span class="at">--format</span> fasta 16s_aln.sto 16s_aln.fasta</span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a><span class="ex">trimal</span> <span class="at">-in</span> 16s_aln.fasta <span class="at">-out</span> 16s_trim.fasta <span class="at">-automated1</span></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Construir árbol</span></span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== Paso 4: ML con IQ-TREE ==="</span></span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-s</span> 16s_trim.fasta <span class="at">-m</span> MFP <span class="at">-mset</span> GTR,RNA16A,RNA16B,RNA16D <span class="at">-B</span> 1000 <span class="at">-alrt</span> 1000 <span class="at">-T</span> 8 <span class="at">-pre</span> 16s_tree</span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Visualizar</span></span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== Paso 5: Visualización ==="</span></span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a><span class="ex">ete3</span> view <span class="at">-t</span> 16s_tree.treefile</span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a><span class="co"># 6. Reporte</span></span>
+<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== Resumen ==="</span></span>
+<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Secuencias input:    </span><span class="va">$(</span><span class="fu">grep</span> <span class="at">-c</span> <span class="st">'&gt;'</span> <span class="st">"</span><span class="va">$INPUT</span><span class="st">"</span><span class="va">)</span><span class="st">"</span></span>
+<span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Longitud alineada:   </span><span class="va">$(</span><span class="ex">seqmagick</span> info 16s_aln.fasta <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'/alignment length/{print $3}'</span><span class="va">)</span><span class="st">"</span></span>
+<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Longitud recortada:  </span><span class="va">$(</span><span class="ex">seqmagick</span> info 16s_trim.fasta <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'/alignment length/{print $3}'</span><span class="va">)</span><span class="st">"</span></span>
+<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Modelo seleccionado: </span><span class="va">$(</span><span class="fu">grep</span> <span class="st">'Best-fit model'</span> 16s_tree.iqtree <span class="kw">|</span> <span class="fu">head</span> <span class="at">-1</span><span class="va">)</span><span class="st">"</span></span>
+<span id="cb14-35"><a href="#cb14-35" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Árbol:               16s_tree.treefile"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="arn-ribosomales-eucariotas" class="level2">
+<h2 data-anchor-id="arn-ribosomales-eucariotas">15.10 ARN ribosomales eucariotas</h2>
+<p>En eucariotas, el homólogo del 16S procariota es el <strong>18S rRNA</strong> (~1800 nt), parte de la subunidad pequeña 40S. El <strong>28S rRNA</strong> (~4000 nt) homólogo del 23S procariota, parte de la subunidad grande 60S. El <strong>5.8S</strong> y el <strong>5S</strong> completan el ribosoma eucariota.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Para 18S eucariota, usar CM RF01960 de Rfam</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="ex">cmalign</span> <span class="at">--outformat</span> Stockholm RF01960.cm euk_seqs.fasta <span class="op">&gt;</span> euk_aln.sto</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co"># PR2 database: base de datos curada de 18S eucariota (equivalente SILVA)</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="co"># https://pr2-database.org/</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="otros-arn-estructurales" class="level2">
+<h2 data-anchor-id="otros-arn-estructurales">15.11 Otros ARN estructurales</h2>
+<section id="trna" class="level3">
+<h3 data-anchor-id="trna">15.11.1 tRNA</h3>
+<p>Los tRNAs son cortos (~75 nt) con estructura “trébol” muy conservada. Para alinearlos:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># tRNAscan-SE detecta y anota tRNAs en genomas</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="ex">conda</span> install <span class="at">-c</span> bioconda trnascan-se <span class="at">-y</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="ex">tRNAscan-SE</span> <span class="at">-o</span> trnas.txt genome.fasta</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Para filogenia, los tRNAs suelen dar poca resolución por longitud corta.</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Útiles para árboles de genes de tRNA (p. ej., orígenes evolutivos).</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="rnase-p" class="level3">
+<h3 data-anchor-id="rnase-p">15.11.2 RNase P</h3>
+<p>ARN catalítico (~300-400 nt) con estructura conservada pero secuencia divergente. Modelo clásico de ARN con función enzimática.</p>
+</section>
+<section id="micrornas-mirnas" class="level3">
+<h3 data-anchor-id="micrornas-mirnas">15.11.3 microRNAs (miRNAs)</h3>
+<p>Los miRNAs maduros son muy cortos (~22 nt) y filogenéticamente poco informativos individualmente. Sin embargo, los <strong>pre-miRNAs</strong> (precursor con hairpin, ~70 nt) sí permiten filogenia. Familias de miRNAs conservadas en metazoos se analizan a nivel de presencia/ausencia.</p>
+</section>
+<section id="lncrnas" class="level3">
+<h3 data-anchor-id="lncrnas">15.11.4 lncRNAs</h3>
+<p>Los lncRNAs (long non-coding RNAs) son &gt;200 nt y su estructura es compleja. Su filogenia es difícil por:</p>
+<ul>
+<li>Baja conservación de secuencia entre especies lejanas.</li>
+<li>Estructura secundaria solo parcialmente conocida.</li>
+<li>Convergencia estructural posible.</li>
+</ul>
+<p>Mejor estrategia: alineamiento <strong>local</strong> de dominios conservados (con Infernal si hay CM en Rfam) más análisis de synteny.</p>
+</section>
+</section>
+<section id="limitaciones-de-16s" class="level2">
+<h2 data-anchor-id="limitaciones-de-16s">15.12 Limitaciones de 16S</h2>
+<p>A pesar de su utilidad, 16S tiene limitaciones importantes:</p>
+<ol type="1">
+<li><strong>Resolución limitada</strong>: género/familia. Difícil distinguir especies cercanas.</li>
+<li><strong>Variación del número de copias</strong>: bacterias tienen 1-15 copias de operón rRNA → puede sesgar estimaciones de abundancia en metagenómica.</li>
+<li><strong>Intra-genómico heterogéneo</strong>: diferentes copias pueden variar hasta varios %.</li>
+<li><strong>Sesgo de PCR</strong>: cebadores universales no son realmente universales.</li>
+<li><strong>Lecturas cortas</strong>: Illumina da V3-V4 (~460 nt) → menos señal que Sanger full-length 16S.</li>
+</ol>
+<p><strong>Alternativas modernas</strong>:</p>
+<ul>
+<li><strong>Filogenómica</strong> con genoma completo (capítulo 16).</li>
+<li><strong>Marcadores multi-locus</strong> (MLSA): concatenar <em>gyrB</em>, <em>rpoB</em>, <em>recA</em>, <em>atpD</em>.</li>
+<li><strong>GTDB</strong> (Genome Taxonomy DataBase): taxonomía basada en genomas completos, no en 16S.</li>
+</ul>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Important
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Tendencia actual</strong>: con la caída del coste de secuenciación, la filogenia basada en 16S está siendo reemplazada por filogenómica de genomas completos (ANI, AAI, GTDB). Sin embargo, 16S sigue siendo la opción <strong>rápida y barata</strong> para identificación taxonómica preliminar y estudios ambientales donde no se ensambla genoma completo.</p>
+</div>
+</div>
+</section>
+<section id="ejercicios" class="level2">
+<h2 data-anchor-id="ejercicios">15.13 Ejercicios</h2>
+<section id="ejercicio-1-pipeline-16s-con-infernal" class="level3">
+<h3 data-anchor-id="ejercicio-1-pipeline-16s-con-infernal">Ejercicio 1: Pipeline 16S con Infernal</h3>
+<p>Descargar 20 secuencias de 16S rRNA de Bacterias Firmicutes desde SILVA o NCBI. Alinear con Infernal (usando CM estándar de Rfam RF00177). Convertir y recortar. Construir árbol ML con IQ-TREE.</p>
+</section>
+<section id="ejercicio-2-comparación-mafft-vs-infernal" class="level3">
+<h3 data-anchor-id="ejercicio-2-comparación-mafft-vs-infernal">Ejercicio 2: Comparación MAFFT vs Infernal</h3>
+<p>Comparar dos enfoques de alineamiento de 16S: (a) MAFFT simple, (b) Infernal con estructura secundaria. Comparar: longitud del alineamiento, número de sitios informativos, soporte de bootstrap en árbol resultante. ¿Vale la pena Infernal?</p>
+</section>
+<section id="ejercicio-3-script-pipeline_16s.sh" class="level3">
+<h3 data-anchor-id="ejercicio-3-script-pipeline_16s.sh">Ejercicio 3: Script pipeline_16s.sh</h3>
+<p>Escribir script <code>pipeline_16s.sh</code> que reciba archivo FASTA con secuencias 16S y ejecute todo el pipeline: Infernal align → conversión → trimAl → IQ-TREE. Verificar con secuencias de prueba.</p>
+</section>
+</section>
+<section id="soluciones" class="level2">
+<h2 data-anchor-id="soluciones">15.14 Soluciones</h2>
+<section id="solución-ejercicio-1" class="level3">
+<h3 data-anchor-id="solución-ejercicio-1">Solución ejercicio 1</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/usr/bin/env bash</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Ejercicio 1: Pipeline 16S con Infernal</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-euo</span> pipefail</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="va">WORKDIR</span><span class="op">=</span><span class="st">"</span><span class="va">$HOME</span><span class="st">/filogenia_curso/16s_firmicutes"</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> <span class="st">"</span><span class="va">$WORKDIR</span><span class="st">"</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> <span class="st">"</span><span class="va">$WORKDIR</span><span class="st">"</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Lista de accessions NCBI (ejemplos, reemplazar con IDs reales de Firmicutes)</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="va">ACCESSIONS</span><span class="op">=</span><span class="st">"NR_104737,NR_112633,NR_115365,NR_024669,NR_113129,NR_118732,NR_115359,NR_042737,NR_029135,NR_112635,NR_115336,NR_118676,NR_024645,NR_113132,NR_115344,NR_044055,NR_118675,NR_024640,NR_113741,NR_112722"</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Descargar secuencias</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== Descargando secuencias ==="</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a><span class="ex">efetch</span> <span class="at">-db</span> nucleotide <span class="at">-id</span> <span class="st">"</span><span class="va">$ACCESSIONS</span><span class="st">"</span> <span class="at">-format</span> fasta <span class="op">&gt;</span> 16s_raw.fasta</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Verificar número de secuencias</span></span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a><span class="va">N_SEQS</span><span class="op">=</span><span class="va">$(</span><span class="fu">grep</span> <span class="at">-c</span> <span class="st">'&gt;'</span> 16s_raw.fasta<span class="va">)</span></span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Descargadas </span><span class="va">$N_SEQS</span><span class="st"> secuencias"</span></span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Descargar CM de Rfam para 16S bacteriano (RF00177)</span></span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== Descargando CM ==="</span></span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="ot">!</span> <span class="ot">-f</span> RF00177.cm <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">wget</span> <span class="at">-q</span> <span class="st">"https://rfam.org/family/RF00177/cm"</span> <span class="at">-O</span> RF00177.cm</span>
+<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
+<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Alinear con Infernal</span></span>
+<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== Alineamiento con Infernal ==="</span></span>
+<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a><span class="ex">cmalign</span> <span class="at">--outformat</span> Stockholm <span class="at">--mapali</span> 16s_aln.sto RF00177.cm 16s_raw.fasta <span class="op">&gt;</span> 16s_aln.sto</span>
+<span id="cb17-29"><a href="#cb17-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-30"><a href="#cb17-30" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Convertir a FASTA</span></span>
+<span id="cb17-31"><a href="#cb17-31" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== Conversión ==="</span></span>
+<span id="cb17-32"><a href="#cb17-32" aria-hidden="true" tabindex="-1"></a><span class="ex">seqmagick</span> convert <span class="at">--format</span> fasta 16s_aln.sto 16s_aln.fasta</span>
+<span id="cb17-33"><a href="#cb17-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-34"><a href="#cb17-34" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Recortar con trimAl</span></span>
+<span id="cb17-35"><a href="#cb17-35" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== Recorte ==="</span></span>
+<span id="cb17-36"><a href="#cb17-36" aria-hidden="true" tabindex="-1"></a><span class="ex">trimal</span> <span class="at">-in</span> 16s_aln.fasta <span class="at">-out</span> 16s_trim.fasta <span class="at">-automated1</span></span>
+<span id="cb17-37"><a href="#cb17-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-38"><a href="#cb17-38" aria-hidden="true" tabindex="-1"></a><span class="co"># 6. Construir árbol ML</span></span>
+<span id="cb17-39"><a href="#cb17-39" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== ML con IQ-TREE ==="</span></span>
+<span id="cb17-40"><a href="#cb17-40" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-s</span> 16s_trim.fasta <span class="at">-m</span> MFP <span class="at">-mset</span> GTR,RNA16A,RNA16B,RNA16D <span class="at">-B</span> 1000 <span class="at">-alrt</span> 1000 <span class="at">-T</span> 8 <span class="at">-pre</span> 16s_tree</span>
+<span id="cb17-41"><a href="#cb17-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-42"><a href="#cb17-42" aria-hidden="true" tabindex="-1"></a><span class="co"># 7. Reporte</span></span>
+<span id="cb17-43"><a href="#cb17-43" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== REPORTE ==="</span></span>
+<span id="cb17-44"><a href="#cb17-44" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Secuencias: </span><span class="va">$N_SEQS</span><span class="st">"</span></span>
+<span id="cb17-45"><a href="#cb17-45" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Longitud alineada: </span><span class="va">$(</span><span class="ex">seqmagick</span> info 16s_aln.fasta <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'/length/{print $3}'</span> <span class="kw">|</span> <span class="fu">head</span> <span class="at">-1</span><span class="va">)</span><span class="st">"</span></span>
+<span id="cb17-46"><a href="#cb17-46" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Longitud recortada: </span><span class="va">$(</span><span class="ex">seqmagick</span> info 16s_trim.fasta <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'/length/{print $3}'</span> <span class="kw">|</span> <span class="fu">head</span> <span class="at">-1</span><span class="va">)</span><span class="st">"</span></span>
+<span id="cb17-47"><a href="#cb17-47" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Modelo seleccionado: </span><span class="va">$(</span><span class="fu">grep</span> <span class="at">-A1</span> <span class="st">'Best-fit model'</span> 16s_tree.iqtree <span class="kw">|</span> <span class="fu">head</span> <span class="at">-1</span><span class="va">)</span><span class="st">"</span></span>
+<span id="cb17-48"><a href="#cb17-48" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"Árbol: 16s_tree.treefile"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="solución-ejercicio-2" class="level3">
+<h3 data-anchor-id="solución-ejercicio-2">Solución ejercicio 2</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/usr/bin/env bash</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Ejercicio 2: Comparación MAFFT vs Infernal</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-euo</span> pipefail</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="va">INPUT</span><span class="op">=</span><span class="st">"16s_raw.fasta"</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Alineamiento MAFFT</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== Alineamiento con MAFFT ==="</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="ex">mafft</span> <span class="at">--genafpair</span> <span class="at">--maxiterate</span> 1000 <span class="st">"</span><span class="va">$INPUT</span><span class="st">"</span> <span class="op">&gt;</span> 16s_mafft.fasta</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="ex">trimal</span> <span class="at">-in</span> 16s_mafft.fasta <span class="at">-out</span> 16s_mafft_trim.fasta <span class="at">-automated1</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Alineamiento Infernal (ya hecho en ejercicio 1)</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Asumimos: 16s_trim.fasta ya existe</span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Función para estadísticas</span></span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a><span class="fu">alignment_stats()</span> <span class="kw">{</span></span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>    <span class="bu">local</span> <span class="va">file</span><span class="op">=</span><span class="st">"</span><span class="va">$1</span><span class="st">"</span></span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>    <span class="bu">local</span> <span class="va">name</span><span class="op">=</span><span class="st">"</span><span class="va">$2</span><span class="st">"</span></span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>    <span class="bu">local</span> <span class="va">length</span><span class="op">=</span><span class="va">$(</span><span class="ex">seqmagick</span> info <span class="st">"</span><span class="va">$file</span><span class="st">"</span> <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'/alignment length/{print $3}'</span> <span class="kw">|</span> <span class="fu">head</span> <span class="at">-1</span><span class="va">)</span></span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Contar sitios informativos (≥2 taxones con nucleótido diferente)</span></span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Simplificado: contar columnas con ≥3 estados diferentes</span></span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a>    <span class="bu">local</span> <span class="va">informative</span><span class="op">=</span><span class="va">$(</span><span class="ex">python3</span> <span class="at">-c</span> <span class="st">"</span></span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a><span class="st">from Bio import AlignIO</span></span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a><span class="st">aln = AlignIO.read('</span><span class="va">$file</span><span class="st">', 'fasta')</span></span>
+<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a><span class="st">informative = 0</span></span>
+<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a><span class="st">for i in range(aln.get_alignment_length()):</span></span>
+<span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a><span class="st">    col = set(aln[:, i].upper()) - {'-', '?', 'N'}</span></span>
+<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a><span class="st">    if len(col) &gt;= 2:</span></span>
+<span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a><span class="st">        # verificar que al menos 2 estados aparecen ≥2 veces</span></span>
+<span id="cb18-30"><a href="#cb18-30" aria-hidden="true" tabindex="-1"></a><span class="st">        from collections import Counter</span></span>
+<span id="cb18-31"><a href="#cb18-31" aria-hidden="true" tabindex="-1"></a><span class="st">        cnt = Counter(aln[:, i].upper())</span></span>
+<span id="cb18-32"><a href="#cb18-32" aria-hidden="true" tabindex="-1"></a><span class="st">        if sum(1 for c, n in cnt.items() if c not in '-?N' and n &gt;= 2) &gt;= 2:</span></span>
+<span id="cb18-33"><a href="#cb18-33" aria-hidden="true" tabindex="-1"></a><span class="st">            informative += 1</span></span>
+<span id="cb18-34"><a href="#cb18-34" aria-hidden="true" tabindex="-1"></a><span class="st">print(informative)</span></span>
+<span id="cb18-35"><a href="#cb18-35" aria-hidden="true" tabindex="-1"></a><span class="st">"</span><span class="va">)</span></span>
+<span id="cb18-36"><a href="#cb18-36" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"</span><span class="va">$name</span><span class="st">: longitud=</span><span class="va">$length</span><span class="st">, sitios_informativos=</span><span class="va">$informative</span><span class="st">"</span></span>
+<span id="cb18-37"><a href="#cb18-37" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span>
+<span id="cb18-38"><a href="#cb18-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-39"><a href="#cb18-39" aria-hidden="true" tabindex="-1"></a><span class="ex">alignment_stats</span> 16s_mafft_trim.fasta <span class="st">"MAFFT"</span></span>
+<span id="cb18-40"><a href="#cb18-40" aria-hidden="true" tabindex="-1"></a><span class="ex">alignment_stats</span> 16s_trim.fasta <span class="st">"Infernal"</span></span>
+<span id="cb18-41"><a href="#cb18-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-42"><a href="#cb18-42" aria-hidden="true" tabindex="-1"></a><span class="co"># Árboles con IQ-TREE</span></span>
+<span id="cb18-43"><a href="#cb18-43" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== ML MAFFT ==="</span></span>
+<span id="cb18-44"><a href="#cb18-44" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-s</span> 16s_mafft_trim.fasta <span class="at">-m</span> GTR+I+G <span class="at">-B</span> 1000 <span class="at">-pre</span> 16s_mafft_tree</span>
+<span id="cb18-45"><a href="#cb18-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-46"><a href="#cb18-46" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== ML Infernal ==="</span></span>
+<span id="cb18-47"><a href="#cb18-47" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-s</span> 16s_trim.fasta <span class="at">-m</span> GTR+I+G <span class="at">-B</span> 1000 <span class="at">-pre</span> 16s_infernal_tree</span>
+<span id="cb18-48"><a href="#cb18-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-49"><a href="#cb18-49" aria-hidden="true" tabindex="-1"></a><span class="co"># Comparar topologías (RF distance)</span></span>
+<span id="cb18-50"><a href="#cb18-50" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== Distancia Robinson-Foulds ==="</span></span>
+<span id="cb18-51"><a href="#cb18-51" aria-hidden="true" tabindex="-1"></a><span class="ex">nw_distance</span> <span class="at">-m</span> rf 16s_mafft_tree.treefile 16s_infernal_tree.treefile</span>
+<span id="cb18-52"><a href="#cb18-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-53"><a href="#cb18-53" aria-hidden="true" tabindex="-1"></a><span class="co"># Comparar soporte bootstrap medio</span></span>
+<span id="cb18-54"><a href="#cb18-54" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="st">"=== Bootstrap medio ==="</span></span>
+<span id="cb18-55"><a href="#cb18-55" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> <span class="at">-c</span> <span class="st">"</span></span>
+<span id="cb18-56"><a href="#cb18-56" aria-hidden="true" tabindex="-1"></a><span class="st">from ete3 import Tree</span></span>
+<span id="cb18-57"><a href="#cb18-57" aria-hidden="true" tabindex="-1"></a><span class="st">for name, tree_file in [('MAFFT', '16s_mafft_tree.treefile'), ('Infernal', '16s_infernal_tree.treefile')]:</span></span>
+<span id="cb18-58"><a href="#cb18-58" aria-hidden="true" tabindex="-1"></a><span class="st">    t = Tree(tree_file)</span></span>
+<span id="cb18-59"><a href="#cb18-59" aria-hidden="true" tabindex="-1"></a><span class="st">    supports = [n.support for n in t.traverse() if not n.is_leaf() and n.support]</span></span>
+<span id="cb18-60"><a href="#cb18-60" aria-hidden="true" tabindex="-1"></a><span class="st">    print(f'{name}: bootstrap medio = {sum(supports)/len(supports):.1f}')</span></span>
+<span id="cb18-61"><a href="#cb18-61" aria-hidden="true" tabindex="-1"></a><span class="st">"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Salida típica:</p>
+<pre class="text"><code>MAFFT:  longitud=1450, sitios_informativos=612
+Infernal: longitud=1487, sitios_informativos=705
+
+=== Distancia Robinson-Foulds ===
+8
+
+=== Bootstrap medio ===
+MAFFT:   bootstrap medio = 87.3
+Infernal: bootstrap medio = 92.8</code></pre>
+<p><strong>Análisis</strong>:</p>
+<ol type="1">
+<li><strong>Infernal genera alineamientos ligeramente más largos</strong> porque respeta regiones estructurales que MAFFT puede colapsar.</li>
+<li><strong>Más sitios informativos</strong> con Infernal: las posiciones emparejadas se alinean correctamente, recogiendo señal filogenética que MAFFT puede perder.</li>
+<li><strong>Bootstrap medio más alto</strong> con Infernal: las relaciones evolutivas están mejor soportadas.</li>
+<li><strong>Distancia RF = 8</strong>: diferencias topológicas menores, pero significativas. Las diferencias suelen estar en clados de soporte bajo.</li>
+</ol>
+<p><strong>Conclusión</strong>: Infernal vale la pena especialmente para datasets con taxones lejanos (familias/órdenes distintos) o cuando la estructura es muy conservada. Para análisis intra-género, MAFFT es suficiente.</p>
+</section>
+<section id="solución-ejercicio-3" class="level3">
+<h3 data-anchor-id="solución-ejercicio-3">Solución ejercicio 3</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/usr/bin/env bash</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="co"># pipeline_16s.sh: pipeline completo de filogenia para 16S rRNA</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Uso: ./pipeline_16s.sh &lt;input.fasta&gt; &lt;cm_file&gt; [threads]</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="bu">set</span> <span class="at">-euo</span> pipefail</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a><span class="co"># === Validación ===</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">[</span> <span class="st">"</span><span class="va">$#</span><span class="st">"</span> <span class="ot">-lt</span> 2 <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"Uso: </span><span class="va">$0</span><span class="st"> &lt;input.fasta&gt; &lt;cm_file&gt; [threads]"</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">"Ejemplo: </span><span class="va">$0</span><span class="st"> 16s.fasta RF00177.cm 8"</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>    <span class="bu">exit</span> 1</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a><span class="cf">fi</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a><span class="va">INPUT</span><span class="op">=</span><span class="st">"</span><span class="va">$1</span><span class="st">"</span></span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a><span class="va">CM_FILE</span><span class="op">=</span><span class="st">"</span><span class="va">$2</span><span class="st">"</span></span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a><span class="va">THREADS</span><span class="op">=</span><span class="st">"</span><span class="va">${3</span><span class="op">:-</span>4<span class="va">}</span><span class="st">"</span></span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a><span class="va">BASENAME</span><span class="op">=</span><span class="va">$(</span><span class="fu">basename</span> <span class="st">"</span><span class="va">${INPUT</span><span class="op">%</span>.<span class="pp">*</span><span class="va">}</span><span class="st">"</span><span class="va">)</span></span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a><span class="co"># === Logging ===</span></span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a><span class="fu">log()</span> <span class="kw">{</span> <span class="bu">echo</span> <span class="st">"[</span><span class="va">$(</span><span class="fu">date</span> <span class="st">'+%H:%M:%S'</span><span class="va">)</span><span class="st">] </span><span class="va">$*</span><span class="st">"</span> <span class="kw">|</span> <span class="fu">tee</span> <span class="at">-a</span> <span class="st">"</span><span class="va">${BASENAME}</span><span class="st">_pipeline.log"</span><span class="kw">;</span> <span class="kw">}</span></span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a><span class="co"># === Trap para errores ===</span></span>
+<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a><span class="fu">cleanup()</span> <span class="kw">{</span></span>
+<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a>    <span class="va">EXIT_CODE</span><span class="op">=</span><span class="va">$?</span></span>
+<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a>    <span class="bu">[</span> <span class="va">$EXIT_CODE</span> <span class="ot">-ne</span> 0 <span class="bu">]</span> <span class="kw">&amp;&amp;</span> <span class="ex">log</span> <span class="st">"ERROR: pipeline falló (código </span><span class="va">$EXIT_CODE</span><span class="st">)"</span></span>
+<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a><span class="kw">}</span></span>
+<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a><span class="bu">trap</span> cleanup EXIT</span>
+<span id="cb20-27"><a href="#cb20-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a><span class="co"># === Verificar dependencias ===</span></span>
+<span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a><span class="ex">log</span> <span class="st">"Verificando dependencias..."</span></span>
+<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> cmd <span class="kw">in</span> cmalign seqmagick trimal iqtree2<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a>    <span class="bu">command</span> <span class="at">-v</span> <span class="st">"</span><span class="va">$cmd</span><span class="st">"</span> <span class="op">&gt;</span>/dev/null <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="kw">||</span> <span class="kw">{</span></span>
+<span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a>        <span class="ex">log</span> <span class="st">"ERROR: </span><span class="va">$cmd</span><span class="st"> no encontrado"</span></span>
+<span id="cb20-33"><a href="#cb20-33" aria-hidden="true" tabindex="-1"></a>        <span class="bu">exit</span> 1</span>
+<span id="cb20-34"><a href="#cb20-34" aria-hidden="true" tabindex="-1"></a>    <span class="kw">}</span></span>
+<span id="cb20-35"><a href="#cb20-35" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span>
+<span id="cb20-36"><a href="#cb20-36" aria-hidden="true" tabindex="-1"></a><span class="bu">[</span> <span class="ot">-f</span> <span class="st">"</span><span class="va">$CM_FILE</span><span class="st">"</span> <span class="bu">]</span> <span class="kw">||</span> <span class="kw">{</span> <span class="ex">log</span> <span class="st">"ERROR: CM </span><span class="va">$CM_FILE</span><span class="st"> no existe"</span><span class="kw">;</span> <span class="bu">exit</span> 1<span class="kw">;</span> <span class="kw">}</span></span>
+<span id="cb20-37"><a href="#cb20-37" aria-hidden="true" tabindex="-1"></a><span class="bu">[</span> <span class="ot">-f</span> <span class="st">"</span><span class="va">$INPUT</span><span class="st">"</span> <span class="bu">]</span>   <span class="kw">||</span> <span class="kw">{</span> <span class="ex">log</span> <span class="st">"ERROR: input </span><span class="va">$INPUT</span><span class="st"> no existe"</span><span class="kw">;</span> <span class="bu">exit</span> 1<span class="kw">;</span> <span class="kw">}</span></span>
+<span id="cb20-38"><a href="#cb20-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-39"><a href="#cb20-39" aria-hidden="true" tabindex="-1"></a><span class="co"># === Ejecución ===</span></span>
+<span id="cb20-40"><a href="#cb20-40" aria-hidden="true" tabindex="-1"></a><span class="ex">log</span> <span class="st">"Paso 1/4: Alineamiento con Infernal..."</span></span>
+<span id="cb20-41"><a href="#cb20-41" aria-hidden="true" tabindex="-1"></a><span class="ex">cmalign</span> <span class="at">--outformat</span> Stockholm <span class="st">"</span><span class="va">$CM_FILE</span><span class="st">"</span> <span class="st">"</span><span class="va">$INPUT</span><span class="st">"</span> <span class="op">&gt;</span> <span class="st">"</span><span class="va">${BASENAME}</span><span class="st">.sto"</span></span>
+<span id="cb20-42"><a href="#cb20-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-43"><a href="#cb20-43" aria-hidden="true" tabindex="-1"></a><span class="ex">log</span> <span class="st">"Paso 2/4: Conversión a FASTA..."</span></span>
+<span id="cb20-44"><a href="#cb20-44" aria-hidden="true" tabindex="-1"></a><span class="ex">seqmagick</span> convert <span class="at">--format</span> fasta <span class="st">"</span><span class="va">${BASENAME}</span><span class="st">.sto"</span> <span class="st">"</span><span class="va">${BASENAME}</span><span class="st">_aln.fasta"</span></span>
+<span id="cb20-45"><a href="#cb20-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-46"><a href="#cb20-46" aria-hidden="true" tabindex="-1"></a><span class="ex">log</span> <span class="st">"Paso 3/4: Recorte con trimAl..."</span></span>
+<span id="cb20-47"><a href="#cb20-47" aria-hidden="true" tabindex="-1"></a><span class="ex">trimal</span> <span class="at">-in</span> <span class="st">"</span><span class="va">${BASENAME}</span><span class="st">_aln.fasta"</span> <span class="at">-out</span> <span class="st">"</span><span class="va">${BASENAME}</span><span class="st">_trim.fasta"</span> <span class="at">-automated1</span></span>
+<span id="cb20-48"><a href="#cb20-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-49"><a href="#cb20-49" aria-hidden="true" tabindex="-1"></a><span class="ex">log</span> <span class="st">"Paso 4/4: ML con IQ-TREE..."</span></span>
+<span id="cb20-50"><a href="#cb20-50" aria-hidden="true" tabindex="-1"></a><span class="ex">iqtree2</span> <span class="at">-s</span> <span class="st">"</span><span class="va">${BASENAME}</span><span class="st">_trim.fasta"</span> <span class="at">-m</span> MFP <span class="at">-mset</span> GTR,RNA16A,RNA16B,RNA16D <span class="dt">\</span></span>
+<span id="cb20-51"><a href="#cb20-51" aria-hidden="true" tabindex="-1"></a>        <span class="at">-B</span> 1000 <span class="at">-alrt</span> 1000 <span class="at">-T</span> <span class="st">"</span><span class="va">$THREADS</span><span class="st">"</span> <span class="at">-pre</span> <span class="st">"</span><span class="va">${BASENAME}</span><span class="st">_tree"</span></span>
+<span id="cb20-52"><a href="#cb20-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-53"><a href="#cb20-53" aria-hidden="true" tabindex="-1"></a><span class="co"># === Reporte final ===</span></span>
+<span id="cb20-54"><a href="#cb20-54" aria-hidden="true" tabindex="-1"></a><span class="ex">log</span> <span class="st">"=== REPORTE PIPELINE 16S ==="</span></span>
+<span id="cb20-55"><a href="#cb20-55" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> <span class="op">&lt;&lt;EOF</span></span>
+<span id="cb20-56"><a href="#cb20-56" aria-hidden="true" tabindex="-1"></a><span class="st">+-------------------------------+</span></span>
+<span id="cb20-57"><a href="#cb20-57" aria-hidden="true" tabindex="-1"></a><span class="st">| REPORTE PIPELINE 16S          |</span></span>
+<span id="cb20-58"><a href="#cb20-58" aria-hidden="true" tabindex="-1"></a><span class="st">+-------------------------------+</span></span>
+<span id="cb20-59"><a href="#cb20-59" aria-hidden="true" tabindex="-1"></a><span class="st">| Input:        </span><span class="va">${INPUT}</span></span>
+<span id="cb20-60"><a href="#cb20-60" aria-hidden="true" tabindex="-1"></a><span class="st">| CM:           </span><span class="va">${CM_FILE}</span></span>
+<span id="cb20-61"><a href="#cb20-61" aria-hidden="true" tabindex="-1"></a><span class="st">| Threads:      </span><span class="va">${THREADS}</span></span>
+<span id="cb20-62"><a href="#cb20-62" aria-hidden="true" tabindex="-1"></a><span class="st">| Secuencias:   </span><span class="va">$(</span><span class="fu">grep</span> <span class="at">-c</span> <span class="st">'&gt;'</span> <span class="st">"</span><span class="va">$INPUT</span><span class="st">"</span><span class="va">)</span></span>
+<span id="cb20-63"><a href="#cb20-63" aria-hidden="true" tabindex="-1"></a><span class="st">| Long. alineada: </span><span class="va">$(</span><span class="ex">seqmagick</span> info <span class="st">"</span><span class="va">${BASENAME}</span><span class="st">_aln.fasta"</span> <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'/length/{print $3}'</span> <span class="kw">|</span> <span class="fu">head</span> <span class="at">-1</span><span class="va">)</span></span>
+<span id="cb20-64"><a href="#cb20-64" aria-hidden="true" tabindex="-1"></a><span class="st">| Long. recortada: </span><span class="va">$(</span><span class="ex">seqmagick</span> info <span class="st">"</span><span class="va">${BASENAME}</span><span class="st">_trim.fasta"</span> <span class="kw">|</span> <span class="fu">awk</span> <span class="st">'/length/{print $3}'</span> <span class="kw">|</span> <span class="fu">head</span> <span class="at">-1</span><span class="va">)</span></span>
+<span id="cb20-65"><a href="#cb20-65" aria-hidden="true" tabindex="-1"></a><span class="st">| Modelo:       </span><span class="va">$(</span><span class="fu">grep</span> <span class="at">-m1</span> <span class="st">'Best-fit model'</span> <span class="st">"</span><span class="va">${BASENAME}</span><span class="st">_tree.iqtree"</span><span class="va">)</span></span>
+<span id="cb20-66"><a href="#cb20-66" aria-hidden="true" tabindex="-1"></a><span class="st">| Árbol:        </span><span class="va">${BASENAME}</span><span class="st">_tree.treefile</span></span>
+<span id="cb20-67"><a href="#cb20-67" aria-hidden="true" tabindex="-1"></a><span class="st">+-------------------------------+</span></span>
+<span id="cb20-68"><a href="#cb20-68" aria-hidden="true" tabindex="-1"></a><span class="op">EOF</span></span>
+<span id="cb20-69"><a href="#cb20-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-70"><a href="#cb20-70" aria-hidden="true" tabindex="-1"></a><span class="ex">log</span> <span class="st">"Pipeline completado exitosamente."</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Important
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Resumen del capítulo</strong>: - 16S rRNA requiere alineamiento estructural (Infernal) y modelos específicos (RNA16). - Infernal es el estándar de oro: respeta estructura secundaria vía CMs. - SILVA es la base de datos de referencia para 16S/23S. - Resolución de 16S: género/familia; para especie usar filogenómica. - Modelos doublet (RNA16A/B/D) capturan dependencia entre pares emparejados. - Pipeline: Infernal → trimAl → IQ-TREE con RNA16* en mset.</p>
+</div>
+</div>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/bioden\.github\.io\/bioden_website\/");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Semillero de Biología del Desarrollo y Plasticidad Neural © 2025. All content licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Sitio web desarrollado por Xavier Clemente García Cevallos</p>
+</div>   
+    <div class="nav-footer-center">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/bioden">
+      <i class="bi bi-github" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="mailto:bioden@unicauca.edu.co">
+      <i class="bi bi-envelope" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    <div class="cookie-consent-footer"><a href="#" id="open_preferences_center">Cookie Preferences</a></div></div>
+    <div class="nav-footer-right">
+<p>Made with <a href="https://www.r-project.org/"><img src="https://www.r-project.org/Rlogo.png" alt="R" width="25px"></a> and <a href="https://quarto.org/"><img src="https://quarto.org/quarto.png" alt="Quarto" width="65px"></a>.</p>
+</div>
+  </div>
+</footer>
+
+
+
+
+<script src="../../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

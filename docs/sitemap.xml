@@ -6,7 +6,7 @@
   </url>
   <url>
     <loc>https://bioden.github.io/bioden_website/material_educativo.html</loc>
-    <lastmod>2026-11-08T03:38:45.105Z</lastmod>
+    <lastmod>2026-11-08T15:32:18.509Z</lastmod>
   </url>
   <url>
     <loc>https://bioden.github.io/bioden_website/material_educativo/rust_capitulos/14-crates-esenciales.html</loc>
@@ -73,12 +73,88 @@
     <lastmod>2026-11-08T01:11:25.506Z</lastmod>
   </url>
   <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/Modelamiento_de_proteinas_desde_cero.html</loc>
+    <lastmod>2026-11-08T15:35:11.275Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/filogenia_capitulos/18-proyecto.html</loc>
+    <lastmod>2026-11-08T15:15:10.494Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/filogenia_capitulos/16-filogenomica.html</loc>
+    <lastmod>2026-11-08T15:15:11.775Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/filogenia_capitulos/14-beast2.html</loc>
+    <lastmod>2026-11-08T15:15:14.074Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/filogenia_capitulos/12-raxml-fasttree.html</loc>
+    <lastmod>2026-11-08T15:15:16.536Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/filogenia_capitulos/10-parsimonia.html</loc>
+    <lastmod>2026-11-08T15:15:19.812Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/filogenia_capitulos/08-modelos-proteinas.html</loc>
+    <lastmod>2026-11-08T15:15:20.791Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/filogenia_capitulos/06-alineamiento-proteinas.html</loc>
+    <lastmod>2026-11-08T15:15:27.201Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/filogenia_capitulos/04-manipulacion.html</loc>
+    <lastmod>2026-11-08T15:15:28.429Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/filogenia_capitulos/02-entorno.html</loc>
+    <lastmod>2026-11-08T15:15:30.499Z</lastmod>
+  </url>
+  <url>
     <loc>https://bioden.github.io/bioden_website/material_educativo/curso_r.html</loc>
     <lastmod>2026-11-06T06:15:16.925Z</lastmod>
   </url>
   <url>
     <loc>https://bioden.github.io/bioden_website/material_educativo/capitulos_r/Capitulo1.html</loc>
     <lastmod>2025-11-13T02:52:44.000Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_capitulos/17-pipeline.html</loc>
+    <lastmod>2026-11-08T03:29:55.205Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_capitulos/15-regex.html</loc>
+    <lastmod>2026-11-08T03:29:57.164Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_capitulos/13-funciones.html</loc>
+    <lastmod>2026-11-08T03:29:58.373Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_capitulos/11-control.html</loc>
+    <lastmod>2026-11-08T03:30:06.113Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_capitulos/09-sed.html</loc>
+    <lastmod>2026-11-08T03:30:07.240Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_capitulos/07-grep-find.html</loc>
+    <lastmod>2026-11-08T03:30:09.818Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_capitulos/05-variables.html</loc>
+    <lastmod>2026-11-08T03:30:18.553Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_capitulos/03-archivos.html</loc>
+    <lastmod>2026-11-08T03:30:21.705Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_capitulos/01-introduccion.html</loc>
+    <lastmod>2026-11-08T03:30:22.102Z</lastmod>
   </url>
   <url>
     <loc>https://bioden.github.io/bioden_website/investigacion.html</loc>
@@ -253,8 +329,84 @@
     <lastmod>2025-11-11T04:20:14.000Z</lastmod>
   </url>
   <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_capitulos/02-navegacion.html</loc>
+    <lastmod>2026-11-08T03:30:17.734Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_capitulos/04-permisos.html</loc>
+    <lastmod>2026-11-08T03:30:19.243Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_capitulos/06-pipes.html</loc>
+    <lastmod>2026-11-08T03:30:17.147Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_capitulos/08-texto.html</loc>
+    <lastmod>2026-11-08T03:30:07.866Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_capitulos/10-awk.html</loc>
+    <lastmod>2026-11-08T03:30:06.678Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_capitulos/12-bucles.html</loc>
+    <lastmod>2026-11-08T03:29:59.042Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_capitulos/14-arrays.html</loc>
+    <lastmod>2026-11-08T03:29:57.789Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_capitulos/16-procesos.html</loc>
+    <lastmod>2026-11-08T03:29:56.368Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_para_dummies.html</loc>
+    <lastmod>2026-11-08T03:33:42.737Z</lastmod>
+  </url>
+  <url>
     <loc>https://bioden.github.io/bioden_website/material_educativo/capitulos_r/Capitulo2.html</loc>
     <lastmod>2026-07-07T15:30:08.000Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/filogenia_capitulos/01-introduccion.html</loc>
+    <lastmod>2026-11-08T15:15:32.261Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/filogenia_capitulos/03-ncbi.html</loc>
+    <lastmod>2026-11-08T15:15:29.894Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/filogenia_capitulos/05-alineamiento-dna.html</loc>
+    <lastmod>2026-11-08T15:15:27.830Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/filogenia_capitulos/07-modelos-dna.html</loc>
+    <lastmod>2026-11-08T15:15:21.722Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/filogenia_capitulos/09-distancia.html</loc>
+    <lastmod>2026-11-08T15:15:19.787Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/filogenia_capitulos/11-iqtree.html</loc>
+    <lastmod>2026-11-08T15:15:17.088Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/filogenia_capitulos/13-mrbayes.html</loc>
+    <lastmod>2026-11-08T15:15:16.000Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/filogenia_capitulos/15-arn-estructural.html</loc>
+    <lastmod>2026-11-08T15:15:13.426Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/filogenia_capitulos/17-visualizacion.html</loc>
+    <lastmod>2026-11-08T15:15:10.874Z</lastmod>
+  </url>
+  <url>
+    <loc>https://bioden.github.io/bioden_website/material_educativo/filogenia_molecular.html</loc>
+    <lastmod>2026-11-08T15:25:44.212Z</lastmod>
   </url>
   <url>
     <loc>https://bioden.github.io/bioden_website/material_educativo/python_bio.html</loc>
@@ -327,77 +479,5 @@
   <url>
     <loc>https://bioden.github.io/bioden_website/multimedia.html</loc>
     <lastmod>2025-11-10T01:36:11.000Z</lastmod>
-  </url>
-  <url>
-    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_para_dummies.html</loc>
-    <lastmod>2026-11-08T03:33:42.737Z</lastmod>
-  </url>
-  <url>
-    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_capitulos/17-pipeline.html</loc>
-    <lastmod>2026-11-08T03:29:55.205Z</lastmod>
-  </url>
-  <url>
-    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_capitulos/15-regex.html</loc>
-    <lastmod>2026-11-08T03:29:57.164Z</lastmod>
-  </url>
-  <url>
-    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_capitulos/13-funciones.html</loc>
-    <lastmod>2026-11-08T03:29:58.373Z</lastmod>
-  </url>
-  <url>
-    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_capitulos/11-control.html</loc>
-    <lastmod>2026-11-08T03:30:06.113Z</lastmod>
-  </url>
-  <url>
-    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_capitulos/09-sed.html</loc>
-    <lastmod>2026-11-08T03:30:07.240Z</lastmod>
-  </url>
-  <url>
-    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_capitulos/07-grep-find.html</loc>
-    <lastmod>2026-11-08T03:30:09.818Z</lastmod>
-  </url>
-  <url>
-    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_capitulos/05-variables.html</loc>
-    <lastmod>2026-11-08T03:30:18.553Z</lastmod>
-  </url>
-  <url>
-    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_capitulos/03-archivos.html</loc>
-    <lastmod>2026-11-08T03:30:21.705Z</lastmod>
-  </url>
-  <url>
-    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_capitulos/01-introduccion.html</loc>
-    <lastmod>2026-11-08T03:30:22.102Z</lastmod>
-  </url>
-  <url>
-    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_capitulos/02-navegacion.html</loc>
-    <lastmod>2026-11-08T03:30:17.734Z</lastmod>
-  </url>
-  <url>
-    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_capitulos/04-permisos.html</loc>
-    <lastmod>2026-11-08T03:30:19.243Z</lastmod>
-  </url>
-  <url>
-    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_capitulos/06-pipes.html</loc>
-    <lastmod>2026-11-08T03:30:17.147Z</lastmod>
-  </url>
-  <url>
-    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_capitulos/08-texto.html</loc>
-    <lastmod>2026-11-08T03:30:07.866Z</lastmod>
-  </url>
-  <url>
-    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_capitulos/10-awk.html</loc>
-    <lastmod>2026-11-08T03:30:06.678Z</lastmod>
-  </url>
-  <url>
-    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_capitulos/12-bucles.html</loc>
-    <lastmod>2026-11-08T03:29:59.042Z</lastmod>
-  </url>
-  <url>
-    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_capitulos/14-arrays.html</loc>
-    <lastmod>2026-11-08T03:29:57.789Z</lastmod>
-  </url>
-  <url>
-    <loc>https://bioden.github.io/bioden_website/material_educativo/bash_capitulos/16-procesos.html</loc>
-    <lastmod>2026-11-08T03:29:56.368Z</lastmod>
   </url>
 </urlset>
